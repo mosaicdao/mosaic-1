@@ -36,6 +36,26 @@ contract Consensus {
         Withdrawn
     }
 
+    enum RoundStatus {
+        /** Initial state after completion of previous commit */
+        Committed,
+
+        /** Proposal has been submitted */
+        Proposed,
+
+        /** Proposal has been validated */
+        Validated,
+
+        /** Committee for proposal has been formed */
+        CommitteeFormed,
+
+        /** Proposal has been precommitted to */
+        Precommitted,
+
+        /** Precommits have been revealed */
+        Revealed
+    }
+
     /** Validator structure */
     struct Validator {
         /** Address of previous validator in linked list */
@@ -82,6 +102,10 @@ contract Consensus {
     }
 
     /* External functions */
+
+    /** Submit a proposal */
+
+
 
     /** Validator joins */
     function join(
