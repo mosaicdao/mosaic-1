@@ -104,8 +104,62 @@ contract Consensus {
     /* External functions */
 
     /** Submit a proposal */
+    function submit(
+        uint256 _height,
+        bytes32 _proposal
+    )
+        external
+        returns (bool)
+    {
 
+    }
 
+    /** Validate the proposal */
+    // In the toy model the validation can be done
+    // during the submission call
+ 
+    /** enter a validator into the committee */
+    // at submission, future blockheight is set to function as seed
+    // first entry in window of 256 most recent blocks containing assigned block
+    function enterCommittee(address _validator)
+        external
+        returns (bool)
+    {
+        
+    }
+
+    /** Form committee from entries */
+    // caller puts up stake, to be slashed if omitted entries?
+    function formCommittee()
+        external
+        returns (bool)
+    {
+
+    }
+
+    /** Precommit answer as committee member */
+    function precommit(bytes32 _concealedVote)
+        external
+        returns (bool)
+    {
+
+    }
+
+    /** Reveal answer */
+    function reveal(bytes32 _salt)
+        external
+        returns (bool)
+    {
+
+    }
+
+    /** Commit the answer */
+    function commit()
+        external
+        returns (bool)
+    {
+
+    }
 
     /** Validator joins */
     function join(
