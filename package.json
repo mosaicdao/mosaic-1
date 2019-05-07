@@ -1,0 +1,23 @@
+{
+  "name": "compute",
+  "version": "1.0.0",
+  "description": "compute",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benjaminbollen/compute.git"
+  },
+  "author": "Benjamin Bollen",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/benjaminbollen/compute/issues"
+  },
+  "homepage": "https://github.com/benjaminbollen/compute#readme",
+  "dependencies": {
+    "openzeppelin-solidity": "2.1.1",
+    "truffle": "beta"
+  }
+}

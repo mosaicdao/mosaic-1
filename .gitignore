@@ -1,0 +1,29 @@
+# OSX
+.DS_Store
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+*.swp
+tags
+
+# don't commit node_modules
+node_modules
+
+# NPM package generated files:
+dist/contracts.json
+
+# Do not track builds
+build/
+
+# LaTeX auxiliary files
+*.aux
+*.log
+
+## Build tool auxiliary files:
+*.synctex
+*.synctex(busy)
+*.synctex.gz
+*.synctex.gz(busy)
+*.pdfsync
