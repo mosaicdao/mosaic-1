@@ -77,8 +77,8 @@ contract Consensus {
     /** Sentinel pointer for marking beginning and ending of circular linked-list of validators */
     address public constant SENTINEL_VALIDATORS = address(0x1);
 
-    /** Sentinel pointer for marking beginning and ending of circular linked-list of commits */
-    bytes32 public constant SENTINEL_COMMITS = bytes32(0x0000000000000000000000000000000000000000000000000000000000000001);
+    /** Committee formation block delay */
+    uint256 public constant COMMITTEE_FORMATION_DELAY = uint256(35);
 
     /** EIP20 token for stakes and rewards for validators */
     EIP20I public valueToken;
@@ -93,18 +93,67 @@ contract Consensus {
     mapping(uint256 => bytes32) public commits;
 
     /** Latest height */
-    uint256 head;
+    uint256 public head;
+
+    /** Round status */
+    RoundStatus public round;
+
+    /** Active proposal and proposer */
+    bytes32 public activeProposal;
+    address public activeProposer;
+
+    /** Committee formation block height */
+    uint256 public committeeFormationHeight;
+    bytes32 public committeeFormationHash;
+
+    /* Modifiers */
+
+    modifier onlyValidator()
+    {
+        require(validators[msg.sender].status == Staked,
+            "Validator must have an active stake.");
+        _;
+    }
+
+    modifier Extend(uint256 _height)
+    {
+        require(_height == head,
+            "Height must equal head.");
+        _;
+    }
+
+    modifier Open()
+    {
+        require(round == Committed,
+            "Previous proposal has to have been committed.");
+        _;
+    }
+
+    modifier Validated()
+    {
+        require(round == Validated,
+            "Active proposal must have been validated.");
+        _;
+    }
+
+    modifier UnderCommittee()
+    {
+        require(round == CommitteeFormed,
+            "Active proposal is under committee.");
+        _;
+    }
 
     /* Constructor */
 
-    /**  */
+    /** Initialise */
     constructor(
-        uint256 _stakeAmount
-        //bytes32 _initialCommit
+        uint256 _stakeAmount,
+        bytes32 _initialCommit
     )
         public
     {
-
+        head = 0;
+        addCommit(head, _initialCommit);
         stakeAmount = _stakeAmount;
     }
 
@@ -116,15 +165,43 @@ contract Consensus {
         bytes32 _proposal
     )
         external
+        Extend(_height)
+        onlyValidator
+        Open
         returns (bool)
     {
+        // only validation is on strict increment of height
+        // so round moves to validated instantly
+        round = Validated;
 
+        activeProposer = msg.sender;
+        activeProposal = _proposal;
+
+        // set the future blockheight for randomizing the committee
+        committeeFormationHeight = block.number + COMMITTEE_FORMATION_DELAY;
     }
 
     /** Validate the proposal */
     // In the toy model the validation can be done
     // during the submission call
  
+    /** Randomize committee to start formation */
+    function randomizeCommittee()
+        external
+        returns (bool)
+    {
+        require(committeeFormationHash == 0,
+            "Committee formation hash is already set.");
+
+        require(block.number > committeeFormationHeight,
+            "Block height must be higher than set committee formation height.");
+        require(block.number - 256 < committeeFormationHeight,
+            "Committee formation height must be in 256 most recent blocks.");
+
+        committeeFormationHash = block.blockhash(committeeFormationHeight);
+        assert(committeeFormationHash != 0);
+    }
+
     /** enter a validator into the committee */
     // at submission, future blockheight is set to function as seed
     // first entry in window of 256 most recent blocks containing assigned block
@@ -132,6 +209,8 @@ contract Consensus {
         external
         returns (bool)
     {
+        require(committeeFormationHash != 0,
+            "Randomization hash must be set");
         
     }
 
@@ -199,8 +278,8 @@ contract Consensus {
     /** Add commit */
     function addCommit(uint256 _height, bytes32 _resultHash)
         private
+        Extend(_height)
     {
-        require(_height == head, "Height must equal head.");
         head = head.add(1);
         // anchor resultHash in commits
         commits[_height] = _resultHash;
