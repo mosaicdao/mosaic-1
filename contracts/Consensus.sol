@@ -15,8 +15,11 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 
 import "./EIP20I.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract Consensus {
+
+    using SafeMath for uint256;
 
     /** Validator status enum */
     enum ValidatorStatus {
@@ -25,7 +28,7 @@ contract Consensus {
 
         /** Validator has been slashed and lost stake and rewards */
         Slashed,
-        
+
         /** Validator has put up stake and participates in consensus */
         Staked,
 
@@ -68,16 +71,14 @@ contract Consensus {
         uint256 earnedRewards;
 
         /** Status */
-        ValidatorStatus status; 
-    }
-
-    /** Commit structure */
-    struct Commit {
-        bytes32 resultHash;
+        ValidatorStatus status;
     }
 
     /** Sentinel pointer for marking beginning and ending of circular linked-list of validators */
     address public constant SENTINEL_VALIDATORS = address(0x1);
+
+    /** Sentinel pointer for marking beginning and ending of circular linked-list of commits */
+    bytes32 public constant SENTINEL_COMMITS = bytes32(0x0000000000000000000000000000000000000000000000000000000000000001);
 
     /** EIP20 token for stakes and rewards for validators */
     EIP20I public valueToken;
@@ -85,19 +86,25 @@ contract Consensus {
     /** Required stake amount to join as a validator */
     uint256 public stakeAmount;
 
-    /** Validator linked-list */
-    mapping(bytes32 => Validator) public validators;
+    /** Validator linked-list indexed by address */
+    mapping(address => Validator) public validators;
 
-    mapping(bytes32 => Commit) public commits;
+    /** Commits indexed by height mapped to result hash */
+    mapping(uint256 => bytes32) public commits;
+
+    /** Latest height */
+    uint256 head;
 
     /* Constructor */
 
     /**  */
     constructor(
         uint256 _stakeAmount
+        //bytes32 _initialCommit
     )
         public
     {
+
         stakeAmount = _stakeAmount;
     }
 
@@ -184,6 +191,19 @@ contract Consensus {
         external
         returns (bool)
     {
+
+    }
+
+    /* Private functions */
+
+    /** Add commit */
+    function addCommit(uint256 _height, bytes32 _resultHash)
+        private
+    {
+        require(_height == head, "Height must equal head.");
+        head = head.add(1);
+        // anchor resultHash in commits
+        commits[_height] = _resultHash;
 
     }
 }
