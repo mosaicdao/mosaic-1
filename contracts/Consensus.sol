@@ -86,11 +86,17 @@ contract Consensus {
     /** Required stake amount to join as a validator */
     uint256 public stakeAmount;
 
+    /** Committee size */
+    uint256 public committeeSize;
+
     /** Validator linked-list indexed by address */
     mapping(address => Validator) public validators;
 
     /** Commits indexed by height mapped to result hash */
     mapping(uint256 => bytes32) public commits;
+
+    /** Committee maps an index to a validator */
+    mapping(address => address) public committee;
 
     /** Latest height */
     uint256 public head;
@@ -110,7 +116,7 @@ contract Consensus {
 
     modifier onlyValidator()
     {
-        require(validators[msg.sender].status == Staked,
+        require(validators[msg.sender].status == ValidatorStatus.Staked,
             "Validator must have an active stake.");
         _;
     }
@@ -124,21 +130,21 @@ contract Consensus {
 
     modifier Open()
     {
-        require(round == Committed,
+        require(round == RoundStatus.Committed,
             "Previous proposal has to have been committed.");
         _;
     }
 
     modifier Validated()
     {
-        require(round == Validated,
+        require(round == RoundStatus.Validated,
             "Active proposal must have been validated.");
         _;
     }
 
     modifier UnderCommittee()
     {
-        require(round == CommitteeFormed,
+        require(round == RoundStatus.CommitteeFormed,
             "Active proposal is under committee.");
         _;
     }
@@ -147,14 +153,24 @@ contract Consensus {
 
     /** Initialise */
     constructor(
+        EIP20I _valueToken,
         uint256 _stakeAmount,
-        bytes32 _initialCommit
+        bytes32 _initialCommit,
+        uint256 _committeeSize
     )
         public
     {
+        require(address(_valueToken) != address(0),
+            "Value token must not be zero address.");
+        require(_committeeSize > 0,
+            "Committee size must be non-zero.");
+
+        valueToken = _valueToken;
+        stakeAmount = _stakeAmount;
+
         head = 0;
         addCommit(head, _initialCommit);
-        stakeAmount = _stakeAmount;
+        committeeSize = _committeeSize;
     }
 
     /* External functions */
@@ -172,7 +188,7 @@ contract Consensus {
     {
         // only validation is on strict increment of height
         // so round moves to validated instantly
-        round = Validated;
+        round = RoundStatus.Validated;
 
         activeProposer = msg.sender;
         activeProposal = _proposal;
@@ -198,15 +214,16 @@ contract Consensus {
         require(block.number - 256 < committeeFormationHeight,
             "Committee formation height must be in 256 most recent blocks.");
 
-        committeeFormationHash = block.blockhash(committeeFormationHeight);
+        committeeFormationHash = blockhash(committeeFormationHeight);
         assert(committeeFormationHash != 0);
     }
 
     /** enter a validator into the committee */
     // at submission, future blockheight is set to function as seed
     // first entry in window of 256 most recent blocks containing assigned block
-    function enterCommittee(address _validator)
+    function enterCommittee(address _validator, address _closerValidator)
         external
+
         returns (bool)
     {
         require(committeeFormationHash != 0,
@@ -283,6 +300,5 @@ contract Consensus {
         head = head.add(1);
         // anchor resultHash in commits
         commits[_height] = _resultHash;
-
     }
 }
