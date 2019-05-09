@@ -14,14 +14,18 @@ pragma solidity ^0.5.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
 /**
  * @title Committee
  * @author Benjamin Bollen - <ben@ost.com>
  */
 contract Committee {
 
+    using SafeMath for uint256;
+    
     /**
-     * Sentinel pointer for marking beginning and ending of circular,
+     * Sentinel pointer for marking the ending of circular,
      * linked-list of validators
      */
     address public constant SENTINEL_MEMBERS = address(0x1);
@@ -81,6 +85,8 @@ contract Committee {
         /** creator of committee is consensus */
         consensus = msg.sender;
 
+        // initialize the members linked-list as the empty set
+        members[SENTINEL_MEMBERS] = SENTINEL_MEMBERS;
         committeeSize = _committeeSize;
         dislocation = _dislocation;
         proposal = _proposal;
@@ -112,27 +118,88 @@ contract Committee {
         require(dValidator < dFurtherValidator,
             "Validator must be nearer than further away present validator.");
 
-        // check whether other members are further removed
+        // check whether other members are further removed.
+        // loop over maximum size of committee; note, when providing the
+        // correct _furtherValidator this loop should execute only once and break;
+        // the loop provides fall-back for transaction re-ordering as multiple validators
+        // attempt to enter simultaneously.
         for (uint256 i = 0; i < committeeSize; i++) {
             // get address of nearer validator
             address nearerValidator = members[_furtherValidator];
             if (nearerValidator == SENTINEL_MEMBERS) {
-                // validator is nearest member to proposal
-                // currently in the committe
+                // validator is nearest member to proposal currently in the committee;
                 // break and enter member
-                members[_validator] = SENTINEL_MEMBERS;
-                members[SENTINEL_MEMBERS] = _validator;
+                members[_validator] = SENTINEL_MEMBERS; // loop back to end
+                members[_furtherValidator] = _validator;
+                break;
             }
+
+            // calculate the distance of the preceding member, its distance should be less
+            // than the validator's however, correct if not the case.
             dNearerValidator = distance(shuffle(nearerValidator), proposal);
             if (dNearerValidator > dValidator) {
+                // validator is nearer to the proposal than the supposedly nearer validator,
+                // so move validator closer
                 _furtherValidator = nearerValidator;
-                // continue
+            } else {
+                // validator has found its correct further validator
+                members[_validator] = nearerValidator;
+                members[_furtherValidator] = _validator;
+                break;
             }
         }
-
+        assert(false, "The committee is not correctly constructed");
     }
 
     /* Private functions */
+
+    /** 
+     * Insert member into commitee
+     * @dev important, this private function does *not* perform
+     *      sanity checks anymore; must be done by caller
+     */
+    function insertMember(
+        address _member,
+        address _previousMember,
+        address _nextMember
+    )
+        private
+    {
+        // note that we could check whether the member inserted would be
+        // popped off again; but also note that a sensible actor will never
+        // enter a validator that doesn't belong in the group, and so incurs
+        // his own cost if he adds an wrong member when the group is already full.
+        members[_member] = _previousMember;
+        members[_nextMember] = _member;
+        insertCount();
+    }
+
+    function increaseCount()
+        private
+        returns (uint256 count_)
+    {
+        assert(count <= committeeSize + 1,
+            "Count must be equal or less than committeeSize.");
+        count = count.add(1);
+        if (count > commiteeSize) {
+            // member count in committee has reached desired size
+            // remove furthest member
+            popFurthestMember();
+        }
+    }
+
+    function popFurthestMember()
+        private
+    {
+        assert(count > 0, "Members list should not be empty");
+        address furthestMember = members[SENTINEL_MEMBERS];
+        if (furthestMember != SENTINEL_MEMBERS) { // linked-list is not empty
+            address secondFurthestMember = members[furthestMember];
+            members[SENTINEL_MEMBERS] = secondFurthestMember;
+            delete members[furthestMember];
+            count = count.sub(1);
+        }
+    }
 
     function shuffle(address _validator)
         private
