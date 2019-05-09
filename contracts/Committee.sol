@@ -16,11 +16,18 @@ pragma solidity ^0.5.0;
 
 /**
  * @title Committee
+ * @author Benjamin Bollen - <ben@ost.com>
  */
 contract Committee {
 
-    /** Sentinel pointer for marking beginning and ending of circular linked-list of validators */
+    /**
+     * Sentinel pointer for marking beginning and ending of circular,
+     * linked-list of validators
+     */
     address public constant SENTINEL_MEMBERS = address(0x1);
+
+    /** Sentinel distance */
+    bytes32 public constant SENTINEL_DISTANCE = bytes32(0x1111111111111111111111111111111111111111111111111111111111111111);
 
     /* Storage */
 
@@ -38,6 +45,12 @@ contract Committee {
 
     /** Committee members */
     mapping(address => address) public members;
+
+    /**
+     * Committee members count
+     * counts members entered and reaches maximum at committeSize
+     */
+    uint256 public count;
 
     modifier onlyConsensus()
     {
@@ -81,16 +94,42 @@ contract Committee {
         onlyConsensus
         returns (bool)
     {
-        require(members[_validator] == address(0),
+        require(_validator != SENTINEL_MEMBERS,
+            "Validator address must not be sentinel.");
+        require(members[_validator] == address(0) ,
             "Validator must not already have entered.");
         require(members[_furtherValidator] != address(0),
             "Further validator must be in the committee.");
         
         dValidator = distance(shuffle(_validator), proposal);
-        dFurtherValidator = distance(shuffle(_furtherValidator), proposal);
+        if (_furtherValidator == SENTINEL_MEMBERS) {
+            // Sentinel is always at maximum distance
+            dFutherValidator = SENTINEL_DISTANCE;
+        } else {
+            dFurtherValidator = distance(shuffle(_furtherValidator), proposal);
+        }
 
         require(dValidator < dFurtherValidator,
-            "Validator must be nearer than further away present validator.);
+            "Validator must be nearer than further away present validator.");
+
+        // check whether other members are further removed
+        for (uint256 i = 0; i < committeeSize; i++) {
+            // get address of nearer validator
+            address nearerValidator = members[_furtherValidator];
+            if (nearerValidator == SENTINEL_MEMBERS) {
+                // validator is nearest member to proposal
+                // currently in the committe
+                // break and enter member
+                members[_validator] = SENTINEL_MEMBERS;
+                members[SENTINEL_MEMBERS] = _validator;
+            }
+            dNearerValidator = distance(shuffle(nearerValidator), proposal);
+            if (dNearerValidator > dValidator) {
+                _furtherValidator = nearerValidator;
+                // continue
+            }
+        }
+
     }
 
     /* Private functions */
