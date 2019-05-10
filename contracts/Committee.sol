@@ -95,7 +95,7 @@ contract Committee {
     /* External functions */
 
     /** enter a validator into the Committee */
-    function enterCommittee(address _validator, address _furtherValidator)
+    function enterCommittee(address _validator, address _furtherMember)
         external
         onlyConsensus
         returns (bool)
@@ -104,15 +104,18 @@ contract Committee {
             "Validator address must not be sentinel.");
         require(members[_validator] == address(0) ,
             "Validator must not already have entered.");
-        require(members[_furtherValidator] != address(0),
+        require(members[_furtherMember] != address(0),
             "Further validator must be in the committee.");
         
+        // calculate the dislocated distance of the validator to the proposal
         dValidator = distance(shuffle(_validator), proposal);
-        if (_furtherValidator == SENTINEL_MEMBERS) {
+
+        if (_furtherMember == SENTINEL_MEMBERS) {
             // Sentinel is always at maximum distance
             dFutherValidator = SENTINEL_DISTANCE;
         } else {
-            dFurtherValidator = distance(shuffle(_furtherValidator), proposal);
+            // (re-)calculate the dislocated distance of the further member to the proposal
+            dFurtherValidator = distance(shuffle(_furtherMember), proposal);
         }
 
         require(dValidator < dFurtherValidator,
@@ -120,31 +123,31 @@ contract Committee {
 
         // check whether other members are further removed.
         // loop over maximum size of committee; note, when providing the
-        // correct _furtherValidator this loop should execute only once and break;
+        // correct _furtherMember this loop should execute only once and break;
         // the loop provides fall-back for transaction re-ordering as multiple validators
         // attempt to enter simultaneously.
         for (uint256 i = 0; i < committeeSize; i++) {
             // get address of nearer validator
-            address nearerValidator = members[_furtherValidator];
-            if (nearerValidator == SENTINEL_MEMBERS) {
+            address nearerMember = members[_furtherMember];
+            if (nearerMember == SENTINEL_MEMBERS) {
                 // validator is nearest member to proposal currently in the committee;
                 // break and enter member
                 members[_validator] = SENTINEL_MEMBERS; // loop back to end
-                members[_furtherValidator] = _validator;
+                members[_furtherMember] = _validator;
                 break;
             }
 
             // calculate the distance of the preceding member, its distance should be less
             // than the validator's however, correct if not the case.
-            dNearerValidator = distance(shuffle(nearerValidator), proposal);
+            dNearerValidator = distance(shuffle(nearerMember), proposal);
             if (dNearerValidator > dValidator) {
                 // validator is nearer to the proposal than the supposedly nearer validator,
                 // so move validator closer
-                _furtherValidator = nearerValidator;
+                _furtherMember = nearerMember;
             } else {
                 // validator has found its correct further validator
-                members[_validator] = nearerValidator;
-                members[_furtherValidator] = _validator;
+                members[_validator] = nearerMember;
+                members[_furtherMember] = _validator;
                 break;
             }
         }
@@ -171,21 +174,21 @@ contract Committee {
         // his own cost if he adds an wrong member when the group is already full.
         members[_member] = _previousMember;
         members[_nextMember] = _member;
-        insertCount();
+        increaseCount();
     }
 
     function increaseCount()
         private
         returns (uint256 count_)
     {
-        assert(count <= committeeSize + 1,
-            "Count must be equal or less than committeeSize.");
         count = count.add(1);
         if (count > commiteeSize) {
             // member count in committee has reached desired size
             // remove furthest member
             popFurthestMember();
         }
+        assert(count <= committeeSize,
+            "Count must be equal or less than committeeSize.");
     }
 
     function popFurthestMember()
