@@ -112,13 +112,13 @@ contract Committee {
 
         if (_furtherMember == SENTINEL_MEMBERS) {
             // Sentinel is always at maximum distance
-            dFutherValidator = SENTINEL_DISTANCE;
+            dFurtherMember = SENTINEL_DISTANCE;
         } else {
             // (re-)calculate the dislocated distance of the further member to the proposal
-            dFurtherValidator = distance(shuffle(_furtherMember), proposal);
+            dFurtherMember = distance(shuffle(_furtherMember), proposal);
         }
 
-        require(dValidator < dFurtherValidator,
+        require(dValidator < dFurtherMember,
             "Validator must be nearer than further away present validator.");
 
         // check whether other members are further removed.
@@ -127,31 +127,29 @@ contract Committee {
         // the loop provides fall-back for transaction re-ordering as multiple validators
         // attempt to enter simultaneously.
         for (uint256 i = 0; i < committeeSize; i++) {
-            // get address of nearer validator
+            // get address of nearer member
             address nearerMember = members[_furtherMember];
             if (nearerMember == SENTINEL_MEMBERS) {
-                // validator is nearest member to proposal currently in the committee;
-                // break and enter member
-                members[_validator] = SENTINEL_MEMBERS; // loop back to end
-                members[_furtherMember] = _validator;
-                break;
+                // validator is nearest to proposal currently in the committee;
+                // enter validator as a member and return
+                insertMember(_validator, SENTINEL_MEMBERS, _furtherMember);
+                return true;
             }
 
             // calculate the distance of the preceding member, its distance should be less
             // than the validator's however, correct if not the case.
-            dNearerValidator = distance(shuffle(nearerMember), proposal);
-            if (dNearerValidator > dValidator) {
+            dNearerMember = distance(shuffle(nearerMember), proposal);
+            if (dNearerMember > dValidator) {
                 // validator is nearer to the proposal than the supposedly nearer validator,
                 // so move validator closer
                 _furtherMember = nearerMember;
             } else {
                 // validator has found its correct further validator
-                members[_validator] = nearerMember;
-                members[_furtherMember] = _validator;
-                break;
+                insertMember(_validator, nearerMember, _furtherMember);
+                return true;
             }
         }
-        assert(false, "The committee is not correctly constructed");
+        assert(false, "The committee is not correctly constructed.");
     }
 
     /* Private functions */
