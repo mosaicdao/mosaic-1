@@ -15,6 +15,7 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 
 import "./EIP20I.sol";
+import "./Committee.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract Consensus {
