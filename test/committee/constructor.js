@@ -19,7 +19,7 @@ const Utils = require('../test_lib/utils');
 
 const NullAddress = Utils.NULL_ADDRESS;
 
-contract('Anchor.constructor()', (accounts) => {
+contract('Committee.constructor()', (accounts) => {
   let remoteChainId;
   let blockHeight;
   let stateRoot;

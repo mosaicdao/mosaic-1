@@ -23,15 +23,41 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 contract Committee {
 
     using SafeMath for uint256;
-    
+
+    /* Enum */
+
+    /**
+     * Committee status enum
+     */
+    enum CommitteeStatus {
+        Open,
+        Formed,
+
+        //
+        Closed,
+        // Committee has 
+        Invalid
+    }
+
+    /* Constants */
+
     /**
      * Sentinel pointer for marking the ending of circular,
      * linked-list of validators
      */
     address public constant SENTINEL_MEMBERS = address(0x1);
 
-    /** Sentinel distance */
+    /**
+     * Sentinel set to maximum distance removed from problem
+     */
     uint256 public constant SENTINEL_DISTANCE = uint256(0x1111111111111111111111111111111111111111111111111111111111111111);
+
+    /**
+      * Committee formation cooldown period allows for objections to be
+      * raised against the members entered into committee. After closing
+      *
+      */
+    uint256 public constant COMMITTEE_FORMATION_COOLDOWN = uint256(10);
 
     /* Storage */
 
@@ -44,8 +70,11 @@ contract Committee {
     /** Proposal under consideration */
     bytes32 proposal;
 
-    /** Shuffle to validators in hashed space */
+    /** Shuffle validators in hashed space with dislocation */
     bytes32 dislocation;
+
+    /** Committee status */
+    CommitteeStatus public committeeStatus;
 
     /** Committee members */
     mapping(address => address) public members;
@@ -60,6 +89,13 @@ contract Committee {
     {
         require(msg.sender == consensus,
             "Only the consensus contract can call this fucntion.");
+        _;
+    }
+
+    modifier isOpen()
+    {
+        require(committeeStatus == CommitteeStatus.Open,
+            "Committee formation must be open.");
         _;
     }
 
@@ -83,7 +119,9 @@ contract Committee {
             "Proposal must not be zero.");
 
         /** creator of committee is consensus */
+        /** committee created by Consensus contract */
         consensus = msg.sender;
+        committeeStatus = CommiteeStatus.Open;
 
         // initialize the members linked-list as the empty set
         members[SENTINEL_MEMBERS] = SENTINEL_MEMBERS;
@@ -98,22 +136,23 @@ contract Committee {
     function enterCommittee(address _validator, address _furtherMember)
         external
         onlyConsensus
+        isOpen
         returns (bool)
     {
         require(_validator != SENTINEL_MEMBERS,
-            "Validator address must not be sentinel.");
-        require(members[_validator] == address(0) ,
+            "Validator address must not be sentinel for committee member.");
+        require(members[_validator] == address(0),
             "Validator must not already have entered.");
         require(members[_furtherMember] != address(0),
             "Further validator must be in the committee.");
-        
+
         // calculate the dislocated distance of the validator to the proposal
         uint256 dValidator = distance(shuffle(_validator), proposal);
 
         // Sentinel is always at maximum distance
         uint256 dFurtherMember = SENTINEL_DISTANCE;
         if (_furtherMember != SENTINEL_MEMBERS) {
-            // (re-)calculate the dislocated distance of the further member to the proposal
+            // calculate the distance of the further member to the proposal
             dFurtherMember = distance(shuffle(_furtherMember), proposal);
         }
 
@@ -124,7 +163,7 @@ contract Committee {
         // loop over maximum size of committee; note, when providing the
         // correct furtherMember this loop should execute only once and break;
         // the loop provides fall-back for transaction re-ordering as multiple validators
-        // attempt to enter simultaneously.
+        // attempt to enter simultaneously and if the final furthertMember wouldn't have entered yet.
         address furtherMember = _furtherMember;
         for (uint256 i = 0; i < committeeSize; i++) {
             // get address of nearer member
@@ -137,24 +176,54 @@ contract Committee {
             }
 
             // calculate the distance of the preceding member, its distance should be less
-            // than the validator's however, correct if not the case.
+            // than the validator's distance, however, correct if not the case.
             uint256 dNearerMember = distance(shuffle(nearerMember), proposal);
             if (dNearerMember > dValidator) {
                 // validator is nearer to the proposal than the supposedly nearer validator,
-                // so move validator closer
+                // so move validator closer to the proposal
                 furtherMember = nearerMember;
             } else {
-                // validator has found its correct further validator
+                // validator has found its correct nearer and further member
                 insertMember(_validator, nearerMember, furtherMember);
                 return true;
             }
         }
+        // TODO: improve implementation to remove this assert;
+        // this line should be unreachable.
         assert(false);
     }
 
+    // once committee is filled, ie. reached committee size
+    // put up a deposit to seal committee; can be slashed by anyone
+    // presenting a validator that should have entered but didnt
+    /**
+     * Form committee when the validators closest to the proposal
+     * have been entered as members of the committee
+     */
+    function formCommittee ()
+        external
+        onlyMember
+    {
+        require(count == committeeSize,
+            "To close committee member count must equal committee size.");
+        
+    }
+
+
     /* Private functions */
 
-    /** 
+    /**
+     */
+    function slashMember(address _member)
+        private
+    {
+        require(members[_member] != address(0),
+            "Member must be in the committee to be slashed by committee.");
+        // TODO: remove member from committee? or is committee now invalid?
+        // TODO: implement consensus interface to slash from committee
+        // consensus.slashValidator(_member);
+    }
+    /**
      * Insert member into commitee
      * @dev important, this private function does *not* perform
      *      sanity checks anymore; must be done by caller
@@ -167,9 +236,10 @@ contract Committee {
         private
     {
         // note that we could check whether the member inserted would be
-        // popped off again; but also note that a sensible actor will never
-        // enter a validator that doesn't belong in the group, and so incurs
-        // his own cost if he adds an wrong member when the group is already full.
+        // popped off later when checking the count;
+        // but also note that a sensible actor will never
+        // enter a validator that doesn't belong in the group, and so the sender incurs
+        // his own cost if he adds a wrong member when the group is already full.
         members[_member] = _previousMember;
         members[_nextMember] = _member;
         increaseCount();
@@ -198,6 +268,7 @@ contract Committee {
         address furthestMember = members[SENTINEL_MEMBERS];
         if (furthestMember != SENTINEL_MEMBERS) { // linked-list is not empty
             address secondFurthestMember = members[furthestMember];
+            // remove furthestMember from linked-list
             members[SENTINEL_MEMBERS] = secondFurthestMember;
             delete members[furthestMember];
             count = count.sub(1);
@@ -210,6 +281,7 @@ contract Committee {
     {
         // return the dislocated position of the validator
         return keccak256(
+            // TODO: note abi.encodePacked seems unneccesary, is there an overhead?
             abi.encodePacked(
                 _validator,
                 dislocation
