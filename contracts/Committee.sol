@@ -30,12 +30,17 @@ contract Committee {
      * Committee status enum
      */
     enum CommitteeStatus {
+        // while open, validators can enter as members
         Open,
-        Formed,
-
-        //
+        // during cooldown, the member composition can
+        // be challenged
+        Cooldown,
+        // after unchallenged cooldown, the committee is active
+        Active,
+        // after voting completes the committee closes
         Closed,
-        // Committee has 
+        // committee can become invalid if successfully challenged
+        // during cooldown
         Invalid
     }
 
@@ -54,8 +59,8 @@ contract Committee {
 
     /**
       * Committee formation cooldown period allows for objections to be
-      * raised against the members entered into committee. After closing
-      *
+      * raised against the members entered into committee. After cooldown
+      * without objections the committee is active.
       */
     uint256 public constant COMMITTEE_FORMATION_COOLDOWN = uint256(10);
 
@@ -85,6 +90,18 @@ contract Committee {
      */
     uint256 public count;
 
+    /**
+     * store the block height at which the committee can activate.
+     * Height is set when cooldown commences.
+     */
+    uint256 public activationBlockHeight;
+
+    /**
+     * Store the member who initiated the cooldown, such that it
+     * can be slashed should the committee formation be challenged.
+     */
+    address public memberInitiatedCooldown;
+
     modifier onlyConsensus()
     {
         require(msg.sender == consensus,
@@ -92,10 +109,24 @@ contract Committee {
         _;
     }
 
+    modifier onlyMember()
+    {
+        require(members[msg.sender] != address(0),
+            "Only members can call this function.");
+        _;
+    }
+
     modifier isOpen()
     {
         require(committeeStatus == CommitteeStatus.Open,
             "Committee formation must be open.");
+        _;
+    }
+
+    modifier isCoolingDown()
+    {
+        require(committeeStatus == CommitteeStatus.Cooldown,
+            "Committee formation must be cooling down.");
         _;
     }
 
@@ -193,6 +224,43 @@ contract Committee {
         assert(false);
     }
 
+    /**
+     * Initiate cool down for committee during which objections can be raised
+     * for the members entered in the committee.
+     */
+    function cooldownCommittee()
+        external
+        onlyMember
+        isOpen
+    {
+        require(count == committeeSize,
+            "To close committee member count must equal committee size.");
+        assert(activationBlockHeight == 0);
+        assert(memberInitiatedCooldown == address(0));
+        memberInitiatedCooldown = msg.sender;
+        activationBlockHeight = block.number + COMMITTEE_FORMATION_COOLDOWN;
+        committeeStatus = CommitteeStatus.Cooldown;
+    }
+
+    /**
+     * Challenge committee members during cooldown period.
+     * Must be called over Consensus to assert excluded member is a validator.
+     * Present a member that isn't present in the committee but should have been.
+     */
+    function challengeCommittee(address _excludedMember)
+        external
+        onlyConsensus
+        isCoolingDown
+    {
+        require(members[_excludedMember] == address(0),
+            "Member should not already be in the committee.");
+        uint256 dBoundary = distance(shuffle(members[SENTINEL_MEMBERS]), proposal);
+        uint256 dExcludedMember = distance(shuffle(_excludedMember), proposal);
+        require(dExcludedMember < dBoundary,
+            "Member has been excluded only if distance to proposal is less than the furthest committee member.");
+        committeeStatus = CommitteeStatus.Invalid;
+        slashMember(memberInitiatedCooldown);
+    }
     // once committee is filled, ie. reached committee size
     // put up a deposit to seal committee; can be slashed by anyone
     // presenting a validator that should have entered but didnt
@@ -204,9 +272,7 @@ contract Committee {
         external
         onlyMember
     {
-        require(count == committeeSize,
-            "To close committee member count must equal committee size.");
-        
+
     }
 
 
