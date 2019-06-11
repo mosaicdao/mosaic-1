@@ -36,7 +36,10 @@ contract Committee {
         // be challenged
         Cooldown,
         // after unchallenged cooldown, the committee is active
-        Active,
+        // and accepts sealed commits
+        CommitPhase,
+        // reveal positions and count
+        RevealPhase,
         // after voting completes the committee closes
         Closed,
         // committee can become invalid if successfully challenged
@@ -62,7 +65,17 @@ contract Committee {
       * raised against the members entered into committee. After cooldown
       * without objections the committee is active.
       */
-    uint256 public constant COMMITTEE_FORMATION_COOLDOWN = uint256(10);
+    uint256 public constant COMMITTEE_FORMATION_COOLDOWN = uint256(50);
+
+    /**
+     * Timeout for accepting commits from members. About a day on Ethereum.
+     */
+    uint256 public constant COMMITTEE_COMMIT_PHASE_TIMEOUT = uint256(5760);
+
+    /**
+     * Timeout for revealing positions of members. About two hours on Ethereum.
+     */
+    uint256 public constant COMMITTEE_REVEAL_PHASE_TIMEOUT = uint256(480);
 
     /* Storage */
 
@@ -83,6 +96,9 @@ contract Committee {
 
     /** Committee members */
     mapping(address => address) public members;
+
+    /** Sealed commits submitted by members */
+    mapping(address => bytes32) public commits;
 
     /**
      * Committee members count
@@ -127,6 +143,20 @@ contract Committee {
     {
         require(committeeStatus == CommitteeStatus.Cooldown,
             "Committee formation must be cooling down.");
+        _;
+    }
+
+    modifier isInCommitPhase()
+    {
+        require(committeeStatus == CommitteeStatus.CommitPhase,
+            "Committee must be in the commit phase.");
+        _;
+    }
+
+    modifier isInRevealPhase()
+    {
+        require(committeeStatus == CommitteeStatus.RevealPhase,
+            "Committee must be in the reveal phase.");
         _;
     }
 
@@ -246,6 +276,8 @@ contract Committee {
      * Challenge committee members during cooldown period.
      * Must be called over Consensus to assert excluded member is a validator.
      * Present a member that isn't present in the committee but should have been.
+     * Any excluded member invalidates the committee and member who initiated
+     * cooldown wrongly will be slashed.
      */
     function challengeCommittee(address _excludedMember)
         external
@@ -261,20 +293,39 @@ contract Committee {
         committeeStatus = CommitteeStatus.Invalid;
         slashMember(memberInitiatedCooldown);
     }
-    // once committee is filled, ie. reached committee size
-    // put up a deposit to seal committee; can be slashed by anyone
-    // presenting a validator that should have entered but didnt
+
     /**
-     * Form committee when the validators closest to the proposal
-     * have been entered as members of the committee
+     * Activate committee after fornmation cooled down.
+     * After activation commits can be submitted
      */
-    function formCommittee ()
+    function activateCommittee ()
         external
         onlyMember
+        isCoolingDown
     {
-
+        require(block.number > activationBlockHeight,
+            "Committee formation must have cooled down before activation.");
+        committeeStatus = CommitteeStatus.CommitPhase;
     }
 
+    /**
+     * Members can submit their sealed commit
+     */
+    function submitSealedCommit(bytes32 _sealedCommit)
+        external
+        onlyMember
+        isInCommitPhase
+    {
+        require(commits[msg.sender] == bytes32(0),
+            "Member can only commit once.");
+        commits[msg.sender] = _sealedCommit;
+    }
+
+    /**
+     * continue:
+     * 1. auto switch to reveal phase when all members have submitted
+     * 2. reveal positions, for now with simple yes / no / data-unavailable
+     */
 
     /* Private functions */
 
