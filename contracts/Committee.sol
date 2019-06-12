@@ -104,13 +104,21 @@ contract Committee {
      * Committee members count
      * counts members entered and reaches maximum at committeSize
      */
-    uint256 public count;
+    uint256 public count; // TODO: rename memberCount
+
+    /** submission count */
+    uint256 public submissionCount;
 
     /**
      * store the block height at which the committee can activate.
      * Height is set when cooldown commences.
      */
     uint256 public activationBlockHeight;
+
+    /**
+     * store block height at which commits can no longer be submitted.
+     */
+    uint256 public commitTimeOutBlockHeight;
 
     /**
      * Store the member who initiated the cooldown, such that it
@@ -305,7 +313,9 @@ contract Committee {
     {
         require(block.number > activationBlockHeight,
             "Committee formation must have cooled down before activation.");
+        assert(commitTimeOutBlockHeight == 0);
         committeeStatus = CommitteeStatus.CommitPhase;
+        commitTimeOutBlockHeight = block.number + COMMITTEE_COMMIT_PHASE_TIMEOUT;
     }
 
     /**
@@ -316,18 +326,43 @@ contract Committee {
         onlyMember
         isInCommitPhase
     {
+        require(_sealedCommit != bytes32(0),
+            "Sealed commit cannot be null.");
         require(commits[msg.sender] == bytes32(0),
             "Member can only commit once.");
         commits[msg.sender] = _sealedCommit;
+        submissionCount = submissionCount.add(1);
+        tryStartRevealPhase();
+    }
+
+    /**
+     * Allow explicit closure of commit phase to trigger timeout condition
+     */
+    function closeCommitPhase()
+        external
+    {
+        tryStartRevealPhase();
     }
 
     /**
      * continue:
-     * 1. auto switch to reveal phase when all members have submitted
+     * 1. DONE: auto switch to reveal phase when all members have submitted
      * 2. reveal positions, for now with simple yes / no / data-unavailable
      */
 
     /* Private functions */
+
+    /**
+     * Try to start the reveal phase by checking submission count or timeout.
+     */
+    function tryStartRevealPhase()
+        private
+    {
+        if (submissionCount == count ||
+            block.number > commitTimeOutBlockHeight) {
+            committeeStatus = CommitteeStatus.RevealPhase;
+        }
+    }
 
     /**
      */
