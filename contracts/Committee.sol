@@ -77,6 +77,17 @@ contract Committee {
      */
     uint256 public constant COMMITTEE_REVEAL_PHASE_TIMEOUT = uint256(480);
 
+    /**
+     * Define a super-majority fraction used for reaching consensus;
+     */
+    uint256 public constant COMMITTEE_SUPER_MAJORITY_NUMERATOR = uint256(2);
+    uint256 public constant COMMITTEE_SUPER_MAJORITY_DENOMINATOR = uint256(3);
+
+    /**
+     */
+    bytes32 public constant COMMIT_DATA_UNAVAILABLE = keccak256("COMMIT_DATA_UNAVAILABLE");
+    bytes32 public constant COMMIT_REJECT_PROPOSAL = keccak256("COMMIT_REJECT_PROPOSAL");
+
     /* Storage */
 
     /** Consensus contract for which this committee was formed. */
@@ -84,6 +95,27 @@ contract Committee {
 
     /** Committee size */
     uint256 public committeeSize;
+
+    /** Committee super majority */
+    uint256 public quorum;
+
+    /**
+     * Committee members count
+     * counts members entered and reaches maximum at committeSize
+     */
+    uint256 public count; // TODO: rename memberCount
+
+    /** submission count */
+    uint256 public submissionCount;
+
+    /** positions revealed count */
+    uint256 public totalPositionsCount;
+
+    /** count positions taken */
+    mapping(bytes32 => uint256) public positionCounts;
+
+    /** Track array of positions taken */
+    bytes32[] public positionsTaken;
 
     /** Proposal under consideration */
     bytes32 proposal;
@@ -100,14 +132,8 @@ contract Committee {
     /** Sealed commits submitted by members */
     mapping(address => bytes32) public commits;
 
-    /**
-     * Committee members count
-     * counts members entered and reaches maximum at committeSize
-     */
-    uint256 public count; // TODO: rename memberCount
-
-    /** submission count */
-    uint256 public submissionCount;
+    /** Public positions taken by members */
+    mapping(address => bytes32) public positions;
 
     /**
      * store the block height at which the committee can activate.
@@ -180,12 +206,14 @@ contract Committee {
     )
         public
     {
-        require(_committeeSize != 0,
-            "Committee size must not be zero.");
+        require(_committeeSize >= 3,
+            "Committee size must not smaller than three.");
         require(_dislocation != 0,
             "Dislocation must not be zero.");
         require(_proposal != 0,
             "Proposal must not be zero.");
+        // ensure constants are for a strict majority (Remove)
+        assert(2 * COMMITTEE_SUPER_MAJORITY_NUMERATOR > COMMITTEE_SUPER_MAJORITY_DENOMINATOR);
 
         /** creator of committee is consensus */
         /** committee created by Consensus contract */
@@ -197,6 +225,9 @@ contract Committee {
         committeeSize = _committeeSize;
         dislocation = _dislocation;
         proposal = _proposal;
+
+        quorum = _committeeSize * COMMITTEE_SUPER_MAJORITY_NUMERATOR /
+            COMMITTEE_SUPER_MAJORITY_DENOMINATOR;
     }
 
     /* External functions */
@@ -344,9 +375,32 @@ contract Committee {
         tryStartRevealPhase();
     }
 
+    function revealCommit(bytes32 _position, bytes32 _salt)
+        external
+        onlyMember
+        isInRevealPhase
+    {
+        bytes32 commit = commits[msg.sender];
+        require(commit != bytes32(0),
+            "Commit cannot be null.");
+        require(_position != bytes32(0),
+            "Position cannot be null.");
+        require(commit == sealPosition(_position, _salt),
+            "Position must match previously submitted commit.");
+        // note: _position can express among others data-unavailable, disagreement
+        //       for PoC just register whether _position equals proposition
+        delete commits[msg.sender];
+        positions[msg.sender] = _position;
+        positionCounts[_position] = positionCounts[_position].add(1);
+        if (positionCounts[_position] == 1) {
+            // for each newly seen position, push it to the array
+            positionsTaken.push(_position);
+        }
+        totalPositionsCount = totalPositionsCount.add(1);
+    }
+
     /**
      * continue:
-     * 1. DONE: auto switch to reveal phase when all members have submitted
      * 2. reveal positions, for now with simple yes / no / data-unavailable
      */
 
@@ -448,5 +502,20 @@ contract Committee {
     {
         // return _a XOR _b as a distance
         distance_ = uint256(_a ^ _b);
+    }
+
+    /** use the salt to seal the position */
+    function sealPosition(bytes32 _position, bytes32 _salt)
+        private
+        returns (bytes32)
+    {
+        // return the sealed position
+        return keccak256(
+            // TODO: note abi.encodePacked seems unneccesary, is there an overhead?
+            abi.encodePacked(
+                _position,
+                _salt
+            )
+        );
     }
 }
