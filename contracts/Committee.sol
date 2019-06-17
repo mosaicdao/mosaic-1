@@ -121,10 +121,10 @@ contract Committee {
     bytes32[] public positionsTaken;
 
     /** Proposal under consideration */
-    bytes32 proposal;
+    bytes32 public proposal;
 
     /** Shuffle validators in hashed space with dislocation */
-    bytes32 dislocation;
+    bytes32 public dislocation;
 
     /** Committee status */
     CommitteeStatus public committeeStatus;
@@ -517,7 +517,7 @@ contract Committee {
     }
 
     function shuffle(address _validator)
-        private
+        public
         view
         returns (bytes32)
     {

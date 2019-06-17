@@ -27,21 +27,21 @@ async function createCommittee(committeeSize, dislocation, proposal) {
   return committee;
 }
 
-function distanceFromProposal(dislocation, account, proposal) {
+function distanceToProposal(dislocation, account, proposal) {
   return distance(shuffleAccount(dislocation, account), proposal);
 }
 
 function shuffleAccount(dislocation, account) {
   return web3.utils.soliditySha3(
-    { t: 'bytes32', v: account },
+    { t: 'address', v: account },
     { t: 'bytes32', v: dislocation },
   );
 }
 
 function distance(h1, h2) {
   // create BN from hashes
-  var a = new BN.BigInteger(h1, 16);
-  var b = new BN.BigInteger(h2, 16);
+  var a = new BN(h1, 16);
+  var b = new BN(h2, 16);
   // return XOR as big number
   return a.xor(b);
 }
@@ -50,5 +50,9 @@ module.exports = {
 
   createCommittee,
 
-  distanceFromProposal,
+  shuffleAccount,
+
+  distance,
+
+  distanceToProposal,
 };

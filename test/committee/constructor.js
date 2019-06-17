@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+'use strict';
+
 const BN = require('bn.js');
 const web3 = require('../test_lib/web3.js');
 const CommitteeUtils = require('./utils.js');
@@ -34,6 +36,20 @@ contract('Committee::constructor', (accounts) => {
       committeeConsensus == accounts[0],
       true,
       `Consensus contract is set to ${committeeConsensus} and is not ${accounts[0]}.`,
+    );
+
+    const committeeProposal = await committee.proposal.call();
+    assert.strictEqual(
+      committeeProposal == proposal,
+      true,
+      `Proposals don't match.`
+    );
+
+    const committeeDislocation = await committee.dislocation.call();
+    assert.strictEqual(
+      committeeDislocation == dislocation,
+      true,
+      `Dislocation doesn't match.`
     );
   });
 
