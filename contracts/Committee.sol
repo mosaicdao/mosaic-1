@@ -430,6 +430,14 @@ contract Committee {
         return positionCounts[proposal] >= quorum;
     }
 
+    function distanceToProposal(address _account)
+        external
+        view
+        returns (uint256)
+    {
+        return distance(shuffle(_account), proposal);
+    }
+
     /* Private functions */
 
     /**

@@ -14,26 +14,16 @@
 
 const BN = require('bn.js');
 const web3 = require('../test_lib/web3.js');
-const Utils = require('../test_lib/utils');
+const CommitteeUtils = require('./utils.js');
 
-const Committee = artifacts.require('Committee');
+contract('Committee::constructor', (accounts) => {
+  let committeeSize = new BN(10);
+  let dislocation = web3.utils.sha3('dislocation');
+  let proposal = web3.utils.sha3('proposal');
 
-contract('Committee.constructor()', (accounts) => {
-  let committeeSize;
-  let dislocation;
-  let proposal;
-  let consensus;
+  it('should construct given sensible parameters', async () => {
 
-  beforeEach(async () => {
-    committeeSize = new BN(10);
-    dislocation = web3.utils.sha3('dislocation');
-    proposal = web3.utils.sha3('proposal');
-    consensus = accounts[1];
-  });
-
-  it('should construct with sensible parameters', async () => {
-
-    const committee = await Committee.new(
+    const committee = await CommitteeUtils.createCommittee(
       committeeSize,
       dislocation,
       proposal,
