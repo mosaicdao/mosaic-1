@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const Commitee = artifacts.require('./Committee.sol');
 const BN = require('bn.js');
 const web3 = require('../test_lib/web3.js');
 const Utils = require('../test_lib/utils');
 
-const NullAddress = Utils.NULL_ADDRESS;
+const Committee = artifacts.require('Committee');
 
 contract('Committee.constructor()', (accounts) => {
   let committeeSize;
@@ -34,15 +33,15 @@ contract('Committee.constructor()', (accounts) => {
 
   it('should construct with sensible parameters', async () => {
 
-    committee = await Committee.new(
+    const committee = await Committee.new(
       committeeSize,
       dislocation,
       proposal,
     );
 
-    const committeeConsensus = await committee.consenus.call();
+    const committeeConsensus = await committee.consensus.call();
     assert.strictEqual(
-      committeeConsensus.eq(accounts[0]),
+      committeeConsensus == accounts[0],
       true,
       `Consensus contract is set to ${committeeConsensus} and is not ${accounts[0]}.`,
     );

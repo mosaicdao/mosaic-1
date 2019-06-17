@@ -18,9 +18,17 @@
     "url": "https://github.com/openst/compute/issues"
   },
   "homepage": "https://github.com/openst/compute#readme",
-  "dependencies": {
+  "devDependencies": {
+    "assert": "^2.0.0",
+    "bn.js": "^4.11.8",
+    "eslint": "^5.16.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.17.3",
+    "ethlint": "^1.2.4",
     "ganache-cli": "^6.4.4",
-    "openzeppelin-solidity": "2.1.1",
-    "truffle": "beta"
+    "openzeppelin-solidity": "^2.1.1",
+    "solium": "^1.2.4",
+    "truffle": "^5.0.0-beta.2",
+    "web3": "^1.0.0-beta.55"
   }
 }
