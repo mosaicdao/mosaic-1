@@ -222,9 +222,9 @@ contract Consensus {
     /** enter a validator into the committee */
     // at submission, future blockheight is set to function as seed
     // first entry in window of 256 most recent blocks containing assigned block
-    function enterCommittee(address _validator, address _closerValidator)
+    function enterCommittee(address /*_validator*/, address /*_closerValidator*/)
         external
-
+        view
         returns (bool)
     {
         require(committeeFormationHash != 0,

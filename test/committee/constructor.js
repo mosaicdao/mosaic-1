@@ -20,86 +20,84 @@ const Utils = require('../test_lib/utils');
 const NullAddress = Utils.NULL_ADDRESS;
 
 contract('Committee.constructor()', (accounts) => {
-  let remoteChainId;
-  let blockHeight;
-  let stateRoot;
-  let maxNumberOfStateRoots;
-  let organization;
-  let anchor;
+  let committeeSize;
+  let dislocation;
+  let proposal;
+  let consensus;
 
   beforeEach(async () => {
-    remoteChainId = new BN(1410);
-    blockHeight = new BN(5);
-    stateRoot = web3.utils.sha3('dummy_state_root');
-    maxNumberOfStateRoots = new BN(10);
-    organization = accounts[1];
+    committeeSize = new BN(10);
+    dislocation = web3.utils.sha3('dislocation');
+    proposal = web3.utils.sha3('proposal');
+    consensus = accounts[1];
   });
 
-  it('should fail when remote chain id is zero', async () => {
-    remoteChainId = new BN(0);
+  it('should construct with sensible parameters', async () => {
 
-    await Utils.expectRevert(
-      Anchor.new(
-        remoteChainId,
-        blockHeight,
-        stateRoot,
-        maxNumberOfStateRoots,
-        organization,
-      ),
-      'Remote chain Id must not be 0.',
-    );
-  });
-
-  it('should fail when organization address is zero', async () => {
-    organization = NullAddress;
-
-    await Utils.expectRevert(
-      Anchor.new(
-        remoteChainId,
-        blockHeight,
-        stateRoot,
-        maxNumberOfStateRoots,
-        organization,
-      ),
-      'Organization contract address must not be zero.',
-    );
-  });
-
-  it('should pass with correct params', async () => {
-    anchor = await Anchor.new(
-      remoteChainId,
-      blockHeight,
-      stateRoot,
-      maxNumberOfStateRoots,
-      organization,
+    committee = await Committee.new(
+      committeeSize,
+      dislocation,
+      proposal,
     );
 
-    const chainId = await anchor.getRemoteChainId.call();
+    const committeeConsensus = await committee.consenus.call();
     assert.strictEqual(
-      remoteChainId.eq(chainId),
+      committeeConsensus.eq(accounts[0]),
       true,
-      `Remote chain id from the contract must be ${remoteChainId}.`,
-    );
-
-    const latestBlockHeight = await anchor.getLatestStateRootBlockHeight.call();
-    assert.strictEqual(
-      blockHeight.eq(latestBlockHeight),
-      true,
-      `Latest block height from the contract must be ${blockHeight}.`,
-    );
-
-    const latestStateRoot = await anchor.getStateRoot.call(blockHeight);
-    assert.strictEqual(
-      latestStateRoot,
-      stateRoot,
-      `Latest state root from the contract must be ${stateRoot}.`,
-    );
-
-    const organizationAddress = await anchor.organization.call();
-    assert.strictEqual(
-      organizationAddress,
-      organization,
-      `Organization address from the contract must be ${organization}.`,
+      `Consensus contract is set to ${committeeConsensus} and is not ${accounts[0]}.`,
     );
   });
+
+  // it('should fail when organization address is zero', async () => {
+  //   organization = NullAddress;
+
+  //   await Utils.expectRevert(
+  //     Anchor.new(
+  //       remoteChainId,
+  //       blockHeight,
+  //       stateRoot,
+  //       maxNumberOfStateRoots,
+  //       organization,
+  //     ),
+  //     'Organization contract address must not be zero.',
+  //   );
+  // });
+
+  // it('should pass with correct params', async () => {
+  //   anchor = await Anchor.new(
+  //     remoteChainId,
+  //     blockHeight,
+  //     stateRoot,
+  //     maxNumberOfStateRoots,
+  //     organization,
+  //   );
+
+  //   const chainId = await anchor.getRemoteChainId.call();
+  //   assert.strictEqual(
+  //     remoteChainId.eq(chainId),
+  //     true,
+  //     `Remote chain id from the contract must be ${remoteChainId}.`,
+  //   );
+
+  //   const latestBlockHeight = await anchor.getLatestStateRootBlockHeight.call();
+  //   assert.strictEqual(
+  //     blockHeight.eq(latestBlockHeight),
+  //     true,
+  //     `Latest block height from the contract must be ${blockHeight}.`,
+  //   );
+
+  //   const latestStateRoot = await anchor.getStateRoot.call(blockHeight);
+  //   assert.strictEqual(
+  //     latestStateRoot,
+  //     stateRoot,
+  //     `Latest state root from the contract must be ${stateRoot}.`,
+  //   );
+
+  //   const organizationAddress = await anchor.organization.call();
+  //   assert.strictEqual(
+  //     organizationAddress,
+  //     organization,
+  //     `Organization address from the contract must be ${organization}.`,
+  //   );
+  // });
 });

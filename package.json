@@ -4,20 +4,22 @@
   "description": "compute",
   "main": "index.js",
   "scripts": {
-    "compile": "./node_modules/.bin/truffle compile",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "compile": "./node_modules/.bin/truffle compile --all --reset",
+    "test:contracts": "./node_modules/.bin/truffle test",
+    "ganache-cli": "./tools/run_ganache_cli.sh"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/benjaminbollen/compute.git"
+    "url": "git+https://github.com/openst/compute.git"
   },
   "author": "Benjamin Bollen",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/benjaminbollen/compute/issues"
+    "url": "https://github.com/openst/compute/issues"
   },
-  "homepage": "https://github.com/benjaminbollen/compute#readme",
+  "homepage": "https://github.com/openst/compute#readme",
   "dependencies": {
+    "ganache-cli": "^6.4.4",
     "openzeppelin-solidity": "2.1.1",
     "truffle": "beta"
   }

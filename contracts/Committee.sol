@@ -114,6 +114,9 @@ contract Committee {
     /** count positions taken */
     mapping(bytes32 => uint256) public positionCounts;
 
+    /** Track position for which a quorum has been reached. */
+    bytes32 public committeeDecision;
+
     /** Track array of positions taken */
     bytes32[] public positionsTaken;
 
@@ -142,9 +145,14 @@ contract Committee {
     uint256 public activationBlockHeight;
 
     /**
-     * store block height at which commits can no longer be submitted.
+     * store the block height at which commits can no longer be submitted.
      */
     uint256 public commitTimeOutBlockHeight;
+
+    /**
+     * store the block height at which submitted commits can no longer be revealed.
+     */
+    uint256 public revealTimeOutBlockHeight;
 
     /**
      * Store the member who initiated the cooldown, such that it
@@ -194,6 +202,13 @@ contract Committee {
         _;
     }
 
+    modifier isDecided()
+    {
+        require(committeeDecision != bytes32(0),
+            "Committee must have reached a quorum decision.");
+        _;
+    }
+
     /* Constructor */
 
     /**
@@ -218,7 +233,7 @@ contract Committee {
         /** creator of committee is consensus */
         /** committee created by Consensus contract */
         consensus = msg.sender;
-        committeeStatus = CommiteeStatus.Open;
+        committeeStatus = CommitteeStatus.Open;
 
         // initialize the members linked-list as the empty set
         members[SENTINEL_MEMBERS] = SENTINEL_MEMBERS;
@@ -396,13 +411,24 @@ contract Committee {
             // for each newly seen position, push it to the array
             positionsTaken.push(_position);
         }
+        if (positionCounts[_position] >= quorum) {
+            // sanity check, there should not be more than one position
+            // that can achieve quorum
+            assert(committeeDecision == bytes32(0) ||
+                committeeDecision == _position);
+            positionsTaken.push(_position);
+        }
         totalPositionsCount = totalPositionsCount.add(1);
     }
 
-    /**
-     * continue:
-     * 2. reveal positions, for now with simple yes / no / data-unavailable
-     */
+    function proposalAccepted()
+        external
+        view
+        isDecided
+        returns (bool)
+    {
+        return positionCounts[proposal] >= quorum;
+    }
 
     /* Private functions */
 
@@ -415,6 +441,7 @@ contract Committee {
         if (submissionCount == count ||
             block.number > commitTimeOutBlockHeight) {
             committeeStatus = CommitteeStatus.RevealPhase;
+            revealTimeOutBlockHeight = block.number + COMMITTEE_REVEAL_PHASE_TIMEOUT;
         }
     }
 
@@ -422,6 +449,7 @@ contract Committee {
      */
     function slashMember(address _member)
         private
+        view
     {
         require(members[_member] != address(0),
             "Member must be in the committee to be slashed by committee.");
@@ -453,7 +481,6 @@ contract Committee {
 
     function increaseCount()
         private
-        returns (uint256 count_)
     {
         count = count.add(1);
         if (count > committeeSize) {
@@ -483,6 +510,7 @@ contract Committee {
 
     function shuffle(address _validator)
         private
+        view
         returns (bytes32)
     {
         // return the dislocated position of the validator
@@ -498,6 +526,7 @@ contract Committee {
     /** Distance metric for sorting validators */
     function distance(bytes32 _a, bytes32 _b)
         private
+        pure
         returns (uint256 distance_)
     {
         // return _a XOR _b as a distance
@@ -507,6 +536,7 @@ contract Committee {
     /** use the salt to seal the position */
     function sealPosition(bytes32 _position, bytes32 _salt)
         private
+        pure
         returns (bytes32)
     {
         // return the sealed position
