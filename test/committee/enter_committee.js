@@ -12,8 +12,44 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+'use strict';
+
+const BN = require('bn.js');
+const web3 = require('../test_lib/web3.js');
 const CommitteeUtils = require('./utils.js');
 
+function compare(a, b) {
+    return a - b;
+};
+
 contract('Committee:enter', (accounts) => {
+  let committeeSize = new BN(50);
+  let dislocation = web3.utils.sha3('dislocation');
+  let proposal = web3.utils.sha3('proposal');
+  let numberOfValidators = 999;
   
+  it('should enter validators in the correct order', async() => {
+    const committee = await CommitteeUtils.createCommittee(
+      committeeSize,
+      dislocation,
+      proposal,
+    );
+    
+    // calculate off-chain all distances for all validators to the proposal
+    let dist = [await committee.SENTINEL_DISTANCE.call()];
+    console.log(dist[0]);
+
+    for (let i = 1; i < numberOfValidators; i++) {
+      dist.push(CommitteeUtils.distanceToProposal(dislocation, accounts[i], proposal))
+    }
+    dist.sort(compare);
+    console.log(dist[997]);
+  });
+
+
+//   it('should enter validators in order')
+//   for (let i = 1; i < numberOfValidators; i++) {
+//     await committee
+//   };
+
 });

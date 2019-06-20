@@ -58,7 +58,7 @@ contract Committee {
     /**
      * Sentinel set to maximum distance removed from problem
      */
-    uint256 public constant SENTINEL_DISTANCE = uint256(0x1111111111111111111111111111111111111111111111111111111111111111);
+    uint256 public constant SENTINEL_DISTANCE = uint256(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
 
     /**
       * Committee formation cooldown period allows for objections to be
