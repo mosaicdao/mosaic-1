@@ -303,9 +303,16 @@ contract Committee {
                 return true;
             }
         }
+
+        // if (furtherMember == SENTINEL_MEMBERS) {
+        //     insertMember(_validator, SENTINEL_MEMBERS, furtherMember);
+        //     return true;
+        // }
+
         // TODO: improve implementation to remove this assert;
         // this line should be unreachable.
         assert(false);
+        // return false;
     }
 
     /**
