@@ -23,12 +23,12 @@ function compare(a, b) {
 };
 
 contract('Committee:enter', async (accounts) => {
-  let committeeSize = 50;
+  let committeeSize = 500;
   let committeeSizeBN = new BN(committeeSize);
-  let numberOfValidators = 999;
+  let numberOfValidators = 9999;
   let consensus = accounts[0];
   
-  it('should enter only correct validators in the correct order', async () => {
+  it.skip('should enter only correct validators in the correct order', async () => {
     let dislocation = web3.utils.sha3('dislocation1');
     let proposal = web3.utils.sha3('proposal1');
 
@@ -93,9 +93,9 @@ contract('Committee:enter', async (accounts) => {
     );
   });
 
-  it('should enter corrects validators in random order', async () => {
-    let dislocation = web3.utils.sha3('dislocation3');
-    let proposal = web3.utils.sha3('proposal3');
+  it.skip('should enter corrects validators in reverse order', async () => {
+    let dislocation = web3.utils.sha3('dislocation2');
+    let proposal = web3.utils.sha3('proposal2');
 
     const committee = await CommitteeUtils.createCommittee(
       committeeSizeBN,
@@ -158,7 +158,7 @@ contract('Committee:enter', async (accounts) => {
     );
   });
 
-  it.skip('should enter any validator in random order', async () => {
+  it('should enter any validator in random order', async () => {
     let dislocation = web3.utils.sha3('dislocation3');
     let proposal = web3.utils.sha3('proposal3');
 
@@ -201,30 +201,43 @@ contract('Committee:enter', async (accounts) => {
           from: consensus,
         },
       );
+
+    //   let currentCommittee = await committee.getMembers.call();
+    //   let previousDistance = sentinelDistance;
+    //   const nullBN = new BN(0);
+    //   currentCommittee.forEach(function (member, pos) {
+    //     let currentDistance = CommitteeUtils.distanceToProposal(dislocation, member, proposal);
+    //     assert.strictEqual(
+    //       previousDistance - currentDistance > nullBN,
+    //       true,
+    //       `Distance must decrease`,
+    //     );
+    //     previousDistance = currentDistance;
+    //   });
     };
 
-    // // note: only the correct closest member should remain in the ordered-linked list
-    // // excluded members must have been popped from the members list.
+    // note: only the correct closest member should remain in the ordered-linked list
+    // excluded members must have been popped from the members list.
 
-    // // assert all members in the committee match the distance ordered validators
-    // for (let i = 0; i < committeeSize-1; i++) {
-    //   // get the next further member in the committee
-    //   // note: the linked-list refers to the closer member
-    //   let member = await committee.members.call(dist[i + 1].address);
-    //   assert.strictEqual(
-    //     member,
-    //     dist[i].address,
-    //     `Member ${i} is ${dist[i].address}, but was expected to be ${member}`,
-    //   );
-    // };
+    // assert all members in the committee match the distance ordered validators
+    for (let i = 0; i < committeeSize-1; i++) {
+      // get the next further member in the committee
+      // note: the linked-list refers to the closer member
+      let member = await committee.members.call(dist[i + 1].address);
+      assert.strictEqual(
+        member,
+        dist[i].address,
+        `Member ${i} is ${dist[i].address}, but was expected to be ${member}`,
+      );
+    };
 
-    // // assert we've reached the end of the linked-list
-    // let member = await committee.members.call(sentinelMembers);
-    // assert.strictEqual(
-    //   member,
-    //   dist[committeeSize - 1].address,
-    //   `The furthest member ${dist[committeeSize - 1].address} should be ` +
-    //     `given by Sentinel but instead ${member} was returned.`,
-    // );
+    // assert we've reached the end of the linked-list
+    let member = await committee.members.call(sentinelMembers);
+    assert.strictEqual(
+      member,
+      dist[committeeSize - 1].address,
+      `The furthest member ${dist[committeeSize - 1].address} should be ` +
+        `given by Sentinel but instead ${member} was returned.`,
+    );
   });
 });

@@ -274,44 +274,64 @@ contract Committee {
         require(dValidator < dFurtherMember,
             "Validator must be nearer than further away present validator.");
 
-        // check whether other members are further removed.
-        // loop over maximum size of committee; note, when providing the
-        // correct furtherMember this loop should execute only once and break;
-        // the loop provides fall-back for transaction re-ordering as multiple validators
-        // attempt to enter simultaneously and if the final furthertMember wouldn't have entered yet.
         address furtherMember = _furtherMember;
-        for (uint256 i = 0; i < committeeSize; i++) {
-            // get address of nearer member
-            address nearerMember = members[furtherMember];
-            if (nearerMember == SENTINEL_MEMBERS) {
-                // validator is nearest to proposal currently in the committee;
-                // enter validator as a member and return
-                insertMember(_validator, SENTINEL_MEMBERS, furtherMember);
-                return true;
-            }
-
-            // calculate the distance of the preceding member, its distance should be less
+        address nearerMember = members[_furtherMember];
+        while (nearerMember != SENTINEL_MEMBERS) {
+            // calculate the distance of the nearer member, its distance should be less
             // than the validator's distance, however, correct if not the case.
             uint256 dNearerMember = distance(shuffle(nearerMember), proposal);
             if (dNearerMember > dValidator) {
                 // validator is nearer to the proposal than the supposedly nearer validator,
                 // so move validator closer to the proposal
                 furtherMember = nearerMember;
+                nearerMember = members[nearerMember];
             } else {
                 // validator has found its correct nearer and further member
+                // insertMember will pop members beyond committee size
                 insertMember(_validator, nearerMember, furtherMember);
                 return true;
             }
         }
 
-        // if (furtherMember == SENTINEL_MEMBERS) {
-        //     insertMember(_validator, SENTINEL_MEMBERS, furtherMember);
+        insertMember(_validator, SENTINEL_MEMBERS, furtherMember);
+        return true;
+        // check whether other members are further removed.
+        // loop over maximum size of committee; note, when providing the
+        // correct furtherMember this loop should execute only once and break;
+        // the loop provides fall-back for transaction re-ordering as multiple validators
+        // attempt to enter simultaneously and if the final furthertMember wouldn't have entered yet.
+        // address furtherMember = _furtherMember;
+        // for (uint256 i = 0; i < committeeSize; i++) {
+        //     // get address of nearer member
+        //     address nearerMember = members[furtherMember];
+        //     if (nearerMember == SENTINEL_MEMBERS) {
+        //         // validator is nearest to proposal currently in the committee;
+        //         // enter validator as a member and return
+        //         insertMember(_validator, SENTINEL_MEMBERS, furtherMember);
+        //         return true;
+        //     }
+
+        //     // calculate the distance of the preceding member, its distance should be less
+        //     // than the validator's distance, however, correct if not the case.
+        //     uint256 dNearerMember = distance(shuffle(nearerMember), proposal);
+        //     if (dNearerMember > dValidator) {
+        //         // validator is nearer to the proposal than the supposedly nearer validator,
+        //         // so move validator closer to the proposal
+        //         furtherMember = nearerMember;
+        //     } else {
+        //         // validator has found its correct nearer and further member
+        //         insertMember(_validator, nearerMember, furtherMember);
+        //         return true;
+        //     }
+        // }
+
+        // address nearestMember = members[furtherMember];
+        // uint256 dNearestMember = distance(shuffle(nearestMember), proposal);
+        // if (dNearestMember > dValidator) {
+        //     insertMember(_validator, SENTINEL_MEMBERS, nearestMember);
         //     return true;
         // }
 
-        // TODO: improve implementation to remove this assert;
-        // this line should be unreachable.
-        assert(false);
         // return false;
     }
 
@@ -443,6 +463,30 @@ contract Committee {
         returns (uint256)
     {
         return distance(shuffle(_account), proposal);
+    }
+
+    function getMembers()
+        external
+        view
+        returns (address[] memory)
+    {
+        uint256 c = 0;
+        address currentMember = members[SENTINEL_MEMBERS];
+        while(currentMember != SENTINEL_MEMBERS) {
+            currentMember = members[currentMember];
+            c ++;
+        }
+        assert(c == count);
+        address[] memory array = new address[](c);
+
+        c = 0;
+        currentMember = members[SENTINEL_MEMBERS];
+        while(currentMember != SENTINEL_MEMBERS) {
+            array[c] = currentMember;
+            currentMember = members[currentMember];
+            c ++;
+        }
+        return array;
     }
 
     /* Private functions */
