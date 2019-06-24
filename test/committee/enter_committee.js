@@ -23,12 +23,12 @@ function compare(a, b) {
 };
 
 contract('Committee:enter', async (accounts) => {
-  let committeeSize = 500;
+  let committeeSize = 50;
   let committeeSizeBN = new BN(committeeSize);
-  let numberOfValidators = 9999;
+  let numberOfValidators = 299;
   let consensus = accounts[0];
   
-  it.skip('should enter only correct validators in the correct order', async () => {
+  it('should enter only correct validators in the correct order', async () => {
     let dislocation = web3.utils.sha3('dislocation1');
     let proposal = web3.utils.sha3('proposal1');
 
@@ -93,7 +93,7 @@ contract('Committee:enter', async (accounts) => {
     );
   });
 
-  it.skip('should enter corrects validators in reverse order', async () => {
+  it('should enter corrects validators in reverse order', async () => {
     let dislocation = web3.utils.sha3('dislocation2');
     let proposal = web3.utils.sha3('proposal2');
 

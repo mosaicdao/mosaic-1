@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "compile": "./node_modules/.bin/truffle compile --all --reset",
-    "test:contracts": "./node_modules/.bin/truffle test --timeout 1000000000",
+    "test:contracts": "./node_modules/.bin/truffle test",
     "ganache-cli": "./tools/run_ganache_cli.sh"
   },
   "repository": {
