@@ -22,29 +22,7 @@ contract Consensus {
 
     using SafeMath for uint256;
 
-    enum RoundStatus {
-        /** Initial state after completion of previous commit */
-        Committed,
 
-        /** Proposal has been submitted */
-        Proposed,
-
-        /** Proposal has been validated */
-        Validated,
-
-        /** Committee for proposal has been formed */
-        CommitteeFormed,
-
-        /** Proposal has been precommitted to */
-        Precommitted,
-
-        /** Precommits have been revealed */
-        Revealed
-    }
-
-
-    /** Sentinel pointer for marking beginning and ending of circular linked-list of validators */
-    address public constant SENTINEL_VALIDATORS = address(0x1);
 
     /** Committee formation block delay */
     uint256 public constant COMMITTEE_FORMATION_DELAY = uint256(35);

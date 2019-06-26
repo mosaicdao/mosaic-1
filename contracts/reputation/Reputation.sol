@@ -15,7 +15,7 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 
 import "../EIP20I.sol";
-import "../consensus/ConsensusModule";
+import "../consensus/ConsensusModule.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract Reputation is ConsensusModule {
@@ -54,17 +54,39 @@ contract Reputation is ConsensusModule {
     mapping(address => ValidatorStatus) public status;
 
     /** Withdrawal address */
-    mapping(address => address) public withdrawalAddresses;
+    mapping(address => address) public withdrawalAddress;
 
     /** Earned rewards */
-    mapping(address => uint256) public rewards;
+    mapping(address => uint256) public reward;
+
+    /** Reputation earned */
+    mapping(address => uint256) public reputation;
+
+    /** Value token */
+    EIP20I public valueToken;
 
     /** External / public functions */
 
-    constructor()
-        ConsensusModule(msg.sender)
+    constructor(address _consensus)
+        ConsensusModule(_consensus)
         public
     {
-        
+        // valueToken = consensus.valueToken();
+    }
+
+    function join(address _validator)
+        onlyConsensus
+        external
+    {
+        require(status[_validator] == ValidatorStatus.Undefined,
+            "No validator can rejoin.");
+        // continue
+    }
+
+    function logout(address _validator)
+        onlyConsensus
+        external
+    {
+        // continue
     }
 }
