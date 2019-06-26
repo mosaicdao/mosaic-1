@@ -14,31 +14,13 @@ pragma solidity ^0.5.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "./EIP20I.sol";
-import "./Committee.sol";
+import "../EIP20I.sol";
+import "../committee/Committee.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract Consensus {
 
     using SafeMath for uint256;
-
-    /** Validator status enum */
-    enum ValidatorStatus {
-        /** Undefined as null value */
-        Undefined,
-
-        /** Validator has been slashed and lost stake and rewards */
-        Slashed,
-
-        /** Validator has put up stake and participates in consensus */
-        Staked,
-
-        /** Validator has logged out and no longer participates in consensus */
-        LoggedOut,
-
-        /** Validator has withdrawn stake after logging out and cooldown period */
-        Withdrawn
-    }
 
     enum RoundStatus {
         /** Initial state after completion of previous commit */
@@ -60,20 +42,6 @@ contract Consensus {
         Revealed
     }
 
-    /** Validator structure */
-    struct Validator {
-        /** Address of previous validator in linked list */
-        address previousValidator;
-
-        /** Withdrawal address */
-        address withdrawalAddress;
-
-        /** Earned rewards */
-        uint256 earnedRewards;
-
-        /** Status */
-        ValidatorStatus status;
-    }
 
     /** Sentinel pointer for marking beginning and ending of circular linked-list of validators */
     address public constant SENTINEL_VALIDATORS = address(0x1);

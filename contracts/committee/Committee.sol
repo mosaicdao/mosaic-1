@@ -14,13 +14,14 @@ pragma solidity ^0.5.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import "../consensus/ConsensusModule.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
  * @title Committee
  * @author Benjamin Bollen - <ben@ost.com>
  */
-contract Committee {
+contract Committee is ConsensusModule {
 
     using SafeMath for uint256;
 
@@ -90,9 +91,6 @@ contract Committee {
 
     /* Storage */
 
-    /** Consensus contract for which this committee was formed. */
-    address public consensus;
-
     /** Committee size */
     uint256 public committeeSize;
 
@@ -160,13 +158,6 @@ contract Committee {
      */
     address public memberInitiatedCooldown;
 
-    modifier onlyConsensus()
-    {
-        require(msg.sender == consensus,
-            "Only the consensus contract can call this fucntion.");
-        _;
-    }
-
     modifier onlyMember()
     {
         require(members[msg.sender] != address(0),
@@ -219,6 +210,7 @@ contract Committee {
         bytes32 _dislocation,
         bytes32 _proposal
     )
+        ConsensusModule(msg.sender)
         public
     {
         require(_committeeSize >= 3,
@@ -232,7 +224,6 @@ contract Committee {
 
         /** creator of committee is consensus */
         /** committee created by Consensus contract */
-        consensus = msg.sender;
         committeeStatus = CommitteeStatus.Open;
 
         // initialize the members linked-list as the empty set
