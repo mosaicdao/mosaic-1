@@ -15,6 +15,7 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 
 import "../consensus/ConsensusModule.sol";
+import "../reputation/ReputationI.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract Core is ConsensusModule {
@@ -23,7 +24,33 @@ contract Core is ConsensusModule {
 
     /* Enum and structs */
 
+    /** The kernel of a meta-block header */
+    struct Kernel {
+        /** The height of the metablock in the chain */
+        uint256 height;
+        /** Hash of the metablock's parent */
+        bytes32 parent;
+        /** Gas target to close the metablock */
+        uint256 gasTarget;
+        /** Gas price fixed for this metablock */
+        uint256 gasPrice;
+    }
+
+    struct Transition {
+        /** Observation of the origin chain */
+        bytes32 originObservation;
+        /** Dynasty number of the metablockchain */
+        uint256 dynasty;
+        /** Accumulated gas on the metablockchain */
+        uint256 accumulatedGas;
+        /** Committee lock is the hash of the accumulated transaction root */
+        bytes32 committeeLock;
+    }
+
     /* Storage */
+
+    /** Sentinel pointer for marking end of linked-list of validators */
+    address public constant SENTINEL_VALIDATORS = address(0x1);
 
     /** Validators assigned to this core */
     mapping(address => address) public validators;
@@ -40,6 +67,10 @@ contract Core is ConsensusModule {
 
     }
 
+    // function submit(
+    //     uint256 _height,
+
+    // )
 
     function join(address _validator)
         external
