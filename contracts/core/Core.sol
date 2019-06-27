@@ -25,7 +25,13 @@ contract Core is ConsensusModule {
 
     /* Storage */
 
-    /** External / public functions */
+    /** Validators assigned to this core */
+    mapping(address => address) public validators;
+
+    /** Reputation contract */
+    ReputationI public reputation;
+
+    /* External and public functions */
 
     constructor()
         ConsensusModule(msg.sender)
@@ -34,4 +40,45 @@ contract Core is ConsensusModule {
 
     }
 
+
+    function join(address _validator)
+        external
+        onlyConsensus
+    {
+
+    }
+
+    /* Internal and private functions */
+
+    /**
+     * insert validator in linked-list
+     */
+    function insertValidator(address _validator)
+        internal
+    {
+        require(_validator != address(0),
+            "Validator must not be null address.");
+        require(_validator != SENTINEL_VALIDATORS,
+            "Validator must not be Sentinel address.");
+        require(validators[_validator] == address(0),
+            "Validator must not already be part of this core.");
+
+        validators[_validator] = validators[SENTINEL_VALIDATORS];
+        validators[SENTINEL_VALIDATORS] = _validator;
+    }
+
+    /**
+     * remove validator from linked-list
+     */
+    function removeValidator(address _validator, address _prevValidator)
+        internal
+    {
+        require(_validator != address(0) &&
+            _validator != SENTINEL_VALIDATORS,
+            "Validator null or sentinel address cannot be removed.");
+        require(_validator == validators[_prevValidator],
+            "Invalid validator-pair provided to remove validator from core.");
+        validators[_prevValidator] = validators[_validator];
+        delete validators[_validator];
+    }
 }
