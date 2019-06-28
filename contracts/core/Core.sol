@@ -30,6 +30,10 @@ contract Core is ConsensusModule {
         uint256 height;
         /** Hash of the metablock's parent */
         bytes32 parent;
+        /** Added validators */
+        address[] updatedValidators;
+        /** Removed validators */
+        uint256[] updatedReputation;
         /** Gas target to close the metablock */
         uint256 gasTarget;
         /** Gas price fixed for this metablock */
@@ -47,7 +51,23 @@ contract Core is ConsensusModule {
         bytes32 committeeLock;
     }
 
+    struct VoteMessage {
+        /** Source block hash */
+        bytes32 source;
+        /** Target block hash */
+        bytes32 target;
+        /** Source block height */
+        uint256 sourceBlockHeight;
+        /** Target block height */
+        uint256 targetBlockHeight;
+    }
+
     /* Storage */
+
+    /** EIP-712 type hash for Kernel. */
+    bytes32 constant KERNEL_TYPEHASH = keccak256(
+        "Kernel(uint256 height,bytes32 parent,address[] updatedValidators,uint256[] updatedReputation,uint256 gasTarget,uint256 gasPrice)"
+    );
 
     /** Sentinel pointer for marking end of linked-list of validators */
     address public constant SENTINEL_VALIDATORS = address(0x1);
@@ -58,17 +78,97 @@ contract Core is ConsensusModule {
     /** Reputation contract */
     ReputationI public reputation;
 
+    /** Open kernel */
+    Kernel public openKernel;
+
+    /** Open kernel hash */
+    bytes32 public openKernelHash;
+
+    /** Closed transition object */
+    Transition public closedTransition;
+
+    /** Sealing vote message */
+    VoteMessage public sealedVoteMessage;
+
+    /** Proposals submitted for closing the open Kernel */
+    mapping(bytes32 => VoteMessage) public propositions;
+
     /* External and public functions */
 
-    constructor()
+    constructor(
+        uint256 _height,
+        bytes32 _parent,
+        uint256 _gasTarget,
+        uint256 _gasPrice,
+        uint256 _dynasty,
+        uint256 _accumulatedGas,
+        bytes32 _source,
+        uint256 _sourceBlockHeight
+    )
         ConsensusModule(msg.sender)
         public
     {
+        openKernel.height = _height;
+        openKernel.parent = _parent;
+        openKernel.gasTarget = _gasTarget;
+        openKernel.gasPrice = _gasPrice;
+
+        openKernelHash = hashKernel(
+            openKernel.height,
+            openKernel.parent,
+            openKernel.updatedValidators,
+            openKernel.updatedReputation,
+            openKernel.gasTarget,
+            openKernel.gasPrice
+        );
+
+        closedTransition.dynasty = _dynasty;
+        closedTransition.accumulatedGas = _accumulatedGas;
+
+        sealedVoteMessage.source = _source;
+        sealedVoteMessage.sourceBlockHeight = _sourceBlockHeight;
+    }
+
+    /**
+     * Propose transition object and vote message from seal
+     * for the open kernel.
+     */
+    function proposeMetablock(
+        bytes32 _kernelHash,
+        bytes32 _originObservation,
+        uint256 _dynasty,
+        uint256 _accumulatedGas,
+        bytes32 _committeeLock,
+        bytes32 _source,
+        bytes32 _target,
+        uint256 _sourceBlockHeight,
+        uint256 _targetBlockHeight
+    )
+        external
+    {
+        require(_kernelHash == openKernelHash,
+            "A metablock can only be proposed for the open Kernel in this core.");
+        require(_originObservation != bytes32(0),
+            "Origin observation cannot be null.");
+        require(_dynasty > closedTransition.dynasty,
+            "Dynasty must strictly increase.");
+        require(_accumulatedGas > closedTransition.accumulatedGas,
+            "Accumulated gas must strictly increase.");
+        require(_committeeLock != bytes32(0),
+            "Committee lock cannot be null.");
+        require(_source != bytes32(0),
+            "Source blockhash must not be null.");
+        // note: is this necessary?
+        require(_source != sealedVoteMessage.source,
+            "Source blockhash cannot equal sealed source blockhash.");
+        require(_sourceBlockHeight > sealedVoteMessage.sourceBlockHeight,
+            "Source block height must strictly increase.");
+        require(_targetBlockHeight == _sourceBlockHeight.add(1),
+            "Target block height must equal source block height plus one.");
 
     }
 
-    // function submit(
-    //     uint256 _height,
+    // function registerVote(
 
     // )
 
@@ -111,5 +211,44 @@ contract Core is ConsensusModule {
             "Invalid validator-pair provided to remove validator from core.");
         validators[_prevValidator] = validators[_validator];
         delete validators[_validator];
+    }
+
+    /**
+     * @notice Takes the parameters of a kernel object and returns the
+     *         typed hash of it.
+     *
+     * @param _height The height of meta-block.
+     * @param _parent The hash of this block's parent.
+     * @param _updatedValidators  The array of addresses of the updated validators.
+     * @param _updatedReputation The array of reputation that corresponds to
+     *                        the updated validators.
+     * @param _gasTarget The gas target for this metablock
+     * @param _gasPrice The gas price for this metablock
+     *
+     * @return hash_ The hash of kernel.
+     */
+    function hashKernel(
+        uint256 _height,
+        bytes32 _parent,
+        address[] memory _updatedValidators,
+        uint256[] memory _updatedReputation,
+        uint256 _gasTarget,
+        uint256 _gasPrice
+    )
+        internal
+        pure
+        returns (bytes32 hash_)
+    {
+        hash_ = keccak256(
+            abi.encode(
+                KERNEL_TYPEHASH,
+                _height,
+                _parent,
+                _updatedValidators,
+                _updatedReputation,
+                _gasTarget,
+                _gasPrice
+            )
+        );
     }
 }
