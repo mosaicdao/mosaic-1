@@ -14,11 +14,12 @@ pragma solidity ^0.5.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import "../version/MosaicVersion.sol";
 import "../consensus/ConsensusModule.sol";
 import "../reputation/ReputationI.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
-contract Core is ConsensusModule {
+contract Core is ConsensusModule, MosaicVersion {
 
     using SafeMath for uint256;
 
@@ -41,6 +42,8 @@ contract Core is ConsensusModule {
     }
 
     struct Transition {
+        /** Kernel Hash */
+        bytes32 KernelHash;
         /** Observation of the origin chain */
         bytes32 originObservation;
         /** Dynasty number of the metablockchain */
@@ -64,13 +67,32 @@ contract Core is ConsensusModule {
 
     /* Storage */
 
+    /** EIP-712 domain separator name for Core */
+    string public constant DOMAIN_SEPARATOR_NAME = "Mosaic-Core";
+
+    /** EIP-712 domain separator for Core */
+    bytes32 public constant DOMAIN_SEPARATOR_TYPEHASH = keccak256(
+        "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+    );
+
     /** EIP-712 type hash for Kernel. */
     bytes32 constant KERNEL_TYPEHASH = keccak256(
         "Kernel(uint256 height,bytes32 parent,address[] updatedValidators,uint256[] updatedReputation,uint256 gasTarget,uint256 gasPrice)"
     );
 
+    /** EIP-712 type hash for a Transition. */
+    bytes32 constant TRANSITION_TYPEHASH = keccak256(
+        "Transition(bytes32 kernelHash, bytes32 originObservation,uint256 dynasty,uint256 accumulatedGas,bytes32 committeeLock)"
+    );
+
     /** Sentinel pointer for marking end of linked-list of validators */
     address public constant SENTINEL_VALIDATORS = address(0x1);
+
+    /** Domain separator */
+    bytes32 public domainSeparator;
+
+    /** Chain Id of the meta-blockchain */
+    uint256 public chainId;
 
     /** Validators assigned to this core */
     mapping(address => address) public validators;
@@ -93,9 +115,12 @@ contract Core is ConsensusModule {
     /** Proposals submitted for closing the open Kernel */
     mapping(bytes32 => VoteMessage) public propositions;
 
+    /**  */
+
     /* External and public functions */
 
     constructor(
+        uint256 _chainId,
         uint256 _height,
         bytes32 _parent,
         uint256 _gasTarget,
@@ -108,6 +133,16 @@ contract Core is ConsensusModule {
         ConsensusModule(msg.sender)
         public
     {
+        domainSeparator = keccak256(
+            abi.encode(
+                DOMAIN_SEPARATOR_TYPEHASH,
+                DOMAIN_SEPARATOR_NAME,
+                DOMAIN_SEPARATOR_VERSION,
+                _chainId,
+                address(this)
+            )
+        );
+
         openKernel.height = _height;
         openKernel.parent = _parent;
         openKernel.gasTarget = _gasTarget;
@@ -140,11 +175,12 @@ contract Core is ConsensusModule {
         uint256 _accumulatedGas,
         bytes32 _committeeLock,
         bytes32 _source,
-        bytes32 _target,
+        bytes32 /* _target */,
         uint256 _sourceBlockHeight,
         uint256 _targetBlockHeight
     )
         external
+        view
     {
         require(_kernelHash == openKernelHash,
             "A metablock can only be proposed for the open Kernel in this core.");
@@ -174,6 +210,7 @@ contract Core is ConsensusModule {
 
     function join(address _validator)
         external
+        view
         onlyConsensus
     {
 
@@ -236,10 +273,10 @@ contract Core is ConsensusModule {
         uint256 _gasPrice
     )
         internal
-        pure
+        view
         returns (bytes32 hash_)
     {
-        hash_ = keccak256(
+        bytes32 typedKernelHash = keccak256(
             abi.encode(
                 KERNEL_TYPEHASH,
                 _height,
@@ -248,6 +285,59 @@ contract Core is ConsensusModule {
                 _updatedReputation,
                 _gasTarget,
                 _gasPrice
+            )
+        );
+
+        hash_ = keccak256(
+            abi.encodePacked(
+                byte(0x19),
+                byte(0x01),
+                domainSeparator,
+                typedKernelHash
+            )
+        );
+    }
+
+   /**
+     * @notice Takes the parameters of an transition object and returns the
+     *         typed hash of it.
+     *
+     * @param _originObservation Observation of the origin chain.
+     * @param _dynasty The dynasty number where the meta-block closes
+     *                 on the auxiliary chain.
+     * @param _accumulatedGas The total consumed gas on auxiliary within this
+     *                        meta-block.
+     * @param _committeeLock The committee lock that hashes the transaction
+      *                      root on the auxiliary chain.
+     * @return hash_ The hash of this transition object.
+     */
+    function hashTransition(
+        bytes32 _originObservation,
+        uint256 _dynasty,
+        uint256 _accumulatedGas,
+        bytes32 _committeeLock
+    )
+        internal
+        view
+        returns (bytes32 hash_)
+    {
+        bytes32 typedTransitionHash = keccak256(
+            abi.encode(
+                TRANSITION_TYPEHASH,
+                openKernelHash,
+                _originObservation,
+                _dynasty,
+                _accumulatedGas,
+                _committeeLock
+            )
+        );
+
+        hash_ = keccak256(
+            abi.encodePacked(
+                byte(0x19),
+                byte(0x01),
+                domainSeparator,
+                typedTransitionHash
             )
         );
     }

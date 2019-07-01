@@ -77,6 +77,7 @@ contract Reputation is ConsensusModule {
     function join(address _validator)
         onlyConsensus
         external
+        view
     {
         require(status[_validator] == ValidatorStatus.Undefined,
             "No validator can rejoin.");
@@ -86,6 +87,7 @@ contract Reputation is ConsensusModule {
     function logout(address _validator)
         onlyConsensus
         external
+        view
     {
         // continue
     }
