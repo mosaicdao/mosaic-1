@@ -4,6 +4,7 @@
   "description": "compute",
   "main": "index.js",
   "scripts": {
+    "update": "git submodule update --init --recursive && npm ci",
     "compile": "./node_modules/.bin/truffle compile --all --reset",
     "test:contracts": "./node_modules/.bin/truffle test",
     "ganache-cli": "./tools/run_ganache_cli.sh"

@@ -55,6 +55,8 @@ contract Core is ConsensusModule, MosaicVersion {
     }
 
     struct VoteMessage {
+        /** Transition hash */
+        bytes32 transitionHash;
         /** Source block hash */
         bytes32 source;
         /** Target block hash */
@@ -76,13 +78,18 @@ contract Core is ConsensusModule, MosaicVersion {
     );
 
     /** EIP-712 type hash for Kernel. */
-    bytes32 constant KERNEL_TYPEHASH = keccak256(
+    bytes32 public constant KERNEL_TYPEHASH = keccak256(
         "Kernel(uint256 height,bytes32 parent,address[] updatedValidators,uint256[] updatedReputation,uint256 gasTarget,uint256 gasPrice)"
     );
 
     /** EIP-712 type hash for a Transition. */
-    bytes32 constant TRANSITION_TYPEHASH = keccak256(
+    bytes32 public constant TRANSITION_TYPEHASH = keccak256(
         "Transition(bytes32 kernelHash, bytes32 originObservation,uint256 dynasty,uint256 accumulatedGas,bytes32 committeeLock)"
+    );
+
+    /** EIP-712 type hash for a Vote Message */
+    bytes32 public constant VOTE_MESSAGE_TYPEHASH = keccak256(
+        "VoteMessage(bytes32 transitionHash,bytes32 source,bytes32 target,uint256 sourceBlockHeight,uint256 targetBlockHeight)"
     );
 
     /** Sentinel pointer for marking end of linked-list of validators */
@@ -202,6 +209,7 @@ contract Core is ConsensusModule, MosaicVersion {
         require(_targetBlockHeight == _sourceBlockHeight.add(1),
             "Target block height must equal source block height plus one.");
 
+        
     }
 
     // function registerVote(
@@ -338,6 +346,38 @@ contract Core is ConsensusModule, MosaicVersion {
                 byte(0x01),
                 domainSeparator,
                 typedTransitionHash
+            )
+        );
+    }
+
+    function hashVoteMessage(
+        bytes32 _transitionHash,
+        bytes32 _source,
+        bytes32 _target,
+        uint256 _sourceBlockHeight,
+        uint256 _targetBlockHeight
+    )
+        internal
+        view
+        returns (bytes32 hash_)
+    {
+        bytes32 typedVoteMessageHash = keccak256(
+            abi.encode(
+                VOTE_MESSAGE_TYPEHASH,
+                _transitionHash,
+                _source,
+                _target,
+                _sourceBlockHeight,
+                _targetBlockHeight
+            )
+        );
+
+        hash_ = keccak256(
+            abi.encodePacked(
+                byte(0x19),
+                byte(0x01),
+                domainSeparator,
+                typedVoteMessageHash
             )
         );
     }
