@@ -14,21 +14,23 @@ pragma solidity ^0.5.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import "./ConsensusI.sol";
+
 contract ConsensusModule {
 
     /** Consensus contract for which this committee was formed. */
-    address public consensus;
+    ConsensusI public consensus;
 
     modifier onlyConsensus()
     {
-        require(msg.sender == consensus,
-            "Only the consensus contract can call this fucntion.");
+        require(msg.sender == address(consensus),
+            "Only the consensus contract can call this function.");
         _;
     }
 
     constructor(address _consensus)
         public
     {
-        consensus = _consensus;
+        consensus = ConsensusI(_consensus);
     }
  }

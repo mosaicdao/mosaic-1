@@ -67,6 +67,15 @@ contract Core is ConsensusModule, MosaicVersion {
         uint256 targetBlockHeight;
     }
 
+    struct VoteCount {
+        /** Kernel height for proposed metablock */
+        uint256 height;
+        /** Transition dynasty number for proposed metablock */
+        uint256 dynasty;
+        /** Vote count for the proposal */
+        uint256 count;
+    }
+
     /* Storage */
 
     /** EIP-712 domain separator name for Core */
@@ -95,6 +104,9 @@ contract Core is ConsensusModule, MosaicVersion {
     /** Sentinel pointer for marking end of linked-list of validators */
     address public constant SENTINEL_VALIDATORS = address(0x1);
 
+    /** Sentinel pointer for marking end of linked-list of proposals */
+    bytes32 public constant SENTINEL_PROPOSALS = bytes32(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+
     /** Domain separator */
     bytes32 public domainSeparator;
 
@@ -119,10 +131,14 @@ contract Core is ConsensusModule, MosaicVersion {
     /** Sealing vote message */
     VoteMessage public sealedVoteMessage;
 
-    /** Proposals submitted for closing the open Kernel */
-    mapping(bytes32 => VoteMessage) public propositions;
+    /** Map kernel height to linked list of proposals */
+    mapping(uint256 => mapping(bytes32 => bytes32)) public proposals;
 
-    /**  */
+    /** Map proposal hash to VoteCount struct */
+    mapping(bytes32 => VoteCount) public voteCounts;
+
+    /** Map validator to proposal hash */
+    mapping(address => bytes32) public votes;
 
     /* External and public functions */
 
@@ -137,7 +153,7 @@ contract Core is ConsensusModule, MosaicVersion {
         bytes32 _source,
         uint256 _sourceBlockHeight
     )
-        ConsensusModule(msg.sender)
+        ConsensusModule(msg.sender) // Core is constructed by Consenus
         public
     {
         domainSeparator = keccak256(
@@ -149,6 +165,8 @@ contract Core is ConsensusModule, MosaicVersion {
                 address(this)
             )
         );
+
+        // reputation = consensus.reputation();
 
         openKernel.height = _height;
         openKernel.parent = _parent;
@@ -182,12 +200,11 @@ contract Core is ConsensusModule, MosaicVersion {
         uint256 _accumulatedGas,
         bytes32 _committeeLock,
         bytes32 _source,
-        bytes32 /* _target */,
+        bytes32 _target,
         uint256 _sourceBlockHeight,
         uint256 _targetBlockHeight
     )
         external
-        view
     {
         require(_kernelHash == openKernelHash,
             "A metablock can only be proposed for the open Kernel in this core.");
@@ -209,7 +226,26 @@ contract Core is ConsensusModule, MosaicVersion {
         require(_targetBlockHeight == _sourceBlockHeight.add(1),
             "Target block height must equal source block height plus one.");
 
-        
+        bytes32 transitionHash = hashTransition(
+            _kernelHash,
+            _originObservation,
+            _dynasty,
+            _accumulatedGas,
+            _committeeLock
+        );
+
+        bytes32 proposal = hashVoteMessage(
+            transitionHash,
+            _source,
+            _target,
+            _sourceBlockHeight,
+            _targetBlockHeight
+        );
+
+        // insert proposal, reverts if proposal already inserted
+        insertProposal(_dynasty, proposal);
+
+
     }
 
     // function registerVote(
@@ -227,6 +263,59 @@ contract Core is ConsensusModule, MosaicVersion {
     /* Internal and private functions */
 
     /**
+     * insert proposal
+     */
+    function insertProposal(
+        uint256 _dynasty,
+        bytes32 _proposal)
+        internal
+    {
+        uint256 height = openKernel.height;
+        VoteCount storage voteCount = voteCounts[_proposal];
+
+        // note: redundant because we always calculate the proposal hash
+        require(_proposal != bytes32(0),
+            "Proposal must not be null.");
+        require(proposals[height][_proposal] == bytes32(0),
+            "Proposal can only be inserted once.");
+        require(_proposal != SENTINEL_PROPOSALS,
+            "Proposal must not be sentinel for proposals.");
+
+        // vote registered for open kernel
+        voteCount.height = height;
+        // register dynasty of transition
+        voteCount.dynasty = _dynasty;
+        // vote count is zero
+        voteCount.count = 0;
+
+        proposals[height][_proposal] = proposals[height][SENTINEL_PROPOSALS];
+        proposals[height][SENTINEL_PROPOSALS] = _proposal;
+    }
+
+    /**
+     * clean proposals
+     * note: improve logic, to be done partially in case too much gas needed
+     *       double-check if logic is correct
+     */
+    function cleanProposals(
+        uint256 _height)
+        internal
+    {
+        require(_height < openKernel.height,
+            "Only proposals of older kernels can be cleaned out.");
+        bytes32 currentProposal = proposals[_height][SENTINEL_PROPOSALS];
+        bytes32 deleteProposal = SENTINEL_PROPOSALS;
+        require(currentProposal != bytes32(0),
+            "There are no proposals to clear out.");
+        while (currentProposal != SENTINEL_PROPOSALS) {
+            delete proposals[_height][deleteProposal];
+            deleteProposal = currentProposal;
+            currentProposal = proposals[_height][currentProposal];
+        }
+        delete proposals[_height][deleteProposal];
+    }
+
+    /**
      * insert validator in linked-list
      */
     function insertValidator(address _validator)
@@ -235,7 +324,7 @@ contract Core is ConsensusModule, MosaicVersion {
         require(_validator != address(0),
             "Validator must not be null address.");
         require(_validator != SENTINEL_VALIDATORS,
-            "Validator must not be Sentinel address.");
+            "Validator must not be sentinel address for validators.");
         require(validators[_validator] == address(0),
             "Validator must not already be part of this core.");
 
@@ -310,16 +399,18 @@ contract Core is ConsensusModule, MosaicVersion {
      * @notice Takes the parameters of an transition object and returns the
      *         typed hash of it.
      *
+     * @param _kernelHash Kernel hash
      * @param _originObservation Observation of the origin chain.
      * @param _dynasty The dynasty number where the meta-block closes
      *                 on the auxiliary chain.
      * @param _accumulatedGas The total consumed gas on auxiliary within this
      *                        meta-block.
      * @param _committeeLock The committee lock that hashes the transaction
-      *                      root on the auxiliary chain.
+     *                       root on the auxiliary chain.
      * @return hash_ The hash of this transition object.
      */
     function hashTransition(
+        bytes32 _kernelHash,
         bytes32 _originObservation,
         uint256 _dynasty,
         uint256 _accumulatedGas,
@@ -332,7 +423,7 @@ contract Core is ConsensusModule, MosaicVersion {
         bytes32 typedTransitionHash = keccak256(
             abi.encode(
                 TRANSITION_TYPEHASH,
-                openKernelHash,
+                _kernelHash,
                 _originObservation,
                 _dynasty,
                 _accumulatedGas,
