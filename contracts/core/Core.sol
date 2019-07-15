@@ -113,6 +113,9 @@ contract Core is ConsensusModule, MosaicVersion {
     /** Chain Id of the meta-blockchain */
     uint256 public chainId;
 
+    /** Epoch length */
+    uint256 public epochLength;
+
     /** Validators assigned to this core */
     mapping(address => address) public validators;
 
@@ -144,6 +147,7 @@ contract Core is ConsensusModule, MosaicVersion {
 
     constructor(
         uint256 _chainId,
+        uint256 _epochLength,
         uint256 _height,
         bytes32 _parent,
         uint256 _gasTarget,
@@ -156,6 +160,7 @@ contract Core is ConsensusModule, MosaicVersion {
         ConsensusModule(msg.sender) // Core is constructed by Consenus
         public
     {
+        // note: consider adding requirement checks
         domainSeparator = keccak256(
             abi.encode(
                 DOMAIN_SEPARATOR_TYPEHASH,
@@ -166,7 +171,9 @@ contract Core is ConsensusModule, MosaicVersion {
             )
         );
 
-        // reputation = consensus.reputation();
+        epochLength = _epochLength;
+
+        reputation = consensus.reputation();
 
         openKernel.height = _height;
         openKernel.parent = _parent;
@@ -187,6 +194,8 @@ contract Core is ConsensusModule, MosaicVersion {
 
         sealedVoteMessage.source = _source;
         sealedVoteMessage.sourceBlockHeight = _sourceBlockHeight;
+
+        newProposalSet();
     }
 
     /**
@@ -223,7 +232,9 @@ contract Core is ConsensusModule, MosaicVersion {
             "Source blockhash cannot equal sealed source blockhash.");
         require(_sourceBlockHeight > sealedVoteMessage.sourceBlockHeight,
             "Source block height must strictly increase.");
-        require(_targetBlockHeight == _sourceBlockHeight.add(1),
+        require((_sourceBlockHeight % epochLength) == 0,
+            "Source block height must be a checkpoint.");
+        require(_targetBlockHeight == _sourceBlockHeight.add(epochLength),
             "Target block height must equal source block height plus one.");
 
         bytes32 transitionHash = hashTransition(
@@ -244,13 +255,41 @@ contract Core is ConsensusModule, MosaicVersion {
 
         // insert proposal, reverts if proposal already inserted
         insertProposal(_dynasty, proposal);
-
-
     }
 
-    // function registerVote(
+    function registerVote(
+        bytes32 _proposal,
+        bytes32 _r,
+        bytes32 _s,
+        uint8 _v
+    )
+        external
+    {
+        require(_proposal != bytes32(0),
+            "Proposal can not be null.");
 
-    // )
+        uint256 height = openKernel.height;
+        require(proposals[height][_proposal] != bytes32(0),
+            "Proposal must be registered at open metablock height.");
+        address validator = ecrecover(_proposal, _v, _r, _s);
+        require(validators[validator] != address(0),
+            "Validator must be registered in this core.");
+        require(reputation.isActive(validator),
+            "Validator must be active.");
+
+        bytes32 castVote = votes[validator];
+        require(castVote != _proposal,
+            "Vote has already been cast.");
+        VoteCount storage castVoteCount = voteCounts[castVote];
+        VoteCount storage registerVoteCount = voteCounts[_proposal];
+        if (castVoteCount.height == height) {
+            require(castVoteCount.dynasty < registerVoteCount.dynasty,
+                "For a given metablock height, the vote can only be recast for higher dynasty numbers.");
+            castVoteCount.count = castVoteCount.count.sub(1);
+        }
+        votes[validator] = _proposal;
+        registerVoteCount.count = registerVoteCount.count.add(1);
+    }
 
     function join(address _validator)
         external
@@ -261,6 +300,18 @@ contract Core is ConsensusModule, MosaicVersion {
     }
 
     /* Internal and private functions */
+
+    /**
+     * start new linked list for proposals
+     */
+    function newProposalSet()
+        internal
+    {
+        uint256 height = openKernel.height;
+        require(proposals[height][SENTINEL_PROPOSALS] == bytes32(0),
+            "Proposal set has already been initialised at this height.");
+        proposals[height][SENTINEL_PROPOSALS] = SENTINEL_PROPOSALS;
+    }
 
     /**
      * insert proposal
@@ -309,10 +360,12 @@ contract Core is ConsensusModule, MosaicVersion {
             "There are no proposals to clear out.");
         while (currentProposal != SENTINEL_PROPOSALS) {
             delete proposals[_height][deleteProposal];
+            delete voteCounts[deleteProposal];
             deleteProposal = currentProposal;
             currentProposal = proposals[_height][currentProposal];
         }
         delete proposals[_height][deleteProposal];
+        delete voteCounts[deleteProposal];
     }
 
     /**
