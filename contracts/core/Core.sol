@@ -107,6 +107,12 @@ contract Core is ConsensusModule, MosaicVersion {
     /** Sentinel pointer for marking end of linked-list of proposals */
     bytes32 public constant SENTINEL_PROPOSALS = bytes32(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
 
+    /** Maximum future end height, set for all active validators */
+    uint256 public constant MAX_FUTURE_END_HEIGHT = uint256(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+
+    /** Maximum validators that can join or logout in one metablock */
+    uint256 public constant MAX_DELTA_VALIDATORS = uint256(10);
+
     /** Domain separator */
     bytes32 public domainSeparator;
 
@@ -116,8 +122,18 @@ contract Core is ConsensusModule, MosaicVersion {
     /** Epoch length */
     uint256 public epochLength;
 
-    /** Validators assigned to this core */
-    mapping(address => address) public validators;
+    /** Validators assigned to this core with their end height registered
+     * zero - not registered to this core
+     * MAX_FUTURE_END_HEIGHT - for active validators
+     * less than MAX_FUTURE_END_HEIGHT - for logged out validators
+     */
+    mapping(address => uint256) public validators;
+
+    /** Validators who will join in the next metablock */
+    address[] public joinedValidators;
+
+    /** Validators who have logged out */
+    address[] public loggedOutValidators;
 
     /** Reputation contract */
     ReputationI public reputation;
@@ -272,7 +288,7 @@ contract Core is ConsensusModule, MosaicVersion {
         require(proposals[height][_proposal] != bytes32(0),
             "Proposal must be registered at open metablock height.");
         address validator = ecrecover(_proposal, _v, _r, _s);
-        require(validators[validator] != address(0),
+        require(validators[validator] > height,
             "Validator must be registered in this core.");
         require(reputation.isActive(validator),
             "Validator must be active.");
@@ -291,12 +307,51 @@ contract Core is ConsensusModule, MosaicVersion {
         registerVoteCount.count = registerVoteCount.count.add(1);
     }
 
-    function join(address _validator)
+    /**
+     * remove vote can be called by consensus when a validator
+     * is slashed, to retro-actively remove the vote from the current open metablock
+     */
+    function removeVote(
+        address _validator
+    )
         external
-        view
         onlyConsensus
     {
+        uint256 height = openKernel.height;
+        bytes32 castVote = votes[_validator];
+        VoteCount storage castVoteCount = voteCounts[castVote];
+        if (castVoteCount.height == height) {
+            delete votes[_validator];
+            castVoteCount.count = castVoteCount.count.sub(1);
+        }
+    }
 
+    function join(address _validator)
+        external
+        onlyConsensus
+    {
+        // note : don't check for double joining,
+        // consensus and reputation will block double joining
+        // and on opening the new metablock we would catch double entries
+        require(validators[_validator] == 0,
+            "Validator must not have already joined the core.");
+        require(joinedValidators.length < MAX_DELTA_VALIDATORS,
+            "Maximum number of validators that can join in one metablock is reached.");
+        joinedValidators.push(_validator);
+    }
+
+    function logout(address _validator)
+        external
+        onlyConsensus
+    {
+        // note : don't check for double logging-out,
+        // consensus and reputation will block double joining
+        // and on opening the new metablock we would catch double entries
+        require(validators[_validator] > openKernel.height.add(1),
+            "Validator cannot already have logged out.");
+        require(loggedOutValidators.length < MAX_DELTA_VALIDATORS,
+            "Maximum number of validators that can log out in one metablock is reached.");
+        loggedOutValidators.push(_validator);
     }
 
     /* Internal and private functions */
@@ -368,37 +423,37 @@ contract Core is ConsensusModule, MosaicVersion {
         delete voteCounts[deleteProposal];
     }
 
-    /**
-     * insert validator in linked-list
-     */
-    function insertValidator(address _validator)
-        internal
-    {
-        require(_validator != address(0),
-            "Validator must not be null address.");
-        require(_validator != SENTINEL_VALIDATORS,
-            "Validator must not be sentinel address for validators.");
-        require(validators[_validator] == address(0),
-            "Validator must not already be part of this core.");
+    // /**
+    //  * insert validator in linked-list
+    //  */
+    // function insertValidator(address _validator)
+    //     internal
+    // {
+    //     require(_validator != address(0),
+    //         "Validator must not be null address.");
+    //     require(_validator != SENTINEL_VALIDATORS,
+    //         "Validator must not be sentinel address for validators.");
+    //     require(validators[_validator] == address(0),
+    //         "Validator must not already be part of this core.");
 
-        validators[_validator] = validators[SENTINEL_VALIDATORS];
-        validators[SENTINEL_VALIDATORS] = _validator;
-    }
+    //     validators[_validator] = validators[SENTINEL_VALIDATORS];
+    //     validators[SENTINEL_VALIDATORS] = _validator;
+    // }
 
-    /**
-     * remove validator from linked-list
-     */
-    function removeValidator(address _validator, address _prevValidator)
-        internal
-    {
-        require(_validator != address(0) &&
-            _validator != SENTINEL_VALIDATORS,
-            "Validator null or sentinel address cannot be removed.");
-        require(_validator == validators[_prevValidator],
-            "Invalid validator-pair provided to remove validator from core.");
-        validators[_prevValidator] = validators[_validator];
-        delete validators[_validator];
-    }
+    // /**
+    //  * remove validator from linked-list
+    //  */
+    // function removeValidator(address _validator, address _prevValidator)
+    //     internal
+    // {
+    //     require(_validator != address(0) &&
+    //         _validator != SENTINEL_VALIDATORS,
+    //         "Validator null or sentinel address cannot be removed.");
+    //     require(_validator == validators[_prevValidator],
+    //         "Invalid validator-pair provided to remove validator from core.");
+    //     validators[_prevValidator] = validators[_validator];
+    //     delete validators[_validator];
+    // }
 
     /**
      * @notice Takes the parameters of a kernel object and returns the
