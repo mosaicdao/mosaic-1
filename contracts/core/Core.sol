@@ -129,11 +129,17 @@ contract Core is ConsensusModule, MosaicVersion {
      */
     mapping(address => uint256) public validators;
 
-    /** Validators who will join in the next metablock */
-    address[] public joinedValidators;
+    /** Linked list of validators who will join in the next metablock */
+    mapping(address => address) public joinedValidators;
 
-    /** Validators who have logged out */
-    address[] public loggedOutValidators;
+    /** Linked list of validators who have logged out */
+    mapping(address => address) public loggedOutValidators;
+
+    /** Count of join messages */
+    uint256 public countJoinMessages;
+
+    /** Count of log out messages */
+    uint256 public countLogOutMessages;
 
     /** Reputation contract */
     ReputationI public reputation;
@@ -330,29 +336,33 @@ contract Core is ConsensusModule, MosaicVersion {
         external
         onlyConsensus
     {
-        // note : don't check for double joining,
-        // consensus and reputation will block double joining
-        // and on opening the new metablock we would catch double entries
         require(validators[_validator] == 0,
             "Validator must not have already joined the core.");
-        require(joinedValidators.length < MAX_DELTA_VALIDATORS,
+        require(joinedValidators[_validator] == address(0),
+            "Validator cannot join twice.");
+        require(countJoinMessages < MAX_DELTA_VALIDATORS,
             "Maximum number of validators that can join in one metablock is reached.");
-        joinedValidators.push(_validator);
+        joinedValidators[_validator] = joinedValidators[SENTINEL_VALIDATORS];
+        joinedValidators[SENTINEL_VALIDATORS] = _validator;
+        countJoinMessages = countJoinMessages.add(1);
     }
 
     function logout(address _validator)
         external
         onlyConsensus
     {
-        // note : don't check for double logging-out,
-        // consensus and reputation will block double joining
-        // and on opening the new metablock we would catch double entries
         require(validators[_validator] > openKernel.height.add(1),
             "Validator cannot already have logged out.");
-        require(loggedOutValidators.length < MAX_DELTA_VALIDATORS,
+        require(loggedOutValidators[_validator] == address(0),
+            "Validator cannot log out twice.");
+        require(countLogOutMessages < MAX_DELTA_VALIDATORS,
             "Maximum number of validators that can log out in one metablock is reached.");
-        loggedOutValidators.push(_validator);
+        loggedOutValidators[_validator] = loggedOutValidators[SENTINEL_VALIDATORS];
+        loggedOutValidators[SENTINEL_VALIDATORS] = _validator;
+        countLogOutMessages = countLogOutMessages.add(1);
     }
+
+
 
     /* Internal and private functions */
 
