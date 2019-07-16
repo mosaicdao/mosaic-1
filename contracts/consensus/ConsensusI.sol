@@ -18,4 +18,6 @@ import "../reputation/ReputationI.sol";
 
 interface ConsensusI {
     function reputation() external view returns (ReputationI reputation_);
+
+    function minimumValidatorCount() external view returns (uint256 minimumValidatorCount_);
 }

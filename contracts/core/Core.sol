@@ -25,6 +25,20 @@ contract Core is ConsensusModule, MosaicVersion {
 
     /* Enum and structs */
 
+    /** Enum of Core state machine */
+    enum Status {
+        // core accepts initial set of validators
+        creation,
+        // core has an open kernel without precommitment to a proposal
+        opened,
+        // core has precommitted to to a proposal for the open kernel
+        precommitted,
+        // core has failed to get a proposal committed when challenged for being halted
+        halted,
+        // precommitted proposal is rejected by consensus committee
+        corrupted
+    }
+
     /** The kernel of a meta-block header */
     struct Kernel {
         /** The height of the metablock in the chain */
@@ -119,6 +133,9 @@ contract Core is ConsensusModule, MosaicVersion {
     /** Chain Id of the meta-blockchain */
     uint256 public chainId;
 
+    /** Core status */
+    Status public coreStatus;
+
     /** Epoch length */
     uint256 public epochLength;
 
@@ -134,6 +151,12 @@ contract Core is ConsensusModule, MosaicVersion {
 
     /** Linked list of validators who have logged out */
     mapping(address => address) public loggedOutValidators;
+
+    /** Validator count in core */
+    uint256 public countValidators;
+
+    /** Validator minimum count required set by consensus */
+    uint256 public minimumValidatorCount;
 
     /** Count of join messages */
     uint256 public countJoinMessages;
@@ -165,6 +188,15 @@ contract Core is ConsensusModule, MosaicVersion {
     /** Map validator to proposal hash */
     mapping(address => bytes32) public votes;
 
+    /* Modifiers */
+
+    modifier duringCreation()
+    {
+        require(coreStatus == Status.creation,
+            "The core must be under creation.");
+        _;
+    }
+
     /* External and public functions */
 
     constructor(
@@ -193,9 +225,13 @@ contract Core is ConsensusModule, MosaicVersion {
             )
         );
 
+        coreStatus = Status.creation;
+
         epochLength = _epochLength;
 
         reputation = consensus.reputation();
+
+        minimumValidatorCount = consensus.minimumValidatorCount();
 
         openKernel.height = _height;
         openKernel.parent = _parent;
@@ -332,6 +368,17 @@ contract Core is ConsensusModule, MosaicVersion {
         }
     }
 
+    function joinDuringCreation(address _validator)
+        external
+        onlyConsensus
+        duringCreation
+    {
+        insertValidator(_validator);
+        if (countValidators > minimumValidatorCount) {
+            coreStatus = Status.opened;
+        }
+    }
+
     function join(address _validator)
         external
         onlyConsensus
@@ -340,6 +387,8 @@ contract Core is ConsensusModule, MosaicVersion {
             "Validator must not have already joined the core.");
         require(joinedValidators[_validator] == address(0),
             "Validator cannot join twice.");
+        require(_validator != SENTINEL_VALIDATORS,
+            "Validator must not be sentinel address for validators.");
         require(countJoinMessages < MAX_DELTA_VALIDATORS,
             "Maximum number of validators that can join in one metablock is reached.");
         joinedValidators[_validator] = joinedValidators[SENTINEL_VALIDATORS];
@@ -355,14 +404,14 @@ contract Core is ConsensusModule, MosaicVersion {
             "Validator cannot already have logged out.");
         require(loggedOutValidators[_validator] == address(0),
             "Validator cannot log out twice.");
+        require(_validator != SENTINEL_VALIDATORS,
+            "Validator must not be sentinel address for validators.");
         require(countLogOutMessages < MAX_DELTA_VALIDATORS,
             "Maximum number of validators that can log out in one metablock is reached.");
         loggedOutValidators[_validator] = loggedOutValidators[SENTINEL_VALIDATORS];
         loggedOutValidators[SENTINEL_VALIDATORS] = _validator;
         countLogOutMessages = countLogOutMessages.add(1);
     }
-
-
 
     /* Internal and private functions */
 
@@ -433,22 +482,19 @@ contract Core is ConsensusModule, MosaicVersion {
         delete voteCounts[deleteProposal];
     }
 
-    // /**
-    //  * insert validator in linked-list
-    //  */
-    // function insertValidator(address _validator)
-    //     internal
-    // {
-    //     require(_validator != address(0),
-    //         "Validator must not be null address.");
-    //     require(_validator != SENTINEL_VALIDATORS,
-    //         "Validator must not be sentinel address for validators.");
-    //     require(validators[_validator] == address(0),
-    //         "Validator must not already be part of this core.");
-
-    //     validators[_validator] = validators[SENTINEL_VALIDATORS];
-    //     validators[SENTINEL_VALIDATORS] = _validator;
-    // }
+    /**
+     * insert validator in linked-list
+     */
+    function insertValidator(address _validator)
+        internal
+    {
+        require(_validator != address(0),
+            "Validator must not be null address.");
+        require(validators[_validator] == 0,
+            "Validator must not already be part of this core.");
+        validators[_validator] = MAX_FUTURE_END_HEIGHT;
+        countValidators = countValidators.add(1);
+    }
 
     // /**
     //  * remove validator from linked-list
