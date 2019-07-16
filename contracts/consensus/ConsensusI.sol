@@ -20,4 +20,6 @@ interface ConsensusI {
     function reputation() external view returns (ReputationI reputation_);
 
     function minimumValidatorCount() external view returns (uint256 minimumValidatorCount_);
+
+    function joinLimitValidators() external view returns (uint256 joinLimit_);
 }

@@ -158,6 +158,9 @@ contract Core is ConsensusModule, MosaicVersion {
     /** Validator minimum count required set by consensus */
     uint256 public minimumValidatorCount;
 
+    /** Join limit for validators */
+    uint256 public joinLimit;
+
     /** Count of join messages */
     uint256 public countJoinMessages;
 
@@ -197,6 +200,21 @@ contract Core is ConsensusModule, MosaicVersion {
         _;
     }
 
+    modifier whileRunning()
+    {
+        require(coreStatus == Status.opened ||
+            coreStatus == Status.precommitted,
+            "The core must be running.");
+        _;
+    }
+
+    modifier duringOpenMetablock()
+    {
+        require(coreStatus == Status.opened,
+            "The core must have an open metablock kernel.");
+        _;
+    }
+
     /* External and public functions */
 
     constructor(
@@ -232,6 +250,7 @@ contract Core is ConsensusModule, MosaicVersion {
         reputation = consensus.reputation();
 
         minimumValidatorCount = consensus.minimumValidatorCount();
+        joinLimit = consensus.joinLimitValidators();
 
         openKernel.height = _height;
         openKernel.parent = _parent;
@@ -272,6 +291,7 @@ contract Core is ConsensusModule, MosaicVersion {
         uint256 _targetBlockHeight
     )
         external
+        duringOpenMetablock
     {
         require(_kernelHash == openKernelHash,
             "A metablock can only be proposed for the open Kernel in this core.");
@@ -322,6 +342,7 @@ contract Core is ConsensusModule, MosaicVersion {
         uint8 _v
     )
         external
+        duringOpenMetablock
     {
         require(_proposal != bytes32(0),
             "Proposal can not be null.");
@@ -358,6 +379,7 @@ contract Core is ConsensusModule, MosaicVersion {
     )
         external
         onlyConsensus
+        whileRunning
     {
         uint256 height = openKernel.height;
         bytes32 castVote = votes[_validator];
@@ -374,7 +396,7 @@ contract Core is ConsensusModule, MosaicVersion {
         duringCreation
     {
         insertValidator(_validator);
-        if (countValidators > minimumValidatorCount) {
+        if (countValidators >= minimumValidatorCount) {
             coreStatus = Status.opened;
         }
     }
@@ -382,6 +404,7 @@ contract Core is ConsensusModule, MosaicVersion {
     function join(address _validator)
         external
         onlyConsensus
+        whileRunning
     {
         require(validators[_validator] == 0,
             "Validator must not have already joined the core.");
@@ -399,6 +422,7 @@ contract Core is ConsensusModule, MosaicVersion {
     function logout(address _validator)
         external
         onlyConsensus
+        whileRunning
     {
         require(validators[_validator] > openKernel.height.add(1),
             "Validator cannot already have logged out.");
@@ -432,7 +456,8 @@ contract Core is ConsensusModule, MosaicVersion {
      */
     function insertProposal(
         uint256 _dynasty,
-        bytes32 _proposal)
+        bytes32 _proposal
+    )
         internal
     {
         uint256 height = openKernel.height;
@@ -462,8 +487,7 @@ contract Core is ConsensusModule, MosaicVersion {
      * note: improve logic, to be done partially in case too much gas needed
      *       double-check if logic is correct
      */
-    function cleanProposals(
-        uint256 _height)
+    function cleanProposals(uint256 _height)
         internal
     {
         require(_height < openKernel.height,
