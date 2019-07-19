@@ -107,7 +107,7 @@ contract Core is ConsensusModule, MosaicVersion {
 
     /** EIP-712 type hash for a Transition. */
     bytes32 public constant TRANSITION_TYPEHASH = keccak256(
-        "Transition(bytes32 kernelHash, bytes32 originObservation,uint256 dynasty,uint256 accumulatedGas,bytes32 committeeLock)"
+        "Transition(bytes32 kernelHash,bytes32 originObservation,uint256 dynasty,uint256 accumulatedGas,bytes32 committeeLock)"
     );
 
     /** EIP-712 type hash for a Vote Message */
@@ -126,6 +126,18 @@ contract Core is ConsensusModule, MosaicVersion {
 
     /** Maximum validators that can join or logout in one metablock */
     uint256 public constant MAX_DELTA_VALIDATORS = uint256(10);
+
+    /**
+     * Define a super-majority fraction used for reaching consensus;
+     */
+    uint256 public constant CORE_SUPER_MAJORITY_NUMERATOR = uint256(2);
+    uint256 public constant CORE_SUPER_MAJORITY_DENOMINATOR = uint256(3);
+
+    /** For open metablocks the voting window is reset to future infinity */
+    uint256 public constant CORE_OPEN_VOTES_WINDOW = uint256(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+
+    /** Closing window for reporting last votes on precommitment */
+    uint256 public constant CORE_LAST_VOTES_WINDOW = uint256(3);
 
     /** Domain separator */
     bytes32 public domainSeparator;
@@ -161,6 +173,9 @@ contract Core is ConsensusModule, MosaicVersion {
     /** Join limit for validators */
     uint256 public joinLimit;
 
+    /** Quorum needed for valid proposal */
+    uint256 public quorum;
+
     /** Count of join messages */
     uint256 public countJoinMessages;
 
@@ -191,6 +206,12 @@ contract Core is ConsensusModule, MosaicVersion {
     /** Map validator to proposal hash */
     mapping(address => bytes32) public votes;
 
+    /** Precommitment to a proposal */
+    bytes32 public precommitment;
+
+    /** Precommitment closure block height */
+    uint256 public precommitmentClosureBlockHeight;
+
     /* Modifiers */
 
     modifier duringCreation()
@@ -208,10 +229,24 @@ contract Core is ConsensusModule, MosaicVersion {
         _;
     }
 
-    modifier duringOpenMetablock()
+    modifier whileMetablockOpen()
     {
         require(coreStatus == Status.opened,
             "The core must have an open metablock kernel.");
+        _;
+    }
+
+    modifier whileMetablockPrecommitted()
+    {
+        require(coreStatus == Status.precommitted,
+            "The core must be precommitted.");
+        _;
+    }
+
+    modifier duringPrecommitmentWindow()
+    {
+        require(block.number <= precommitmentClosureBlockHeight,
+            "The precommitment window must be open.");
         _;
     }
 
@@ -249,8 +284,7 @@ contract Core is ConsensusModule, MosaicVersion {
 
         reputation = consensus.reputation();
 
-        minimumValidatorCount = consensus.minimumValidatorCount();
-        joinLimit = consensus.joinLimitValidators();
+        (minimumValidatorCount, joinLimit) = consensus.coreValidatorThresholds();
 
         openKernel.height = _height;
         openKernel.parent = _parent;
@@ -291,7 +325,7 @@ contract Core is ConsensusModule, MosaicVersion {
         uint256 _targetBlockHeight
     )
         external
-        duringOpenMetablock
+        whileMetablockOpen
     {
         require(_kernelHash == openKernelHash,
             "A metablock can only be proposed for the open Kernel in this core.");
@@ -342,7 +376,7 @@ contract Core is ConsensusModule, MosaicVersion {
         uint8 _v
     )
         external
-        duringOpenMetablock
+        duringPrecommitmentWindow
     {
         require(_proposal != bytes32(0),
             "Proposal can not be null.");
@@ -368,6 +402,34 @@ contract Core is ConsensusModule, MosaicVersion {
         }
         votes[validator] = _proposal;
         registerVoteCount.count = registerVoteCount.count.add(1);
+        if (registerVoteCount.count >= quorum) {
+            precommit(_proposal);
+        }
+    }
+
+    function openMetablock(
+        uint256 _gasTarget,
+        uint256 _gasPrice
+    )
+        external
+        onlyConsensus
+        whileMetablockPrecommitted
+    {
+        assert(precommitment != bytes32(0));
+
+        openKernel.height = openKernel.height.add(1);
+        openKernel.parent = precommitment;
+        openKernel.gasTarget = _gasTarget;
+        openKernel.gasPrice = _gasPrice;
+
+        openKernelHash = hashKernel(
+            openKernel.height,
+            openKernel.parent,
+            openKernel.updatedValidators,
+            openKernel.updatedReputation,
+            openKernel.gasTarget,
+            openKernel.gasPrice
+        );
     }
 
     /**
@@ -397,6 +459,8 @@ contract Core is ConsensusModule, MosaicVersion {
     {
         insertValidator(_validator);
         if (countValidators >= minimumValidatorCount) {
+            quorum = calculateQuorum(countValidators);
+            precommitmentClosureBlockHeight = CORE_OPEN_VOTES_WINDOW;
             coreStatus = Status.opened;
         }
     }
@@ -437,7 +501,35 @@ contract Core is ConsensusModule, MosaicVersion {
         countLogOutMessages = countLogOutMessages.add(1);
     }
 
+    function calculateQuorum(uint256 _count)
+        public
+        pure
+        returns (uint256 quorum_)
+    {
+        quorum_ = _count * CORE_SUPER_MAJORITY_NUMERATOR /
+            CORE_SUPER_MAJORITY_DENOMINATOR;
+    }
+
+
     /* Internal and private functions */
+
+    /**
+     * precommit to a given proposal and lock core validators
+     * to associated responsability
+     */
+    function precommit(bytes32 _proposal)
+        internal
+    {
+        require(precommitment == bytes32(0) ||
+            precommitment == _proposal,
+            "Once locked, precommitment cannot be changed.");
+        if (coreStatus == Status.opened) {
+            coreStatus = Status.precommitted;
+            precommitment = _proposal;
+            precommitmentClosureBlockHeight = block.number + CORE_LAST_VOTES_WINDOW;
+            consensus.registerPrecommitment(precommitment);
+        }
+    }
 
     /**
      * start new linked list for proposals
