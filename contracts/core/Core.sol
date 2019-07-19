@@ -380,6 +380,10 @@ contract Core is ConsensusModule, MosaicVersion {
     {
         require(_proposal != bytes32(0),
             "Proposal can not be null.");
+        if (precommitment != bytes32(0)) {
+            require(_proposal == precommitment,
+                "Core has precommitted, only votes for precommitment are relevant.");
+        }
 
         uint256 height = openKernel.height;
         require(proposals[height][_proposal] != bytes32(0),
