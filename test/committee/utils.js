@@ -18,6 +18,14 @@ const web3 = require('../test_lib/web3.js');
 
 const Committee = artifacts.require('Committee');
 
+function remove0x(str) {
+  if (str.substr(0, 2) === '0x') {
+    return str.substr(2);
+  }
+
+  return str;
+}
+
 async function createCommittee(committeeSize, dislocation, proposal) {
   return Committee.new(
     committeeSize,
@@ -35,8 +43,8 @@ function shuffleAccount(dislocation, account) {
 
 function distance(h1, h2) {
   // Create BN from hashes.
-  const a = new BN(h1, 16);
-  const b = new BN(h2, 16);
+  const a = new BN(remove0x(h1), 16);
+  const b = new BN(remove0x(h2), 16);
 
   // Return XOR as big number.
   return a.xor(b);

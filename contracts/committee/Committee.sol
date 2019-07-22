@@ -559,6 +559,15 @@ contract Committee is ConsensusModule {
 
     /* Public Functions */
 
+    /**
+     * @notice Calculates a distance of the specified `_account` from the
+     *         `proposal`. The `_account` is shuffled/dislocated in the
+     *         hashed space before calculating a distande.
+     *
+     * @param _account The account address to calculate distance from the
+     *                 proposal.
+     *
+     */
     function distanceToProposal(address _account)
         public
         view
@@ -650,12 +659,20 @@ contract Committee is ConsensusModule {
         }
     }
 
+    /**
+     * @notice Shuffles (dislocates) `_validator` in the hashed space using
+     *         `dislocation` member.
+     *
+     * @param _validator The validator address to shuffle.
+     *
+     * @return Shuffled value of the specified `_validator`.
+     */
     function shuffle(address _validator)
         public
         view
         returns (bytes32)
     {
-        // return the dislocated position of the validator
+        // Returns the dislocated position of the validator.
         return keccak256(
             // TODO: note abi.encodePacked seems unneccesary,
             // is there an overhead?
@@ -666,13 +683,13 @@ contract Committee is ConsensusModule {
         );
     }
 
-    /** Distance metric for sorting validators */
+    /** @notice Distance metric between `_a` and `_b` for sorting validators. */
     function distance(bytes32 _a, bytes32 _b)
         private
         pure
         returns (uint256 distance_)
     {
-        // return _a XOR _b as a distance
+        // Returns _a XOR _b as a distance.
         distance_ = uint256(_a ^ _b);
     }
 
@@ -682,7 +699,7 @@ contract Committee is ConsensusModule {
         pure
         returns (bytes32)
     {
-        // return the sealed position
+        // Returns the sealed position.
         return keccak256(
             // TODO: note abi.encodePacked seems unneccesary,
             // is there an overhead?

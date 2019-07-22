@@ -15,27 +15,60 @@
 'use strict';
 
 const BN = require('bn.js');
+
+const { AccountProvider } = require('../test_lib/utils.js');
+const Utils = require('../test_lib/utils.js');
 const web3 = require('../test_lib/web3.js');
+
 const CommitteeUtils = require('./utils.js');
 
+
 contract('Committee::distance', (accounts) => {
-  let committeeSize = new BN(10);
-  let dislocation = web3.utils.sha3('dislocation');
-  let proposal = web3.utils.sha3('proposal');
+  const accountProvider = new AccountProvider(accounts);
+
+  const config = {
+    consensus: accountProvider.get(),
+    committeeSize: new BN(10),
+    dislocation: web3.utils.sha3('dislocation'),
+    proposal: web3.utils.sha3('proposal'),
+  };
+  Object.freeze(config);
 
   it('should calculate the same distance as .js', async () => {
     const committee = await CommitteeUtils.createCommittee(
-      committeeSize,
-      dislocation,
-      proposal,
+      config.committeeSize,
+      config.dislocation,
+      config.proposal,
     );
 
-    const distanceAccount = await committee.distanceToProposal.call(accounts[0]);
-    const calculatedDistanceAccount = CommitteeUtils.distanceToProposal(dislocation, accounts[0], proposal);
-    assert.strictEqual(
-      calculatedDistanceAccount.eq(distanceAccount),
-      true,
-      `Calculated distance (${calculatedDistanceAccount}) does not match distance from Committee (${distanceAccount})`
-    );
+    {
+      const account = accountProvider.get();
+      const distanceAccount = await committee.distanceToProposal.call(account);
+      const calculatedDistanceAccount = CommitteeUtils.distanceToProposal(
+        config.dislocation, account, config.proposal,
+      );
+
+      assert.strictEqual(
+        calculatedDistanceAccount.eq(distanceAccount),
+        true,
+        `Calculated distance (${calculatedDistanceAccount}) does not match `
+        + `distance from Committee (${distanceAccount})`,
+      );
+    }
+
+    {
+      const account = Utils.NULL_ADDRESS;
+      const distanceAccount = await committee.distanceToProposal.call(account);
+      const calculatedDistanceAccount = CommitteeUtils.distanceToProposal(
+        config.dislocation, account, config.proposal,
+      );
+
+      assert.strictEqual(
+        calculatedDistanceAccount.eq(distanceAccount),
+        true,
+        `Calculated distance (${calculatedDistanceAccount}) does not match `
+        + `distance from Committee (${distanceAccount})`,
+      );
+    }
   });
 });
