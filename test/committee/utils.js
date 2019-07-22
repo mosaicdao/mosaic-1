@@ -13,22 +13,17 @@
 // limitations under the License.
 
 const BN = require('bn.js');
+
 const web3 = require('../test_lib/web3.js');
 
 const Committee = artifacts.require('Committee');
 
 async function createCommittee(committeeSize, dislocation, proposal) {
-  const committee = await Committee.new(
+  return Committee.new(
     committeeSize,
     dislocation,
     proposal,
   );
-
-  return committee;
-}
-
-function distanceToProposal(dislocation, account, proposal) {
-  return distance(shuffleAccount(dislocation, account), proposal);
 }
 
 function shuffleAccount(dislocation, account) {
@@ -39,20 +34,39 @@ function shuffleAccount(dislocation, account) {
 }
 
 function distance(h1, h2) {
-  // create BN from hashes
-  var a = new BN(h1, 16);
-  var b = new BN(h2, 16);
-  // return XOR as big number
+  // Create BN from hashes.
+  const a = new BN(h1, 16);
+  const b = new BN(h2, 16);
+
+  // Return XOR as big number.
   return a.xor(b);
 }
 
+function distanceToProposal(dislocation, account, proposal) {
+  return distance(shuffleAccount(dislocation, account), proposal);
+}
+
+const CommitteeStatus = {
+  Open: new BN(0),
+  Cooldown: new BN(1),
+  CommitPhase: new BN(2),
+  RevealPhase: new BN(3),
+  Closed: new BN(4),
+  Invalid: new BN(5),
+};
+
+function isCommitteeOpen(status) {
+  return CommitteeStatus.Open.cmp(status) === 0;
+}
+
+const SENTINEL_MEMBERS = '0x1';
+
 module.exports = {
-
   createCommittee,
-
-  shuffleAccount,
-
   distance,
-
+  shuffleAccount,
   distanceToProposal,
+  CommitteeStatus,
+  isCommitteeOpen,
+  SENTINEL_MEMBERS,
 };

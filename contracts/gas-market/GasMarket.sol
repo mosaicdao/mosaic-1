@@ -22,7 +22,9 @@ contract GasMarket is UtilityToken {
     /* Storage */
 
     /** Address of OST on mainnet */
-    address public constant OST_TOKEN_MAINNET = address(0x2C4e8f2D746113d0696cE89B35F0d8bF88E0AEcA);
+    address public constant OST_TOKEN_MAINNET = address(
+        0x2C4e8f2D746113d0696cE89B35F0d8bF88E0AEcA
+    );
 
     /** Symbol of OST, note the symbol is "ST" on mainnet contract */
     string public constant OST_TOKEN_SYMBOL = "OST";
