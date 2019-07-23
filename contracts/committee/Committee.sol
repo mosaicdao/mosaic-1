@@ -287,7 +287,24 @@ contract Committee is ConsensusModule {
 
     /* External functions */
 
-    /** Enter a validator into the committee. */
+    /**
+     * @notice Enters a `_validator` into the committee.
+     *
+     * @dev Function requires:
+     *          - only the consensus contract can call
+     *          - the committe's status is open
+     *          - the specified validator distance from the proposal is less
+     *            then the specified further member one.
+     *
+     * @param _validator Validator address to enter.
+     *                   The specified address:
+     *                      - is not 0
+     *                      - is not the member-sentinel
+     *                      - has not been already entered
+     * @param _furtherMember Further member (compared with the validator)
+     *                       address. The specified address:
+     *                          - has been already entered
+     */
     function enterCommittee(
         address _validator,
         address _furtherMember
@@ -607,6 +624,7 @@ contract Committee is ConsensusModule {
         // TODO: implement consensus interface to slash from committee
         // consensus.slashValidator(_member);
     }
+
     /**
      * Insert member into commitee
      * @dev important, this private function does *not* perform

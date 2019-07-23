@@ -26,11 +26,12 @@ function remove0x(str) {
   return str;
 }
 
-async function createCommittee(committeeSize, dislocation, proposal) {
+async function createCommittee(committeeSize, dislocation, proposal, txOptions = {}) {
   return Committee.new(
     committeeSize,
     dislocation,
     proposal,
+    txOptions,
   );
 }
 
@@ -69,6 +70,44 @@ function isCommitteeOpen(status) {
 
 const SENTINEL_MEMBERS = '0x1';
 
+async function assertCommitteeMembers(committee, dist) {
+  const membersCount = (await committee.memberCount.call()).toNumber();
+
+  assert.strictEqual(
+    membersCount,
+    dist.length,
+  );
+
+  if (membersCount === 0) {
+    return;
+  }
+
+  // assert all members in the committee match the distance ordered validators.
+  for (let i = 0; i < membersCount - 1; i += 1) {
+    // get the next further member in the committee
+    // note: the linked-list refers to the closer member
+    // eslint-disable-next-line no-await-in-loop
+    const member = await committee.members.call(dist[i + 1].address);
+    assert.strictEqual(
+      member,
+      dist[i].address,
+      `Member ${i} is ${dist[i].address}, but was expected to be ${member}`,
+    );
+  }
+
+  const sentinelMembers = await committee.SENTINEL_MEMBERS.call();
+  const member = await committee.members.call(sentinelMembers);
+
+  // assert we've reached the end of the linked-list
+  assert.strictEqual(
+    member,
+    dist[membersCount - 1].address,
+    `The furthest member ${dist[membersCount - 1].address} should be `
+          + `given by Sentinel but instead ${member} was returned.`,
+  );
+}
+
+
 module.exports = {
   createCommittee,
   distance,
@@ -77,4 +116,5 @@ module.exports = {
   CommitteeStatus,
   isCommitteeOpen,
   SENTINEL_MEMBERS,
+  assertCommitteeMembers,
 };

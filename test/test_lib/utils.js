@@ -120,7 +120,8 @@ Utils.prototype = {
 
       return;
     }
-    assert(false, 'Did not throw as expected');
+
+    assert(false, `Did not throw with error message: ${expectedMessage}`);
   },
 
   /**
@@ -144,7 +145,7 @@ Utils.prototype = {
       return;
     }
 
-    assert(false, 'Did not revert as expected.');
+    assert(false, `Did not revert with expected error message: ${expectedMessage}`);
   },
 
   /**
