@@ -377,8 +377,14 @@ contract Committee is ConsensusModule {
     }
 
     /**
-     * @notice Initiate cool down for committee during which objections can
+     * @notice Initiates cool down for the committee during which objections can
      *         be raised for the members entered in the committee.
+     *
+     * @dev Function requires:
+     *          - only a member can call
+     *          - the committee is in an open state
+     *          - members' count in the committee is equal to the committee's
+     *            size
      */
     function cooldownCommittee()
         external
@@ -443,7 +449,7 @@ contract Committee is ConsensusModule {
      * @notice Activate committee after formation cooled down.
      *         After activation commits can be submitted.
      */
-    function activateCommittee ()
+    function activateCommittee()
         external
         onlyMember
         isCoolingDown

@@ -68,6 +68,11 @@ function isCommitteeOpen(status) {
   return CommitteeStatus.Open.cmp(status) === 0;
 }
 
+function isCoolingDown(status) {
+  return CommitteeStatus.Cooldown.cmp(status) === 0;
+}
+
+
 const SENTINEL_MEMBERS = '0x1';
 
 async function assertCommitteeMembers(committee, dist) {
@@ -115,6 +120,7 @@ module.exports = {
   distanceToProposal,
   CommitteeStatus,
   isCommitteeOpen,
+  isCoolingDown,
   SENTINEL_MEMBERS,
   assertCommitteeMembers,
 };
