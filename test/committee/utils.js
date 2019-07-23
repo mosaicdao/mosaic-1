@@ -72,6 +72,10 @@ function isCoolingDown(status) {
   return CommitteeStatus.Cooldown.cmp(status) === 0;
 }
 
+function isInvalid(status) {
+  return CommitteeStatus.Invalid.cmp(status) === 0;
+}
+
 
 const SENTINEL_MEMBERS = '0x1';
 
@@ -121,6 +125,7 @@ module.exports = {
   CommitteeStatus,
   isCommitteeOpen,
   isCoolingDown,
+  isInvalid,
   SENTINEL_MEMBERS,
   assertCommitteeMembers,
 };

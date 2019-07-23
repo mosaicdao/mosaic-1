@@ -415,6 +415,11 @@ contract Committee is ConsensusModule {
      *      committee but should have been.
      *      Any excluded member invalidates the committee and member who
      *      initiated cooldown wrongly will be slashed.
+     *
+     * @param _excludedMember Excluded member of the committee. Requires that
+     *                        the specified account is not a member and
+     *                        that its distance from the proposal is less than
+     *                        furthest committee member distance.
      */
     function challengeCommittee(address _excludedMember)
         external
@@ -442,6 +447,8 @@ contract Committee is ConsensusModule {
 
         committeeStatus = CommitteeStatus.Invalid;
 
+        // @qn (pro): We can remove this call and let consensus to slash
+        // a member that has wrongly initiated cooldown.
         slashMember(memberInitiatedCooldown);
     }
 
