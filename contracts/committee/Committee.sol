@@ -46,8 +46,13 @@ contract Committee is ConsensusModule {
      */
     uint256 public constant COMMITTEE_FORMATION_COOLDOWN = uint256(50);
 
-    /** Timeout for accepting commits from members. About a day on Ethereum. */
-    uint256 public constant COMMITTEE_COMMIT_PHASE_TIMEOUT = uint256(5760);
+    /**
+     * Timeout for accepting commits from members
+     * The proposed value is uint256(5760) which is about a day on Ethereum.
+     * Lowering it 10 times to ease testing.
+     * @qn (pro): Should we move this into the constructor as an argument?
+     */
+    uint256 public constant COMMITTEE_COMMIT_PHASE_TIMEOUT = uint256(576);
 
     /**
      * Timeout for revealing positions of members. About two hours on Ethereum.
