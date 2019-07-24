@@ -54,19 +54,39 @@ async function enterMembers(committeeContract, members, consensus) {
   await Promise.all(enterPromises);
 }
 
-async function advanceBlocksToReachActivationHeight(committeeContract) {
+async function passActivationBlockHeight(committeeContract) {
   const activationBlockHeight = await committeeContract.activationBlockHeight.call();
-  const currentBlockNumber = await web3.eth.getBlockNumber();
+  const blockNumber = await web3.eth.getBlockNumber();
 
-  const blocksAmount = Math.max(0, activationBlockHeight - currentBlockNumber + 1);
+  if (activationBlockHeight.lt(new BN(blockNumber))) {
+    return;
+  }
 
-  await Utils.advanceBlocks(blocksAmount);
+  await Utils.advanceBlocks(activationBlockHeight.isub(new BN(blockNumber - 1)));
+}
+
+async function passCommitTimeoutBlockHeight(committeeContract) {
+  const commitTimeOutBlockHeight = await committeeContract.commitTimeOutBlockHeight.call();
+  const blockNumber = await web3.eth.getBlockNumber();
+
+  if (commitTimeOutBlockHeight.lt(new BN(blockNumber))) {
+    return;
+  }
+
+  await Utils.advanceBlocks(commitTimeOutBlockHeight.isub(new BN(blockNumber - 1)));
 }
 
 function shuffleAccount(dislocation, account) {
   return web3.utils.soliditySha3(
     { t: 'address', v: account },
     { t: 'bytes32', v: dislocation },
+  );
+}
+
+function sealCommit(position, seal) {
+  return web3.utils.soliditySha3(
+    { t: 'bytes32', v: position },
+    { t: 'bytes32', v: seal },
   );
 }
 
@@ -106,6 +126,10 @@ function isInvalid(status) {
 
 function isInCommitPhase(status) {
   return CommitteeStatus.CommitPhase.cmp(status) === 0;
+}
+
+function isInRevealPhase(status) {
+  return CommitteeStatus.RevealPhase.cmp(status) === 0;
 }
 
 
@@ -160,7 +184,10 @@ module.exports = {
   isCoolingDown,
   isInvalid,
   isInCommitPhase,
-  advanceBlocksToReachActivationHeight,
+  isInRevealPhase,
+  passActivationBlockHeight,
+  passCommitTimeoutBlockHeight,
   SENTINEL_MEMBERS,
   assertCommitteeMembers,
+  sealCommit,
 };

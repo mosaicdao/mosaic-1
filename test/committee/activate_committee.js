@@ -24,7 +24,7 @@ const CommitteeUtils = require('./utils.js');
 
 let config = {};
 
-contract('Committee:activateCommittee', async (accounts) => {
+contract('Committee::activateCommittee', async (accounts) => {
   const accountProvider = new AccountProvider(accounts);
 
   beforeEach(async () => {
@@ -130,7 +130,7 @@ contract('Committee:activateCommittee', async (accounts) => {
 
   contract('Positive Tests', async () => {
     it('Checks storage state after successfull activation', async () => {
-      await CommitteeUtils.advanceBlocksToReachActivationHeight(
+      await CommitteeUtils.passActivationBlockHeight(
         config.committee.contract,
       );
 

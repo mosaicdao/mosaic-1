@@ -477,7 +477,21 @@ contract Committee is ConsensusModule {
         commitTimeOutBlockHeight = block.number + COMMITTEE_COMMIT_PHASE_TIMEOUT;
     }
 
-    /** @notice Members can submit their sealed commit. */
+    /**
+     * @notice Members can submit their sealed commit.
+     *         The function transitions the committee to the reveal phase
+     *         in either of the below conditions:
+     *              - all members have submitted their sealed commits
+     *              - commit timeout block height has been reached
+     *
+     * @dev Function requires:
+     *          - committee is in commit phase
+     *          - only member can call
+     *          - member can commit only once
+     *
+     * @param _sealedCommit Sealed commit of a member. Non-zero value is
+     *                      required.
+     */
     function submitSealedCommit(bytes32 _sealedCommit)
         external
         onlyMember
@@ -620,6 +634,8 @@ contract Committee is ConsensusModule {
     function tryStartRevealPhase()
         private
     {
+        // @qn (pro): Should reveal phase start if submitted seals' amount is
+        //            less then the quorum amount.
         if (submissionCount == memberCount ||
             block.number > commitTimeOutBlockHeight) {
             committeeStatus = CommitteeStatus.RevealPhase;
@@ -729,7 +745,7 @@ contract Committee is ConsensusModule {
         distance_ = uint256(_a ^ _b);
     }
 
-    /** use the salt to seal the position */
+    /** Uses the salt to seal the position. */
     function sealPosition(bytes32 _position, bytes32 _salt)
         private
         pure
