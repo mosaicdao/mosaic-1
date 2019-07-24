@@ -453,8 +453,13 @@ contract Committee is ConsensusModule {
     }
 
     /**
-     * @notice Activate committee after formation cooled down.
+     * @notice Activates the committee after formation cooled down.
      *         After activation commits can be submitted.
+     *
+     * @dev Function requires:
+     *          - only member can call
+     *          - committee is in cooling down status
+     *          - committee activation block height is reached
      */
     function activateCommittee()
         external

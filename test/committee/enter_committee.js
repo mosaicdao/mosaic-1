@@ -21,7 +21,7 @@ const web3 = require('../test_lib/web3.js');
 const CommitteeUtils = require('./utils.js');
 
 function compare(a, b) {
-  return a.distance - b.distance;
+  return a.distance.cmp(b.distance);
 }
 
 let config = {};
@@ -201,7 +201,7 @@ contract('Committee:enterCommittee', async (accounts) => {
 
       let validator = '';
       let furtherValidator = '';
-      if (distanceFromProposal1 > distanceFromProposal2) {
+      if (distanceFromProposal1.gt(distanceFromProposal2)) {
         validator = account1;
         furtherValidator = account2;
       } else {
@@ -218,7 +218,7 @@ contract('Committee:enterCommittee', async (accounts) => {
         },
       );
 
-      await await Utils.expectRevert(
+      await Utils.expectRevert(
         config.committee.contract.enterCommittee(
           validator,
           furtherValidator,

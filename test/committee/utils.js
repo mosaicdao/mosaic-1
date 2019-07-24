@@ -14,6 +14,7 @@
 
 const BN = require('bn.js');
 
+const Utils = require('../test_lib/utils.js');
 const web3 = require('../test_lib/web3.js');
 
 const Committee = artifacts.require('Committee');
@@ -33,6 +34,33 @@ async function createCommittee(committeeSize, dislocation, proposal, txOptions =
     proposal,
     txOptions,
   );
+}
+
+async function enterMembers(committeeContract, members, consensus) {
+  const sentinelMembers = await committeeContract.SENTINEL_MEMBERS.call();
+
+  const enterPromises = [];
+  for (let i = 0; i < members.length; i += 1) {
+    enterPromises.push(
+      committeeContract.enterCommittee(
+        members[i],
+        sentinelMembers,
+        {
+          from: consensus,
+        },
+      ),
+    );
+  }
+  await Promise.all(enterPromises);
+}
+
+async function advanceBlocksToReachActivationHeight(committeeContract) {
+  const activationBlockHeight = await committeeContract.activationBlockHeight.call();
+  const currentBlockNumber = await web3.eth.getBlockNumber();
+
+  const blocksAmount = Math.max(0, activationBlockHeight - currentBlockNumber + 1);
+
+  await Utils.advanceBlocks(blocksAmount);
 }
 
 function shuffleAccount(dislocation, account) {
@@ -74,6 +102,10 @@ function isCoolingDown(status) {
 
 function isInvalid(status) {
   return CommitteeStatus.Invalid.cmp(status) === 0;
+}
+
+function isInCommitPhase(status) {
+  return CommitteeStatus.CommitPhase.cmp(status) === 0;
 }
 
 
@@ -119,6 +151,7 @@ async function assertCommitteeMembers(committee, dist) {
 
 module.exports = {
   createCommittee,
+  enterMembers,
   distance,
   shuffleAccount,
   distanceToProposal,
@@ -126,6 +159,8 @@ module.exports = {
   isCommitteeOpen,
   isCoolingDown,
   isInvalid,
+  isInCommitPhase,
+  advanceBlocksToReachActivationHeight,
   SENTINEL_MEMBERS,
   assertCommitteeMembers,
 };

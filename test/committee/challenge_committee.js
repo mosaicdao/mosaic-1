@@ -21,28 +21,10 @@ const web3 = require('../test_lib/web3.js');
 const CommitteeUtils = require('./utils.js');
 
 function compare(a, b) {
-  return a.distance - b.distance;
+  return a.distance.cmp(b.distance);
 }
 
 let config = {};
-
-async function enterMembers(accountProvider, committeeContract, members, consensus) {
-  const sentinelMembers = await committeeContract.SENTINEL_MEMBERS.call();
-
-  const enterPromises = [];
-  for (let i = 0; i < members.length; i += 1) {
-    enterPromises.push(
-      committeeContract.enterCommittee(
-        members[i],
-        sentinelMembers,
-        {
-          from: consensus,
-        },
-      ),
-    );
-  }
-  await Promise.all(enterPromises);
-}
 
 contract('Committee:challengeCommittee', async (accounts) => {
   const accountProvider = new AccountProvider(accounts);
@@ -86,8 +68,7 @@ contract('Committee:challengeCommittee', async (accounts) => {
     config.committee.closestMember = dist[0].address;
     config.committee.memberToInitiateCooldown = dist[1].address;
 
-    await enterMembers(
-      accountProvider,
+    await CommitteeUtils.enterMembers(
       config.committee.contract,
       dist.slice(1, config.committee.size + 1).map(
         d => d.address,
