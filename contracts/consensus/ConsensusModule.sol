@@ -23,8 +23,11 @@ contract ConsensusModule {
 
     modifier onlyConsensus()
     {
-        require(msg.sender == address(consensus),
-            "Only the consensus contract can call this function.");
+        require(
+            msg.sender == address(consensus),
+            "Only the consensus contract can call this function."
+        );
+
         _;
     }
 
@@ -33,4 +36,4 @@ contract ConsensusModule {
     {
         consensus = ConsensusI(_consensus);
     }
- }
+}

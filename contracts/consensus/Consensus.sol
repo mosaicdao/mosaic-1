@@ -21,6 +21,8 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract Consensus {
 
+    /* Storage */
+
     using SafeMath for uint256;
 
     /** Committee formation block delay */
@@ -41,18 +43,22 @@ contract Consensus {
     /** Reputation contract for validators */
     ReputationI public reputation;
 
+
     /* Modifiers */
 
     modifier onlyValidator()
     {
-        require(reputation.isActive(msg.sender),
-            "Validator must be active in the reputation contract.");
+        require(
+            reputation.isActive(msg.sender),
+            "Validator must be active in the reputation contract."
+        );
+
         _;
     }
 
-    /* Constructor */
 
-    /** Initialise */
+    /* Special Member Functions */
+
     constructor(
         EIP20I _valueToken,
         uint256 _stakeAmount,
@@ -60,12 +66,23 @@ contract Consensus {
     )
         public
     {
-        require(address(_valueToken) != address(0),
-            "Value token must not be zero address.");
-        require(_committeeSize > 0,
-            "Committee size must be non-zero.");
+        require(
+            address(_valueToken) != address(0),
+            "Value token address is 0."
+        );
+
+        require(
+            _stakeAmount > 0,
+            "Stake amount is 0."
+        );
+
+        require(
+            _committeeSize > 0,
+            "Committee size is 0."
+        );
 
         valueToken = _valueToken;
+
         stakeAmount = _stakeAmount;
 
         committeeSize = _committeeSize;
@@ -100,7 +117,7 @@ contract Consensus {
     {
         // require(committeeFormationHash != 0,
         //     "Randomization hash must be set");
-        
+
     }
 
     /** Form committee from entries */
