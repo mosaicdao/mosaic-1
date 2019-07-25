@@ -132,9 +132,6 @@ function isInRevealPhase(status) {
   return CommitteeStatus.RevealPhase.cmp(status) === 0;
 }
 
-
-const SENTINEL_MEMBERS = '0x1';
-
 async function assertCommitteeMembers(committee, dist) {
   const membersCount = (await committee.memberCount.call()).toNumber();
 
@@ -187,7 +184,6 @@ module.exports = {
   isInRevealPhase,
   passActivationBlockHeight,
   passCommitTimeoutBlockHeight,
-  SENTINEL_MEMBERS,
   assertCommitteeMembers,
   sealCommit,
 };

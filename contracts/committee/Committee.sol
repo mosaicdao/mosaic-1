@@ -18,7 +18,10 @@ import "../consensus/ConsensusModule.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 
-/** @title Committee */
+/**
+ * @title Committee
+ * @author Benjamin Bollen - <ben@ost.com>
+ */
 contract Committee is ConsensusModule {
 
     /* Usings */
@@ -116,8 +119,7 @@ contract Committee is ConsensusModule {
 
     /**
      * Committee members count.
-     *
-     * Counts members entered and reaches maximum at committeSize.
+     * Counts members entered and reaches maximum at committeeSize.
      */
     uint256 public memberCount;
 
@@ -185,7 +187,6 @@ contract Committee is ConsensusModule {
             members[msg.sender] != address(0),
             "Only members can call this function."
         );
-
         _;
     }
 
@@ -194,7 +195,6 @@ contract Committee is ConsensusModule {
             committeeStatus == CommitteeStatus.Open,
             "Committee formation must be open."
         );
-
         _;
     }
 
@@ -203,7 +203,6 @@ contract Committee is ConsensusModule {
             committeeStatus == CommitteeStatus.Cooldown,
             "Committee formation must be cooling down."
         );
-
         _;
     }
 
@@ -212,7 +211,6 @@ contract Committee is ConsensusModule {
             committeeStatus == CommitteeStatus.CommitPhase,
             "Committee must be in the commit phase."
         );
-
         _;
     }
 
@@ -221,7 +219,6 @@ contract Committee is ConsensusModule {
             committeeStatus == CommitteeStatus.RevealPhase,
             "Committee must be in the reveal phase."
         );
-
         _;
     }
 
@@ -230,7 +227,6 @@ contract Committee is ConsensusModule {
             committeeDecision != bytes32(0),
             "Committee must have reached a quorum decision."
         );
-
         _;
     }
 
@@ -242,10 +238,10 @@ contract Committee is ConsensusModule {
      *
      * @param _committeeSize Size of the committee. A minimum size is 3.
      * @param _dislocation Used to dislocate a validator position in a hashed
-     *                     space before calculating a distance from a proposal
-     *                     for example. A non-zero value is expected.
-     * @param _proposal A proposal for committee to agree on. A non-zero value
-     *                  is expected.
+     *                     space before calculating a distance from a proposal.
+     *                     A non-zero value is required.
+     * @param _proposal A proposal for committee to evaluate. A non-zero value
+     *                  is required.
      *
      * @dev Functions requires:
      *          -
@@ -436,10 +432,7 @@ contract Committee is ConsensusModule {
             "Member should not already be in the committee."
         );
 
-        uint256 dBoundary = distance(
-            shuffle(members[SENTINEL_MEMBERS]),
-            proposal
-        );
+        uint256 dBoundary = distanceToProposal(members[SENTINEL_MEMBERS]);
 
         uint256 dExcludedMember = distanceToProposal(_excludedMember);
 

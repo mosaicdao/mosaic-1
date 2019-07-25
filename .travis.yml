@@ -29,6 +29,7 @@ install:
 before_script:
   - ./tools/run_ganache_cli.sh </dev/null 1>/dev/null 2>&1 &
 script:
-  - npm run test:contracts test/committee/constructor.js
+  - npm run compile
+  - npm run test:contracts
 after_script:
   - kill $(ps aux | grep 'ganache-cli' | awk '{print $2}')
