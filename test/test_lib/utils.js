@@ -16,6 +16,12 @@ const Assert = require('assert');
 const BN = require('bn.js');
 const web3 = require('./web3.js');
 
+async function advanceBlock() {
+  return web3.currentProvider.send(
+    'evm_mine',
+  );
+}
+
 const ResultType = {
   FAIL: 0,
   SUCCESS: 1,
@@ -120,7 +126,8 @@ Utils.prototype = {
 
       return;
     }
-    assert(false, 'Did not throw as expected');
+
+    assert(false, `Did not throw with error message: ${expectedMessage}`);
   },
 
   /**
@@ -144,7 +151,7 @@ Utils.prototype = {
       return;
     }
 
-    assert(false, 'Did not revert as expected.');
+    assert(false, `Did not revert with expected error message: ${expectedMessage}`);
   },
 
   /**
@@ -230,17 +237,13 @@ Utils.prototype = {
     });
   },
 
-  advanceBlock: async () => {
-    await web3.currentProvider.send(
-      {
-        jsonrpc: '2.0',
-        method: 'evm_mine',
-        id: new Date().getTime(),
-      },
-      (err) => {
-        assert.strictEqual(err, null);
-      },
-    );
+  advanceBlock,
+
+  advanceBlocks: async (amount) => {
+    for (let i = 0; i < amount; i += 1) {
+      // eslint-disable-next-line no-await-in-loop
+      await advanceBlock();
+    }
   },
 
   getTypeHash: structDescriptor => web3.utils.sha3(

@@ -14,29 +14,30 @@
 
 'use strict';
 
-const BN = require('bn.js');
-
-const web3 = require('../test_lib/web3.js');
+const { AccountProvider } = require('../test_lib/utils.js');
 const Utils = require('../test_lib/utils.js');
+const web3 = require('../test_lib/web3.js');
 
 const CommitteeUtils = require('./utils.js');
-const { AccountProvider } = require('../test_lib/utils.js');
 
+let config = {};
 
 contract('Committee::constructor', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
 
-  const config = {
-    consensus: accountProvider.get(),
-    committeeSize: new BN(10),
-    dislocation: web3.utils.sha3('dislocation'),
-    proposal: web3.utils.sha3('proposal'),
-  };
-  Object.freeze(config);
+  beforeEach(async () => {
+    config = {
+      committeeSize: 50,
+      dislocation: web3.utils.sha3('dislocation'),
+      proposal: web3.utils.sha3('proposal'),
+      consensus: accountProvider.get(),
+    };
+    Object.freeze(config);
+  });
 
   contract('Negative Tests', () => {
     it('should fail if committee size is less than 3', async () => {
-      Utils.expectThrow(
+      await Utils.expectRevert(
         CommitteeUtils.createCommittee(
           2, // committee size,
           config.dislocation,
@@ -50,7 +51,7 @@ contract('Committee::constructor', (accounts) => {
     });
 
     it('should fail if a dislocation is 0', async () => {
-      Utils.expectThrow(
+      await Utils.expectRevert(
         CommitteeUtils.createCommittee(
           config.committeeSize,
           '0x', // dislocation,
@@ -64,7 +65,7 @@ contract('Committee::constructor', (accounts) => {
     });
 
     it('should fail if a proposal is 0', async () => {
-      Utils.expectThrow(
+      await Utils.expectRevert(
         CommitteeUtils.createCommittee(
           config.committeeSize,
           config.dislocation,
@@ -116,11 +117,10 @@ contract('Committee::constructor', (accounts) => {
         `Consensus contract is set to ${consensus} and is not ${config.consensus}.`,
       );
 
-      const proposal = await committee.proposal.call();
-      assert.strictEqual(
-        proposal === config.proposal,
-        true,
-        'Proposals don\'t match.',
+      const committeeSize = await committee.committeeSize.call();
+      assert.isOk(
+        committeeSize.eqn(config.committeeSize),
+        'Committee size does not match with input parameter.',
       );
 
       const dislocation = await committee.dislocation.call();
@@ -128,6 +128,13 @@ contract('Committee::constructor', (accounts) => {
         dislocation === config.dislocation,
         true,
         'Dislocation doesn\'t match.',
+      );
+
+      const proposal = await committee.proposal.call();
+      assert.strictEqual(
+        proposal === config.proposal,
+        true,
+        'Proposals don\'t match.',
       );
 
       const status = await committee.committeeStatus.call();
@@ -142,7 +149,6 @@ contract('Committee::constructor', (accounts) => {
       const expectedQuorum = Math.floor(
         config.committeeSize * superMajorityNumerator / superMajorityDenominator,
       );
-
       assert.isOk(
         actualQuorum.eqn(expectedQuorum),
         'Quorum\'s do not match',

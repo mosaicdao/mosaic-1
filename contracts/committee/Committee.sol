@@ -49,8 +49,13 @@ contract Committee is ConsensusModule {
      */
     uint256 public constant COMMITTEE_FORMATION_COOLDOWN = uint256(50);
 
-    /** Timeout for accepting commits from members. About a day on Ethereum. */
-    uint256 public constant COMMITTEE_COMMIT_PHASE_TIMEOUT = uint256(5760);
+    /**
+     * Timeout for accepting commits from members
+     * The proposed value is uint256(5760) which is about a day on Ethereum.
+     * Lowering it 10 times to ease testing.
+     * @qn (pro): Should we move this into the constructor as an argument?
+     */
+    uint256 public constant COMMITTEE_COMMIT_PHASE_TIMEOUT = uint256(576);
 
     /**
      * Timeout for revealing positions of members. About two hours on Ethereum.
@@ -283,7 +288,24 @@ contract Committee is ConsensusModule {
 
     /* External functions */
 
-    /** Enter a validator into the committee. */
+    /**
+     * @notice Enters a `_validator` into the committee.
+     *
+     * @dev Function requires:
+     *          - only the consensus contract can call
+     *          - the committe's status is open
+     *          - the specified validator distance from the proposal is less
+     *            then the specified further member one.
+     *
+     * @param _validator Validator address to enter.
+     *                   The specified address:
+     *                      - is not 0
+     *                      - is not the member-sentinel
+     *                      - has not been already entered
+     * @param _furtherMember Further member (compared with the validator)
+     *                       address. The specified address:
+     *                          - has been already entered
+     */
     function enterCommittee(
         address _validator,
         address _furtherMember
@@ -356,8 +378,14 @@ contract Committee is ConsensusModule {
     }
 
     /**
-     * @notice Initiate cool down for committee during which objections can
+     * @notice Initiates cool down for the committee during which objections can
      *         be raised for the members entered in the committee.
+     *
+     * @dev Function requires:
+     *          - only a member can call
+     *          - the committee is in an open state
+     *          - members' count in the committee is equal to the committee's
+     *            size
      */
     function cooldownCommittee()
         external
@@ -388,6 +416,11 @@ contract Committee is ConsensusModule {
      *      committee but should have been.
      *      Any excluded member invalidates the committee and member who
      *      initiated cooldown wrongly will be slashed.
+     *
+     * @param _excludedMember Excluded member of the committee. Requires that
+     *                        the specified account is not a member and
+     *                        that its distance from the proposal is less than
+     *                        furthest committee member distance.
      */
     function challengeCommittee(address _excludedMember)
         external
@@ -412,14 +445,21 @@ contract Committee is ConsensusModule {
 
         committeeStatus = CommitteeStatus.Invalid;
 
+        // @qn (pro): We can remove this call and let consensus to slash
+        // a member that has wrongly initiated cooldown.
         slashMember(memberInitiatedCooldown);
     }
 
     /**
-     * @notice Activate committee after formation cooled down.
+     * @notice Activates the committee after formation cooled down.
      *         After activation commits can be submitted.
+     *
+     * @dev Function requires:
+     *          - only member can call
+     *          - committee is in cooling down status
+     *          - committee activation block height is reached
      */
-    function activateCommittee ()
+    function activateCommittee()
         external
         onlyMember
         isCoolingDown
@@ -435,7 +475,21 @@ contract Committee is ConsensusModule {
         commitTimeOutBlockHeight = block.number + COMMITTEE_COMMIT_PHASE_TIMEOUT;
     }
 
-    /** @notice Members can submit their sealed commit. */
+    /**
+     * @notice Members can submit their sealed commit.
+     *         The function transitions the committee to the reveal phase
+     *         in either of the below conditions:
+     *              - all members have submitted their sealed commits
+     *              - commit timeout block height has been reached
+     *
+     * @dev Function requires:
+     *          - committee is in commit phase
+     *          - only member can call
+     *          - member can commit only once
+     *
+     * @param _sealedCommit Sealed commit of a member. Non-zero value is
+     *                      required.
+     */
     function submitSealedCommit(bytes32 _sealedCommit)
         external
         onlyMember
@@ -552,6 +606,15 @@ contract Committee is ConsensusModule {
 
     /* Public Functions */
 
+    /**
+     * @notice Calculates a distance of the specified `_account` from the
+     *         `proposal`. The `_account` is shuffled/dislocated in the
+     *         hashed space before calculating a distande.
+     *
+     * @param _account The account address to calculate distance from the
+     *                 proposal.
+     *
+     */
     function distanceToProposal(address _account)
         public
         view
@@ -569,6 +632,8 @@ contract Committee is ConsensusModule {
     function tryStartRevealPhase()
         private
     {
+        // @qn (pro): Should reveal phase start if submitted seals' amount is
+        //            less then the quorum amount.
         if (submissionCount == memberCount ||
             block.number > commitTimeOutBlockHeight) {
             committeeStatus = CommitteeStatus.RevealPhase;
@@ -591,6 +656,7 @@ contract Committee is ConsensusModule {
         // TODO: implement consensus interface to slash from committee
         // consensus.slashValidator(_member);
     }
+
     /**
      * Insert member into commitee
      * @dev important, this private function does *not* perform
@@ -643,12 +709,20 @@ contract Committee is ConsensusModule {
         }
     }
 
+    /**
+     * @notice Shuffles (dislocates) `_validator` in the hashed space using
+     *         `dislocation` member.
+     *
+     * @param _validator The validator address to shuffle.
+     *
+     * @return Shuffled value of the specified `_validator`.
+     */
     function shuffle(address _validator)
         public
         view
         returns (bytes32)
     {
-        // return the dislocated position of the validator
+        // Returns the dislocated position of the validator.
         return keccak256(
             // TODO: note abi.encodePacked seems unneccesary,
             // is there an overhead?
@@ -659,23 +733,23 @@ contract Committee is ConsensusModule {
         );
     }
 
-    /** Distance metric for sorting validators */
+    /** @notice Distance metric between `_a` and `_b` for sorting validators. */
     function distance(bytes32 _a, bytes32 _b)
         private
         pure
         returns (uint256 distance_)
     {
-        // return _a XOR _b as a distance
+        // Returns _a XOR _b as a distance.
         distance_ = uint256(_a ^ _b);
     }
 
-    /** use the salt to seal the position */
+    /** Uses the salt to seal the position. */
     function sealPosition(bytes32 _position, bytes32 _salt)
         private
         pure
         returns (bytes32)
     {
-        // return the sealed position
+        // Returns the sealed position.
         return keccak256(
             // TODO: note abi.encodePacked seems unneccesary,
             // is there an overhead?

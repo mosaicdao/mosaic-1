@@ -14,6 +14,7 @@
 
 const BN = require('bn.js');
 
+const Utils = require('../test_lib/utils.js');
 const web3 = require('../test_lib/web3.js');
 
 const Committee = artifacts.require('Committee');
@@ -26,18 +27,66 @@ function remove0x(str) {
   return str;
 }
 
-async function createCommittee(committeeSize, dislocation, proposal) {
+async function createCommittee(committeeSize, dislocation, proposal, txOptions = {}) {
   return Committee.new(
     committeeSize,
     dislocation,
     proposal,
+    txOptions,
   );
+}
+
+async function enterMembers(committeeContract, members, consensus) {
+  const sentinelMembers = await committeeContract.SENTINEL_MEMBERS.call();
+
+  const enterPromises = [];
+  for (let i = 0; i < members.length; i += 1) {
+    enterPromises.push(
+      committeeContract.enterCommittee(
+        members[i],
+        sentinelMembers,
+        {
+          from: consensus,
+        },
+      ),
+    );
+  }
+  await Promise.all(enterPromises);
+}
+
+async function passActivationBlockHeight(committeeContract) {
+  const activationBlockHeight = await committeeContract.activationBlockHeight.call();
+  const blockNumber = await web3.eth.getBlockNumber();
+
+  if (activationBlockHeight.lt(new BN(blockNumber))) {
+    return;
+  }
+
+  await Utils.advanceBlocks(activationBlockHeight.isub(new BN(blockNumber - 1)));
+}
+
+async function passCommitTimeoutBlockHeight(committeeContract) {
+  const commitTimeOutBlockHeight = await committeeContract.commitTimeOutBlockHeight.call();
+  const blockNumber = await web3.eth.getBlockNumber();
+
+  if (commitTimeOutBlockHeight.lt(new BN(blockNumber))) {
+    return;
+  }
+
+  await Utils.advanceBlocks(commitTimeOutBlockHeight.isub(new BN(blockNumber - 1)));
 }
 
 function shuffleAccount(dislocation, account) {
   return web3.utils.soliditySha3(
     { t: 'address', v: account },
     { t: 'bytes32', v: dislocation },
+  );
+}
+
+function sealCommit(position, seal) {
+  return web3.utils.soliditySha3(
+    { t: 'bytes32', v: position },
+    { t: 'bytes32', v: seal },
   );
 }
 
@@ -67,11 +116,74 @@ function isCommitteeOpen(status) {
   return CommitteeStatus.Open.cmp(status) === 0;
 }
 
+function isCoolingDown(status) {
+  return CommitteeStatus.Cooldown.cmp(status) === 0;
+}
+
+function isInvalid(status) {
+  return CommitteeStatus.Invalid.cmp(status) === 0;
+}
+
+function isInCommitPhase(status) {
+  return CommitteeStatus.CommitPhase.cmp(status) === 0;
+}
+
+function isInRevealPhase(status) {
+  return CommitteeStatus.RevealPhase.cmp(status) === 0;
+}
+
+async function assertCommitteeMembers(committee, dist) {
+  const membersCount = (await committee.memberCount.call()).toNumber();
+
+  assert.strictEqual(
+    membersCount,
+    dist.length,
+  );
+
+  if (membersCount === 0) {
+    return;
+  }
+
+  // assert all members in the committee match the distance ordered validators.
+  for (let i = 0; i < membersCount - 1; i += 1) {
+    // get the next further member in the committee
+    // note: the linked-list refers to the closer member
+    // eslint-disable-next-line no-await-in-loop
+    const member = await committee.members.call(dist[i + 1].address);
+    assert.strictEqual(
+      member,
+      dist[i].address,
+      `Member ${i} is ${dist[i].address}, but was expected to be ${member}`,
+    );
+  }
+
+  const sentinelMembers = await committee.SENTINEL_MEMBERS.call();
+  const member = await committee.members.call(sentinelMembers);
+
+  // assert we've reached the end of the linked-list
+  assert.strictEqual(
+    member,
+    dist[membersCount - 1].address,
+    `The furthest member ${dist[membersCount - 1].address} should be `
+          + `given by Sentinel but instead ${member} was returned.`,
+  );
+}
+
+
 module.exports = {
   createCommittee,
+  enterMembers,
   distance,
   shuffleAccount,
   distanceToProposal,
   CommitteeStatus,
   isCommitteeOpen,
+  isCoolingDown,
+  isInvalid,
+  isInCommitPhase,
+  isInRevealPhase,
+  passActivationBlockHeight,
+  passCommitTimeoutBlockHeight,
+  assertCommitteeMembers,
+  sealCommit,
 };
