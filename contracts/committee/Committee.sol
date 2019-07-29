@@ -237,7 +237,7 @@ contract Committee is ConsensusModule {
      * @notice Setups a new committee.
      *
      * @param _committeeSize Size of the committee. A minimum size is 3.
-     * @param _dislocation Used to dislocate a validator position in a hashed
+     * @param _dislocation Used to dislocate a validator location in a hashed
      *                     space before calculating a distance from a proposal.
      *                     A non-zero value is required.
      * @param _proposal A proposal for committee to evaluate. A non-zero value
@@ -295,7 +295,7 @@ contract Committee is ConsensusModule {
      *          - only the consensus contract can call
      *          - the committe's status is open
      *          - the specified validator distance from the proposal is less
-     *            then the specified further member one.
+     *            than the specified further member one.
      *
      * @param _validator Validator address to enter.
      *                   The specified address:
@@ -515,6 +515,9 @@ contract Committee is ConsensusModule {
     /**
      * @notice Allow explicit closure of commit phase to trigger
      *         timeout condition.
+     *
+     * @dev Function requires:
+     *          - committee is in commit phase
      */
     function closeCommitPhase()
         external
@@ -523,6 +526,19 @@ contract Committee is ConsensusModule {
         tryStartRevealPhase();
     }
 
+    /**
+     * @notice Members reveal their positions and salts.
+     *
+     * @dev Function requires:
+     *          - only member can call
+     *          - committee is in reveal phase
+     *          - member has submitted and has not reveal its commit yet
+     *          - position and salt must match with sealed commit
+     *
+     * @param _position Position of the member's commit.
+     *                  Non-zero value is required.
+     * @param _salt Salt of the member's submitted commit.
+     */
     function revealCommit(bytes32 _position, bytes32 _salt)
         external
         onlyMember
@@ -554,10 +570,12 @@ contract Committee is ConsensusModule {
         positions[msg.sender] = _position;
 
         positionCounts[_position] = positionCounts[_position].add(1);
+
         if (positionCounts[_position] == 1) {
             // For each newly seen position, push it to the array.
             positionsTaken.push(_position);
         }
+
         if (positionCounts[_position] >= quorum) {
             // Sanity check, there should not be more than one position
             // that can achieve quorum.
@@ -565,8 +583,9 @@ contract Committee is ConsensusModule {
                 committeeDecision == bytes32(0) ||
                 committeeDecision == _position
             );
-            positionsTaken.push(_position);
+            committeeDecision = _position;
         }
+
         totalPositionsCount = totalPositionsCount.add(1);
     }
 
@@ -733,7 +752,10 @@ contract Committee is ConsensusModule {
         );
     }
 
-    /** @notice Distance metric between `_a` and `_b` for sorting validators. */
+    /**
+     * @notice Returns a distance (by using XOR) between `_a` and `_b`
+     *         for sorting validators.
+     */
     function distance(bytes32 _a, bytes32 _b)
         private
         pure

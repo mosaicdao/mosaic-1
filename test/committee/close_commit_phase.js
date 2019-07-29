@@ -15,7 +15,6 @@
 'use strict';
 
 const BN = require('bn.js');
-const crypto = require('crypto');
 
 const { AccountProvider } = require('../test_lib/utils.js');
 const Utils = require('../test_lib/utils.js');
@@ -24,19 +23,6 @@ const web3 = require('../test_lib/web3.js');
 const CommitteeUtils = require('./utils.js');
 
 let config = {};
-
-function createCommitteeMember(account, proposal) {
-  const member = {
-    address: account,
-    salt: `0x${crypto.randomBytes(32).toString('hex')}`,
-  };
-
-  member.sealedCommit = CommitteeUtils.sealCommit(
-    proposal, member.salt,
-  );
-
-  return member;
-}
 
 contract('Committee::closeCommitPhase', async (accounts) => {
   const accountProvider = new AccountProvider(accounts);
@@ -69,18 +55,6 @@ contract('Committee::closeCommitPhase', async (accounts) => {
       );
     }
 
-    config.committee.memberA = createCommitteeMember(
-      members[0], config.committee.proposal,
-    );
-
-    config.committee.memberB = createCommitteeMember(
-      members[1], config.committee.proposal,
-    );
-
-    config.committee.memberC = createCommitteeMember(
-      members[2], config.committee.proposal,
-    );
-
     await CommitteeUtils.enterMembers(
       config.committee.contract,
       members,
@@ -89,7 +63,7 @@ contract('Committee::closeCommitPhase', async (accounts) => {
 
     await config.committee.contract.cooldownCommittee(
       {
-        from: config.committee.memberA.address,
+        from: members[0],
       },
     );
 
@@ -97,7 +71,7 @@ contract('Committee::closeCommitPhase', async (accounts) => {
 
     await config.committee.contract.activateCommittee(
       {
-        from: config.committee.memberB.address,
+        from: members[0],
       },
     );
 
