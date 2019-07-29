@@ -222,14 +222,6 @@ contract Committee is ConsensusModule {
         _;
     }
 
-    modifier isDecided() {
-        require(
-            committeeDecision != bytes32(0),
-            "Committee must have reached a quorum decision."
-        );
-        _;
-    }
-
 
     /* Special Functions */
 
@@ -589,15 +581,16 @@ contract Committee is ConsensusModule {
         totalPositionsCount = totalPositionsCount.add(1);
     }
 
+    /** @notice Returns true if the proposal reached the quorum. */
     function proposalAccepted()
         external
         view
-        isDecided
         returns (bool)
     {
         return positionCounts[proposal] >= quorum;
     }
 
+    /** @notice Returns an array of committee members. */
     function getMembers()
         external
         view
@@ -607,7 +600,7 @@ contract Committee is ConsensusModule {
         address currentMember = members[SENTINEL_MEMBERS];
         while(currentMember != SENTINEL_MEMBERS) {
             currentMember = members[currentMember];
-            c ++;
+            c++;
         }
         assert(c == memberCount);
         address[] memory array = new address[](c);
@@ -617,7 +610,7 @@ contract Committee is ConsensusModule {
         while(currentMember != SENTINEL_MEMBERS) {
             array[c] = currentMember;
             currentMember = members[currentMember];
-            c ++;
+            c++;
         }
         return array;
     }
