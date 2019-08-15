@@ -14,10 +14,10 @@ pragma solidity ^0.5.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../utility-token/contracts/UtilityToken.sol";
-import "../utility-token/contracts/organization/contracts/OrganizationInterface.sol";
+// import "../utility-token/contracts/UtilityToken.sol";
+// import "../utility-token/contracts/organization/contracts/OrganizationInterface.sol";
 
-contract GasMarket is UtilityToken {
+contract GasMarket { //is UtilityToken {
 
     /* Storage */
 
@@ -48,17 +48,17 @@ contract GasMarket is UtilityToken {
     /* External / public functions */
 
     constructor(
-        address _kernelGateway,
-        OrganizationInterface _organization
+        address _kernelGateway
+        // OrganizationInterface _organization
     )
         public
-        UtilityToken(
-            OST_TOKEN_MAINNET,
-            OST_TOKEN_SYMBOL,
-            OST_TOKEN_NAME,
-            OST_TOKEN_DECIMALS,
-            _organization
-        )
+        // UtilityToken(
+        //     OST_TOKEN_MAINNET,
+        //     OST_TOKEN_SYMBOL,
+        //     OST_TOKEN_NAME,
+        //     OST_TOKEN_DECIMALS,
+        //     _organization
+        // )
     {
         require(_kernelGateway != address(0),
             "Kernel gateway must not be null.");
@@ -89,7 +89,9 @@ contract GasMarket is UtilityToken {
         // record the failure of the message.
         if (_account == address(this)) {
             // deposit OST into the gas market
-            success_ = super.increaseSupplyInternal(address(this), _amount);
+            // TODO: implement ERC20
+            // success_ = super.increaseSupplyInternal(address(this), _amount);
+            success_ = true;
         } else {
             success_ = false;
         }

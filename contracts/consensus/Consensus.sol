@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity >=0.5.0 <0.6.0;
 
 // Copyright 2019 OpenST Ltd.
 //
@@ -21,21 +21,73 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract Consensus {
 
-    /* Storage */
-
     using SafeMath for uint256;
 
+
+    /* Constants */
+
     /** Committee formation block delay */
-    uint256 public constant COMMITTEE_FORMATION_DELAY = uint256(35);
+    uint256 public constant COMMITTEE_FORMATION_DELAY = uint256(14);
 
-    /** EIP20 token for stakes and rewards for validators */
-    EIP20I public valueToken;
+    /** Committee formation mixing length */
+    uint256 public constant COMMITTEE_FORMATION_LENGTH = uint256(7);
 
-    /** Required stake amount to join as a validator */
-    uint256 public stakeAmount;
+    /** Core status Halted */
+    bytes20 public constant CORE_STATUS_HALTED = bytes20(keccak256("CORE_STATUS_HALTED"));
+
+    /** Core status Corrupted */
+    bytes20 public constant CORE_STATUS_CORRUPTED = bytes20(keccak256("CORE_STATUS_CORRUPTED"));
+
+
+    /* Structs */
+
+    /** Precommit from core for a next metablock */
+    struct Precommit {
+        bytes32 proposal;
+        uint256 committeeFormationBlockHeight;
+    }
+
+
+    /* Storage */
+
+    /** EIP20 mOST for stakes and rewards for validators */
+    EIP20I public mOST;
+
+    /** Required stake amount in mOST to join as a validator */
+    uint256 public stakeMOSTAmount;
+
+    /** Required stake amount in ETH to join as a validator */
+    uint256 public stakeETHAmount;
 
     /** Committee size */
     uint256 public committeeSize;
+
+    /** Minimum number of validators that must join a created core to open */
+    uint256 public minCoreSize;
+
+    /** Maximum number of validatirs that can join in a core */
+    uint256 public maxCoreSize;
+
+    /** Gas target delta to open new metablock */
+    uint256 public gasTargetDelta;
+
+    /** Coinbase split percentage */
+    uint256 public coinbaseSplitPercentage;
+
+    /** Block hash of heads of Metablockchains */
+    mapping(bytes20 /* chainId */ => bytes32 /* MetablockHash */) public metablockHeaderTips;
+
+    /** Core statuses */
+    mapping(address /* core */ => bytes20 /* coreStatus */) public coreStatuses;
+
+    /** Assigned core for a given chainId */
+    mapping(bytes20 /* chainId */ => address /* core */) public assignments;
+
+    /** Precommitted proposals from core for a metablockchain */
+    mapping(address /* core */ => Precommit) public precommits;
+
+    /** Proposals under consideration of a committee */
+    mapping(bytes32 /* proposal */ => address /* committee */) public proposals;
 
     /** Proposals mapped to Committees */
     mapping(bytes32 => address) public committees;
@@ -60,20 +112,21 @@ contract Consensus {
     /* Special Member Functions */
 
     constructor(
-        EIP20I _valueToken,
-        uint256 _stakeAmount,
+        EIP20I _mOST,
+        uint256 _stakeMOSTAmount,
+        uint256 _stakeETHAmount,
         uint256 _committeeSize
     )
         public
     {
         require(
-            address(_valueToken) != address(0),
-            "Value token address is 0."
+            address(_mOST) != address(0),
+            "mOST address is 0."
         );
 
         require(
-            _stakeAmount > 0,
-            "Stake amount is 0."
+            _stakeMOSTAmount.add(_stakeETHAmount) > 0,
+            "Total stake amount is 0."
         );
 
         require(
@@ -81,9 +134,11 @@ contract Consensus {
             "Committee size is 0."
         );
 
-        valueToken = _valueToken;
+        mOST = _mOST;
 
-        stakeAmount = _stakeAmount;
+        stakeMOSTAmount = _stakeMOSTAmount;
+
+        stakeETHAmount = _stakeETHAmount;
 
         committeeSize = _committeeSize;
     }
