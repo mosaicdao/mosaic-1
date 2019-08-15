@@ -54,6 +54,39 @@ async function enterMembers(committeeContract, members, consensus) {
   await Promise.all(enterPromises);
 }
 
+async function submitSealedCommits(committee, members, sealedCommits) {
+  assert(members.length === sealedCommits.length);
+
+  const promises = [];
+  for (let i = 0; i < members.length; i += 1) {
+    promises.push(
+      committee.submitSealedCommit(
+        sealedCommits[i],
+        { from: members[i] },
+      ),
+    );
+  }
+
+  await Promise.all(promises);
+}
+
+async function revealCommits(committee, members, commits) {
+  assert(members.length === commits.length);
+
+  const promises = [];
+  for (let i = 0; i < members.length; i += 1) {
+    promises.push(
+      committee.revealCommit(
+        commits[i].position,
+        commits[i].salt,
+        { from: members[i] },
+      ),
+    );
+  }
+
+  await Promise.all(promises);
+}
+
 async function passActivationBlockHeight(committeeContract) {
   const activationBlockHeight = await committeeContract.activationBlockHeight.call();
   const blockNumber = await web3.eth.getBlockNumber();
@@ -173,6 +206,8 @@ async function assertCommitteeMembers(committee, dist) {
 module.exports = {
   createCommittee,
   enterMembers,
+  submitSealedCommits,
+  revealCommits,
   distance,
   shuffleAccount,
   distanceToProposal,
