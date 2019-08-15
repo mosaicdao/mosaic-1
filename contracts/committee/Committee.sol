@@ -187,6 +187,7 @@ contract Committee is ConsensusModule {
             members[msg.sender] != address(0),
             "Only members can call this function."
         );
+
         _;
     }
 
@@ -195,6 +196,7 @@ contract Committee is ConsensusModule {
             committeeStatus == CommitteeStatus.Open,
             "Committee formation must be open."
         );
+
         _;
     }
 
@@ -211,6 +213,7 @@ contract Committee is ConsensusModule {
             committeeStatus == CommitteeStatus.CommitPhase,
             "Committee must be in the commit phase."
         );
+
         _;
     }
 
@@ -219,6 +222,7 @@ contract Committee is ConsensusModule {
             committeeStatus == CommitteeStatus.RevealPhase,
             "Committee must be in the reveal phase."
         );
+
         _;
     }
 

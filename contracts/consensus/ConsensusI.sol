@@ -21,5 +21,5 @@ interface ConsensusI {
 
     function coreValidatorThresholds() external view returns (uint256 minimumValidatorCount_, uint256 joinLimit_);
 
-    function registerPrecommitment(bytes32 _precommitment) external;
+    function registerPrecommit(bytes32 _precommitment) external;
 }

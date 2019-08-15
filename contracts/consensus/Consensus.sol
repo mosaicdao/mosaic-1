@@ -108,6 +108,16 @@ contract Consensus {
         _;
     }
 
+    modifier onlyCore()
+    {
+        require(
+            isCore(msg.sender),
+            "Caller must be an active core."
+        );
+
+        _;
+    }
+
 
     /* Special Member Functions */
 
@@ -175,33 +185,24 @@ contract Consensus {
 
     }
 
-    /** Form committee from entries */
-    // caller puts up stake, to be slashed if omitted entries?
+    /** Core register precommit */
+    function registerPrecommit(bytes32 _proposal)
+        external
+        onlyCore
+        returns (bool)
+    {
+        // onlyCore asserts msg.sender is active core
+        Precommit storage precommit = precommits[msg.sender];
+        require(
+            precommit.proposal == bytes32(0),
+            "There already exists a precommit of the core."
+        );
+        precommit.proposal = _proposal;
+        precommit.committeeFormationBlockHeight = block.number.add(COMMITTEE_FORMATION_DELAY);
+    }
+
+    /**  */
     function formCommittee()
-        external
-        returns (bool)
-    {
-
-    }
-
-    /** Precommit answer as committee member */
-    function precommit(bytes32 _concealedVote)
-        external
-        returns (bool)
-    {
-
-    }
-
-    /** Reveal answer */
-    function reveal(bytes32 _salt)
-        external
-        returns (bool)
-    {
-
-    }
-
-    /** Commit the answer */
-    function commit()
         external
         returns (bool)
     {
@@ -234,6 +235,18 @@ contract Consensus {
 
     }
 
-    /* Private functions */
 
+    /* Internal functions */
+
+    /**  */
+    function isCore(address _core)
+        internal
+        view
+        returns (bool)
+    {
+        bytes20 status = coreStatuses[_core];
+        return status != bytes20(0) &&
+            status != CORE_STATUS_HALTED &&
+            status != CORE_STATUS_CORRUPTED;
+    }
 }

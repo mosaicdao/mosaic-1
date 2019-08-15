@@ -207,10 +207,10 @@ contract Core is ConsensusModule, MosaicVersion {
     mapping(address => bytes32) public votes;
 
     /** Precommitment to a proposal */
-    bytes32 public precommitment;
+    bytes32 public precommit;
 
     /** Precommitment closure block height */
-    uint256 public precommitmentClosureBlockHeight;
+    uint256 public precommitClosureBlockHeight;
 
     /* Modifiers */
 
@@ -245,7 +245,7 @@ contract Core is ConsensusModule, MosaicVersion {
 
     modifier duringPrecommitmentWindow()
     {
-        require(block.number <= precommitmentClosureBlockHeight,
+        require(block.number <= precommitClosureBlockHeight,
             "The precommitment window must be open.");
         _;
     }
@@ -380,8 +380,8 @@ contract Core is ConsensusModule, MosaicVersion {
     {
         require(_proposal != bytes32(0),
             "Proposal can not be null.");
-        if (precommitment != bytes32(0)) {
-            require(_proposal == precommitment,
+        if (precommit != bytes32(0)) {
+            require(_proposal == precommit,
                 "Core has precommitted, only votes for precommitment are relevant.");
         }
 
@@ -407,7 +407,7 @@ contract Core is ConsensusModule, MosaicVersion {
         votes[validator] = _proposal;
         registerVoteCount.count = registerVoteCount.count.add(1);
         if (registerVoteCount.count >= quorum) {
-            precommit(_proposal);
+            registerPrecommit(_proposal);
         }
     }
 
@@ -419,10 +419,10 @@ contract Core is ConsensusModule, MosaicVersion {
         onlyConsensus
         whileMetablockPrecommitted
     {
-        assert(precommitment != bytes32(0));
+        assert(precommit != bytes32(0));
 
         openKernel.height = openKernel.height.add(1);
-        openKernel.parent = precommitment;
+        openKernel.parent = precommit;
         openKernel.gasTarget = _gasTarget;
         openKernel.gasPrice = _gasPrice;
 
@@ -464,7 +464,7 @@ contract Core is ConsensusModule, MosaicVersion {
         insertValidator(_validator);
         if (countValidators >= minimumValidatorCount) {
             quorum = calculateQuorum(countValidators);
-            precommitmentClosureBlockHeight = CORE_OPEN_VOTES_WINDOW;
+            precommitClosureBlockHeight = CORE_OPEN_VOTES_WINDOW;
             coreStatus = Status.opened;
         }
     }
@@ -521,17 +521,17 @@ contract Core is ConsensusModule, MosaicVersion {
      * precommit to a given proposal and lock core validators
      * to associated responsability
      */
-    function precommit(bytes32 _proposal)
+    function registerPrecommit(bytes32 _proposal)
         internal
     {
-        require(precommitment == bytes32(0) ||
-            precommitment == _proposal,
-            "Once locked, precommitment cannot be changed.");
+        require(precommit == bytes32(0) ||
+            precommit == _proposal,
+            "Once locked, precommit cannot be changed.");
         if (coreStatus == Status.opened) {
             coreStatus = Status.precommitted;
-            precommitment = _proposal;
-            precommitmentClosureBlockHeight = block.number + CORE_LAST_VOTES_WINDOW;
-            consensus.registerPrecommitment(precommitment);
+            precommit = _proposal;
+            precommitClosureBlockHeight = block.number + CORE_LAST_VOTES_WINDOW;
+            consensus.registerPrecommit(_proposal);
         }
     }
 
