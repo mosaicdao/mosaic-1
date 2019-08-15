@@ -14,17 +14,39 @@
 
 'use strict';
 
-const BN = require('bn.js');
+const crypto = require('crypto');
 
 const { AccountProvider } = require('../test_lib/utils.js');
-const Utils = require('../test_lib/utils.js');
 const web3 = require('../test_lib/web3.js');
 
 const CommitteeUtils = require('./utils.js');
 
 let config = {};
 
-contract('Committee::closeCommitPhase', async (accounts) => {
+function createCommitteeMember(account, position) {
+  const member = {
+    address: account,
+    position,
+    salt: `0x${crypto.randomBytes(32).toString('hex')}`,
+  };
+
+  member.sealedCommit = CommitteeUtils.sealCommit(
+    position, member.salt,
+  );
+
+  return member;
+}
+
+function createCommitteeMembers(accounts, position) {
+  const members = [];
+  for (let i = 0; i < accounts.length; i += 1) {
+    members.push(createCommitteeMember(accounts[i], position));
+  }
+
+  return members;
+}
+
+contract('Committee::proposalAccepted', async (accounts) => {
   const accountProvider = new AccountProvider(accounts);
 
   beforeEach(async () => {
@@ -55,6 +77,11 @@ contract('Committee::closeCommitPhase', async (accounts) => {
       );
     }
 
+    config.committee.members = createCommitteeMembers(
+      members,
+      config.committee.proposal,
+    );
+
     await CommitteeUtils.enterMembers(
       config.committee.contract,
       members,
@@ -63,7 +90,7 @@ contract('Committee::closeCommitPhase', async (accounts) => {
 
     await config.committee.contract.cooldownCommittee(
       {
-        from: members[0],
+        from: config.committee.members[0].address,
       },
     );
 
@@ -71,69 +98,51 @@ contract('Committee::closeCommitPhase', async (accounts) => {
 
     await config.committee.contract.activateCommittee(
       {
-        from: members[0],
+        from: config.committee.members[0].address,
       },
+    );
+
+    await CommitteeUtils.submitSealedCommits(
+      config.committee.contract,
+      config.committee.members.map(m => m.address),
+      config.committee.members.map(m => m.sealedCommit),
     );
 
     Object.freeze(config);
   });
 
-  contract('Negative Tests', async () => {
-    it('should fail if committee is not in commit phase status', async () => {
-      const committee = await CommitteeUtils.createCommittee(
-        3,
-        web3.utils.sha3('dislocation'),
-        web3.utils.sha3('proposal'),
-        {
-          from: accountProvider.get(),
-        },
-      );
-
-      await Utils.expectRevert(
-        committee.closeCommitPhase(
-          {
-            from: accountProvider.get(),
-          },
-        ),
-        'Committee must be in the commit phase.',
-      );
-    });
-  });
-
   contract('Positive Tests', async () => {
-    it('checks that committee closes commit phase '
-     + 'if the commit phase timeout has been reached', async () => {
+    it('checks that proposal is successfully accepted', async () => {
       const committeeContract = config.committee.contract;
 
-      let status = await committeeContract.committeeStatus.call();
-      assert.isNotOk(CommitteeUtils.isInRevealPhase(status));
+      assert.isNotOk(
+        await committeeContract.proposalAccepted.call(),
+      );
 
-      await committeeContract.closeCommitPhase(
+      const member0 = config.committee.members[0];
+      await committeeContract.revealCommit(
+        member0.position,
+        member0.salt,
         {
-          from: accountProvider.get(),
+          from: member0.address,
         },
       );
 
-      status = await committeeContract.committeeStatus.call();
-      assert.isNotOk(CommitteeUtils.isInRevealPhase(status));
-
-      await CommitteeUtils.passCommitTimeoutBlockHeight(committeeContract);
-
-      await committeeContract.closeCommitPhase(
-        {
-          from: accountProvider.get(),
-        },
+      assert.isNotOk(
+        await committeeContract.proposalAccepted.call(),
       );
 
-      status = await committeeContract.committeeStatus.call();
-      assert.isOk(CommitteeUtils.isInRevealPhase(status));
-
-      const revealTimeOutBlockHeight = await committeeContract.revealTimeOutBlockHeight.call();
-      const revealPhaseTimeout = await committeeContract.COMMITTEE_REVEAL_PHASE_TIMEOUT.call();
-      const currentBlock = await web3.eth.getBlockNumber();
+      const member1 = config.committee.members[1];
+      await committeeContract.revealCommit(
+        member1.position,
+        member1.salt,
+        {
+          from: member1.address,
+        },
+      );
 
       assert.isOk(
-        revealTimeOutBlockHeight.eq(revealPhaseTimeout.iadd(new BN(currentBlock))),
+        await committeeContract.proposalAccepted.call(),
       );
     });
   });
