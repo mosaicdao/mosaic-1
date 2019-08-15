@@ -9,7 +9,7 @@ Note: this repository is incomplete and not yet following the developer-guidelin
 ## Getting started
 
 ```bash
-git clone https://github.com/openst/compute compute
-cd compute
+git clone https://github.com/mosaicdao/mosaic-1 mosaic-1
+cd mosaic-1
 npm run update
 ```
