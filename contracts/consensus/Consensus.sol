@@ -161,19 +161,6 @@ contract Consensus {
 
     /* External functions */
 
-    /** enter a validator into the committee */
-    // at submission, future blockheight is set to function as seed
-    // first entry in window of 256 most recent blocks containing assigned block
-    function enterCommittee(address /*_validator*/, address /*_closerValidator*/)
-        external
-        view
-        returns (bool)
-    {
-        // require(committeeFormationHash != 0,
-        //     "Randomization hash must be set");
-
-    }
-
     /** Core register precommit */
     function registerPrecommit(bytes32 _proposal)
         external
@@ -223,6 +210,29 @@ contract Consensus {
         );
 
         startCommittee(seed, precommit.proposal);
+    }
+
+    /** enter a validator into the committee */
+    function enterCommittee(
+        address _committeeAddress,
+        address _validator,
+        address _furtherMember
+    )
+        external
+    {
+        require(
+            committees[_committeeAddress] != address(0),
+            "Committee does not exist."
+        );
+        require(
+            reputation.isActive(_validator),
+            "Validator is not active."
+        );
+        Committee committee = Committee(_committeeAddress);
+        require(
+            committee.enterCommittee(_validator, _furtherMember),
+            "Pro is happy."
+        );
     }
 
     /** Validator joins */
