@@ -27,16 +27,19 @@ contract Consensus {
     /* Constants */
 
     /** Committee formation block delay */
-    uint256 public constant COMMITTEE_FORMATION_DELAY = uint256(14);
+    uint256 public constant COMMITTEE_FORMATION_DELAY = uint8(14);
 
     /** Committee formation mixing length */
-    uint256 public constant COMMITTEE_FORMATION_LENGTH = uint256(7);
+    uint256 public constant COMMITTEE_FORMATION_LENGTH = uint8(7);
 
     /** Core status Halted */
     bytes20 public constant CORE_STATUS_HALTED = bytes20(keccak256("CORE_STATUS_HALTED"));
 
     /** Core status Corrupted */
     bytes20 public constant CORE_STATUS_CORRUPTED = bytes20(keccak256("CORE_STATUS_CORRUPTED"));
+
+    /** Sentinel pointer for marking end of linked-list of committees */
+    address public constant SENTINEL_COMMITTEES = address(0x1);
 
 
     /* Structs */
@@ -87,10 +90,10 @@ contract Consensus {
     mapping(address /* core */ => Precommit) public precommits;
 
     /** Proposals under consideration of a committee */
-    mapping(bytes32 /* proposal */ => address /* committee */) public proposals;
+    mapping(bytes32 /* proposal */ => Committee /* committee */) public proposals;
 
-    /** Proposals mapped to Committees */
-    mapping(bytes32 => address) public committees;
+    /** Linked-list of committees */
+    mapping(address => address) public committees;
 
     /** Reputation contract for validators */
     ReputationI public reputation;
@@ -151,26 +154,12 @@ contract Consensus {
         stakeETHAmount = _stakeETHAmount;
 
         committeeSize = _committeeSize;
+
+        committees[SENTINEL_COMMITTEES] = SENTINEL_COMMITTEES;
     }
 
+
     /* External functions */
-
-    // /** Randomize committee to start formation */
-    // function randomizeCommittee()
-    //     external
-    //     returns (bool)
-    // {
-    //     require(committeeFormationHash == 0,
-    //         "Committee formation hash is already set.");
-
-    //     require(block.number > committeeFormationHeight,
-    //         "Block height must be higher than set committee formation height.");
-    //     require(block.number - 256 < committeeFormationHeight,
-    //         "Committee formation height must be in 256 most recent blocks.");
-
-    //     committeeFormationHash = blockhash(committeeFormationHeight);
-    //     assert(committeeFormationHash != 0);
-    // }
 
     /** enter a validator into the committee */
     // at submission, future blockheight is set to function as seed
@@ -198,15 +187,42 @@ contract Consensus {
             "There already exists a precommit of the core."
         );
         precommit.proposal = _proposal;
-        precommit.committeeFormationBlockHeight = block.number.add(COMMITTEE_FORMATION_DELAY);
+        precommit.committeeFormationBlockHeight = block.number.add(uint256(COMMITTEE_FORMATION_DELAY));
     }
 
     /**  */
-    function formCommittee()
+    function formCommittee(address _core)
         external
         returns (bool)
     {
+        Precommit storage precommit = precommits[_core];
+        // note it should suffice to check only one property for existance, in PoC asserting both
+        require(
+            precommit.proposal != bytes32(0) &&
+            precommit.committeeFormationBlockHeight != uint256(0),
+            "There does not exist a precommitment of the core to a proposal"
+        );
+        require(
+            block.number > precommit.committeeFormationBlockHeight,
+            "Block height must be higher than set committee formation height."
+        );
+        require(
+            block.number
+                .sub(uint256(COMMITTEE_FORMATION_LENGTH))
+                .sub(uint256(256)) < precommit.committeeFormationBlockHeight,
+            "Committee formation blocksegment length must be in 256 most recent blocks."
+        );
+        uint256 segmentHeight = precommit.committeeFormationBlockHeight;
+        bytes32[] memory seedGenerator = new bytes32[](uint256(COMMITTEE_FORMATION_LENGTH));
+        for (uint8 i = 0; i < COMMITTEE_FORMATION_LENGTH; i++) {
+            seedGenerator[i] = blockhash(segmentHeight);
+            segmentHeight = segmentHeight.sub(1);
+        }
+        bytes32 seed = keccak256(
+            abi.encodePacked(seedGenerator)
+        );
 
+        startCommittee(seed, precommit.proposal);
     }
 
     /** Validator joins */
@@ -248,5 +264,21 @@ contract Consensus {
         return status != bytes20(0) &&
             status != CORE_STATUS_HALTED &&
             status != CORE_STATUS_CORRUPTED;
+    }
+
+    /** insert new Committee */
+    function startCommittee(bytes32 _dislocation, bytes32 _proposal)
+        internal
+    {
+        require(
+            proposals[_proposal] != Committee(0),
+            "There already exists a committee for the proposal."
+        );
+        // TODO: implement proxy pattern
+        Committee committee_ = new Committee(committeeSize, _dislocation, _proposal);
+        committees[address(committee_)] = committees[SENTINEL_COMMITTEES];
+        committees[SENTINEL_COMMITTEES] = address(committee_);
+
+        proposals[_proposal] = committee_;
     }
 }
