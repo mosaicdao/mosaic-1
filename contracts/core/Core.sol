@@ -530,7 +530,7 @@ contract Core is ConsensusModule, MosaicVersion {
         if (coreStatus == Status.opened) {
             coreStatus = Status.precommitted;
             precommit = _proposal;
-            precommitClosureBlockHeight = block.number + CORE_LAST_VOTES_WINDOW;
+            precommitClosureBlockHeight = block.number.add(CORE_LAST_VOTES_WINDOW);
             consensus.registerPrecommit(_proposal);
         }
     }
