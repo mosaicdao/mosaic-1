@@ -14,12 +14,18 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../EIP20I.sol";
-import "../reputation/ReputationI.sol";
-import "../committee/Committee.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
+import "../committee/Committee.sol";
+import "../reputation/ReputationI.sol";
+import "../EIP20I.sol";
+
+import "./AnchorI.sol";
+import "./Block.sol";
+
 contract Consensus {
+
+    /* Usings */
 
     using SafeMath for uint256;
 
@@ -84,7 +90,7 @@ contract Consensus {
     mapping(address /* core */ => bytes20 /* coreStatus */) public coreStatuses;
 
     /** Assigned core for a given chainId */
-    mapping(bytes20 /* chainId */ => address /* core */) public assignments;
+    mapping(bytes20 /* chainId */ => address /* core */) public cores;
 
     /** Precommitted proposals from core for a metablockchain */
     mapping(address /* core */ => Precommit) public precommits;
@@ -94,6 +100,9 @@ contract Consensus {
 
     /** Linked-list of committees */
     mapping(address => address) public committees;
+
+    /** Assigned anchor for a given chainId */
+    mapping(bytes20 => address) public anchors;
 
     /** Reputation contract for validators */
     ReputationI public reputation;
@@ -232,6 +241,80 @@ contract Consensus {
         require(
             committee.enterCommittee(_validator, _furtherMember),
             "Pro is happy."
+        );
+    }
+
+    function commit(
+        bytes20 _chainId,
+        bytes calldata _rlpBlockHeader,
+        bytes32 _kernelHash,
+        bytes32 _originObservation,
+        uint256 _dynasty,
+        uint256 _accumulatedGas,
+        bytes32 _committeeLock,
+        bytes32 _source,
+        bytes32 _target,
+        uint256 _sourceBlockHeight,
+        uint256 _targetBlockHeight
+    )
+        external
+    {
+        bytes32 blockHash = keccak256(_rlpBlockHeader);
+        require(
+            blockHash == _source,
+            "Block header does not match with vote message source."
+        );
+
+        address coreAddress = cores[_chainId];
+        require(
+            coreAddress != address(0),
+            "There is no core for the specified chain id."
+        );
+
+        bytes32 transitionHash = Core(coreAddress).hashTransition(
+            _kernelHash,
+            _originObservation,
+            _dynasty,
+            _accumulatedGas,
+            _committeeLock
+        );
+
+        bytes32 proposal = Core(coreAddress).hashVoteMessage(
+            transitionHash,
+            _source,
+            _target,
+            _sourceBlockHeight,
+            _targetBlockHeight
+        );
+
+        Committee committee = proposals[proposal];
+
+        require(
+            committee != Committee(0),
+            "There is no committee matching to the specified vote message."
+        );
+
+        require(
+            committee.committeeDecision != bytes32(0),
+            "Committee has not decide on the proposal."
+        );
+
+        require(
+            _committeeLock == keccak256(committee.committeeDecision),
+            "Committee decision does not match with committee lock."
+        );
+
+        address anchorAddress = anchors[chainId];
+        require(
+            anchorAddress != 0,
+            "There is no anchor for the specified chain id."
+        );
+
+        Block.Header memory blockHeader = Block.decodeHeader(rlpBlockHeader);
+
+        AnchorI(anchorAddress).anchorStateRoot(
+            blockHeader.height,
+            blockHeader.stateRoot
         );
     }
 
