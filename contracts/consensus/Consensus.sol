@@ -59,15 +59,6 @@ contract Consensus {
 
     /* Storage */
 
-    /** EIP20 mOST for stakes and rewards for validators */
-    EIP20I public mOST;
-
-    /** Required stake amount in mOST to join as a validator */
-    uint256 public stakeMOSTAmount;
-
-    /** Required stake amount in ETH to join as a validator */
-    uint256 public stakeETHAmount;
-
     /** Committee size */
     uint256 public committeeSize;
 
@@ -134,33 +125,14 @@ contract Consensus {
     /* Special Member Functions */
 
     constructor(
-        EIP20I _mOST,
-        uint256 _stakeMOSTAmount,
-        uint256 _stakeETHAmount,
         uint256 _committeeSize
     )
         public
     {
         require(
-            address(_mOST) != address(0),
-            "mOST address is 0."
-        );
-
-        require(
-            _stakeMOSTAmount.add(_stakeETHAmount) > 0,
-            "Total stake amount is 0."
-        );
-
-        require(
             _committeeSize > 0,
             "Committee size is 0."
         );
-
-        mOST = _mOST;
-
-        stakeMOSTAmount = _stakeMOSTAmount;
-
-        stakeETHAmount = _stakeETHAmount;
 
         committeeSize = _committeeSize;
 
@@ -299,7 +271,6 @@ contract Consensus {
         external
         returns (bool)
     {
-
     }
 
     function joinDuringCreation(address _withdrawalAddress)
@@ -312,7 +283,6 @@ contract Consensus {
         external
         returns (bool)
     {
-
     }
 
     /** Validator withdraws */
