@@ -16,12 +16,12 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
+import "../anchor/AnchorI.sol";
+import "../block/Block.sol";
 import "../committee/Committee.sol";
-import "../reputation/ReputationI.sol";
+import "../core/Core.sol";
 import "../EIP20I.sol";
-
-import "./AnchorI.sol";
-import "./Block.sol";
+import "../reputation/ReputationI.sol";
 
 contract Consensus {
 
@@ -90,7 +90,7 @@ contract Consensus {
     mapping(address /* core */ => bytes20 /* coreStatus */) public coreStatuses;
 
     /** Assigned core for a given chainId */
-    mapping(bytes20 /* chainId */ => address /* core */) public cores;
+    mapping(bytes20 /* chainId */ => address /* core */) public assignments;
 
     /** Precommitted proposals from core for a metablockchain */
     mapping(address /* core */ => Precommit) public precommits;
@@ -265,52 +265,26 @@ contract Consensus {
             "Block header does not match with vote message source."
         );
 
-        address coreAddress = cores[_chainId];
-        require(
-            coreAddress != address(0),
-            "There is no core for the specified chain id."
-        );
-
-        bytes32 transitionHash = Core(coreAddress).hashTransition(
+        verifyCommitteeLock(
+            _chainId,
             _kernelHash,
             _originObservation,
             _dynasty,
             _accumulatedGas,
-            _committeeLock
-        );
-
-        bytes32 proposal = Core(coreAddress).hashVoteMessage(
-            transitionHash,
+            _committeeLock,
             _source,
             _target,
             _sourceBlockHeight,
             _targetBlockHeight
         );
 
-        Committee committee = proposals[proposal];
-
+        address anchorAddress = anchors[_chainId];
         require(
-            committee != Committee(0),
-            "There is no committee matching to the specified vote message."
-        );
-
-        require(
-            committee.committeeDecision != bytes32(0),
-            "Committee has not decide on the proposal."
-        );
-
-        require(
-            _committeeLock == keccak256(committee.committeeDecision),
-            "Committee decision does not match with committee lock."
-        );
-
-        address anchorAddress = anchors[chainId];
-        require(
-            anchorAddress != 0,
+            anchorAddress != address(0),
             "There is no anchor for the specified chain id."
         );
 
-        Block.Header memory blockHeader = Block.decodeHeader(rlpBlockHeader);
+        Block.Header memory blockHeader = Block.decodeHeader(_rlpBlockHeader);
 
         AnchorI(anchorAddress).anchorStateRoot(
             blockHeader.height,
@@ -326,6 +300,11 @@ contract Consensus {
         returns (bool)
     {
 
+    }
+
+    function joinDuringCreation(address _withdrawalAddress)
+        external
+    {
     }
 
     /** Validator logs out */
@@ -373,5 +352,62 @@ contract Consensus {
         committees[SENTINEL_COMMITTEES] = address(committee_);
 
         proposals[_proposal] = committee_;
+    }
+
+    function verifyCommitteeLock(
+        bytes20 _chainId,
+        bytes32 _kernelHash,
+        bytes32 _originObservation,
+        uint256 _dynasty,
+        uint256 _accumulatedGas,
+        bytes32 _committeeLock,
+        bytes32 _source,
+        bytes32 _target,
+        uint256 _sourceBlockHeight,
+        uint256 _targetBlockHeight
+    )
+        private
+        view
+    {
+        address coreAddress = assignments[_chainId];
+        require(
+            isCore(coreAddress),
+            "There is no core for the specified chain id"
+        );
+
+        bytes32 transitionHash = Core(coreAddress).hashTransition(
+            _kernelHash,
+            _originObservation,
+            _dynasty,
+            _accumulatedGas,
+            _committeeLock
+        );
+
+        bytes32 proposal = Core(coreAddress).hashVoteMessage(
+            transitionHash,
+            _source,
+            _target,
+            _sourceBlockHeight,
+            _targetBlockHeight
+        );
+
+        Committee committee = proposals[proposal];
+
+        require(
+            committee != Committee(0),
+            "There is no committee matching to the specified vote message."
+        );
+
+        require(
+            committee.committeeDecision() != bytes32(0),
+            "Committee has not decide on the proposal."
+        );
+
+        require(
+            _committeeLock == keccak256(
+                abi.encode(committee.committeeDecision())
+            ),
+            "Committee decision does not match with committee lock."
+        );
     }
 }
