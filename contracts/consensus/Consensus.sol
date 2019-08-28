@@ -375,16 +375,12 @@ contract Consensus {
             "There is no core for the specified chain id"
         );
 
-        bytes32 transitionHash = Core(coreAddress).hashTransition(
+        bytes32 proposal = Core(coreAddress).assertPrecommit(
             _kernelHash,
             _originObservation,
             _dynasty,
             _accumulatedGas,
-            _committeeLock
-        );
-
-        bytes32 proposal = Core(coreAddress).hashVoteMessage(
-            transitionHash,
+            _committeeLock,
             _source,
             _target,
             _sourceBlockHeight,
