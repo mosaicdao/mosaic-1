@@ -95,21 +95,21 @@ contract Reputation is ConsensusModule {
         _;
     }
 
-    modifier isSlashed(address _validator)
+    modifier wasSlashed(address _validator)
     {
         require(
             statuses[_validator] == ValidatorStatus.Slashed,
-            "Validator is slashed."
+            "Validator was not slashed."
         );
 
         _;
     }
 
-    modifier isNotSlashed(address _validator)
+    modifier wasNotSlashed(address _validator)
     {
         require(
             statuses[_validator] != ValidatorStatus.Slashed,
-            "Validator is not slashed."
+            "Validator was slashed."
         );
 
         _;
@@ -120,6 +120,26 @@ contract Reputation is ConsensusModule {
         require(
             statuses[_validator] != ValidatorStatus.Undefined,
             "Validator has not joined."
+        );
+
+        _;
+    }
+
+    modifier hasWithdrawn(address _validator)
+    {
+        require(
+            statuses[_validator] == ValidatorStatus.Withdrawn,
+            "Validator has not withdrawn."
+        );
+
+        _;
+    }
+
+    modifier hasNotWithdrawn(address _validator)
+    {
+        require(
+            statuses[_validator] != ValidatorStatus.Withdrawn,
+            "Validator has withdrawn."
         );
 
         _;
@@ -258,7 +278,7 @@ contract Reputation is ConsensusModule {
         onlyConsensus
         isActive(_validator)
     {
-        rewards[_validator] = rewards[validator].add(_amount);
+        rewards[_validator] = rewards[_validator].add(_amount);
         withdrawableRewards[_validator] = withdrawableRewards[_validator].add(
             (_amount * withdrawableRewardPercentage) / 100
         );
@@ -270,6 +290,8 @@ contract Reputation is ConsensusModule {
      * @dev Function requiers:
      *          - only consensus can call
      *          - validator has joined
+     *          - validator was not slashed
+     *          - validator has not withdrawn
      *          - the speciefied amount is not bigger than a withdrawable reward
      *            of a validator
      *
@@ -279,7 +301,9 @@ contract Reputation is ConsensusModule {
     function withdrawReward(address _validator, uint256 _amount)
         external
         onlyConsensus
-        hasJoined(msg_validator)
+        hasJoined(_validator)
+        wasNotSlashed(_validator)
+        hasNotWithdrawn(_validator)
     {
         require(
             _amount <= withdrawableRewards[_validator],
@@ -345,8 +369,13 @@ contract Reputation is ConsensusModule {
         );
 
         require(
-            withdrawalAddresses[_withdrawalAddress] == ValidatorStatus.Undefined,
-            "The specified withdrawal address has been already used."
+            withdrawalAddresses[_validator] == address(0),
+            "No validator can rejoin."
+        );
+
+        require(
+            withdrawalAddresses[_withdrawalAddress] == address(0),
+            "The specified withdrawal address has been already used as validator."
         );
 
         statuses[_validator] = ValidatorStatus.Staked;
@@ -384,6 +413,17 @@ contract Reputation is ConsensusModule {
         external
         view
         onlyConsensus
+    {
+        // continue
+        revert("Implementation is incomplete!");
+    }
+
+    function withdraw(address _validator)
+        external
+        onlyConsensus
+        hasJoined(_validator)
+        wasNotSlashed(_validator)
+        hasNotWithdrawn(_validator)
     {
         // continue
         revert("Implementation is incomplete!");
