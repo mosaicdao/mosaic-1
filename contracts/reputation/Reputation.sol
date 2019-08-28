@@ -78,6 +78,9 @@ contract Reputation is ConsensusModule {
     /** Earned rewards */
     mapping(address => uint256) public rewards;
 
+    /** A withdrawable rewards */
+    mapping(address => uint256) public withdrawableRewards;
+
 
     /* Modifiers */
 
@@ -210,6 +213,34 @@ contract Reputation is ConsensusModule {
         }
 
         return reputations[_validator];
+    }
+
+    /**
+     * @notice Rewards validator by the specified amount.
+     *         Only fixed percentage (`withdrawableRewardPercentage`) from the
+     *         rewarded amount is withdrawable by a validator. The remaining is
+     *         locked in the contract and can be withdrawn only when validator
+     *         has been logged out and cooling period has elapsed.
+     *
+     * @dev Function requires:
+     *          - only consensus can call
+     *          - a validator is active
+     *
+     * @param _validator A validator to reward.
+     * @param _amount An amount to reward a validator.
+     */
+    function reward(
+        address _validator,
+        uint256 _amount
+    )
+        external
+        onlyConsensus
+        isActive(_validator)
+    {
+        rewards[_validator] = rewards[validator].add(_amount);
+        withdrawableRewards[_validator] = withdrawableRewards[_validator].add(
+            (_amount * withdrawableRewardPercentage) / 100
+        );
     }
 
     /**
