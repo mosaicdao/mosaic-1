@@ -98,7 +98,7 @@ contract Core is ConsensusModule, MosaicVersion {
 
     /** EIP-712 domain separator for Core */
     bytes32 public constant DOMAIN_SEPARATOR_TYPEHASH = keccak256(
-        "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+        "EIP712Domain(string name,string version,bytes20 chainId,address verifyingContract)"
     );
 
     /** EIP-712 type hash for Kernel. */
@@ -144,7 +144,7 @@ contract Core is ConsensusModule, MosaicVersion {
     bytes32 public domainSeparator;
 
     /** Chain Id of the meta-blockchain */
-    uint256 public chainId;
+    bytes20 public chainId;
 
     /** Core status */
     Status public coreStatus;
@@ -254,7 +254,7 @@ contract Core is ConsensusModule, MosaicVersion {
     /* External and public functions */
 
     constructor(
-        uint256 _chainId,
+        bytes20 _chainId,
         uint256 _epochLength,
         uint256 _height,
         bytes32 _parent,
