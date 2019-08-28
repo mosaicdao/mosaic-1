@@ -95,6 +95,16 @@ contract Reputation is ConsensusModule {
         _;
     }
 
+    modifier hasJoined(address _validator)
+    {
+        require(
+            statuses[_validator] != ValidatorStatus.Undefined,
+            "Validator has not joined."
+        );
+
+        _;
+    }
+
     modifier wasSlashed(address _validator)
     {
         require(
@@ -115,11 +125,23 @@ contract Reputation is ConsensusModule {
         _;
     }
 
-    modifier hasJoined(address _validator)
+    modifier hasLoggedOut(address _validator)
     {
         require(
-            statuses[_validator] != ValidatorStatus.Undefined,
-            "Validator has not joined."
+            statuses[_validator] == ValidatorStatus.LoggedOut ||
+            statuses[_validator] == ValidatorStatus.Withdrawn,
+            "Validator has not logged out."
+        );
+
+        _;
+    }
+
+    modifier hasNotLoggedOut(address _validator)
+    {
+        require(
+            statuses[_validator] != ValidatorStatus.LoggedOut &&
+            statuses[_validator] != ValidatorStatus.Withdrawn,
+            "Validator has not logged out."
         );
 
         _;
@@ -409,13 +431,22 @@ contract Reputation is ConsensusModule {
         revert("Implementation is incomplete!");
     }
 
+    /**
+     * @notice Logs out a validator.
+     *
+     * @dev Function requires:
+     *          - only consensus can call
+     *          - validator is active
+     *
+     * @param _validator A validator to log out.
+     */
     function logout(address _validator)
         external
         view
         onlyConsensus
+        isActive(_validator)
     {
-        // continue
-        revert("Implementation is incomplete!");
+        statuses[_validator] = ValidatorStatus.LoggedOut;
     }
 
     function withdraw(address _validator)
