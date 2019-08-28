@@ -22,6 +22,7 @@ import "../consensus/ConsensusModule.sol";
 contract Reputation is ConsensusModule {
 
     /* Usings */
+
     using SafeMath for uint256;
 
 
@@ -89,6 +90,26 @@ contract Reputation is ConsensusModule {
         require(
             statuses[_validator] == ValidatorStatus.Staked,
             "Validator is not active."
+        );
+
+        _;
+    }
+
+    modifier isSlashed(address _validator)
+    {
+        require(
+            statuses[_validator] == ValidatorStatus.Slashed,
+            "Validator is slashed."
+        );
+
+        _;
+    }
+
+    modifier isNotSlashed(address _validator)
+    {
+        require(
+            statuses[_validator] != ValidatorStatus.Slashed,
+            "Validator is not slashed."
         );
 
         _;
@@ -240,6 +261,37 @@ contract Reputation is ConsensusModule {
         rewards[_validator] = rewards[validator].add(_amount);
         withdrawableRewards[_validator] = withdrawableRewards[_validator].add(
             (_amount * withdrawableRewardPercentage) / 100
+        );
+    }
+
+    /**
+     * @notice Withdraws the specified amount from a reward of a validator.
+     *
+     * @dev Function requiers:
+     *          - only joined validator can call
+     *          - the speciefied amount is not bigger than a withdrawable reward
+     *            of a validator
+     *
+     * @param _amount An amount to withdraw.
+     */
+    function withdrawReward(uint256 _amount)
+        external
+        hasJoined(msg.sender)
+    {
+        require(
+            _amount <= withdrawableRewards[msg.sender],
+            "The specified amount is bigger than available withdrawable amount."
+        );
+
+        withdrawableRewards[msg.sender] = withdrawableRewards[msg.sender].sub(
+            _amount
+        );
+
+        require(
+            mOST.transfer(
+                withdrawalAddresses[msg.sender], _amount
+            ),
+            "Failed to transfer a reward amount to withdrawal address."
         );
     }
 
