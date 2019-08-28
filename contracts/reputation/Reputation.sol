@@ -268,28 +268,31 @@ contract Reputation is ConsensusModule {
      * @notice Withdraws the specified amount from a reward of a validator.
      *
      * @dev Function requiers:
-     *          - only joined validator can call
+     *          - only consensus can call
+     *          - validator has joined
      *          - the speciefied amount is not bigger than a withdrawable reward
      *            of a validator
      *
+     * @param _validator A validator address that requested a withdrawal.
      * @param _amount An amount to withdraw.
      */
-    function withdrawReward(uint256 _amount)
+    function withdrawReward(address _validator, uint256 _amount)
         external
-        hasJoined(msg.sender)
+        onlyConsensus
+        hasJoined(msg_validator)
     {
         require(
-            _amount <= withdrawableRewards[msg.sender],
+            _amount <= withdrawableRewards[_validator],
             "The specified amount is bigger than available withdrawable amount."
         );
 
-        withdrawableRewards[msg.sender] = withdrawableRewards[msg.sender].sub(
+        withdrawableRewards[_validator] = withdrawableRewards[_validator].sub(
             _amount
         );
 
         require(
             mOST.transfer(
-                withdrawalAddresses[msg.sender], _amount
+                withdrawalAddresses[_validator], _amount
             ),
             "Failed to transfer a reward amount to withdrawal address."
         );
