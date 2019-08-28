@@ -301,6 +301,7 @@ contract Reputation is ConsensusModule {
         isActive(_validator)
     {
         rewards[_validator] = rewards[_validator].add(_amount);
+
         withdrawableRewards[_validator] = withdrawableRewards[_validator].add(
             (_amount * withdrawableRewardPercentage) / 100
         );
@@ -333,6 +334,10 @@ contract Reputation is ConsensusModule {
         );
 
         withdrawableRewards[_validator] = withdrawableRewards[_validator].sub(
+            _amount
+        );
+
+        rewards[_validator] = rewards[_validator].sub(
             _amount
         );
 
@@ -449,14 +454,41 @@ contract Reputation is ConsensusModule {
         statuses[_validator] = ValidatorStatus.LoggedOut;
     }
 
+    /**
+     * @notice Withdraws a staked and rewarded values to a validator.
+     *
+     * @dev Function requires:
+     *          - only consensus can call
+     *          - a validator has logged out
+     *          - a validator was not slashed
+     *          - a validator has not withdrawn
+     */
     function withdraw(address _validator)
         external
         onlyConsensus
-        hasJoined(_validator)
+        hasLoggedOut(_validator)
         wasNotSlashed(_validator)
         hasNotWithdrawn(_validator)
     {
-        // continue
-        revert("Implementation is incomplete!");
+        statuses[_validator] = ValidatorStatus.Withdrawn;
+
+        uint256 reward = rewards[_validator];
+
+        rewards[_validator] = 0;
+        withdrawableRewards[_validator] = 0;
+
+        require(
+            mOST.transfer(
+                withdrawalAddresses[_validator], stakeMOSTAmount.add(reward)
+            ),
+            "Failed to withdraw a staked and rewarded mOST amount."
+        );
+
+        require(
+            wETH.transfer(
+                withdrawalAddresses[_validator], stakeWETHAmount
+            ),
+            "Failed to withdraw a staked wETH amount."
+        );
     }
 }
