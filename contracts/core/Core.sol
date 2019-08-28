@@ -98,7 +98,7 @@ contract Core is ConsensusModule, MosaicVersion {
 
     /** EIP-712 domain separator for Core */
     bytes32 public constant DOMAIN_SEPARATOR_TYPEHASH = keccak256(
-        "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+        "EIP712Domain(string name,string version,bytes20 chainId,address verifyingContract)"
     );
 
     /** EIP-712 type hash for Kernel. */
@@ -144,7 +144,7 @@ contract Core is ConsensusModule, MosaicVersion {
     bytes32 public domainSeparator;
 
     /** Chain Id of the meta-blockchain */
-    uint256 public chainId;
+    bytes20 public chainId;
 
     /** Core status */
     Status public coreStatus;
@@ -254,7 +254,7 @@ contract Core is ConsensusModule, MosaicVersion {
     /* External and public functions */
 
     constructor(
-        uint256 _chainId,
+        bytes20 _chainId,
         uint256 _epochLength,
         uint256 _height,
         bytes32 _parent,
@@ -412,6 +412,48 @@ contract Core is ConsensusModule, MosaicVersion {
         }
     }
 
+    /**
+     */
+    function assertPrecommit(
+        bytes32 _kernelHash,
+        bytes32 _originObservation,
+        uint256 _dynasty,
+        uint256 _accumulatedGas,
+        bytes32 _committeeLock,
+        bytes32 _source,
+        bytes32 _target,
+        uint256 _sourceBlockHeight,
+        uint256 _targetBlockHeight
+    )
+        external
+        view
+        returns (bytes32 proposal_)
+    {
+        require(precommit != bytes32(0),
+            "Core is has not precommitted to a proposal.");
+        require(_kernelHash == openKernelHash,
+            "KernelHash must be the open kernel");
+
+        bytes32 transitionHash = hashTransition(
+            _kernelHash,
+            _originObservation,
+            _dynasty,
+            _accumulatedGas,
+            _committeeLock
+        );
+
+        proposal_ = hashVoteMessage(
+            transitionHash,
+            _source,
+            _target,
+            _sourceBlockHeight,
+            _targetBlockHeight
+        );
+
+        require(proposal_ == precommit,
+            "Provided metablock does not match precommited.");
+    }
+
     function openMetablock(
         uint256 _gasTarget,
         uint256 _gasPrice
@@ -513,84 +555,6 @@ contract Core is ConsensusModule, MosaicVersion {
     {
         quorum_ = _count * CORE_SUPER_MAJORITY_NUMERATOR /
             CORE_SUPER_MAJORITY_DENOMINATOR;
-    }
-
-    /**
-     * @notice Takes the parameters of an transition object and returns the
-     *         typed hash of it.
-     *
-     * @param _kernelHash Kernel hash
-     * @param _originObservation Observation of the origin chain.
-     * @param _dynasty The dynasty number where the meta-block closes
-     *                 on the auxiliary chain.
-     * @param _accumulatedGas The total consumed gas on auxiliary within this
-     *                        meta-block.
-     * @param _committeeLock The committee lock that hashes the transaction
-     *                       root on the auxiliary chain.
-     * @return hash_ The hash of this transition object.
-     */
-    function hashTransition(
-        bytes32 _kernelHash,
-        bytes32 _originObservation,
-        uint256 _dynasty,
-        uint256 _accumulatedGas,
-        bytes32 _committeeLock
-    )
-        public
-        view
-        returns (bytes32 hash_)
-    {
-        bytes32 typedTransitionHash = keccak256(
-            abi.encode(
-                TRANSITION_TYPEHASH,
-                _kernelHash,
-                _originObservation,
-                _dynasty,
-                _accumulatedGas,
-                _committeeLock
-            )
-        );
-
-        hash_ = keccak256(
-            abi.encodePacked(
-                byte(0x19),
-                byte(0x01),
-                domainSeparator,
-                typedTransitionHash
-            )
-        );
-    }
-
-    function hashVoteMessage(
-        bytes32 _transitionHash,
-        bytes32 _source,
-        bytes32 _target,
-        uint256 _sourceBlockHeight,
-        uint256 _targetBlockHeight
-    )
-        public
-        view
-        returns (bytes32 hash_)
-    {
-        bytes32 typedVoteMessageHash = keccak256(
-            abi.encode(
-                VOTE_MESSAGE_TYPEHASH,
-                _transitionHash,
-                _source,
-                _target,
-                _sourceBlockHeight,
-                _targetBlockHeight
-            )
-        );
-
-        hash_ = keccak256(
-            abi.encodePacked(
-                byte(0x19),
-                byte(0x01),
-                domainSeparator,
-                typedVoteMessageHash
-            )
-        );
     }
 
 
@@ -757,4 +721,86 @@ contract Core is ConsensusModule, MosaicVersion {
             )
         );
     }
+
+    /**
+     * @notice Takes the parameters of an transition object and returns the
+     *         typed hash of it.
+     *
+     * @param _kernelHash Kernel hash
+     * @param _originObservation Observation of the origin chain.
+     * @param _dynasty The dynasty number where the meta-block closes
+     *                 on the auxiliary chain.
+     * @param _accumulatedGas The total consumed gas on auxiliary within this
+     *                        meta-block.
+     * @param _committeeLock The committee lock that hashes the transaction
+     *                       root on the auxiliary chain.
+     * @return hash_ The hash of this transition object.
+     */
+    function hashTransition(
+        bytes32 _kernelHash,
+        bytes32 _originObservation,
+        uint256 _dynasty,
+        uint256 _accumulatedGas,
+        bytes32 _committeeLock
+    )
+        internal
+        view
+        returns (bytes32 hash_)
+    {
+        bytes32 typedTransitionHash = keccak256(
+            abi.encode(
+                TRANSITION_TYPEHASH,
+                _kernelHash,
+                _originObservation,
+                _dynasty,
+                _accumulatedGas,
+                _committeeLock
+            )
+        );
+
+        hash_ = keccak256(
+            abi.encodePacked(
+                byte(0x19),
+                byte(0x01),
+                domainSeparator,
+                typedTransitionHash
+            )
+        );
+    }
+
+    /** @notice takes the VoteMessage parameters and returns
+     *          the typed VoteMessage hash
+     */
+    function hashVoteMessage(
+        bytes32 _transitionHash,
+        bytes32 _source,
+        bytes32 _target,
+        uint256 _sourceBlockHeight,
+        uint256 _targetBlockHeight
+    )
+        internal
+        view
+        returns (bytes32 hash_)
+    {
+        bytes32 typedVoteMessageHash = keccak256(
+            abi.encode(
+                VOTE_MESSAGE_TYPEHASH,
+                _transitionHash,
+                _source,
+                _target,
+                _sourceBlockHeight,
+                _targetBlockHeight
+            )
+        );
+
+        hash_ = keccak256(
+            abi.encodePacked(
+                byte(0x19),
+                byte(0x01),
+                domainSeparator,
+                typedVoteMessageHash
+            )
+        );
+    }
+
 }
