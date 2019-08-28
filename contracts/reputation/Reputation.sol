@@ -67,6 +67,9 @@ contract Reputation is ConsensusModule {
     /** Initial reputation for the newly joined validator. */
     uint256 public initialReputation;
 
+    /** Cooldown period to withdraw after validator has logged out. */
+    uint256 public withdrawalCooldownPeriodInBlocks;
+
     /** Status */
     mapping(address => ValidatorStatus) public statuses;
 
@@ -81,6 +84,9 @@ contract Reputation is ConsensusModule {
 
     /** A withdrawable rewards */
     mapping(address => uint256) public withdrawableRewards;
+
+    /** Withdrawal blockheits for validators */
+    mapping(address => uint256) public withdrawalBlockHeights;
 
 
     /* Modifiers */
@@ -147,6 +153,16 @@ contract Reputation is ConsensusModule {
         _;
     }
 
+    modifier withdrawalCooldownPeriodHasElapsed(address _validator)
+    {
+        require(
+            block.number > withdrawalBlockHeights[_validator],
+            "Withdrawal cooldown period has not elapsed."
+        );
+
+        _;
+    }
+
     modifier hasWithdrawn(address _validator)
     {
         require(
@@ -185,7 +201,8 @@ contract Reputation is ConsensusModule {
         EIP20I _wETH,
         uint256 _stakeWETHAmount,
         uint256 _withdrawableRewardPercentage,
-        uint256 _initialReputation
+        uint256 _initialReputation,
+        uint256 _withdrawalCooldownPeriodInBlocks
     )
         ConsensusModule(_consensus)
         public
@@ -221,6 +238,7 @@ contract Reputation is ConsensusModule {
         stakeWETHAmount = _stakeWETHAmount;
         initialReputation = _initialReputation;
         withdrawableRewardPercentage = _withdrawableRewardPercentage;
+        _withdrawalCooldownPeriodInBlocks = _withdrawalCooldownPeriodInBlocks;
     }
 
 
@@ -311,39 +329,37 @@ contract Reputation is ConsensusModule {
      * @notice Withdraws the specified amount from a reward of a validator.
      *
      * @dev Function requiers:
-     *          - only consensus can call
+     *          - only validator can call
      *          - validator has joined
      *          - validator was not slashed
      *          - validator has not withdrawn
      *          - the speciefied amount is not bigger than a withdrawable reward
      *            of a validator
      *
-     * @param _validator A validator address that requested a withdrawal.
      * @param _amount An amount to withdraw.
      */
-    function withdrawReward(address _validator, uint256 _amount)
+    function withdrawReward(uint256 _amount)
         external
-        onlyConsensus
-        hasJoined(_validator)
-        wasNotSlashed(_validator)
-        hasNotWithdrawn(_validator)
+        hasJoined(msg.sender)
+        wasNotSlashed(msg.sender)
+        hasNotWithdrawn(msg.sender)
     {
         require(
-            _amount <= withdrawableRewards[_validator],
+            _amount <= withdrawableRewards[msg.sender],
             "The specified amount is bigger than available withdrawable amount."
         );
 
-        withdrawableRewards[_validator] = withdrawableRewards[_validator].sub(
+        withdrawableRewards[msg.sender] = withdrawableRewards[msg.sender].sub(
             _amount
         );
 
-        rewards[_validator] = rewards[_validator].sub(
+        rewards[msg.sender] = rewards[msg.sender].sub(
             _amount
         );
 
         require(
             mOST.transfer(
-                withdrawalAddresses[_validator], _amount
+                withdrawalAddresses[msg.sender], _amount
             ),
             "Failed to transfer a reward amount to withdrawal address."
         );
@@ -427,6 +443,8 @@ contract Reputation is ConsensusModule {
      *          - only consensus can call
      *          - a validator has joined
      *          - a validator has not withdrawn
+     *
+     * @todo: The reward and stakes of a validator should be burned.
      */
     function slash(address _validator)
         external
@@ -455,23 +473,28 @@ contract Reputation is ConsensusModule {
         isActive(_validator)
     {
         statuses[_validator] = ValidatorStatus.LoggedOut;
+
+        withdrawalBlockHeights[_validator] = block.number.add(
+            withdrawalCooldownPeriodInBlocks
+        );
     }
 
     /**
      * @notice Withdraws a staked and rewarded values to a validator.
      *
      * @dev Function requires:
-     *          - only consensus can call
      *          - a validator has logged out
      *          - a validator was not slashed
      *          - a validator has not withdrawn
+     *
+     * @param _validator A validator to withdraw reward and stakes.
      */
     function withdraw(address _validator)
         external
-        onlyConsensus
         hasLoggedOut(_validator)
         wasNotSlashed(_validator)
         hasNotWithdrawn(_validator)
+        withdrawalCooldownPeriodHasElapsed(_validator)
     {
         statuses[_validator] = ValidatorStatus.Withdrawn;
 
