@@ -421,19 +421,23 @@ contract Reputation is ConsensusModule {
     }
 
     /**
+     * @notice Slashes validator.
+     *
      * @dev Function requires:
      *          - only consensus can call
      *          - a validator has joined
+     *          - a validator has not withdrawn
      */
     function slash(address _validator)
         external
         onlyConsensus
         hasJoined(_validator)
+        hasNotWithdrawn(_validator)
     {
         statuses[_validator] = ValidatorStatus.Slashed;
 
-        // continue
-        revert("Implementation is incomplete!");
+        rewards[_validator] = 0;
+        withdrawableRewards[_validator] = 0;
     }
 
     /**
@@ -447,7 +451,6 @@ contract Reputation is ConsensusModule {
      */
     function logout(address _validator)
         external
-        view
         onlyConsensus
         isActive(_validator)
     {
@@ -472,14 +475,14 @@ contract Reputation is ConsensusModule {
     {
         statuses[_validator] = ValidatorStatus.Withdrawn;
 
-        uint256 reward = rewards[_validator];
+        uint256 rewardAmount = rewards[_validator];
 
         rewards[_validator] = 0;
         withdrawableRewards[_validator] = 0;
 
         require(
             mOST.transfer(
-                withdrawalAddresses[_validator], stakeMOSTAmount.add(reward)
+                withdrawalAddresses[_validator], stakeMOSTAmount.add(rewardAmount)
             ),
             "Failed to withdraw a staked and rewarded mOST amount."
         );
