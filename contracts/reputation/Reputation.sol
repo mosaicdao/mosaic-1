@@ -33,7 +33,6 @@ contract Reputation is ConsensusModule {
     );
 
 
-
     /* Enums */
 
     /** Validator status enum */
@@ -72,22 +71,25 @@ contract Reputation is ConsensusModule {
     /** EIP20 mOST for stakes and rewards for validators. */
     EIP20I public mOST;
 
-    /** EIP20 wETH for stakes and rewards for validators. */
+    /** EIP20 wETH for stakes for validators. */
     EIP20I public wETH;
 
-    /** Required stake amount in mOST to join as a validator */
+    /** Required stake amount in mOST to join as a validator. */
     uint256 public stakeMOSTAmount;
 
-    /** Required stake amount in wETH to join as a validator */
+    /** Required stake amount in wETH to join as a validator. */
     uint256 public stakeWETHAmount;
 
-    /** A percentage from a reward that validator can withdraw. */
+    /** A percentage of a reward that validator can withdraw immediately. */
     uint256 withdrawableRewardPercentage;
 
-    /** Initial reputation for the newly joined validator. */
+    /** An initial reputation for a newly joined validator. */
     uint256 public initialReputation;
 
-    /** Cooldown period to withdraw after validator has logged out. */
+    /**
+     * A cooldown period for being able to withdraw after a validator
+     * has logged out.
+     */
     uint256 public withdrawalCooldownPeriodInBlocks;
 
     /** Validators info */
@@ -279,8 +281,8 @@ contract Reputation is ConsensusModule {
      *         it's negative.
      *
      * @dev Function requires:
-     *          - only consensus can call.
-     *          - the specified validator is active.
+     *          - only consensus can call
+     *          - the specified validator is active
      *
      * @param _validator A validator for which to decrease a reputation.
      * @param _delta A change (delta) to decrease a validator's reputation.
@@ -307,9 +309,10 @@ contract Reputation is ConsensusModule {
     /**
      * @notice Rewards validator by the specified amount.
      *         Only fixed percentage (`withdrawableRewardPercentage`) from the
-     *         rewarded amount is withdrawable by a validator. The remaining is
-     *         locked in the contract and can be withdrawn only when validator
-     *         has been logged out and cooling period has elapsed.
+     *         rewarded amount is withdrawable by a validator immediately.
+     *         The remaining is locked in the contract and can be withdrawn
+     *         only when validator has been logged out and cooling period
+     *         has elapsed.
      *
      * @dev Function requires:
      *          - only consensus can call
@@ -378,6 +381,8 @@ contract Reputation is ConsensusModule {
     }
 
     /**
+     * @notice Joins a validator.
+     *
      * @dev Function requires:
      *          - only consensus can call
      *          - a validator address is not 0
@@ -385,11 +390,13 @@ contract Reputation is ConsensusModule {
      *          - a validator address is not same as its withdrawal address
      *          - a validator has not joined previously
      *          - a withdrawal address has not been used as a validator address
-     *          - a withdrawal address has not been already used
      *          - a validator approved in mOST token contract to transfer
      *            a stake amount.
      *          - a validator approved in wETH token contract to transfer
      *            a stake amount.
+     *
+     * @param _validator A validator address to join.
+     * @param _withdrawalAddress A withdrawal address of newly joined validator.
      */
     function join(
         address _validator,
@@ -421,16 +428,6 @@ contract Reputation is ConsensusModule {
         require(
             validators[_withdrawalAddress].status == ValidatorStatus.Undefined,
             "The specified withdrawal address was registered as validator."
-        );
-
-        require(
-            validators[_validator].withdrawalAddress == address(0),
-            "No validator can rejoin."
-        );
-
-        require(
-            validators[_withdrawalAddress].withdrawalAddress == address(0),
-            "The specified withdrawal address has been already used as validator."
         );
 
         ValidatorInfo storage v = validators[_validator];
@@ -499,12 +496,13 @@ contract Reputation is ConsensusModule {
     }
 
     /**
-     * @notice Withdraws a staked and rewarded values to a validator.
+     * @notice Withdraws staked and rewarded values to a validator.
      *
      * @dev Function requires:
      *          - a validator has logged out
      *          - a validator was not slashed
      *          - a validator has not withdrawn
+     *          - a withdrawal cooling period for the validator has elapsed
      *
      * @param _validator A validator to withdraw reward and stakes.
      */
@@ -528,14 +526,14 @@ contract Reputation is ConsensusModule {
             mOST.transfer(
                 v.withdrawalAddress, stakeMOSTAmount.add(rewardAmount)
             ),
-            "Failed to withdraw a staked and rewarded mOST amount."
+            "Failed to withdraw staked and rewarded mOST amount."
         );
 
         require(
             wETH.transfer(
                 v.withdrawalAddress, stakeWETHAmount
             ),
-            "Failed to withdraw a staked wETH amount."
+            "Failed to withdraw staked wETH amount."
         );
     }
 }
