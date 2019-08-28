@@ -26,6 +26,14 @@ contract Reputation is ConsensusModule {
     using SafeMath for uint256;
 
 
+    /* Constants */
+
+    uint256 public constant MAX_UINT256 = uint256(
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    );
+
+
+
     /* Enums */
 
     /** Validator status enum */
@@ -44,6 +52,18 @@ contract Reputation is ConsensusModule {
 
         /** Validator has withdrawn stake after logging out and cooldown period */
         Withdrawn
+    }
+
+
+    /* Structs */
+
+    struct ValidatorInfo {
+        ValidatorStatus status;
+        address withdrawalAddress;
+        uint256 reputation;
+        uint256 reward;
+        uint256 withdrawableReward;
+        uint256 withdrawalBlockHeight;
     }
 
 
@@ -70,23 +90,8 @@ contract Reputation is ConsensusModule {
     /** Cooldown period to withdraw after validator has logged out. */
     uint256 public withdrawalCooldownPeriodInBlocks;
 
-    /** Status */
-    mapping(address => ValidatorStatus) public statuses;
-
-    /** Withdrawal address */
-    mapping(address => address) public withdrawalAddresses;
-
-    /** Reputation earned */
-    mapping(address => uint256) public reputations;
-
-    /** Earned rewards */
-    mapping(address => uint256) public rewards;
-
-    /** A withdrawable rewards */
-    mapping(address => uint256) public withdrawableRewards;
-
-    /** Withdrawal blockheits for validators */
-    mapping(address => uint256) public withdrawalBlockHeights;
+    /** Validators info */
+    mapping(address => ValidatorInfo) public validators;
 
 
     /* Modifiers */
@@ -94,7 +99,7 @@ contract Reputation is ConsensusModule {
     modifier isActive(address _validator)
     {
         require(
-            statuses[_validator] == ValidatorStatus.Staked,
+            validators[_validator].status == ValidatorStatus.Staked,
             "Validator is not active."
         );
 
@@ -104,7 +109,7 @@ contract Reputation is ConsensusModule {
     modifier hasJoined(address _validator)
     {
         require(
-            statuses[_validator] != ValidatorStatus.Undefined,
+            validators[_validator].status != ValidatorStatus.Undefined,
             "Validator has not joined."
         );
 
@@ -114,7 +119,7 @@ contract Reputation is ConsensusModule {
     modifier wasSlashed(address _validator)
     {
         require(
-            statuses[_validator] == ValidatorStatus.Slashed,
+            validators[_validator].status == ValidatorStatus.Slashed,
             "Validator was not slashed."
         );
 
@@ -124,7 +129,7 @@ contract Reputation is ConsensusModule {
     modifier wasNotSlashed(address _validator)
     {
         require(
-            statuses[_validator] != ValidatorStatus.Slashed,
+            validators[_validator].status != ValidatorStatus.Slashed,
             "Validator was slashed."
         );
 
@@ -134,8 +139,8 @@ contract Reputation is ConsensusModule {
     modifier hasLoggedOut(address _validator)
     {
         require(
-            statuses[_validator] == ValidatorStatus.LoggedOut ||
-            statuses[_validator] == ValidatorStatus.Withdrawn,
+            validators[_validator].status == ValidatorStatus.LoggedOut ||
+            validators[_validator].status == ValidatorStatus.Withdrawn,
             "Validator has not logged out."
         );
 
@@ -145,8 +150,8 @@ contract Reputation is ConsensusModule {
     modifier hasNotLoggedOut(address _validator)
     {
         require(
-            statuses[_validator] != ValidatorStatus.LoggedOut &&
-            statuses[_validator] != ValidatorStatus.Withdrawn,
+            validators[_validator].status != ValidatorStatus.LoggedOut &&
+            validators[_validator].status != ValidatorStatus.Withdrawn,
             "Validator has not logged out."
         );
 
@@ -156,7 +161,7 @@ contract Reputation is ConsensusModule {
     modifier withdrawalCooldownPeriodHasElapsed(address _validator)
     {
         require(
-            block.number > withdrawalBlockHeights[_validator],
+            block.number > validators[_validator].withdrawalBlockHeight,
             "Withdrawal cooldown period has not elapsed."
         );
 
@@ -166,7 +171,7 @@ contract Reputation is ConsensusModule {
     modifier hasWithdrawn(address _validator)
     {
         require(
-            statuses[_validator] == ValidatorStatus.Withdrawn,
+            validators[_validator].status == ValidatorStatus.Withdrawn,
             "Validator has not withdrawn."
         );
 
@@ -176,7 +181,7 @@ contract Reputation is ConsensusModule {
     modifier hasNotWithdrawn(address _validator)
     {
         require(
-            statuses[_validator] != ValidatorStatus.Withdrawn,
+            validators[_validator].status != ValidatorStatus.Withdrawn,
             "Validator has withdrawn."
         );
 
@@ -262,9 +267,10 @@ contract Reputation is ConsensusModule {
         isActive(_validator)
         returns (uint256)
     {
-        reputations[_validator] = reputations[_validator].add(_delta);
+        ValidatorInfo storage v = validators[_validator];
+        v.reputation = v.reputation.add(_delta);
 
-        return reputations[_validator];
+        return v.reputation;
     }
 
     /**
@@ -287,13 +293,15 @@ contract Reputation is ConsensusModule {
         isActive(_validator)
         returns (uint256)
     {
-        if (reputations[_validator] < _delta) {
-            reputations[_validator] = 0;
+        ValidatorInfo storage v = validators[_validator];
+
+        if (v.reputation < _delta) {
+            v.reputation = 0;
         } else {
-            reputations[_validator] = reputations[_validator].sub(_delta);
+            v.reputation = v.reputation.sub(_delta);
         }
 
-        return reputations[_validator];
+        return v.reputation;
     }
 
     /**
@@ -318,9 +326,11 @@ contract Reputation is ConsensusModule {
         onlyConsensus
         isActive(_validator)
     {
-        rewards[_validator] = rewards[_validator].add(_amount);
+        ValidatorInfo storage v = validators[_validator];
 
-        withdrawableRewards[_validator] = withdrawableRewards[_validator].add(
+        v.reward = v.reward.add(_amount);
+
+        v.withdrawableReward = v.withdrawableReward.add(
             (_amount * withdrawableRewardPercentage) / 100
         );
     }
@@ -344,22 +354,24 @@ contract Reputation is ConsensusModule {
         wasNotSlashed(msg.sender)
         hasNotWithdrawn(msg.sender)
     {
+        ValidatorInfo storage v = validators[msg.sender];
+
         require(
-            _amount <= withdrawableRewards[msg.sender],
+            _amount <= v.withdrawableReward,
             "The specified amount is bigger than available withdrawable amount."
         );
 
-        withdrawableRewards[msg.sender] = withdrawableRewards[msg.sender].sub(
+        v.withdrawableReward = v.withdrawableReward.sub(
             _amount
         );
 
-        rewards[msg.sender] = rewards[msg.sender].sub(
+        v.reward = v.reward.sub(
             _amount
         );
 
         require(
             mOST.transfer(
-                withdrawalAddresses[msg.sender], _amount
+                v.withdrawalAddress, _amount
             ),
             "Failed to transfer a reward amount to withdrawal address."
         );
@@ -402,28 +414,31 @@ contract Reputation is ConsensusModule {
         );
 
         require(
-            statuses[_validator] == ValidatorStatus.Undefined,
+            validators[_validator].status == ValidatorStatus.Undefined,
             "No validator can rejoin."
         );
 
         require(
-            statuses[_withdrawalAddress] == ValidatorStatus.Undefined,
+            validators[_withdrawalAddress].status == ValidatorStatus.Undefined,
             "The specified withdrawal address was registered as validator."
         );
 
         require(
-            withdrawalAddresses[_validator] == address(0),
+            validators[_validator].withdrawalAddress == address(0),
             "No validator can rejoin."
         );
 
         require(
-            withdrawalAddresses[_withdrawalAddress] == address(0),
+            validators[_withdrawalAddress].withdrawalAddress == address(0),
             "The specified withdrawal address has been already used as validator."
         );
 
-        statuses[_validator] = ValidatorStatus.Staked;
-        withdrawalAddresses[_validator] = _withdrawalAddress;
-        reputations[_validator] = initialReputation;
+        ValidatorInfo storage v = validators[_validator];
+
+        v.status = ValidatorStatus.Staked;
+        v.withdrawalAddress = _withdrawalAddress;
+        v.reputation = initialReputation;
+        v.withdrawalBlockHeight = MAX_UINT256;
 
         require(
             mOST.transferFrom(_validator, address(this), stakeMOSTAmount),
@@ -444,7 +459,7 @@ contract Reputation is ConsensusModule {
      *          - a validator has joined
      *          - a validator has not withdrawn
      *
-     * @todo: The reward and stakes of a validator should be burned.
+     * TODO: The reward and stakes of a validator must be burned.
      */
     function slash(address _validator)
         external
@@ -452,10 +467,12 @@ contract Reputation is ConsensusModule {
         hasJoined(_validator)
         hasNotWithdrawn(_validator)
     {
-        statuses[_validator] = ValidatorStatus.Slashed;
+        ValidatorInfo storage v = validators[_validator];
 
-        rewards[_validator] = 0;
-        withdrawableRewards[_validator] = 0;
+        v.status = ValidatorStatus.Slashed;
+
+        v.reward = 0;
+        v.withdrawableReward = 0;
     }
 
     /**
@@ -472,9 +489,11 @@ contract Reputation is ConsensusModule {
         onlyConsensus
         isActive(_validator)
     {
-        statuses[_validator] = ValidatorStatus.LoggedOut;
+        ValidatorInfo storage v = validators[_validator];
 
-        withdrawalBlockHeights[_validator] = block.number.add(
+        v.status = ValidatorStatus.LoggedOut;
+
+        v.withdrawalBlockHeight = block.number.add(
             withdrawalCooldownPeriodInBlocks
         );
     }
@@ -496,23 +515,25 @@ contract Reputation is ConsensusModule {
         hasNotWithdrawn(_validator)
         withdrawalCooldownPeriodHasElapsed(_validator)
     {
-        statuses[_validator] = ValidatorStatus.Withdrawn;
+        ValidatorInfo storage v = validators[_validator];
 
-        uint256 rewardAmount = rewards[_validator];
+        v.status = ValidatorStatus.Withdrawn;
 
-        rewards[_validator] = 0;
-        withdrawableRewards[_validator] = 0;
+        uint256 rewardAmount = v.reward;
+
+        v.reward = 0;
+        v.withdrawableReward = 0;
 
         require(
             mOST.transfer(
-                withdrawalAddresses[_validator], stakeMOSTAmount.add(rewardAmount)
+                v.withdrawalAddress, stakeMOSTAmount.add(rewardAmount)
             ),
             "Failed to withdraw a staked and rewarded mOST amount."
         );
 
         require(
             wETH.transfer(
-                withdrawalAddresses[_validator], stakeWETHAmount
+                v.withdrawalAddress, stakeWETHAmount
             ),
             "Failed to withdraw a staked wETH amount."
         );

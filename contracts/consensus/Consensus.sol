@@ -285,18 +285,10 @@ contract Consensus {
     {
     }
 
-    /** Validator withdraws */
-    function withdraw()
-        external
-        returns (bool)
-    {
-
-    }
-
 
     /* Internal functions */
 
-    /**  */
+    /** Returns true if the specified address is a core. */
     function isCore(address _core)
         internal
         view
