@@ -25,12 +25,6 @@ contract Reputation is ConsensusModule {
     using SafeMath for uint256;
 
 
-    /* Constants */
-
-    /** Sentinel pointer for marking end of linked-list of validators */
-    address public constant SENTINEL_VALIDATORS = address(0x1);
-
-
     /* Enums */
 
     /** Validator status enum */
@@ -38,11 +32,11 @@ contract Reputation is ConsensusModule {
         /** Undefined as null value */
         Undefined,
 
-        /** Validator has put up stake and participates in consensus */
-        Staked,
-
         /** Validator has been slashed and lost stake and rewards */
         Slashed,
+
+        /** Validator has put up stake and participates in consensus */
+        Staked,
 
         /** Validator has logged out and no longer participates in consensus */
         LoggedOut,
@@ -66,11 +60,11 @@ contract Reputation is ConsensusModule {
     /** Required stake amount in wETH to join as a validator */
     uint256 public stakeWETHAmount;
 
+    /** A percentage from a reward that validator can withdraw. */
+    uint256 withdrawableRewardPercentage;
+
     /** Initial reputation for the newly joined validator. */
     uint256 public initialReputation;
-
-    /** Address of previous validator in linked list */
-    mapping(address => address) public validators;
 
     /** Status */
     mapping(address => ValidatorStatus) public statuses;
@@ -80,6 +74,9 @@ contract Reputation is ConsensusModule {
 
     /** Reputation earned */
     mapping(address => uint256) public reputations;
+
+    /** Earned rewards */
+    mapping(address => uint256) public rewards;
 
 
     /* Modifiers */
@@ -98,7 +95,7 @@ contract Reputation is ConsensusModule {
     {
         require(
             statuses[_validator] != ValidatorStatus.Undefined,
-            "Validator was not joined."
+            "Validator has not joined."
         );
 
         _;
@@ -113,7 +110,7 @@ contract Reputation is ConsensusModule {
      *          - wETH token address is not 0
      *          - a stake amount to join in mOST is positive
      *          - a stake amount to join in wETH is positive
-     *          - an initial reputation for newly joined validators is positive
+     *          - a withdrawable reward percentage is in [0, 100] range
      */
     constructor(
         address _consensus,
@@ -121,6 +118,7 @@ contract Reputation is ConsensusModule {
         uint256 _stakeMOSTAmount,
         EIP20I _wETH,
         uint256 _stakeWETHAmount,
+        uint256 _withdrawableRewardPercentage,
         uint256 _initialReputation
     )
         ConsensusModule(_consensus)
@@ -147,8 +145,8 @@ contract Reputation is ConsensusModule {
         );
 
         require(
-            _initialReputation > 0,
-            "Initial reputation for newly joined valiator is not positive."
+            _withdrawableRewardPercentage <= 100,
+            "Withdrawable reward percentage is not in valid range: [0, 100]."
         );
 
         mOST = _mOST;
@@ -156,9 +154,7 @@ contract Reputation is ConsensusModule {
         stakeMOSTAmount = _stakeMOSTAmount;
         stakeWETHAmount = _stakeWETHAmount;
         initialReputation = _initialReputation;
-
-        // Initialize the validators linked-list as the empty set.
-        validators[SENTINEL_VALIDATORS] = SENTINEL_VALIDATORS;
+        withdrawableRewardPercentage = _withdrawableRewardPercentage;
     }
 
 
@@ -176,7 +172,7 @@ contract Reputation is ConsensusModule {
      *
      * @return Returns an updated reputation.
      */
-    function increase(address _validator, uint256 _delta)
+    function increaseReputation(address _validator, uint256 _delta)
         external
         onlyConsensus
         isActive(_validator)
@@ -201,7 +197,7 @@ contract Reputation is ConsensusModule {
      *
      * @return Returns an updated reputation.
      */
-    function decrease(address _validator, uint256 _delta)
+    function decreaseReputation(address _validator, uint256 _delta)
         external
         onlyConsensus
         isActive(_validator)
@@ -219,10 +215,12 @@ contract Reputation is ConsensusModule {
     /**
      * @dev Function requires:
      *          - only consensus can call
-     *          - a validator was not joined previously
      *          - a validator address is not 0
      *          - a withdrawal address is not 0
      *          - a validator address is not same as its withdrawal address
+     *          - a validator has not joined previously
+     *          - a withdrawal address has not been used as a validator address
+     *          - a withdrawal address has not been already used
      *          - a validator approved in mOST token contract to transfer
      *            a stake amount.
      *          - a validator approved in wETH token contract to transfer
@@ -256,13 +254,14 @@ contract Reputation is ConsensusModule {
         );
 
         require(
-            validators[_validator] == address(0),
-            "No validator can rejoin."
+            statuses[_withdrawalAddress] == ValidatorStatus.Undefined,
+            "The specified withdrawal address was registered as validator."
         );
 
-        // adding a validator into the circular link-list of validators.
-        validators[_validator] = validators[SENTINEL_VALIDATORS];
-        validators[SENTINEL_VALIDATORS] = _validator;
+        require(
+            withdrawalAddresses[_withdrawalAddress] == ValidatorStatus.Undefined,
+            "The specified withdrawal address has been already used."
+        );
 
         statuses[_validator] = ValidatorStatus.Staked;
         withdrawalAddresses[_validator] = _withdrawalAddress;
@@ -290,6 +289,9 @@ contract Reputation is ConsensusModule {
         hasJoined(_validator)
     {
         statuses[_validator] = ValidatorStatus.Slashed;
+
+        // continue
+        revert("Implementation is incomplete!");
     }
 
     function logout(address _validator)
@@ -298,5 +300,6 @@ contract Reputation is ConsensusModule {
         onlyConsensus
     {
         // continue
+        revert("Implementation is incomplete!");
     }
 }
