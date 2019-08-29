@@ -40,7 +40,7 @@ contract Reputation is ConsensusModule {
         /** Undefined as null value */
         Undefined,
 
-        /** Validator has been slashed and lost stake and rewards */
+        /** Validator has been slashed and lost stake and earnings */
         Slashed,
 
         /** Validator has put up stake and participates in consensus */
@@ -60,15 +60,15 @@ contract Reputation is ConsensusModule {
         ValidatorStatus status;
         address withdrawalAddress;
         uint256 reputation;
-        uint256 reward;
-        uint256 withdrawableReward;
+        uint256 lockedEarnings;
+        uint256 cashableEarnings;
         uint256 withdrawalBlockHeight;
     }
 
 
     /* Storage */
 
-    /** EIP20 mOST for stakes and rewards for validators. */
+    /** EIP20 mOST for stakes and earnings for validators. */
     EIP20I public mOST;
 
     /** EIP20 wETH for stakes for validators. */
@@ -80,8 +80,8 @@ contract Reputation is ConsensusModule {
     /** Required stake amount in wETH to join as a validator. */
     uint256 public stakeWETHAmount;
 
-    /** A percentage of a reward that validator can withdraw immediately. */
-    uint256 withdrawableRewardPercentage;
+    /** A per mille of earnings that validator can cash out immediately. */
+    uint256 cashableEarningsPerMille;
 
     /** An initial reputation for a newly joined validator. */
     uint256 public initialReputation;
@@ -128,11 +128,11 @@ contract Reputation is ConsensusModule {
         _;
     }
 
-    modifier wasNotSlashed(address _validator)
+    modifier isHonest(address _validator)
     {
         require(
-            validators[_validator].status != ValidatorStatus.Slashed,
-            "Validator was slashed."
+            validators[_validator].status >= ValidatorStatus.Staked,
+            "Validator is not honest."
         );
 
         _;
@@ -141,19 +141,7 @@ contract Reputation is ConsensusModule {
     modifier hasLoggedOut(address _validator)
     {
         require(
-            validators[_validator].status == ValidatorStatus.LoggedOut ||
-            validators[_validator].status == ValidatorStatus.Withdrawn,
-            "Validator has not logged out."
-        );
-
-        _;
-    }
-
-    modifier hasNotLoggedOut(address _validator)
-    {
-        require(
-            validators[_validator].status != ValidatorStatus.LoggedOut &&
-            validators[_validator].status != ValidatorStatus.Withdrawn,
+            validators[_validator].status >= ValidatorStatus.LoggedOut,
             "Validator has not logged out."
         );
 
@@ -165,16 +153,6 @@ contract Reputation is ConsensusModule {
         require(
             block.number > validators[_validator].withdrawalBlockHeight,
             "Withdrawal cooldown period has not elapsed."
-        );
-
-        _;
-    }
-
-    modifier hasWithdrawn(address _validator)
-    {
-        require(
-            validators[_validator].status == ValidatorStatus.Withdrawn,
-            "Validator has not withdrawn."
         );
 
         _;
@@ -199,7 +177,7 @@ contract Reputation is ConsensusModule {
      *          - wETH token address is not 0
      *          - a stake amount to join in mOST is positive
      *          - a stake amount to join in wETH is positive
-     *          - a withdrawable reward percentage is in [0, 100] range
+     *          - a cashable earnings per mille is in [0, 1000] range
      */
     constructor(
         address _consensus,
@@ -207,7 +185,7 @@ contract Reputation is ConsensusModule {
         uint256 _stakeMOSTAmount,
         EIP20I _wETH,
         uint256 _stakeWETHAmount,
-        uint256 _withdrawableRewardPercentage,
+        uint256 _cashableEarningsPerMille,
         uint256 _initialReputation,
         uint256 _withdrawalCooldownPeriodInBlocks
     )
@@ -235,8 +213,8 @@ contract Reputation is ConsensusModule {
         );
 
         require(
-            _withdrawableRewardPercentage <= 100,
-            "Withdrawable reward percentage is not in valid range: [0, 100]."
+            _cashableEarningsPerMille <= 1000,
+            "Cashable earnings is not in valid range: [0, 1000]."
         );
 
         mOST = _mOST;
@@ -244,8 +222,8 @@ contract Reputation is ConsensusModule {
         stakeMOSTAmount = _stakeMOSTAmount;
         stakeWETHAmount = _stakeWETHAmount;
         initialReputation = _initialReputation;
-        withdrawableRewardPercentage = _withdrawableRewardPercentage;
-        _withdrawalCooldownPeriodInBlocks = _withdrawalCooldownPeriodInBlocks;
+        cashableEarningsPerMille = _cashableEarningsPerMille;
+        withdrawalCooldownPeriodInBlocks = _withdrawalCooldownPeriodInBlocks;
     }
 
 
@@ -307,68 +285,72 @@ contract Reputation is ConsensusModule {
     }
 
     /**
-     * @notice Rewards validator by the specified amount.
-     *         Only fixed percentage (`withdrawableRewardPercentage`) from the
-     *         rewarded amount is withdrawable by a validator immediately.
-     *         The remaining is locked in the contract and can be withdrawn
-     *         only when validator has been logged out and cooling period
+     * @notice Deposits earnings of a validator by the specified amount.
+     *         Only fixed per-mille (`cashableEarningsPerMille`) from the
+     *         earned amount is cashable by a validator immediately.
+     *         The remaining is locked in the contract and can be cashed out
+     *         only when the validator has logged out and cooling period
      *         has elapsed.
      *
      * @dev Function requires:
-     *          - only consensus can call
      *          - a validator is active
+     *          - a caller has approved the contract to transfer
+     *            `_amount` mOST from its address to the contract address.
      *
-     * @param _validator A validator to reward.
-     * @param _amount An amount to reward a validator.
+     * @param _validator A validator to deposit earnings.
+     * @param _amount An amount of earnings of a validator.
      */
-    function reward(
+    function depositEarnings(
         address _validator,
         uint256 _amount
     )
         external
-        onlyConsensus
         isActive(_validator)
     {
         ValidatorInfo storage v = validators[_validator];
 
-        v.reward = v.reward.add(_amount);
+        uint256 cashableEarnings = (_amount * cashableEarningsPerMille) / 1000;
 
-        v.withdrawableReward = v.withdrawableReward.add(
-            (_amount * withdrawableRewardPercentage) / 100
+        v.cashableEarnings = v.cashableEarnings.add(cashableEarnings);
+
+        v.lockedEarnings = v.lockedEarnings.add(
+            _amount.sub(cashableEarnings)
+        );
+
+        require(
+            mOST.transferFrom(msg.sender, address(this), _amount),
+            "Failed to transfer earnings to the contract address"
         );
     }
 
     /**
-     * @notice Withdraws the specified amount from a reward of a validator.
+     * @notice Cashs out the specified amount from cashable earnings
+     *         of a validator.
      *
      * @dev Function requiers:
      *          - only validator can call
      *          - validator has joined
      *          - validator was not slashed
      *          - validator has not withdrawn
-     *          - the speciefied amount is not bigger than a withdrawable reward
+     *          - the speciefied amount is not bigger than cashable earnings
      *            of a validator
      *
      * @param _amount An amount to withdraw.
      */
-    function withdrawReward(uint256 _amount)
+    function cashOutEarnings(uint256 _amount)
         external
         hasJoined(msg.sender)
-        wasNotSlashed(msg.sender)
+        isHonest(msg.sender)
         hasNotWithdrawn(msg.sender)
     {
         ValidatorInfo storage v = validators[msg.sender];
 
         require(
-            _amount <= v.withdrawableReward,
-            "The specified amount is bigger than available withdrawable amount."
+            _amount <= v.cashableEarnings,
+            "The specified amount is bigger than available cashable amount."
         );
 
-        v.withdrawableReward = v.withdrawableReward.sub(
-            _amount
-        );
-
-        v.reward = v.reward.sub(
+        v.cashableEarnings = v.cashableEarnings.sub(
             _amount
         );
 
@@ -376,7 +358,7 @@ contract Reputation is ConsensusModule {
             mOST.transfer(
                 v.withdrawalAddress, _amount
             ),
-            "Failed to transfer a reward amount to withdrawal address."
+            "Failed to transfer cashable earnings to withdrawal address."
         );
     }
 
@@ -456,7 +438,7 @@ contract Reputation is ConsensusModule {
      *          - a validator has joined
      *          - a validator has not withdrawn
      *
-     * TODO: The reward and stakes of a validator must be burned.
+     * TODO: The earnings and stakes of a validator must be burned.
      */
     function slash(address _validator)
         external
@@ -468,8 +450,8 @@ contract Reputation is ConsensusModule {
 
         v.status = ValidatorStatus.Slashed;
 
-        v.reward = 0;
-        v.withdrawableReward = 0;
+        v.lockedEarnings = 0;
+        v.cashableEarnings = 0;
     }
 
     /**
@@ -496,7 +478,7 @@ contract Reputation is ConsensusModule {
     }
 
     /**
-     * @notice Withdraws staked and rewarded values to a validator.
+     * @notice Withdraws staked and earnings values to a validator.
      *
      * @dev Function requires:
      *          - a validator has logged out
@@ -504,12 +486,12 @@ contract Reputation is ConsensusModule {
      *          - a validator has not withdrawn
      *          - a withdrawal cooling period for the validator has elapsed
      *
-     * @param _validator A validator to withdraw reward and stakes.
+     * @param _validator A validator to withdraw earnings and stakes.
      */
     function withdraw(address _validator)
         external
         hasLoggedOut(_validator)
-        wasNotSlashed(_validator)
+        isHonest(_validator)
         hasNotWithdrawn(_validator)
         withdrawalCooldownPeriodHasElapsed(_validator)
     {
@@ -517,16 +499,22 @@ contract Reputation is ConsensusModule {
 
         v.status = ValidatorStatus.Withdrawn;
 
-        uint256 rewardAmount = v.reward;
+        uint256 lockedEarnings = v.lockedEarnings;
+        uint256 cashableEarnings = v.cashableEarnings;
 
-        v.reward = 0;
-        v.withdrawableReward = 0;
+        v.lockedEarnings = 0;
+        v.cashableEarnings = 0;
 
         require(
             mOST.transfer(
-                v.withdrawalAddress, stakeMOSTAmount.add(rewardAmount)
+                v.withdrawalAddress,
+                stakeMOSTAmount.add(
+                    lockedEarnings
+                ).add(
+                    cashableEarnings
+                )
             ),
-            "Failed to withdraw staked and rewarded mOST amount."
+            "Failed to withdraw staked and earned mOST amounts."
         );
 
         require(
