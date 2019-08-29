@@ -177,7 +177,7 @@ contract Reputation is ConsensusModule {
      *          - wETH token address is not 0
      *          - a stake amount to join in mOST is positive
      *          - a stake amount to join in wETH is positive
-     *          - a cashable earnings per mille is in [0, 1000] range
+     *          - a cashable earnings per mille is in [0, 499] range
      */
     constructor(
         address _consensus,
@@ -213,8 +213,8 @@ contract Reputation is ConsensusModule {
         );
 
         require(
-            _cashableEarningsPerMille <= 1000,
-            "Cashable earnings is not in valid range: [0, 1000]."
+            _cashableEarningsPerMille <= 499,
+            "Cashable earnings is not in valid range: [0, 499]."
         );
 
         mOST = _mOST;
