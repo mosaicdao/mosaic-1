@@ -97,30 +97,6 @@ contract Anchor is AnchorI, ConsensusModule, CircularBufferUint {
     /* External functions */
 
     /**
-     *  @notice The Co-Anchor address is the address of the anchor that is
-     *          deployed on the other (origin/auxiliary) chain.
-     *
-     *  @param _coAnchor Address of the Co-Anchor on auxiliary.
-     */
-    function setCoAnchorAddress(address _coAnchor)
-        external
-        onlyConsensus
-    {
-
-        require(
-            _coAnchor != address(0),
-            "Co-Anchor address must not be 0."
-        );
-
-        require(
-            coAnchor == address(0),
-            "Co-Anchor has already been set and cannot be updated."
-        );
-
-        coAnchor = _coAnchor;
-    }
-
-    /**
      * @notice Get the state root for the given block height.
      *
      * @param _blockHeight The block height for which the state root is needed.
