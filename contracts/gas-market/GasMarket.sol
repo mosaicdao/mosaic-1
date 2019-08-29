@@ -81,9 +81,12 @@ contract GasMarket { //is UtilityToken {
         uint256 _amount
     )
         external
+        view
         onlyKernelGateway
         returns (bool success_)
     {
+        _amount;
+
         // Supply can only be increased to deposit in the gas market.
         // note: don't require this condition to allow the gateway to
         // record the failure of the message.
@@ -97,15 +100,22 @@ contract GasMarket { //is UtilityToken {
         }
     }
 
-    function transfer(
+    function transfer (
         address _to,
         uint256 _value
     )
         public
+        pure
         returns (bool success_)
     {
-        require(false,
-            "Transfers on the gas market are not allowed.");
+        _to;
+        _value;
+
+        require(
+            false,
+            "Transfers on the gas market are not allowed."
+        );
+
         success_ = false;
     }
 
@@ -115,10 +125,18 @@ contract GasMarket { //is UtilityToken {
         uint256 _value
     )
         public
+        pure
         returns (bool success_)
     {
-        require(false,
-            "Transfers on the gas market are not allowed.");
+        _from;
+        _to;
+        _value;
+
+        require(
+            false,
+            "Transfers on the gas market are not allowed."
+        );
+
         success_ = false;
     }
 }
