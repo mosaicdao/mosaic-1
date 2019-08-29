@@ -14,9 +14,10 @@ pragma solidity ^0.5.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../consensus/ConsensusModule.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
+import "../consensus/ConsensusModule.sol";
+import "../EIP20I.sol";
 
 /**
  * @title Committee
@@ -110,6 +111,9 @@ contract Committee is ConsensusModule {
 
 
     /* Storage */
+
+    /** mOST token address */
+    EIP20I mOST;
 
     /** Committee size */
     uint256 public committeeSize;
@@ -226,6 +230,15 @@ contract Committee is ConsensusModule {
         _;
     }
 
+    modifier proposalIsAccepted() {
+        require(
+            positionCounts[proposal] >= quorum,
+            "Proposal is not accepted."
+        );
+
+        _;
+    }
+
 
     /* Special Functions */
 
@@ -240,9 +253,13 @@ contract Committee is ConsensusModule {
      *                  is required.
      *
      * @dev Functions requires:
-     *          -
+     *          - token address is not null
+     *          - committee size is greater or equal than 3
+     *          - dislocation is not 0
+     *          - proposal is not 0
      */
     constructor(
+        EIP20I _mOST,
         uint256 _committeeSize,
         bytes32 _dislocation,
         bytes32 _proposal
@@ -250,6 +267,11 @@ contract Committee is ConsensusModule {
         ConsensusModule(msg.sender)
         public
     {
+        require(
+            mOST != EIP20I(0),
+            "Token address is 0."
+        );
+
         require(
             _committeeSize >= 3,
             "Committee size must not be smaller than three."
@@ -264,6 +286,8 @@ contract Committee is ConsensusModule {
             _proposal != 0,
             "Proposal must not be zero."
         );
+
+        mOST = _mOST;
 
         committeeStatus = CommitteeStatus.Open;
 
@@ -592,6 +616,27 @@ contract Committee is ConsensusModule {
         returns (bool)
     {
         return positionCounts[proposal] >= quorum;
+    }
+
+    /**
+     * @dev Function requires:
+     *          - only consensus can call
+     *          - proposal was accepted by committee
+     *          - consensus has approved the committee to transfer a reward
+     *            from its address to this contract address.
+     */
+    function rewardCommittee(uint256 _reward)
+        external
+        onlyConsensus
+        proposalIsAccepted
+    {
+        require(
+            mOST.transferFrom(address(msg.sender), address(this), _reward),
+            "Failed to transfer a reward to committee."
+        );
+
+        // TODO: Committee should divide the reward between members
+        //       voted for decision.
     }
 
     /** @notice Returns an array of committee members. */

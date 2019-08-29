@@ -98,6 +98,9 @@ contract Consensus {
     /** Reputation contract for validators */
     ReputationI public reputation;
 
+    /** Cached mOST token address from the reputation contract. */
+    EIP20I public mOST;
+
 
     /* Modifiers */
 
@@ -125,6 +128,7 @@ contract Consensus {
     /* Special Member Functions */
 
     constructor(
+        ReputationI _reputation,
         uint256 _committeeSize
     )
         public
@@ -137,6 +141,12 @@ contract Consensus {
         committeeSize = _committeeSize;
 
         committees[SENTINEL_COMMITTEES] = SENTINEL_COMMITTEES;
+
+        reputation = _reputation;
+
+        reputation.setupConsensus(address(this));
+
+        mOST = reputation.mOST();
     }
 
 
@@ -237,7 +247,7 @@ contract Consensus {
             "Block header does not match with vote message source."
         );
 
-        verifyCommitteeLock(
+        Committee committee = verifyCommitteeLock(
             _chainId,
             _kernelHash,
             _originObservation,
@@ -250,18 +260,9 @@ contract Consensus {
             _targetBlockHeight
         );
 
-        address anchorAddress = anchors[_chainId];
-        require(
-            anchorAddress != address(0),
-            "There is no anchor for the specified chain id."
-        );
+        anchorStateRoot(_chainId, _rlpBlockHeader);
 
-        Block.Header memory blockHeader = Block.decodeHeader(_rlpBlockHeader);
-
-        AnchorI(anchorAddress).anchorStateRoot(
-            blockHeader.height,
-            blockHeader.stateRoot
-        );
+        rewardCommittee(committee);
     }
 
     /** Validator joins */
@@ -309,7 +310,12 @@ contract Consensus {
             "There already exists a committee for the proposal."
         );
         // TODO: implement proxy pattern
-        Committee committee_ = new Committee(committeeSize, _dislocation, _proposal);
+        Committee committee_ = new Committee(
+            mOST,
+            committeeSize,
+            _dislocation,
+            _proposal
+        );
         committees[address(committee_)] = committees[SENTINEL_COMMITTEES];
         committees[SENTINEL_COMMITTEES] = address(committee_);
 
@@ -330,6 +336,7 @@ contract Consensus {
     )
         private
         view
+        returns (Committee committee_)
     {
         address coreAddress = assignments[_chainId];
         require(
@@ -349,23 +356,58 @@ contract Consensus {
             _targetBlockHeight
         );
 
-        Committee committee = proposals[proposal];
+        committee_ = proposals[proposal];
 
         require(
-            committee != Committee(0),
+            committee_ != Committee(0),
             "There is no committee matching to the specified vote message."
         );
 
         require(
-            committee.committeeDecision() != bytes32(0),
+            committee_.committeeDecision() != bytes32(0),
             "Committee has not decide on the proposal."
         );
 
         require(
             _committeeLock == keccak256(
-                abi.encode(committee.committeeDecision())
+                abi.encode(committee_.committeeDecision())
             ),
             "Committee decision does not match with committee lock."
         );
+    }
+
+    function anchorStateRoot(
+        bytes20 _chainId,
+        bytes memory _rlpBlockHeader
+    )
+        private
+    {
+        address anchorAddress = anchors[_chainId];
+        require(
+            anchorAddress != address(0),
+            "There is no anchor for the specified chain id."
+        );
+
+        Block.Header memory blockHeader = Block.decodeHeader(_rlpBlockHeader);
+
+        AnchorI(anchorAddress).anchorStateRoot(
+            blockHeader.height,
+            blockHeader.stateRoot
+        );
+
+    }
+
+    function rewardCommittee(Committee committee)
+        private
+    {
+        uint256 committeeReward = 0; // TODO: Committee should be rewarded from
+                                     // the percentage of newly minted mOSTs.
+
+        require(
+            mOST.approve(address(committee), committeeReward),
+            "Failed to approve committee to transfer its reward."
+        );
+
+        committee.rewardCommittee(committeeReward);
     }
 }

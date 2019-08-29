@@ -17,9 +17,8 @@ pragma solidity >=0.5.0 <0.6.0;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "../EIP20I.sol";
-import "../consensus/ConsensusModule.sol";
 
-contract Reputation is ConsensusModule {
+contract Reputation {
 
     /* Usings */
 
@@ -68,6 +67,9 @@ contract Reputation is ConsensusModule {
 
     /* Storage */
 
+    /** Consensus contract for which this committee was formed. */
+    address public consensus;
+
     /** EIP20 mOST for stakes and earnings for validators. */
     EIP20I public mOST;
 
@@ -97,6 +99,16 @@ contract Reputation is ConsensusModule {
 
 
     /* Modifiers */
+
+    modifier onlyConsensus()
+    {
+        require(
+            msg.sender == address(consensus),
+            "Only the consensus contract can call this function."
+        );
+
+        _;
+    }
 
     modifier isActive(address _validator)
     {
@@ -180,7 +192,6 @@ contract Reputation is ConsensusModule {
      *          - a cashable earnings per mille is in [0, 499] range
      */
     constructor(
-        address _consensus,
         EIP20I _mOST,
         uint256 _stakeMOSTAmount,
         EIP20I _wETH,
@@ -189,7 +200,6 @@ contract Reputation is ConsensusModule {
         uint256 _initialReputation,
         uint256 _withdrawalCooldownPeriodInBlocks
     )
-        ConsensusModule(_consensus)
         public
     {
         require(
@@ -224,6 +234,24 @@ contract Reputation is ConsensusModule {
         initialReputation = _initialReputation;
         cashableEarningsPerMille = _cashableEarningsPerMille;
         withdrawalCooldownPeriodInBlocks = _withdrawalCooldownPeriodInBlocks;
+    }
+
+    function setupConsensus(
+        address _consensus
+    )
+        external
+    {
+        require(
+            consensus == address(0),
+            "Consensus is already setup for the contract."
+        );
+
+        require(
+            _consensus != address(0),
+            "Consensus address is 0"
+        );
+
+        consensus = _consensus;
     }
 
 
