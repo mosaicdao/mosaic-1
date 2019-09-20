@@ -17,4 +17,5 @@ pragma solidity ^0.5.0;
 interface ReputationI {
 
     function isActive(address _validator) external view returns (bool);
+    function getReputation(address _validator) external view returns (uint256);
 }

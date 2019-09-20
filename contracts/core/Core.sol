@@ -43,7 +43,9 @@ contract Core is ConsensusModule, MosaicVersion {
     /** The kernel of a meta-block header */
     struct Kernel {
         /** The height of the metablock in the chain */
-        uint256 height;
+        // Kernels are stored in a mapping)height => Kernel),
+        // which makes storing height redundant
+        // uint256 height;
         /** Hash of the metablock's parent */
         bytes32 parent;
         /** Added validators */
@@ -152,18 +154,33 @@ contract Core is ConsensusModule, MosaicVersion {
     /** Epoch length */
     uint256 public epochLength;
 
-    /** Validators assigned to this core with their end height registered
+    /** Validator begin height assigned to this core
+     * zero - not registered to this core, or started at height 0
+     * bigger than zero - begin height for active validators (given endHeight >= metablock height)
+     */
+    mapping(address => uint256) public validatorBeginHeight;
+
+    /** Validator end height assigned to this core
      * zero - not registered to this core
-     * MAX_FUTURE_END_HEIGHT - for active validators
+     * MAX_FUTURE_END_HEIGHT - for active validators (assert beginHeight <= metablock height)
      * less than MAX_FUTURE_END_HEIGHT - for logged out validators
      */
-    mapping(address => uint256) public validators;
+    mapping(address => uint256) public validatorEndHeight;
 
-    /** Linked list of validators who will join in the next metablock */
-    mapping(address => address) public joinedValidators;
+    // /** Linked list of validators who will join in the next metablock */
+    // mapping(address => address) public joinedValidators;
 
-    /** Linked list of validators who have logged out */
-    mapping(address => address) public loggedOutValidators;
+    // /** Linked list of validators who have logged out */
+    // mapping(address => address) public loggedOutValidators;
+
+    // /** mapping of updated validators */
+    // mapping(uint256 /* metablock height */ => address[]) updatedValidators;
+
+    // /** mapping of updated reputation validator */
+    // mapping(uint256 /* metablock height */ => uint256[]) updatedReputation;
+
+    /** mapping of metablock height to Kernels */
+    mapping(uint256 => Kernel) public kernels;
 
     /** Validator count in core */
     uint256 public countValidators;
@@ -186,8 +203,11 @@ contract Core is ConsensusModule, MosaicVersion {
     /** Reputation contract */
     ReputationI public reputation;
 
-    /** Open kernel */
-    Kernel public openKernel;
+    /** Creation kernel height */
+    uint256 public creationKernelHeight;
+
+    /** Open kernel height */
+    uint256 public openKernelHeight;
 
     /** Open kernel hash */
     bytes32 public openKernelHash;
@@ -287,19 +307,13 @@ contract Core is ConsensusModule, MosaicVersion {
 
         (minimumValidatorCount, joinLimit) = consensus.coreValidatorThresholds();
 
-        openKernel.height = _height;
-        openKernel.parent = _parent;
-        openKernel.gasTarget = _gasTarget;
-        openKernel.gasPrice = _gasPrice;
+        creationKernelHeight = _height;
 
-        openKernelHash = hashKernel(
-            openKernel.height,
-            openKernel.parent,
-            openKernel.updatedValidators,
-            openKernel.updatedReputation,
-            openKernel.gasTarget,
-            openKernel.gasPrice
-        );
+        Kernel storage creationKernel = kernels[_height];
+        creationKernel.parent = _parent;
+        creationKernel.gasTarget = _gasTarget;
+        creationKernel.gasPrice = _gasPrice;
+        // before the Kernel can be opened, initial validators need to join
 
         closedTransition.dynasty = _dynasty;
         closedTransition.accumulatedGas = _accumulatedGas;
@@ -386,23 +400,22 @@ contract Core is ConsensusModule, MosaicVersion {
                 "Core has precommitted, only votes for precommitment are relevant.");
         }
 
-        uint256 height = openKernel.height;
-        require(proposals[height][_proposal] != bytes32(0),
+        require(proposals[openKernelHeight][_proposal] != bytes32(0),
             "Proposal must be registered at open metablock height.");
         address validator = ecrecover(_proposal, _v, _r, _s);
-        require(validators[validator] > height,
-            "Validator must be registered in this core.");
+        // check validator is registered to this core
+        require(isValidator(validator),
+            "Validator ,ust be active in this core.");
         require(reputation.isActive(validator),
             "Validator must be active.");
-
         bytes32 castVote = votes[validator];
         require(castVote != _proposal,
             "Vote has already been cast.");
         VoteCount storage castVoteCount = voteCounts[castVote];
         VoteCount storage registerVoteCount = voteCounts[_proposal];
-        if (castVoteCount.height == height) {
+        if (castVoteCount.height == openKernelHeight) {
             require(castVoteCount.dynasty < registerVoteCount.dynasty,
-                "For a given metablock height, the vote can only be recast for higher dynasty numbers.");
+                "Vote can only be recast for higher dynasty numbers.");
             castVoteCount.count = castVoteCount.count.sub(1);
         }
         votes[validator] = _proposal;
@@ -451,7 +464,7 @@ contract Core is ConsensusModule, MosaicVersion {
         );
 
         require(proposal_ == precommit,
-            "Provided metablock does not match precommited.");
+            "Provided metablock does not match precommit.");
     }
 
     function openMetablock(
@@ -464,19 +477,25 @@ contract Core is ConsensusModule, MosaicVersion {
     {
         assert(precommit != bytes32(0));
 
-        openKernel.height = openKernel.height.add(1);
-        openKernel.parent = precommit;
-        openKernel.gasTarget = _gasTarget;
-        openKernel.gasPrice = _gasPrice;
+        uint256 nextKernelHeight = openKernelHeight.add(1);
+        Kernel storage nextKernel = kernels[nextKernelHeight];
+        nextKernel.parent = precommit;
+        nextKernel.gasTarget = _gasTarget;
+        nextKernel.gasPrice = _gasPrice;
+        // updated validators are already written to the next kernel
+
+        openKernelHeight = nextKernelHeight;
 
         openKernelHash = hashKernel(
-            openKernel.height,
-            openKernel.parent,
-            openKernel.updatedValidators,
-            openKernel.updatedReputation,
-            openKernel.gasTarget,
-            openKernel.gasPrice
+            nextKernelHeight,
+            nextKernel.parent,
+            nextKernel.updatedValidators,
+            nextKernel.updatedReputation,
+            nextKernel.gasTarget,
+            nextKernel.gasPrice
         );
+
+        newProposalSet();
     }
 
     /**
@@ -490,10 +509,9 @@ contract Core is ConsensusModule, MosaicVersion {
         onlyConsensus
         whileRunning
     {
-        uint256 height = openKernel.height;
         bytes32 castVote = votes[_validator];
         VoteCount storage castVoteCount = voteCounts[castVote];
-        if (castVoteCount.height == height) {
+        if (castVoteCount.height == openKernelHeight) {
             delete votes[_validator];
             castVoteCount.count = castVoteCount.count.sub(1);
         }
@@ -504,10 +522,25 @@ contract Core is ConsensusModule, MosaicVersion {
         onlyConsensus
         duringCreation
     {
-        insertValidator(_validator);
+        // during creation join at creation kernel height
+        insertValidator(_validator, creationKernelHeight);
+
+        Kernel storage creationKernel = kernels[creationKernelHeight];
+        creationKernel.updatedValidators.push(_validator);
+        // TASK: reputation can be uint64, and initial rep set properly
+        creationKernel.updatedReputation.push(uint256(1));
         if (countValidators >= minimumValidatorCount) {
             quorum = calculateQuorum(countValidators);
             precommitClosureBlockHeight = CORE_OPEN_VOTES_WINDOW;
+            openKernelHeight = creationKernelHeight;
+            openKernelHash = hashKernel(
+                creationKernelHeight,
+                creationKernel.parent,
+                creationKernel.updatedValidators,
+                creationKernel.updatedReputation,
+                creationKernel.gasTarget,
+                creationKernel.gasPrice
+            );
             coreStatus = Status.opened;
         }
     }
@@ -517,16 +550,20 @@ contract Core is ConsensusModule, MosaicVersion {
         onlyConsensus
         whileRunning
     {
-        require(validators[_validator] == 0,
-            "Validator must not have already joined the core.");
-        require(joinedValidators[_validator] == address(0),
-            "Validator cannot join twice.");
-        require(_validator != SENTINEL_VALIDATORS,
-            "Validator must not be sentinel address for validators.");
+        require(countValidators
+            .add(countJoinMessages)
+            .sub(countLogOutMessages) < joinLimit,
+            "Join limit is reached for this core.");
         require(countJoinMessages < MAX_DELTA_VALIDATORS,
             "Maximum number of validators that can join in one metablock is reached.");
-        joinedValidators[_validator] = joinedValidators[SENTINEL_VALIDATORS];
-        joinedValidators[SENTINEL_VALIDATORS] = _validator;
+        uint256 nextKernelHeight = openKernelHeight.add(1);
+        // insertValidator requires validator cannot join twice
+        // insert validator starting from next metablock height
+        insertValidator(_validator, nextKernelHeight);
+        Kernel storage nextKernel = kernels[nextKernelHeight];
+        nextKernel.updatedValidators.push(_validator);
+        // TASK: reputation can be uint64, and initial rep set properly
+        nextKernel.updatedReputation.push(uint256(1));
         countJoinMessages = countJoinMessages.add(1);
     }
 
@@ -535,17 +572,37 @@ contract Core is ConsensusModule, MosaicVersion {
         onlyConsensus
         whileRunning
     {
-        require(validators[_validator] > openKernel.height.add(1),
-            "Validator cannot already have logged out.");
-        require(loggedOutValidators[_validator] == address(0),
-            "Validator cannot log out twice.");
-        require(_validator != SENTINEL_VALIDATORS,
-            "Validator must not be sentinel address for validators.");
+        require(countValidators
+            .add(countJoinMessages)
+            .sub(countLogOutMessages) > minimumValidatorCount,
+            "Validator minimum limit reached.");
         require(countLogOutMessages < MAX_DELTA_VALIDATORS,
             "Maximum number of validators that can log out in one metablock is reached.");
-        loggedOutValidators[_validator] = loggedOutValidators[SENTINEL_VALIDATORS];
-        loggedOutValidators[SENTINEL_VALIDATORS] = _validator;
+        uint256 nextKernelHeight = openKernelHeight.add(1);
+        // removeValidator performs necessary requirements
+        // remove validator from next metablock height
+        removeValidator(_validator, nextKernelHeight);
+        Kernel storage nextKernel = kernels[nextKernelHeight];
+        nextKernel.updatedValidators.push(_validator);
+        nextKernel.updatedReputation.push(uint256(0));
         countLogOutMessages = countLogOutMessages.add(1);
+    }
+
+    /** Validator is active if open kernel height is
+     * - greater or equal than validator's begin height
+     * - and, less or equal than validator's end height
+     */
+    function isValidator(address _account)
+        public
+        view
+        returns (bool)
+    {
+        // Validator must have a begin height less than current metablock height.
+        // Validator must have an end height higher than current metablock height.
+        // Validator must be registered to this core.
+        return (validatorBeginHeight[_account] <= openKernelHeight) &&
+            (validatorEndHeight[_account] >= openKernelHeight) &&
+            (validatorEndHeight[_account] > uint256(0));
     }
 
     function calculateQuorum(uint256 _count)
@@ -584,10 +641,9 @@ contract Core is ConsensusModule, MosaicVersion {
     function newProposalSet()
         internal
     {
-        uint256 height = openKernel.height;
-        require(proposals[height][SENTINEL_PROPOSALS] == bytes32(0),
+        require(proposals[openKernelHeight][SENTINEL_PROPOSALS] == bytes32(0),
             "Proposal set has already been initialised at this height.");
-        proposals[height][SENTINEL_PROPOSALS] = SENTINEL_PROPOSALS;
+        proposals[openKernelHeight][SENTINEL_PROPOSALS] = SENTINEL_PROPOSALS;
     }
 
     /**
@@ -599,26 +655,25 @@ contract Core is ConsensusModule, MosaicVersion {
     )
         internal
     {
-        uint256 height = openKernel.height;
         VoteCount storage voteCount = voteCounts[_proposal];
 
         // note: redundant because we always calculate the proposal hash
         require(_proposal != bytes32(0),
             "Proposal must not be null.");
-        require(proposals[height][_proposal] == bytes32(0),
+        require(proposals[openKernelHeight][_proposal] == bytes32(0),
             "Proposal can only be inserted once.");
         require(_proposal != SENTINEL_PROPOSALS,
             "Proposal must not be sentinel for proposals.");
 
         // vote registered for open kernel
-        voteCount.height = height;
+        voteCount.height = openKernelHeight;
         // register dynasty of transition
         voteCount.dynasty = _dynasty;
         // vote count is zero
         voteCount.count = 0;
 
-        proposals[height][_proposal] = proposals[height][SENTINEL_PROPOSALS];
-        proposals[height][SENTINEL_PROPOSALS] = _proposal;
+        proposals[openKernelHeight][_proposal] = proposals[openKernelHeight][SENTINEL_PROPOSALS];
+        proposals[openKernelHeight][SENTINEL_PROPOSALS] = _proposal;
     }
 
     /**
@@ -629,7 +684,7 @@ contract Core is ConsensusModule, MosaicVersion {
     function cleanProposals(uint256 _height)
         internal
     {
-        require(_height < openKernel.height,
+        require(_height < openKernelHeight,
             "Only proposals of older kernels can be cleaned out.");
         bytes32 currentProposal = proposals[_height][SENTINEL_PROPOSALS];
         bytes32 deleteProposal = SENTINEL_PROPOSALS;
@@ -646,33 +701,39 @@ contract Core is ConsensusModule, MosaicVersion {
     }
 
     /**
-     * insert validator in linked-list
+     * insert validator in the core
+     * sets begin height and end height of validator
      */
-    function insertValidator(address _validator)
+    function insertValidator(address _validator, uint256 _beginHeight)
         internal
     {
         require(_validator != address(0),
             "Validator must not be null address.");
-        require(validators[_validator] == 0,
+        require(_beginHeight >= openKernelHeight,
+            "Begin height cannot be less than kernel height.");
+        require(validatorEndHeight[_validator] == 0,
             "Validator must not already be part of this core.");
-        validators[_validator] = MAX_FUTURE_END_HEIGHT;
-        countValidators = countValidators.add(1);
+        require(validatorBeginHeight[_validator] == 0,
+            "Validator must not have a non-zero begin height");
+        validatorBeginHeight[_validator] = _beginHeight;
+        validatorEndHeight[_validator] = MAX_FUTURE_END_HEIGHT;
+        // update validator count upon new metablock opening
     }
 
-    // /**
-    //  * remove validator from linked-list
-    //  */
-    // function removeValidator(address _validator, address _prevValidator)
-    //     internal
-    // {
-    //     require(_validator != address(0) &&
-    //         _validator != SENTINEL_VALIDATORS,
-    //         "Validator null or sentinel address cannot be removed.");
-    //     require(_validator == validators[_prevValidator],
-    //         "Invalid validator-pair provided to remove validator from core.");
-    //     validators[_prevValidator] = validators[_validator];
-    //     delete validators[_validator];
-    // }
+    function removeValidator(address _validator, uint256 _endHeight)
+        internal
+    {
+        require(_validator != address(0),
+            "Validator must not be null address.");
+        require(_endHeight > openKernelHeight,
+            "End height cannot be less or equal than kernel height.");
+        require(validatorBeginHeight[_validator] <= openKernelHeight,
+            "Validator must have begun.");
+        require(validatorEndHeight[_validator] == MAX_FUTURE_END_HEIGHT,
+            "Validator must be active.");
+        validatorEndHeight[_validator] = _endHeight;
+        // update validator count upon new metablock opening
+    }
 
     /**
      * @notice Takes the parameters of a kernel object and returns the
