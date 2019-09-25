@@ -109,6 +109,9 @@ contract ProtoCore is MosaicVersion
         /** The block hash of the block at this checkpoint. */
         bytes32 blockHash;
 
+        /** The height of the checkpoint (not block). */
+        uint256 height;
+
         /** The hash of the block of the parent checkpoint (not block) */
         bytes32 parent;
 
@@ -118,11 +121,11 @@ contract ProtoCore is MosaicVersion
         /** Is true if the checkpoint has been finalised. */
         bool finalised;
 
-        /**
-         * The dynasty of block b is the number of finalised checkpoints in the
-         * chain from the starting checkpoint to the parent of block b.
-         */
-        uint256 dynasty;
+        // /**
+        //  * The dynasty of block b is the number of finalized checkpoints in the
+        //  * chain from the starting checkpoint to the parent of block b.
+        //  */
+        // uint256 dynasty;
     }
 
     /**
@@ -228,8 +231,14 @@ contract ProtoCore is MosaicVersion
     /** A mapping of block hashes to their reported headers. */
     mapping(bytes20 => mapping(bytes32 => Block.Header)) internal blocks;
 
-    /** A mapping of block hashes to a justified checkpoints. */
-    mapping(bytes20 => mapping(bytes32 => Checkpoint)) internal justifiedCheckpoints;
+    /**
+     * A mapping of block hashes to parent checkpoints (represented
+     * by blockhash).
+     */
+    mapping(bytes20 => mapping(bytes32 => bytes32)) internal parentCheckpoints;
+
+    /** A mapping of block hashes to checkpoints. */
+    mapping(bytes20 => mapping(bytes32 => Checkpoint)) internal checkpoints;
 
     mapping(bytes32 => VoteCount) internal votesCount;
 
@@ -245,25 +254,24 @@ contract ProtoCore is MosaicVersion
     /** Dynasty number of auxiliary blockchain. */
     uint256 internal auxiliaryDynasty;
 
-    /* A mapping from a validator address to a validator object. */
+    /**
+     * Define a super-majority fraction used for justifying and finalising
+     * checkpoints.
+     */
+    uint256 public constant SUPER_MAJORITY_NUMERATOR = uint256(2);
+    uint256 public constant SUPER_MAJORITY_DENOMINATOR = uint256(3);
+
+    /** A mapping from a validator address to a validator object. */
     mapping(address => Validator) internal validators;
 
+    /** A sum of weights of all active validators. */
+    uint256 internal activeValidatorsSummedWeight;
 
-    /* Modifiers */
+    /** A mapping from a hash(validatorAddress, voteHash) to boolean. */
+    mapping(bytes32 => bool) internal validatorVoteHashes;
 
-    /**
-     * @notice Requries that the specified core identifier is either origin or
-     *         auxiliary core identifier registered in the contract.
-     */
-    modifier coreIsKnown(bytes20 coreIdentifier)
-    {
-        require(
-            _isKnownCore(coreIdentifier),
-            "The specified core identifier is unknown to the contract."
-        );
-
-        _;
-    }
+    /** A mapping from a vote hash to a sum of validator weights voted for it. */
+    mapping(bytes32 => uint256) internal voteWeights;
 
 
     /* Special Member Functions */
@@ -334,36 +342,52 @@ contract ProtoCore is MosaicVersion
      *          - target is reported
      *          - height of target is bigger than height of source
      *          - a non-slashed validator has signed vote
+     *          - validator has not already voted for the specified link
      *
      * @param _coreIdentifier A unique identifier that identifies what chain
      *                        this vote is about.
-     * @param _source The hash of any justified checkpoint.
-     * @param _target The hash of any checkpoint that is descendent of source.
+     * @param _sourceBlockHash The hash of any justified checkpoint.
+     * @param _targetBlockHash The hash of any checkpoint that is descendent of source.
      * @param _v V of the signature.
      * @param _r R of the signature.
      * @param _s S of the signature.
      */
     function voteOrigin(
-        bytes32 _source,
-        bytes32 _target,
+        bytes32 _sourceBlockHash,
+        bytes32 _targetBlockHash,
         uint8 _v,
         bytes32 _r,
         bytes32 _s
     )
         external
     {
-        bytes32 voteHash = _assertVoteValidity(
+        (address validator, bytes32 voteHash) = _assertVoteValidity(
             originCoreIdentifier,
             bytes32(0), // transition hash is 0 for origin chain.
-            _source,
-            _target
+            _sourceBlockHash,
+            _targetBlockHash
         );
 
+        _storeVote(validator, voteHash);
 
+        uint256 requiredWeight = _calculateOriginRequiredWeight();
+
+        if (voteWeights[voteHash] >= requiredWeight) {
+            Checkpoint storage targetCheckpoint = checkpoints[
+                originCoreIdentifier
+            ][_targetBlockHash];
+
+            if (targetCheckpoint.justified) {
+                return;
+            }
+
+            _justify(originCoreIdentifier, _targetBlockHash);
+
+            if (distanceInEpochs(_sourceBlockHash, _targetBlockHash) == 1) {
+                _finalise(originCoreIdentifier, _sourceBlockHash);
+            }
+        }
     }
-
-    // In case of auxiliary chain we assume single line of history.
-    // In this case checking inclusion is relatively simpler.
 
     /**
      * @notice Cast a vote from a source to a target.
@@ -575,10 +599,14 @@ contract ProtoCore is MosaicVersion
     /* Internal Functions */
 
     /**
-     * @notice Reports a block of a chain speicfied by the core identifier.
+     * @notice Reports a block for a chain specified by a core identifier.
+     *         If a block is at checkpoint height, creates a checkpoint.
      *
-     * @dev Function requires:
-     *          - the specified core is known by the contract
+     * @dev Function assumes:
+     *          - the block header validity
+     *          - the core identifier validity
+     *      Function requires:
+     *          - the block has not been already reported
      *          - the reported block's parent block has been already reported
      *
      * @param _coreIdentifier A chain's core identifier.
@@ -589,24 +617,52 @@ contract ProtoCore is MosaicVersion
         Block.Header memory _header
     )
         internal
-        coreIsKnown(_coreIdentifier)
     {
+        require(
+            !_isBlockReported(_coreIdentifier, _header.blockHash),
+            "The block was already reported."
+        );
+
         require(
             _isBlockReported(_coreIdentifier, _header.parentHash),
             "The parent of the block to report must be reported first."
         );
 
-        blocks[_coreIdentifier][header.blockHash] = header;
+        blocks[_coreIdentifier][_header.blockHash] = _header;
+
+        bytes32 parentCheckpointHash = parentCheckpoints[_coreIdentifier][_header.parentHash];
+        parentCheckpoints[_coreIdentifier][_header.blockHash] = parentCheckpointHash;
+
+        if (_isAtCheckpoint(_coreIdentifier, _header.blockHash)) {
+            Checkpoint storage checkpoint = checkpoints[_coreIdentifier][_blockHash];
+
+            checkpoint.blockHash = _header.blockHash;
+
+            Checkpoint storage parentCheckpoint = checkpoints[_coreIdentifier][parentCheckpointHash];
+            checkpoint.height = parentCheckpoint.height;
+
+            checkpoint.parent = parentCheckpoints[
+                _coreIdentifier
+            ][_header.blockHash];
+
+            checkpoint.justified = false;
+            checkpoint.finalised = false;
+
+            parentCheckpoints[
+                _coreIdentifier
+            ][_header.blockHash] = _header.blockHash;
+        }
     }
 
     /**
-     * @notice Calculates and stores a transition object for a header.
+     * @notice Calculates and stores an auxiliary transition
+     *         object.
      *
-     * @dev Function requires:
-     *          - the specified block header is not a null object
-     *          - a transition object for the specified block header
-     *            does not exist
-     *          - a parent block for the specified block exists
+     * @dev Function assumes:
+     *          - the block header validity
+     *      Function requires:
+     *          - a transition object for the block does not exist
+     *          - a parent block for the block exists
      *          - a transition object for the parent block exists
      *
      * @param _header Block header to calculate a transition object.
@@ -617,31 +673,25 @@ contract ProtoCore is MosaicVersion
         internal
     {
         require(
-            _header.blockHash != bytes32(0),
-            "Block header is a null object."
-        );
-
-        require(
-            auxiliaryTransitionObjects[
-                _header.blockHash
-            ].kernelHash == bytes32(0),
-            "Transition object of the block header already exists."
+            auxiliaryTransitionObjects[_header.blockHash].kernelHash == bytes32(0),
+            "Transition object of the block exists."
         );
 
         Block.Header storage parent = blocks[_header.parentHash];
 
         require(
             parent.blockHash != bytes32(0),
-            "Parent block of the specified block does not exist."
+            "Parent block of the block does not exist."
         );
 
         require(
             auxiliaryTransitionObjects[
                 parent.blockHash
             ].kernelHash != bytes32(0),
-            "Transition object of the parent block header does not exist."
+            "Transition object of the parent block does not exist."
         );
 
+        // Assigning kernel hash.
         auxiliaryTransitionObjects[_header.blockHash].kernelHash = kernelHash;
 
         // Calculates accumulated gas for the specified block header.
@@ -664,44 +714,30 @@ contract ProtoCore is MosaicVersion
             )
         );
 
+        // Assigning latest observation of origin chain.
         auxiliaryTransitionObjects[
             _header.blockHash
         ].originLatestObservation = latestFinalizedCheckpoints[
             originCoreIdentifier
         ];
 
+        // Assigning current dynasty number of auxiliary chain.
         auxiliaryTransitionObjects[
             _header.blockHash
         ].dynasty = auxiliaryDynasty;
     }
 
     /**
-     * @notice Checks that the specified core identifier is either origin or
-     *         auxiliary core identifier registered in the contract.
-     *
-     * @param _coreIdentifier Core identifier to check.
-     *
-     * @return Returns true if the specified core identifier is either origin
-     *         or auxiliary core identifier.
-     */
-    function _isKnownCore(bytes20 _coreIdentifier)
-        internal
-        view
-        returns(bool)
-    {
-        return _coreIdentifier == originCoreIdentifier ||
-            _coreIdentifier == auxiliaryCoreIdentifier;
-    }
-
-    /**
      * @notice Checks if a block specified by a blockhash is reported for
      *         a chain specified by a core identifier.
      *
-     * @dev Function requires:
-     *          - the specified core is known by the contract
+     * @dev Function assumes:
+     *          - the core identifier validity
      *
      * @param _coreIdentifier Core identifier of a chain.
      * @param _blockHash Block hash of a block.
+     *
+     * @return true if the block is reported for the chain, otherwise false.
      */
     function _isBlockReported(
         bytes20 _coreIdentifier,
@@ -709,21 +745,25 @@ contract ProtoCore is MosaicVersion
     )
         internal
         view
-        coreIsKnown(_coreIdentifier)
+        returns (bool isBlockReported_)
     {
-        return blocks[_coreIdentifier][_blockHash].blockHash == _blockHash;
+        isBlockReported_ = blocks[_coreIdentifier][_blockHash].blockHash == _blockHash;
     }
 
     /**
-     * Checks if a block specified by a blockhash is at checkpoint height for
-     * a chain specified by a core identifier.
+     * @notice Checks if a block specified by a blockhash is at checkpoint
+     *         height for a chain specified by a core identifier.
      *
-     * @dev Function requires:
-     *          - the specified core is known by the contract
+     * @dev Function assumes:
+     *          - the core identifier validity
+     *      Function requires:
      *          - the block is reported
      *
      * @param _coreIdentifier Core identifier of a chain.
      * @param _blockHash Block hash of a block.
+     *
+     * @return true if the block (specified by the blockhash) is at checkpoint
+     *         height for the chain (specified by the core identifier).
      */
     function _isAtCheckpoint(
         bytes20 _coreIdentifier,
@@ -731,11 +771,10 @@ contract ProtoCore is MosaicVersion
     )
         internal
         view
-        coreIsKnown(_coreIdentifier)
         returns (bool atCheckpoint_)
     {
         require(
-            _isBlockReported(_coreIdentifier, _block),
+            _isBlockReported(_coreIdentifier, _blockHash),
             "Block is not reported."
         );
 
@@ -752,13 +791,14 @@ contract ProtoCore is MosaicVersion
      *         checkpoint height (multiple of the epoch length) for the
      *         chain.
      *
-     * @dev Function requires:
-     *          - the specified core is known by the contract
+     * @dev Function assumes:
+     *          - the core identifier validity
      *
      * @param _coreIdentifier Core identifier of a chain.
      * @param _height The block height to check.
      *
-     * @return true if the given block height is at a valid height.
+     * @return true if the given height is at a checkpoint height,
+     *         otherwise false.
      */
     function _isAtCheckpointHeight(
         bytes20 _coreIdentifier,
@@ -766,7 +806,6 @@ contract ProtoCore is MosaicVersion
     )
         internal
         view
-        coreIsKnown(_coreIdentifier)
         returns (bool atCheckpointHeight_)
     {
         atCheckpointHeight_ = _height.mod(epochLengths[_coreIdentifier]) == 0;
@@ -776,131 +815,118 @@ contract ProtoCore is MosaicVersion
      * @notice Checks if a block specified by a blockhash is justified for
      *         a chain specified by a core identifier.
      *
-     * @dev Function requires:
-     *          - the specified core is known by the contract
-     *          - block is a checkpoint
+     * @dev Function assumes:
+     *          - the core identifier validity
+     *      Function requires:
+     *          - block is at checkpoint height
      *
      * @param _coreIdentifier Core identifier of a chain.
-     * @param _blockhash Block hash of a block.
+     * @param _blockHash Block hash of a block.
      *
      * @return true if the given block is justified, otherwise false.
      */
     function _isJustified(
         bytes20 _coreIdentifier,
-        bytes32 _blockhash
+        bytes32 _blockHash
     )
         internal
         view
-        coreIsKnown(_coreIdentifier)
         returns (bool isJustified_)
     {
-        Checkpoint storage checkpoint = justifiedCheckpoints[
+        require(
+            _isAtCheckpoint(_coreIdentifier, _blockHash),
+            "Block is not at checkpoint height."
+        );
+
+        Checkpoint storage checkpoint = checkpoints[
             _coreIdentifier
         ][_blockHash];
 
-        require(
-            checkpoint.blockHash != bytes32(0),
-            "The block is not a checkpoint."
-        )
-
-        return isJustified_ = checkpoint.justified;
+        isJustified_ = checkpoint.justified;
     }
 
     /**
      * @notice Checks if a block specified by a blockhash is finalised for
      *         a chain specified by a core identifier.
      *
-     * @dev Function requires:
-     *          - the specified core is known by the contract
-     *          - block is a checkpoint
+     * @dev Function assumes:
+     *          - the core identifier validity
+     *      Function requires:
+     *          - block is at checkpoint height
      *
      * @param _coreIdentifier Core identifier of a chain.
-     * @param _blockhash Block hash of a block.
+     * @param _blockHash Block hash of a block.
      *
      * @return true if the given block is finalised, otherwise false.
      */
     function _isFinalised(
         bytes20 _coreIdentifier,
-        bytes32 _blockhash
+        bytes32 _blockHash
     )
         internal
         view
         coreIsKnown(_coreIdentifier)
         returns (bool isFinalised_)
     {
+        require(
+            _isAtCheckpoint(_coreIdentifier, _blockHash),
+            "Block is not at checkpoint height."
+        );
+
         Checkpoint storage checkpoint = justifiedCheckpoints[
             _coreIdentifier
         ][_blockHash];
 
-        require(
-            checkpoint.blockHash != bytes32(0),
-            "The block is not a checkpoint."
-        )
-
-        return isFinalised_ = checkpoint.finalized;
+        isJustified_ = checkpoint.finalised;
     }
 
     /**
      * @notice Checks if a source block specified by a blockhash is an
      *         ancestor for a target block specified by a blockhash in a
-     *         chain specified by a core identifier.
-     *         Function traverses through parents of the target target block
-     *         till it "meets" the source block or latest finalised checkpoint
-     *         of the chain.
+     *         checkpoint tree of a chain specified by a core identifier.
+     *         Function traverses the checkpoint tree backward (to the
+     *         checkpoint tree root) from the target block till it "meets"
+     *         the source block.
+     *
+     * @dev Function assumes:
+     *          - the core identifier validity
+     *          - the source block is justified
+     *          - the target block is at checkpoint height
      *
      * @param _coreIdentifier Core identifier of a chain.
-     * @param _sourceBlockhash Block hash of a source block.
-     * @param _targetBlockhash Block hash of a target block.
+     * @param _sourceBlockHash Block hash of a source block.
+     * @param _targetBlockHash Block hash of a target block.
      *
      * @return true if source block is an ancestor of target block in chain.
      */
-    function _isAncestor(
+    function _isAncestorInCheckpointTree(
         _coreIdentifier,
-        _sourceBlockhash,
-        _targetBlockhash
+        _sourceBlockHash,
+        _targetBlockHash
     )
         internal
         view
-        coreIsKnown(_coreIdentifier)
         returns (bool isAncestor_)
     {
-        Block.Header storage source = blocks[_coreIdentifier][_sourceBlockhash];
-        require(
-            source.blockHash != bytes32(0),
-            "Source block is not registered."
-        );
+        Checkpoint storage source = checkpoints[_coreIdentifier][_sourceBlockHash];
+        Checkpoint storage target = checkpoints[_coreIdentifier][_targetBlockHash];
 
-        Block.Header storage target = blocks[_coreIdentifier][_targetBlockhash];
-        require(
-            target.blockHash != bytes32(0),
-            "Target block is not registered."
-        );
+        sourceHeight = source.height;
+        targetHeight = target.height;
 
-        sourceHeight = source.blockHeight;
-        targetHeight = target.blockHeight;
+        if(_sourceHeight < _targetHeight) {
+            isAncestor_ = false;
+            return;
+        }
 
-        require(
-            _sourceHeight < _targetHeight,
-            "The source height must be less than the target height."
-        );
-
-        bytes32 latestFinalisedCheckpoint = latestFinalisedCheckpoints[
-            _coreIdentifier
-        ];
-
-        Block.header storage parent = target;
+        Checkpoint storage pointer = target;
         do {
-            parent = blocks[_coreIdentifier][parent.parentHash];
-            require(
-                parent.blockHash != bytes32(0),
-                "Parent block does not exist."
-            );
+            pointer = checkpoints[_coreIdentifier][pointer.parent];
         } while (
-            parent.blockHash != _sourceBlockhash ||
-            parent.blockHash != latestFinalisedCheckpoints
+            pointer.height > source.height
         );
 
-        isAncestor_ = parent.blockHash == _sourceBlockhash;
+        isAncestor_ = pointer.blockHash == _sourceBlockHash;
     }
 
     /** Returns true if validator exists and is not slashed, otherwise false. */
@@ -913,71 +939,193 @@ contract ProtoCore is MosaicVersion
     {
         Validator storage validator = validators[validatorAddress];
 
-        isActive_ = (validator.addr != address(0)) && !validator.isSlashed;
+        isActive_ = validator.addr != address(0) && !validator.isSlashed;
     }
 
+    /**
+     * @notice Function asserts the specified vote validity.
+     *         Vote is invalid if:
+     *              - the source block is not justified
+     *              - the target block is not at checkpoint height
+     *              - the source block is not an ancestor of the target block
+     *              - the vote is signed by an inactive validator (
+     *                non-registered or slashed).
+     *
+     * @dev Function assumes:
+     *          - the core identifier validity
+     *
+     * @param _coreIdentifier A unique identifier that identifies what chain
+     *                        this vote is about.
+     * @param _transitionHash The hash of the transition object.
+     * @param _sourceBlockHash The hash of any justified checkpoint.
+     * @param _targetBlockHash The hash of any checkpoint that is descendent
+     *                         of source.
+     * @param _v V of the signature.
+     * @param _r R of the signature.
+     * @param _s S of the signature.
+     */
     function _assertVoteValidity(
         bytes20 _coreIdentifier,
         bytes32 _transitionHash,
         bytes32 _sourceBlockhash,
-        bytes32 _targetBlockhash
+        bytes32 _targetBlockhash,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
     )
         internal
         view
-        coreIsKnown(_coreIdentifier)
-        returns (bytes32 voteHash_)
+        returns (address validator_, bytes32 voteHash_)
     {
         require(
-            _isJustified(_coreIdentifier, _source),
+            _isJustified(_coreIdentifier, _sourceBlockHash),
             "Source is not justified."
         );
 
         require(
-            _isBlockReported(_coreIdentifier, _target),
+            _isAtCheckpoint(_coreIdentifier, _targetBlockhash),
             "Target is not reported."
         );
 
-        sourceHeight = blocks[_coreIdentifier][_source].blockHeight;
-        targetHeight = blocks[_coreIdentifier][_target].blockHeight;
-
-        require(
-            _sourceHeight < _targetHeight,
-            "The source height must be less than the target height."
-        );
+        sourceHeight = blocks[_coreIdentifier][_sourceBlockHash].blockHeight;
+        targetHeight = blocks[_coreIdentifier][_targetBlockhash].blockHeight;
 
         voteHash_ = _hashVoteMessage(
             _coreIdentifier,
             _transitionHash,
-            _source,
-            _target,
+            _sourceBlockHash,
+            _targetBlockhash,
             sourceHeight,
             targetHeight
         );
 
-        address validator = ecrecover(voteHash, _v, _r, _s);
+        validator_ = ecrecover(voteHash, _v, _r, _s);
 
         require(
-            _validatorIsActive(validator),
+            _validatorIsActive(validator_),
             "The validator is not active."
         );
 
         require(
-            _isAncestor(
+            _isAncestorInCheckpointTree(
                 _coreIdentifier,
-                _source,
-                _target
+                _sourceBlockHash,
+                _targetBlockhash
             ),
             "Source is not an ancestor of a target."
         );
+    }
+
+    /**
+     * @notice Stores a validator vote.
+     *
+     * @dev Function requires:
+     *          - the valiator has not casted the same vote already
+     */
+    function _storeVote(
+        address validator,
+        bytes32 voteHash
+    )
+        internal
+    {
+        bytes32 validatorVoteHash = keccak256(
+            abi.encode(
+                validator,
+                voteHash
+            )
+        );
 
         require(
-            _isAncestor(
-                _coreIdentifier,
-                latestFinalizedCheckpoints[_coreIdentifier],
-                _source
-            ),
-            "Latest finalised checkpoint is not an ancestor of a source."
+            !validatorVoteHashes[validatorVoteHash],
+            "Validator has already voted for this link."
         );
+
+        validatorVoteHashes[validatorVoteHash] = true;
+
+        uint256 validatorWeight = _validatorWeight(validator);
+
+        voteWeights[voteHash] = voteWeights[voteHash].add(validatorWeight);
+    }
+
+    function _calculateOriginRequiredWeight()
+        internal
+        view
+        returns (uint256 requiredWeight_)
+    {
+        requiredWeight_ = _calculateSupermajorityAmount(
+            activeValidatorsSummedWeight
+        );
+    }
+
+    function _calculateSupermajorityAmount(uint256 _count)
+        internal
+        pure
+        returns (uint256 supermajorityAmount_)
+    {
+        supermajorityAmount_ = _count * SUPER_MAJORITY_NUMERATOR /
+            SUPER_MAJORITY_DENOMINATOR;
+    }
+
+    /**
+     * @notice Justifies the given block.
+     *
+     * @dev Function assumes:
+     *          - the core identifier validity
+     *          - the block is a checkpoint
+     */
+    function _justify(
+        bytes20 _coreIdentifier,
+        bytes32 _blockHash
+    )
+        internal
+    {
+        Checkpoint storage checkpoint = checkpoints[_coreIdentifier][_blockHash];
+        checkpoint.justified = true;
+    }
+
+    /**
+     * @notice Finalises the given block.
+     *
+     * @dev Function assumes:
+     *          - the core identifier validity
+     *          - the block is a justified checkpoint
+     */
+    function _finalise(
+        bytes20 _coreIdentifier,
+        bytes32 _blockHash
+    )
+        internal
+    {
+        Checkpoint storage checkpoint = checkpoints[_coreIdentifier][_blockHash];
+        checkpoint.finalised = true;
+    }
+
+    /**
+     * @notice Calculates and returns the number of epochs between two given
+     *         blocks.
+     *
+     * @dev Function requires:
+     *          - the specified core is known by the contract
+     *
+     * @param _coreIdentifier Core identifier of a chain.
+     * @param _lowerBlockHash Block hash of the lower block.
+     * @param _higherBlockHash Block hash of the higher block.
+     *
+     * @return The distance between the given blocks in number of epochs.
+     */
+    function distanceInEpochs(
+        bytes20 _coreIdentifier,
+        bytes32 _lowerBlockHash,
+        bytes32 _higherBlockHash
+    )
+        private
+        view
+        returns (uint256 epochDistance_)
+    {
+        uint256 lowerHeight = blocks[_coreIdentifier][_lowerBlockHash].height;
+        uint256 higherHeight = blocks[_coreIdentifier][_higherBlockHash].height;
+        uint256 blockDistance = higherHeight.sub(lowerHeight);
+        epochDistance_ = blockDistance.div(epochLength);
     }
 
     function _hashVoteMessage(
@@ -1137,10 +1285,6 @@ contract ProtoCore is MosaicVersion
             _s
         );
     }
-
-    function _justify() internal;
-
-    function _finalise() internal;
 
     function _commit() internal;
 
