@@ -54,8 +54,6 @@ contract Core is ConsensusModule, MosaicVersion {
         uint256[] updatedReputation;
         /** Gas target to close the metablock */
         uint256 gasTarget;
-        /** Gas price fixed for this metablock */
-        uint256 gasPrice;
     }
 
     struct Transition {
@@ -279,7 +277,6 @@ contract Core is ConsensusModule, MosaicVersion {
         uint256 _height,
         bytes32 _parent,
         uint256 _gasTarget,
-        uint256 _gasPrice,
         uint256 _dynasty,
         uint256 _accumulatedGas,
         bytes32 _source,
@@ -303,16 +300,16 @@ contract Core is ConsensusModule, MosaicVersion {
 
         epochLength = _epochLength;
 
-        reputation = consensus.reputation();
+        // TASK: integrate reputation in Core
+        // reputation = consensus.reputation();
 
-        (minimumValidatorCount, joinLimit) = consensus.coreValidatorThresholds();
+        // (minimumValidatorCount, joinLimit) = consensus.coreValidatorThresholds();
 
         creationKernelHeight = _height;
 
         Kernel storage creationKernel = kernels[_height];
         creationKernel.parent = _parent;
         creationKernel.gasTarget = _gasTarget;
-        creationKernel.gasPrice = _gasPrice;
         // before the Kernel can be opened, initial validators need to join
 
         closedTransition.dynasty = _dynasty;
@@ -406,8 +403,9 @@ contract Core is ConsensusModule, MosaicVersion {
         // check validator is registered to this core
         require(isValidator(validator),
             "Validator ,ust be active in this core.");
-        require(reputation.isActive(validator),
-            "Validator must be active.");
+        // TASK: integrate Reputation mock in test framework
+        // require(reputation.isActive(validator),
+        //     "Validator must be active.");
         bytes32 castVote = votes[validator];
         require(castVote != _proposal,
             "Vote has already been cast.");
@@ -468,8 +466,7 @@ contract Core is ConsensusModule, MosaicVersion {
     }
 
     function openMetablock(
-        uint256 _gasTarget,
-        uint256 _gasPrice
+        uint256 _gasTarget
     )
         external
         onlyConsensus
@@ -481,7 +478,6 @@ contract Core is ConsensusModule, MosaicVersion {
         Kernel storage nextKernel = kernels[nextKernelHeight];
         nextKernel.parent = precommit;
         nextKernel.gasTarget = _gasTarget;
-        nextKernel.gasPrice = _gasPrice;
         // updated validators are already written to the next kernel
 
         openKernelHeight = nextKernelHeight;
@@ -491,8 +487,7 @@ contract Core is ConsensusModule, MosaicVersion {
             nextKernel.parent,
             nextKernel.updatedValidators,
             nextKernel.updatedReputation,
-            nextKernel.gasTarget,
-            nextKernel.gasPrice
+            nextKernel.gasTarget
         );
 
         newProposalSet();
@@ -538,8 +533,7 @@ contract Core is ConsensusModule, MosaicVersion {
                 creationKernel.parent,
                 creationKernel.updatedValidators,
                 creationKernel.updatedReputation,
-                creationKernel.gasTarget,
-                creationKernel.gasPrice
+                creationKernel.gasTarget
             );
             coreStatus = Status.opened;
         }
@@ -745,7 +739,6 @@ contract Core is ConsensusModule, MosaicVersion {
      * @param _updatedReputation The array of reputation that corresponds to
      *                        the updated validators.
      * @param _gasTarget The gas target for this metablock
-     * @param _gasPrice The gas price for this metablock
      *
      * @return hash_ The hash of kernel.
      */
@@ -754,8 +747,7 @@ contract Core is ConsensusModule, MosaicVersion {
         bytes32 _parent,
         address[] memory _updatedValidators,
         uint256[] memory _updatedReputation,
-        uint256 _gasTarget,
-        uint256 _gasPrice
+        uint256 _gasTarget
     )
         internal
         view
@@ -768,8 +760,7 @@ contract Core is ConsensusModule, MosaicVersion {
                 _parent,
                 _updatedValidators,
                 _updatedReputation,
-                _gasTarget,
-                _gasPrice
+                _gasTarget
             )
         );
 
