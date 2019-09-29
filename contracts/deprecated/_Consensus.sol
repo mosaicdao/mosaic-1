@@ -18,7 +18,7 @@ import "../EIP20I.sol";
 import "../committee/Committee.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
-contract Consensus {
+contract _Consensus {
 
     using SafeMath for uint256;
 
@@ -201,7 +201,7 @@ contract Consensus {
     /** Validate the proposal */
     // In the toy model the validation can be done
     // during the submission call
- 
+
     /** Randomize committee to start formation */
     function randomizeCommittee()
         external
@@ -229,7 +229,7 @@ contract Consensus {
     {
         require(committeeFormationHash != 0,
             "Randomization hash must be set");
-        
+
     }
 
     /** Form committee from entries */
