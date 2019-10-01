@@ -38,6 +38,9 @@ contract Consensus {
     /** Committee formation mixing length */
     uint256 public constant COMMITTEE_FORMATION_LENGTH = uint8(7);
 
+    /** Core status Active */
+    bytes20 public constant CORE_STATUS_ACTIVE = bytes20(keccak256("CORE_STATUS_ACTIVE"));
+
     /** Core status Halted */
     bytes20 public constant CORE_STATUS_HALTED = bytes20(keccak256("CORE_STATUS_HALTED"));
 
@@ -156,6 +159,9 @@ contract Consensus {
         );
         precommit.proposal = _proposal;
         precommit.committeeFormationBlockHeight = block.number.add(uint256(COMMITTEE_FORMATION_DELAY));
+
+        // @ben, do we need the boolean return value here?
+        return true;
     }
 
     /**  */
@@ -285,8 +291,115 @@ contract Consensus {
     {
     }
 
-
+//    function registerNewChain(
+//        bytes20 _chainId,
+//        uint256 _epochLength,
+//        uint256 _height,
+//        bytes32 _parent,
+//        uint256 _gasTarget,
+//        uint256 _gasPrice,
+//        uint256 _dynasty,
+//        uint256 _accumulatedGas,
+//        bytes32 _source,
+//        uint256 _sourceBlockHeight
+//    )
+//        external
+//        returns (address coreAddress_)
+//    {
+//        require(
+//            assignments[_chainId] == address(0),
+//            'Chain already registered.'
+//        );
+//
+//        //TODO: Add validations for the params.
+//
+//        coreAddress_ = createNewCore(
+//            _chainId,
+//            _epochLength,
+//            _height,
+//            _parent,
+//            _gasTarget,
+//            _gasPrice,
+//            _dynasty,
+//            _accumulatedGas,
+//            _source,
+//            _sourceBlockHeight
+//        );
+//    }
     /* Internal functions */
+
+    /**
+     * Create a new core
+     */
+//    function createNewCore(
+//        bytes20 _chainId,
+//        uint256 _epochLength,
+//        uint256 _height,
+//        bytes32 _parent,
+//        uint256 _gasTarget,
+//        uint256 _gasPrice,
+//        uint256 _dynasty,
+//        uint256 _accumulatedGas,
+//        bytes32 _source,
+//        uint256 _sourceBlockHeight
+//    )
+//        internal
+//        returns (address coreAddress_)
+//    {
+//        // Fixme: This Code will be updated.
+//        Core core = new Core(
+//            _chainId,
+//            _epochLength,
+//            _height,
+//            _parent,
+//            _gasTarget,
+//            _gasPrice,
+//            _dynasty,
+//            _accumulatedGas,
+//            _source,
+//            _sourceBlockHeight
+//        );
+//        coreAddress_ = address(core);
+//        coreStatuses[coreAddress_] = CORE_STATUS_ACTIVE;
+//
+//        // @Ben, at a given time, only one core address is associated with a chain id?
+//        assignments[_chainId] = coreAddress_;
+//    }
+
+    /**
+     * Halt new core
+     */
+//    function haltCore(
+//        address _core
+//    )
+//    internal
+//    {
+//        require(
+//            isCore(_core),
+//            'Core does not exist.'
+//        );
+//
+//        coreStatuses[_core] = CORE_STATUS_HALTED;
+//        // @ben, what other things need to done here?
+//    }
+
+    /**
+     * Mark core as corrupted.
+     */
+//    function markCoreCorrupted(
+//        address _core
+//    )
+//    internal
+//    {
+//        // TODO: if halted core can be marked corrupted, then modify this check.
+//        require(
+//            isCore(_core),
+//            'Core does not exist.'
+//        );
+//
+//        coreStatuses[_core] = CORE_STATUS_CORRUPTED;
+//        // @ben, what other things need to done here?
+//    }
 
     /** Returns true if the specified address is a core. */
     function isCore(address _core)
