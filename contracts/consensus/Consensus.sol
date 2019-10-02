@@ -218,7 +218,7 @@ contract Consensus {
         Committee committee = Committee(_committeeAddress);
         require(
             committee.enterCommittee(_validator, _furtherMember),
-            "Pro is happy."
+            "Failed to enter committee."
         );
     }
 

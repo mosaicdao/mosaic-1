@@ -46,4 +46,17 @@ contract ConsensusTest is Consensus {
             _committeeFormationBlockheight
         );
     }
+
+    function setCommittee(
+        address _committeeAddress,
+        address _value
+    )
+        external
+    {
+        committees[_committeeAddress] = _value;
+    }
+
+    function setReputation(address _reputation) external {
+        reputation = ReputationI(_reputation);
+    }
 }
