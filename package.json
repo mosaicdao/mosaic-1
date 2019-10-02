@@ -11,7 +11,7 @@
     "lint:sol:solium": "solium --dir contracts/",
     "lint:sol:solium:fix": "npm run lint:sol:solium -- --fix",
     "test": "npm run test:contracts",
-    "test:contracts": "truffle test test/consensus/register_precommit.js",
+    "test:contracts": "truffle test test/consensus/form_committee.js",
     "ganache-cli": "./tools/run_ganache_cli.sh",
     "make:all": "lint:sol:solium && lint:js && compile:all && test:contracts"
   },

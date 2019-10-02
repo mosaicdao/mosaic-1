@@ -178,6 +178,17 @@ Utils.prototype = {
     assert(false, 'Did not fail assert as expected.');
   },
 
+  /** Get block number. */
+  getBlockNumber: () => new Promise((resolve, reject) => {
+    web3.eth.getBlockNumber((error, result) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(new BN(result));
+      }
+    });
+  }),
+
   /** Get account balance. */
   getBalance: address => new Promise((resolve, reject) => {
     web3.eth.getBalance(address, (error, result) => {

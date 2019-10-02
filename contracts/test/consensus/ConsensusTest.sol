@@ -33,4 +33,17 @@ contract ConsensusTest is Consensus {
     {
         coreStatuses[_core] = _status;
     }
+
+    function setPreCommit(
+        address _core,
+        bytes32 _proposal,
+        uint256 _committeeFormationBlockheight
+    )
+        external
+    {
+        precommits[_core] = Precommit(
+            _proposal,
+            _committeeFormationBlockheight
+        );
+    }
 }

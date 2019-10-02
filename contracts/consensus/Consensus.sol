@@ -170,11 +170,11 @@ contract Consensus {
         returns (bool)
     {
         Precommit storage precommit = precommits[_core];
-        // note it should suffice to check only one property for existance, in PoC asserting both
+        // note it should suffice to check only one property for existence, in PoC asserting both
         require(
             precommit.proposal != bytes32(0) &&
             precommit.committeeFormationBlockHeight != uint256(0),
-            "There does not exist a precommitment of the core to a proposal"
+            "There does not exist a precommitment of the core to a proposal."
         );
         require(
             block.number > precommit.committeeFormationBlockHeight,
@@ -418,7 +418,7 @@ contract Consensus {
         internal
     {
         require(
-            proposals[_proposal] != Committee(0),
+            proposals[_proposal] == Committee(0),
             "There already exists a committee for the proposal."
         );
         // TODO: implement proxy pattern
