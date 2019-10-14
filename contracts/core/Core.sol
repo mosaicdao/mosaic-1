@@ -16,11 +16,12 @@ pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
+import "./CoreI.sol";
 import "../consensus/ConsensusModule.sol";
 import "../reputation/ReputationI.sol";
 import "../version/MosaicVersion.sol";
 
-contract Core is ConsensusModule, MosaicVersion {
+contract Core is ConsensusModule, MosaicVersion, CoreI {
 
     using SafeMath for uint256;
 
@@ -43,7 +44,7 @@ contract Core is ConsensusModule, MosaicVersion {
     /** The kernel of a meta-block header */
     struct Kernel {
         /** The height of the metablock in the chain */
-        // Kernels are stored in a mapping)height => Kernel),
+        // Kernels are stored in a mapping(height => Kernel),
         // which makes storing height redundant
         // uint256 height;
         /** Hash of the metablock's parent */
@@ -274,6 +275,8 @@ contract Core is ConsensusModule, MosaicVersion {
     constructor(
         bytes20 _chainId,
         uint256 _epochLength,
+        uint256 _minValidators,
+        uint256 _joinLimit,
         uint256 _height,
         bytes32 _parent,
         uint256 _gasTarget,
@@ -303,7 +306,8 @@ contract Core is ConsensusModule, MosaicVersion {
         // TASK: integrate reputation in Core
         // reputation = consensus.reputation();
 
-        // (minimumValidatorCount, joinLimit) = consensus.coreValidatorThresholds();
+        minimumValidatorCount = _minValidators;
+        joinLimit = _joinLimit;
 
         creationKernelHeight = _height;
 

@@ -12,11 +12,47 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+'use strict';
+
+const BN = require('bn.js');
+
 const Core = artifacts.require('Core');
+const MockConsensus = artifacts.require('MockConsensus');
+
+async function createConsensusCore(
+  chainId,
+  epochLength,
+  height,
+  parent,
+  gasTarget,
+  dynasty,
+  accumulatedGas,
+  source,
+  sourceBlockHeight,
+  txOptions = {},
+) {
+
+  const mockConsensus = await MockConsensus.new(
+    chainId,
+    epochLength,
+    height,
+    parent,
+    gasTarget,
+    dynasty,
+    accumulatedGas,
+    source,
+    sourceBlockHeight,
+    txOptions,
+  );
+
+  return mockConsensus;
+}
 
 async function createCore(
   chainId,
   epochLength,
+  minValidators,
+  joinLimit,
   height,
   parent,
   gasTarget,
@@ -29,6 +65,8 @@ async function createCore(
   return Core.new(
     chainId,
     epochLength,
+    minValidators,
+    joinLimit,
     height,
     parent,
     gasTarget,
@@ -40,6 +78,40 @@ async function createCore(
   );
 }
 
+const CoreStatus = {
+  creation: new BN(0),
+  opened: new BN(1),
+  precommitted: new BN(2),
+  halted: new BN(3),
+  corrupted: new BN(4),
+}
+
+function isCoreCreated(status) {
+  return CoreStatus.creation.cmp(status) === 0;
+}
+
+function isCoreOpened(status) {
+  return CoreStatus.opened.cmp(status) === 0;
+}
+
+function isCorePrecommitted(status) {
+  return CoreStatus.precommitted.cmp(status) === 0;
+}
+
+function isCoreHalted(status) {
+  return CoreStatus.halted.cmp(status) === 0;
+}
+
+function isCoreCorrupted(status) {
+  return CoreStatus.corrupted.cmp(status) === 0;
+}
+
 module.exports = {
+  createConsensusCore,
   createCore,
+  isCoreCreated,
+  isCoreOpened,
+  isCorePrecommitted,
+  isCoreHalted,
+  isCoreCorrupted,
 };

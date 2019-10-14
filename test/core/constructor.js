@@ -14,6 +14,8 @@
 
 'use strict';
 
+const BN = require('bn.js');
+
 const { AccountProvider } = require('../test_lib/utils.js');
 const Utils = require('../test_lib/utils.js');
 const web3 = require('../test_lib/web3.js');
@@ -22,20 +24,25 @@ const CoreUtils = require('./utils.js');
 
 let config = {};
 
+// TASK: improve constructor to constrain inputs
+// TASK: complete tests
+
 contract('Core::constructor', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
 
   beforeEach(async () => {
     config = {
       chainId: Utils.NULL_ADDRESS,
-      epochLength: 100,
-      height: 0,
+      epochLength: new BN(100),
+      minValidators: new BN(3),
+      joinLimit: new BN(5),
+      height: new BN(0),
       parent: Utils.ZERO_BYTES32,
-      gasTarget: 0,
-      dynasty: 0,
-      accumulatedGas: 0,
+      gasTarget: new BN(0),
+      dynasty: new BN(0),
+      accumulatedGas: new BN(0),
       source: Utils.ZERO_BYTES32,
-      sourceBlockHeight: 0,
+      sourceBlockHeight: new BN(0),
       consensus: accountProvider.get(),
     };
     Object.freeze(config);
@@ -46,6 +53,8 @@ contract('Core::constructor', (accounts) => {
       const core = await CoreUtils.createCore(
         config.chainId,
         config.epochLength,
+        config.minValidators,
+        config.joinLimit,
         config.height,
         config.parent,
         config.gasTarget,

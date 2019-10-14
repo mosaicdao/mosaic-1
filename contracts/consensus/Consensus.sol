@@ -146,7 +146,6 @@ contract Consensus {
     function registerPrecommit(bytes32 _proposal)
         external
         onlyCore
-        returns (bool)
     {
         // onlyCore asserts msg.sender is active core
         Precommit storage precommit = precommits[msg.sender];
