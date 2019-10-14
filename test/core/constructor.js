@@ -44,6 +44,7 @@ contract('Core::constructor', (accounts) => {
       source: Utils.ZERO_BYTES32,
       sourceBlockHeight: new BN(0),
       consensus: accountProvider.get(),
+      reputation: accountProvider.get(),
     };
     Object.freeze(config);
   });
@@ -55,6 +56,7 @@ contract('Core::constructor', (accounts) => {
         config.epochLength,
         config.minValidators,
         config.joinLimit,
+        config.reputation,
         config.height,
         config.parent,
         config.gasTarget,

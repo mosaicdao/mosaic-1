@@ -51,6 +51,7 @@ contract MockConsensus is ConsensusI, ReputationI {
             _epochLength,
             MIN_VALIDATOR,
             JOIN_LIMIT,
+            ReputationI(this),
             _height,
             _parent,
             _gasTarget,

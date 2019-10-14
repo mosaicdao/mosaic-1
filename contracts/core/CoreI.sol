@@ -21,5 +21,15 @@ interface CoreI {
 
     function logout(address _validator) external;
 
-    function openMetablock(uint256 _gasTarget) external;
+    function openMetablock(
+        bytes32 _committedOriginObservation,
+        uint256 _committedDynasty,
+        uint256 _committedAccumulatedGas,
+        bytes32 _committedCommitteeLock,
+        bytes32 _committedSource,
+        bytes32 _committedTarget,
+        uint256 _committedSourceBlockHeight,
+        uint256 _committedTargetBlockHeight,
+        uint256 _deltaGasTarget
+    ) external;
 }

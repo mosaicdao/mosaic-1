@@ -25,6 +25,7 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
 
     using SafeMath for uint256;
 
+
     /* Enum and structs */
 
     /** Enum of Core state machine */
@@ -43,10 +44,8 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
 
     /** The kernel of a meta-block header */
     struct Kernel {
-        /** The height of the metablock in the chain */
-        // Kernels are stored in a mapping(height => Kernel),
-        // which makes storing height redundant
-        // uint256 height;
+        // Note the height of the metablock in the chain is omitted in the struct
+
         /** Hash of the metablock's parent */
         bytes32 parent;
         /** Added validators */
@@ -91,6 +90,7 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         /** Vote count for the proposal */
         uint256 count;
     }
+
 
     /* Storage */
 
@@ -166,18 +166,6 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
      */
     mapping(address => uint256) public validatorEndHeight;
 
-    // /** Linked list of validators who will join in the next metablock */
-    // mapping(address => address) public joinedValidators;
-
-    // /** Linked list of validators who have logged out */
-    // mapping(address => address) public loggedOutValidators;
-
-    // /** mapping of updated validators */
-    // mapping(uint256 /* metablock height */ => address[]) updatedValidators;
-
-    // /** mapping of updated reputation validator */
-    // mapping(uint256 /* metablock height */ => uint256[]) updatedReputation;
-
     /** mapping of metablock height to Kernels */
     mapping(uint256 => Kernel) public kernels;
 
@@ -211,11 +199,23 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     /** Open kernel hash */
     bytes32 public openKernelHash;
 
-    /** Closed transition object */
-    Transition public closedTransition;
+    /** Committed accumulated gas */
+    uint256 public committedAccumulatedGas;
 
-    /** Sealing vote message */
-    VoteMessage public sealedVoteMessage;
+    /** Committed dynasty number */
+    uint256 public committedDynasty;
+
+    /** Committed source block hash */
+    bytes32 public committedSource;
+
+    /** Committed sourceBlockHeight */
+    uint256 public committedSourceBlockHeight;
+
+    // /** Closed transition object */
+    // Transition public closedTransition;
+
+    // /** Sealing vote message */
+    // VoteMessage public sealedVoteMessage;
 
     /** Map kernel height to linked list of proposals */
     mapping(uint256 => mapping(bytes32 => bytes32)) public proposals;
@@ -231,6 +231,7 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
 
     /** Precommitment closure block height */
     uint256 public precommitClosureBlockHeight;
+
 
     /* Modifiers */
 
@@ -277,6 +278,7 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         uint256 _epochLength,
         uint256 _minValidators,
         uint256 _joinLimit,
+        ReputationI _reputation,
         uint256 _height,
         bytes32 _parent,
         uint256 _gasTarget,
@@ -303,8 +305,7 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
 
         epochLength = _epochLength;
 
-        // TASK: integrate reputation in Core
-        // reputation = consensus.reputation();
+        reputation = _reputation;
 
         minimumValidatorCount = _minValidators;
         joinLimit = _joinLimit;
@@ -316,11 +317,10 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         creationKernel.gasTarget = _gasTarget;
         // before the Kernel can be opened, initial validators need to join
 
-        closedTransition.dynasty = _dynasty;
-        closedTransition.accumulatedGas = _accumulatedGas;
-
-        sealedVoteMessage.source = _source;
-        sealedVoteMessage.sourceBlockHeight = _sourceBlockHeight;
+        committedDynasty = _dynasty;
+        committedAccumulatedGas = _accumulatedGas;
+        committedSource = _source;
+        committedSourceBlockHeight = _sourceBlockHeight;
 
         newProposalSet();
     }
@@ -347,18 +347,17 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
             "A metablock can only be proposed for the open Kernel in this core.");
         require(_originObservation != bytes32(0),
             "Origin observation cannot be null.");
-        require(_dynasty > closedTransition.dynasty,
+        require(_dynasty > committedDynasty,
             "Dynasty must strictly increase.");
-        require(_accumulatedGas > closedTransition.accumulatedGas,
+        require(_accumulatedGas > committedAccumulatedGas,
             "Accumulated gas must strictly increase.");
         require(_committeeLock != bytes32(0),
             "Committee lock cannot be null.");
         require(_source != bytes32(0),
             "Source blockhash must not be null.");
-        // note: is this necessary?
-        require(_source != sealedVoteMessage.source,
+        require(_source != committedSource,
             "Source blockhash cannot equal sealed source blockhash.");
-        require(_sourceBlockHeight > sealedVoteMessage.sourceBlockHeight,
+        require(_sourceBlockHeight > committedSourceBlockHeight,
             "Source block height must strictly increase.");
         require((_sourceBlockHeight % epochLength) == 0,
             "Source block height must be a checkpoint.");
@@ -407,9 +406,8 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         // check validator is registered to this core
         require(isValidator(validator),
             "Validator ,ust be active in this core.");
-        // TASK: integrate Reputation mock in test framework
-        // require(reputation.isActive(validator),
-        //     "Validator must be active.");
+        require(reputation.isActive(validator),
+             "Validator must be active.");
         bytes32 castVote = votes[validator];
         require(castVote != _proposal,
             "Vote has already been cast.");
@@ -470,7 +468,15 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     }
 
     function openMetablock(
-        uint256 _gasTarget
+        bytes32 _committedOriginObservation,
+        uint256 _committedDynasty,
+        uint256 _committedAccumulatedGas,
+        bytes32 _committedCommitteeLock,
+        bytes32 _committedSource,
+        bytes32 _committedTarget,
+        uint256 _committedSourceBlockHeight,
+        uint256 _committedTargetBlockHeight,
+        uint256 _deltaGasTarget
     )
         external
         onlyConsensus
@@ -478,11 +484,36 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     {
         assert(precommit != bytes32(0));
 
+        bytes32 transitionHash = hashTransition(
+            openKernelHash,
+            _committedOriginObservation,
+            _committedDynasty,
+            _committedAccumulatedGas,
+            _committedCommitteeLock
+        );
+
+        bytes32 committedProposal = hashVoteMessage(
+            transitionHash,
+            _committedSource,
+            _committedTarget,
+            _committedSourceBlockHeight,
+            _committedTargetBlockHeight
+        );
+
+        require(precommit == committedProposal,
+            "Precommit does not equal committed metablock.");
+
+        committedDynasty = _committedDynasty;
+        committedAccumulatedGas = _committedAccumulatedGas;
+        committedSource = _committedSource;
+        committedSourceBlockHeight = _committedSourceBlockHeight;
+
         uint256 nextKernelHeight = openKernelHeight.add(1);
         Kernel storage nextKernel = kernels[nextKernelHeight];
         nextKernel.parent = precommit;
-        nextKernel.gasTarget = _gasTarget;
-        // updated validators are already written to the next kernel
+        nextKernel.gasTarget = committedAccumulatedGas
+            .add(_deltaGasTarget);
+        // updated validators are already written to nextKernel
 
         openKernelHeight = nextKernelHeight;
 
@@ -493,6 +524,13 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
             nextKernel.updatedReputation,
             nextKernel.gasTarget
         );
+
+        countValidators = countValidators
+            .add(countJoinMessages)
+            .sub(countLogOutMessages);
+        quorum = calculateQuorum(countValidators);
+        countJoinMessages = 0;
+        countLogOutMessages = 0;
 
         newProposalSet();
     }
@@ -525,7 +563,7 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         insertValidator(_validator, creationKernelHeight);
 
         Kernel storage creationKernel = kernels[creationKernelHeight];
-        creationKernel.updatedValidators.push(_validator);
+        countValidators = creationKernel.updatedValidators.push(_validator);
         // TASK: reputation can be uint64, and initial rep set properly
         creationKernel.updatedReputation.push(uint256(1));
         if (countValidators >= minimumValidatorCount) {
@@ -595,8 +633,8 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         view
         returns (bool)
     {
-        // Validator must have a begin height less than current metablock height.
-        // Validator must have an end height higher than current metablock height.
+        // Validator must have a begin height less than or equal to current metablock height.
+        // Validator must have an end height higher than or equal current metablock height.
         // Validator must be registered to this core.
         return (validatorBeginHeight[_account] <= openKernelHeight) &&
             (validatorEndHeight[_account] >= openKernelHeight) &&
@@ -608,8 +646,9 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         pure
         returns (uint256 quorum_)
     {
-        quorum_ = _count * CORE_SUPER_MAJORITY_NUMERATOR /
-            CORE_SUPER_MAJORITY_DENOMINATOR;
+        quorum_ = _count
+            .mul(CORE_SUPER_MAJORITY_NUMERATOR)
+            .div(CORE_SUPER_MAJORITY_DENOMINATOR);
     }
 
 
