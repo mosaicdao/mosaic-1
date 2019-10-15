@@ -132,8 +132,8 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     /**
      * Define a super-majority fraction used for reaching consensus;
      */
-    uint256 public constant CORE_SUPER_MAJORITY_NUMERATOR = uint256(2);
-    uint256 public constant CORE_SUPER_MAJORITY_DENOMINATOR = uint256(3);
+    uint256 public constant CORE_SUPER_MAJORITY_NUMERATOR = uint256(5);
+    uint256 public constant CORE_SUPER_MAJORITY_DENOMINATOR = uint256(6);
 
     /** For open metablocks the voting window is reset to future infinity */
     uint256 public constant CORE_OPEN_VOTES_WINDOW = uint256(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);

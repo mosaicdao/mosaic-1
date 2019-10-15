@@ -102,14 +102,45 @@ contract('Core::joinDuringCreation', (accounts) => {
       assert.isOk(
         CoreUtils.isCoreCreated(coreStatus),
       );
+      const valCount = await config.core.countValidators.call();
+      assert.isOk(
+        valCount.eqn(1),
+      );
     });
 
     it('should open after enough validators join', async () => {
-      const validator2 = accountProvider.get();
       const minVal = await config.core.minimumValidatorCount.call();
       const joinLim = await config.core.joinLimit.call();
-      console.log(minVal);
-      console.log(joinLim);
+
+      for (let i = 0; i < minVal.toNumber(10) - 1; i++) {
+        let validator = accountProvider.get();
+        await config.mockConsensus.joinDuringCreation(validator);
+        let valCount = await config.core.countValidators.call();
+        assert.isOk(
+          valCount.eqn(i + 1),
+        );
+        let coreStatus = await config.core.coreStatus.call();
+        assert.isOk(
+          CoreUtils.isCoreCreated(coreStatus),
+        );
+      }
+
+      let validator = accountProvider.get();
+      await config.mockConsensus.joinDuringCreation(validator);
+      let valCount = await config.core.countValidators.call();
+      assert.isOk(
+        valCount.eq(minVal),
+      );
+      let coreStatus = await config.core.coreStatus.call();
+      assert.isOk(
+        CoreUtils.isCoreOpened(coreStatus),
+      );
+
+      let quorum = await config.core.quorum.call();
+      let calcQuorum = await CoreUtils.calculcateQuorum(config.core, minVal);
+      assert.isOk(
+        quorum.eq(calcQuorum),
+      );
     });
   });
 });

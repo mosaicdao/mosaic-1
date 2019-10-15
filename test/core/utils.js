@@ -108,6 +108,15 @@ function isCoreCorrupted(status) {
   return CoreStatus.corrupted.cmp(status) === 0;
 }
 
+async function calculcateQuorum(core, count) {
+  let numerator = await core.CORE_SUPER_MAJORITY_NUMERATOR.call();
+  let denumerator = await core.CORE_SUPER_MAJORITY_DENOMINATOR.call();
+
+  return count
+    .mul(numerator)
+    .div(denumerator);
+}
+
 module.exports = {
   createConsensusCore,
   createCore,
@@ -116,4 +125,5 @@ module.exports = {
   isCorePrecommitted,
   isCoreHalted,
   isCoreCorrupted,
+  calculcateQuorum,
 };

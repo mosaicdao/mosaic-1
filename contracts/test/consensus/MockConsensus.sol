@@ -23,9 +23,9 @@ contract MockConsensus is ConsensusI, ReputationI {
 
     /** Storage */
 
-    uint256 public constant MIN_VALIDATOR = uint256(3);
+    uint256 public constant MIN_VALIDATOR = uint256(10);
 
-    uint256 public constant JOIN_LIMIT = uint256(5);
+    uint256 public constant JOIN_LIMIT = uint256(15);
 
     CoreI public core;
 

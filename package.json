@@ -1,7 +1,7 @@
 {
-  "name": "compute",
+  "name": "Mosaic",
   "version": "0.1.0",
-  "description": "compute",
+  "description": "Mosaic",
   "main": "index.js",
   "scripts": {
     "update": "git submodule update --init --recursive && npm ci",
@@ -12,19 +12,20 @@
     "lint:sol:solium:fix": "npm run lint:sol:solium -- --fix",
     "test": "npm run test:contracts",
     "test:contracts": "truffle test",
+    "test:dev": "truffle test test/core/*",
     "ganache-cli": "./tools/run_ganache_cli.sh",
     "make:all": "lint:sol:solium && lint:js && compile:all && test:contracts"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/openst/compute.git"
+    "url": "git+https://github.com/mosaicdao/mosaic-1.git"
   },
-  "author": "Benjamin Bollen",
+  "author": "OpenST Foundation",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/openst/compute/issues"
+    "url": "https://github.com/mosaicdao/mosaic-1/issues"
   },
-  "homepage": "https://github.com/openst/compute#readme",
+  "homepage": "https://github.com/mosaicdao/mosaic-1#readme",
   "devDependencies": {
     "assert": "^2.0.0",
     "bn.js": "^5.0.0",
