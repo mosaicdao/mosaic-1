@@ -101,6 +101,8 @@ contract Consensus {
     /** Reputation contract for validators */
     ReputationI public reputation;
 
+    /** Axiom contract for validators */
+    address public axiom;
 
     /* Modifiers */
 
@@ -124,26 +126,45 @@ contract Consensus {
         _;
     }
 
-
-    /* Special Member Functions */
-
-    constructor(
-        uint256 _committeeSize
-    )
-        public
+    modifier onlyAxiom()
     {
+        require(
+            axiom == msg.sender,
+            "Caller must be axiom address."
+        );
+
+        _;
+    }
+
+    /* External functions */
+
+    function setup(
+        uint256 _committeeSize,
+        address _reputation
+    )
+        external
+    {
+        require(
+            committeeSize == 0 && address(reputation) == address(0),
+            "Consensus is already setup."
+        );
+
         require(
             _committeeSize > 0,
             "Committee size is 0."
         );
 
+        require(
+            _reputation != address(0),
+            "Reputation contract address is 0."
+        );
+
         committeeSize = _committeeSize;
+        reputation = ReputationI(_reputation);
+        axiom = msg.sender;
 
         committees[SENTINEL_COMMITTEES] = SENTINEL_COMMITTEES;
     }
-
-
-    /* External functions */
 
     /** Core register precommit */
     function registerPrecommit(bytes32 _proposal)
@@ -291,80 +312,21 @@ contract Consensus {
     {
     }
 
-//    function registerNewChain(
-//        bytes20 _chainId,
-//        uint256 _epochLength,
-//        uint256 _height,
-//        bytes32 _parent,
-//        uint256 _gasTarget,
-//        uint256 _gasPrice,
-//        uint256 _dynasty,
-//        uint256 _accumulatedGas,
-//        bytes32 _source,
-//        uint256 _sourceBlockHeight
-//    )
-//        external
-//        returns (address coreAddress_)
-//    {
-//        require(
-//            assignments[_chainId] == address(0),
-//            'Chain already registered.'
-//        );
-//
-//        //TODO: Add validations for the params.
-//
-//        coreAddress_ = createNewCore(
-//            _chainId,
-//            _epochLength,
-//            _height,
-//            _parent,
-//            _gasTarget,
-//            _gasPrice,
-//            _dynasty,
-//            _accumulatedGas,
-//            _source,
-//            _sourceBlockHeight
-//        );
-//    }
-    /* Internal functions */
+    function newChain(
+        bytes20 _chainId,
+        address coreAddress
+    )
+        external
+        onlyAxiom
+    {
 
-    /**
-     * Create a new core
-     */
-//    function createNewCore(
-//        bytes20 _chainId,
-//        uint256 _epochLength,
-//        uint256 _height,
-//        bytes32 _parent,
-//        uint256 _gasTarget,
-//        uint256 _gasPrice,
-//        uint256 _dynasty,
-//        uint256 _accumulatedGas,
-//        bytes32 _source,
-//        uint256 _sourceBlockHeight
-//    )
-//        internal
-//        returns (address coreAddress_)
-//    {
-//        // Fixme: This Code will be updated.
-//        Core core = new Core(
-//            _chainId,
-//            _epochLength,
-//            _height,
-//            _parent,
-//            _gasTarget,
-//            _gasPrice,
-//            _dynasty,
-//            _accumulatedGas,
-//            _source,
-//            _sourceBlockHeight
-//        );
-//        coreAddress_ = address(core);
-//        coreStatuses[coreAddress_] = CORE_STATUS_ACTIVE;
-//
-//        // @Ben, at a given time, only one core address is associated with a chain id?
-//        assignments[_chainId] = coreAddress_;
-//    }
+        require(
+            assignments[_chainId] == address(0),
+            'Chain already exists.'
+        );
+
+        assignments[_chainId] = _chainId;
+    }
 
     /**
      * Halt new core

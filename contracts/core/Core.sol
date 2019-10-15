@@ -251,9 +251,11 @@ contract Core is ConsensusModule, MosaicVersion {
         _;
     }
 
+
     /* External and public functions */
 
-    constructor(
+    function setup(
+        address _consensus,
         bytes20 _chainId,
         uint256 _epochLength,
         uint256 _height,
@@ -265,9 +267,13 @@ contract Core is ConsensusModule, MosaicVersion {
         bytes32 _source,
         uint256 _sourceBlockHeight
     )
-        ConsensusModule(msg.sender) // Core is constructed by Consenus
-        public
+        external
     {
+        require(
+            chainId == bytes20(0),
+            "Core is already setup."
+        );
+
         // note: consider adding requirement checks
         domainSeparator = keccak256(
             abi.encode(
@@ -278,6 +284,8 @@ contract Core is ConsensusModule, MosaicVersion {
                 address(this)
             )
         );
+
+        consensus = _consensus;
 
         coreStatus = Status.creation;
 

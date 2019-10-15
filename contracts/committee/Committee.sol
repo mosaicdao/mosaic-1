@@ -227,29 +227,21 @@ contract Committee is ConsensusModule {
     }
 
 
-    /* Special Functions */
+    /* External functions */
 
-    /**
-     * @notice Setups a new committee.
-     *
-     * @param _committeeSize Size of the committee. A minimum size is 3.
-     * @param _dislocation Used to dislocate a validator location in a hashed
-     *                     space before calculating a distance from a proposal.
-     *                     A non-zero value is required.
-     * @param _proposal A proposal for committee to evaluate. A non-zero value
-     *                  is required.
-     *
-     * @dev Functions requires:
-     *          -
-     */
-    constructor(
+    function setup(
+        address _consensus,
         uint256 _committeeSize,
         bytes32 _dislocation,
         bytes32 _proposal
     )
-        ConsensusModule(msg.sender)
-        public
+        external
     {
+        require(
+            committeeSize == 0 && proposal == bytes32(0),
+            "Committee is already setup."
+        );
+
         require(
             _committeeSize >= 3,
             "Committee size must not be smaller than three."
@@ -265,6 +257,8 @@ contract Committee is ConsensusModule {
             "Proposal must not be zero."
         );
 
+        consensus = _consensus;
+
         committeeStatus = CommitteeStatus.Open;
 
         // Initialize the members linked-list as the empty set.
@@ -278,11 +272,8 @@ contract Committee is ConsensusModule {
 
         // @qn (pro): In case of 7 quorum should be 4 or 5.
         quorum = _committeeSize * COMMITTEE_SUPER_MAJORITY_NUMERATOR /
-            COMMITTEE_SUPER_MAJORITY_DENOMINATOR;
+        COMMITTEE_SUPER_MAJORITY_DENOMINATOR;
     }
-
-
-    /* External functions */
 
     /**
      * @notice Enters a `_validator` into the committee.
