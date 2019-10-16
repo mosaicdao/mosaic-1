@@ -18,7 +18,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "../anchor/AnchorI.sol";
 import "../block/Block.sol";
-import "../committee/Committee.sol";
+import "../committee/CommitteeI.sol";
 import "../core/Core.sol";
 import "../core/CoreStatusEnum.sol";
 import "../EIP20I.sol";
@@ -98,7 +98,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum {
     mapping(address /* core */ => Precommit) public precommits;
 
     /** Proposals under consideration of a committee */
-    mapping(bytes32 /* proposal */ => Committee /* committee */) public proposals;
+    mapping(bytes32 /* proposal */ => CommitteeI /* committee */) public proposals;
 
     /** Linked-list of committees */
     mapping(address => address) public committees;
@@ -248,7 +248,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum {
             reputation.isActive(_validator),
             "Validator is not active."
         );
-        Committee committee = Committee(_committeeAddress);
+        CommitteeI committee = CommitteeI(_committeeAddress);
         require(
             committee.enterCommittee(_validator, _furtherMember),
             "Failed to enter committee."
@@ -411,11 +411,11 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum {
         internal
     {
         require(
-            proposals[_proposal] == Committee(0),
+            proposals[_proposal] == CommitteeI(0),
             "There already exists a committee for the proposal."
         );
 
-        Committee committee_ = newCommittee(committeeSize, _dislocation, _proposal);
+        CommitteeI committee_ = newCommittee(committeeSize, _dislocation, _proposal);
         committees[address(committee_)] = committees[SENTINEL_COMMITTEES];
         committees[SENTINEL_COMMITTEES] = address(committee_);
 
@@ -455,10 +455,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum {
             _targetBlockHeight
         );
 
-        Committee committee = proposals[proposal];
+        CommitteeI committee = proposals[proposal];
 
         require(
-            committee != Committee(0),
+            committee != CommitteeI(0),
             "There is no committee matching to the specified vote message."
         );
 
@@ -519,7 +519,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum {
         bytes32 _proposal
     )
         private
-        returns (Committee committee_)
+        returns (CommitteeI committee_)
     {
         bytes memory committeeSetupData = abi.encodeWithSelector(
             COMMITTEE_SETUP_CALLPREFIX,
@@ -534,6 +534,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum {
             committeeSetupData
         );
 
-        committee_ = Committee(committeeAddress);
+        committee_ = CommitteeI(committeeAddress);
     }
 }
