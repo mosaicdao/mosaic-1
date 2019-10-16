@@ -1,5 +1,3 @@
-pragma solidity ^0.5.0;
-
 // Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,18 +12,23 @@ pragma solidity ^0.5.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-interface ReputationI {
+'use strict';
 
-    function isActive(address _validator) external view returns (bool);
+const BN = require('bn.js');
 
-    function join(
-        address _validator,
-        address _withdrawalAddress
-    )
-        external;
+const { AccountProvider } = require('../test_lib/utils.js');
+const Utils = require('../test_lib/utils.js');
 
-    function logout(address _validator) external;
+const CoreUtils = require('./utils.js');
+const Core = artifacts.require('Core');
 
-    function getReputation(address _validator) external view returns (uint256);
-}
+let config = {};
+let proposal = {};
 
+contract('Core::registerVote', (accounts) => {
+  const accountProvider = new AccountProvider(accounts);
+
+  beforeEach(async () => {
+
+  });
+});

@@ -578,6 +578,8 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
         totalPositionsCount = totalPositionsCount.add(1);
     }
 
+    // note: this is old and superceded by the committee decision.
+    // TASK : remove
     /** @notice Returns true if the proposal reached the quorum. */
     function proposalAccepted()
         external
