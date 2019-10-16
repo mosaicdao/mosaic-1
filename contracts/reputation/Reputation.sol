@@ -118,6 +118,7 @@ contract Reputation is ConsensusModule {
         _;
     }
 
+    // note: dead-code, should be removed
     modifier wasSlashed(address _validator)
     {
         require(
@@ -309,6 +310,7 @@ contract Reputation is ConsensusModule {
     {
         ValidatorInfo storage v = validators[_validator];
 
+        // TODO: use safemath
         uint256 cashableEarnings = (_amount * cashableEarningsPerMille) / 1000;
 
         v.cashableEarnings = v.cashableEarnings.add(cashableEarnings);
@@ -523,5 +525,14 @@ contract Reputation is ConsensusModule {
             ),
             "Failed to withdraw staked wETH amount."
         );
+    }
+
+    /**  */
+    function getReputation(address _validator)
+        external
+        view
+        returns (uint256)
+    {
+        return validators[_validator].reputation;
     }
 }

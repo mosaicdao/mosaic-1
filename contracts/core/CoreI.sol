@@ -14,8 +14,22 @@ pragma solidity ^0.5.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-interface ReputationI {
+interface CoreI {
+    function joinDuringCreation(address _validator) external;
 
-    function isActive(address _validator) external view returns (bool);
-    function getReputation(address _validator) external view returns (uint256);
+    function join(address _validator) external;
+
+    function logout(address _validator) external;
+
+    function openMetablock(
+        bytes32 _committedOriginObservation,
+        uint256 _committedDynasty,
+        uint256 _committedAccumulatedGas,
+        bytes32 _committedCommitteeLock,
+        bytes32 _committedSource,
+        bytes32 _committedTarget,
+        uint256 _committedSourceBlockHeight,
+        uint256 _committedTargetBlockHeight,
+        uint256 _deltaGasTarget
+    ) external;
 }
