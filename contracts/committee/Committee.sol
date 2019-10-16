@@ -17,13 +17,14 @@ pragma solidity ^0.5.0;
 import "../consensus/ConsensusModule.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
+import "./CommitteeI.sol";
 
 
 /**
  * @title Committee
  * @author Benjamin Bollen - <ben@ost.com>
  */
-contract Committee is MasterCopyNonUpgradable, ConsensusModule {
+contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
 
     /* Usings */
 

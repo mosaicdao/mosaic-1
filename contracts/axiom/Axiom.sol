@@ -4,22 +4,23 @@ import "../proxies/Proxy.sol";
 import "../proxies/ProxyFactory.sol";
 import "../consensus/ConsensusI.sol";
 import "../anchor/Anchor.sol"; // TODO: change this to factory
+import "./AxiomI.sol";
 
-contract Axiom {
+contract Axiom is AxiomI{
 
     /* Constants */
 
     /** The callprefix of the Reputation::setup function. */
     bytes4 public constant REPUTATION_SETUP_CALLPREFIX = bytes4(
         keccak256(
-            "setup(address,EIP20I,uint256,EIP20I,uint256,uint256,uint256,uint256)"
+            "setup(address,address,uint256,address,uint256,uint256,uint256,uint256)"
         )
     );
 
     /** The callprefix of the Consensus::setup function. */
     bytes4 public constant CONSENSUS_SETUP_CALLPREFIX = bytes4(
         keccak256(
-            "setup(uint256,address)"
+            "setup(uint256,uint256,uint256,uint256,uint256,address)"
         )
     );
 
@@ -122,6 +123,10 @@ contract Axiom {
 
     function setupConsensus(
         uint256 _committeeSize,
+        uint256 _minCoreSize,
+        uint256 _maxCoreSize,
+        uint256 _gasTargetDelta,
+        uint256 _coinbaseSplitPercentage,
         address _mOST,
         uint256 _stakeMOSTAmount,
         address _wETH,
@@ -166,6 +171,10 @@ contract Axiom {
         bytes memory consensusSetupData = abi.encodeWithSelector(
             CONSENSUS_SETUP_CALLPREFIX,
             _committeeSize,
+            _minCoreSize,
+            _maxCoreSize,
+            _gasTargetDelta,
+            _coinbaseSplitPercentage,
             reputation
         );
 

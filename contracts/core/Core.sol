@@ -21,8 +21,9 @@ import "../reputation/ReputationI.sol";
 import "../version/MosaicVersion.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "./CoreStatusEnum.sol";
+import "./CoreI.sol";
 
-contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreStatusEnum {
+contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreStatusEnum, CoreI {
 
     using SafeMath for uint256;
 

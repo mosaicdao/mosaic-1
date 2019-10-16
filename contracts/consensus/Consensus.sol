@@ -19,14 +19,15 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../anchor/AnchorI.sol";
 import "../block/Block.sol";
 import "../committee/CommitteeI.sol";
-import "../core/Core.sol";
+import "../core/CoreI.sol";
 import "../core/CoreStatusEnum.sol";
 import "../EIP20I.sol";
 import "../reputation/ReputationI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../axiom/AxiomI.sol";
+import "./ConsensusI.sol";
 
-contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum {
+contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
     /* Usings */
 
@@ -152,10 +153,15 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum {
 
     function setup(
         uint256 _committeeSize,
+        uint256 _minCoreSize,
+        uint256 _maxCoreSize,
+        uint256 _gasTargetDelta,
+        uint256 _coinbaseSplitPercentage,
         address _reputation
     )
         external
     {
+        // This function must be called only once.
         require(
             committeeSize == 0 && address(reputation) == address(0),
             "Consensus is already setup."
@@ -167,12 +173,37 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum {
         );
 
         require(
+            _minCoreSize > 0,
+            "Min core size is 0."
+        );
+
+        require(
+            _maxCoreSize > _minCoreSize,
+            "Max core size is less than min core."
+        );
+
+        require(
+            _gasTargetDelta > 0,
+            "Gas target delta is 0."
+        );
+
+        require(
+            _coinbaseSplitPercentage <= uint256(100),
+            "Coin base split percentage is greater than 100"
+        );
+
+        require(
             _reputation != address(0),
             "Reputation contract address is 0."
         );
 
         committeeSize = _committeeSize;
+        minCoreSize = _minCoreSize;
+        maxCoreSize = _maxCoreSize;
+        gasTargetDelta = _gasTargetDelta;
+        coinbaseSplitPercentage = _coinbaseSplitPercentage;
         reputation = ReputationI(_reputation);
+
         axiom = AxiomI(msg.sender);
 
         committees[SENTINEL_COMMITTEES] = SENTINEL_COMMITTEES;
@@ -182,7 +213,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum {
     function registerPrecommit(bytes32 _proposal)
         external
         onlyCore
-        returns (bool)
     {
         // onlyCore asserts msg.sender is active core
         Precommit storage precommit = precommits[msg.sender];
@@ -193,14 +223,11 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum {
         precommit.proposal = _proposal;
         precommit.committeeFormationBlockHeight = block.number.add(uint256(COMMITTEE_FORMATION_DELAY));
 
-        // @ben, do we need the boolean return value here?
-        return true;
     }
 
     /**  */
     function formCommittee(address _core)
         external
-        returns (bool)
     {
         Precommit storage precommit = precommits[_core];
         // note it should suffice to check only one property for existence, in PoC asserting both
@@ -301,27 +328,62 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum {
             blockHeader.height,
             blockHeader.stateRoot
         );
+
+        // TODO: delete precommit on commit
     }
 
     /** Validator joins */
     function join(
+        bytes20 _chainId,
+        address _core,
         address _withdrawalAddress
     )
         external
-        returns (bool)
     {
+        joinReputation(_chainId, _core, _withdrawalAddress);
+        CoreI(_core).join(msg.sender);
     }
 
-    function joinDuringCreation(address _withdrawalAddress)
+    function joinDuringCreation(
+        bytes20 _chainId,
+        address _core,
+        address _withdrawalAddress
+    )
         external
     {
+        joinReputation(_chainId, _core, _withdrawalAddress);
+        CoreI(_core).joinDuringCreation(msg.sender);
     }
 
     /** Validator logs out */
-    function logout()
+    function logout(
+        bytes20 _chainId,
+        address _core
+    )
         external
-        returns (bool)
     {
+        require(
+            _chainId != bytes20(0),
+            "Chain id is 0."
+        );
+
+        require(
+            _core != address(0),
+            "Core address is 0."
+        );
+
+        require(
+            assignments[_chainId] == _core,
+            "Core is not assigned for the specified chain id."
+        );
+
+        require(
+            isCore(_core),
+            "There is no core for the specified chain id"
+        );
+
+        CoreI(_core).logout(msg.sender);
+        reputation.logout(msg.sender);
     }
 
     function newMetaChain(
@@ -400,6 +462,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum {
         view
         returns (bool)
     {
+        // @Ben, shouldnt we just check if the coreStatuses is creation, opened or precommitted
         CoreStatus status = coreStatuses[_core];
         return status != CoreStatus.undefined &&
             status != CoreStatus.halted &&
@@ -440,10 +503,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum {
         address coreAddress = assignments[_chainId];
         require(
             isCore(coreAddress),
-            "There is no core for the specified chain id"
+            "There is no core for the specified chain id."
         );
 
-        bytes32 proposal = Core(coreAddress).assertPrecommit(
+        // TODO: verify precommit at this step.
+
+        bytes32 proposal = CoreI(coreAddress).assertPrecommit(
             _kernelHash,
             _originObservation,
             _dynasty,
@@ -535,5 +600,35 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum {
         );
 
         committee_ = CommitteeI(committeeAddress);
+    }
+
+    function joinReputation(
+        bytes20 _chainId,
+        address _core,
+        address _withdrawalAddress
+    )
+        private
+    {
+        require(
+            _chainId != bytes20(0),
+            "Chain id is 0."
+        );
+
+        require(
+            _core != address(0),
+            "Core address is 0."
+        );
+
+        require(
+            assignments[_chainId] == _core,
+            "Core is not assigned for the specified chain id."
+        );
+
+        require(
+            isCore(_core),
+            "There is no core for the specified chain id"
+        );
+
+        reputation.join(msg.sender, _withdrawalAddress);
     }
 }

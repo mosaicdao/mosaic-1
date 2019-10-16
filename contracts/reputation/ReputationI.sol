@@ -17,4 +17,12 @@ pragma solidity ^0.5.0;
 interface ReputationI {
 
     function isActive(address _validator) external view returns (bool);
+
+    function join(
+        address _validator,
+        address _withdrawalAddress
+    )
+        external;
+
+    function logout(address _validator) external;
 }
