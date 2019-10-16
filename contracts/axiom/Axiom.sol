@@ -22,20 +22,6 @@ contract Axiom {
         )
     );
 
-    /** The callprefix of the Core::setup function. */
-    bytes4 public constant CORE_SETUP_CALLPREFIX = bytes4(
-        keccak256(
-            "setup(address,bytes20,uint256,uint256,bytes32,uint256,uint256,uint256,uint256,bytes32,uint256)"
-        )
-    );
-
-    /** The callprefix of the Core::setup function. */
-    bytes4 public constant COMMITTEE_SETUP_CALLPREFIX = bytes4(
-        keccak256(
-            "setup(address,uint256,bytes32,bytes32)"
-        )
-    );
-
 
     /* Modifiers */
 
@@ -176,85 +162,49 @@ contract Axiom {
     }
 
     function newMetaChain(
-        bytes20 _chainId,
         uint256 _epochLength,
-        uint256 _height,
-        bytes32 _parent,
         uint256 _gasTarget,
-        uint256 _gasPrice,
-        uint256 _dynasty,
-        uint256 _accumulatedGas,
         bytes32 _source,
-        uint256 _sourceBlockHeight
+        uint256 _sourceBlockHeight,
+        uint256 _remoteChainId,
+        bytes32 _stateRoot,
+        uint256 _maxStateRoots
     )
         external
         onlyTechGov
     {
-        address coreAddress = _newCore(
-            _chainId,
+        // New anchor.
+        address anchor = new Anchor(
+            _remoteChainId,
+            _sourceBlockHeight,
+            _stateRoot,
+            _maxStateRoots,
+            consenses
+        );
+
+        consensus.newMetaChain(
+            bytes20(anchor),
             _epochLength,
-            _height,
-            _parent,
             _gasTarget,
-            _gasPrice,
-            _dynasty,
-            _accumulatedGas,
             _source,
             _sourceBlockHeight
         );
-        ConsensusI(consensus).newChain(_chainId, coreAddress);
+        
+        // New core.
+        // Link both
     }
 
-    function newCommittee(
-        uint256 _committeeSize,
-        bytes32 _dislocation,
-        bytes32 _proposal
+    function deployProxyContract(
+        address masterCopy,
+        bytes memory data
     )
         external
         onlyConsensus
-        returns (address committee_)
+        returns (address deployedAddress_)
     {
-        bytes memory committeeSetupData = abi.encodeWithSelector(
-            COMMITTEE_SETUP_CALLPREFIX,
-            msg.sender,
-            _committeeSize,
-            _dislocation,
-            _proposal
-        );
-
-        committee_ = new ProxyFactory(
-            committeeMasterCopy,
-            committeeSetupData
-        );
-    }
-
-    function newCore(
-        bytes20 _chainId,
-        uint256 _epochLength,
-        uint256 _height,
-        bytes32 _parent,
-        uint256 _gasTarget,
-        uint256 _gasPrice,
-        uint256 _dynasty,
-        uint256 _accumulatedGas,
-        bytes32 _source,
-        uint256 _sourceBlockHeight
-    )
-        external
-        onlyConsensus
-        returns (address core_)
-    {
-        core_ = _newCore(
-            _chainId,
-            _epochLength,
-            _height,
-            _parent,
-            _gasTarget,
-            _gasPrice,
-            _dynasty,
-            _accumulatedGas,
-            _source,
-            _sourceBlockHeight
+        deployedAddress_ = new ProxyFactory(
+            masterCopy,
+            data
         );
     }
 
@@ -277,40 +227,4 @@ contract Axiom {
         }
     }
 
-    function _newCore(
-        bytes20 _chainId,
-        uint256 _epochLength,
-        uint256 _height,
-        bytes32 _parent,
-        uint256 _gasTarget,
-        uint256 _gasPrice,
-        uint256 _dynasty,
-        uint256 _accumulatedGas,
-        bytes32 _source,
-        uint256 _sourceBlockHeight
-    )
-        private
-        onlyConsensus
-        returns (address core_)
-    {
-        bytes memory coreSetupData = abi.encodeWithSelector(
-            CORE_SETUP_CALLPREFIX,
-            msg.sender,
-            _chainId,
-            _epochLength,
-            _height,
-            _parent,
-            _gasTarget,
-            _gasPrice,
-            _dynasty,
-            _accumulatedGas,
-            _source,
-            _sourceBlockHeight
-        );
-
-        core_ = new ProxyFactory(
-            coreMasterCopy,
-            coreSetupData
-        );
-    }
 }

@@ -22,8 +22,9 @@ import "../committee/Committee.sol";
 import "../core/Core.sol";
 import "../EIP20I.sol";
 import "../reputation/ReputationI.sol";
+import "../proxies/MasterCopyNonUpgradable.sol";
 
-contract Consensus {
+contract Consensus is MasterCopyNonUpgradable {
 
     /* Usings */
 
@@ -50,6 +51,12 @@ contract Consensus {
     /** Sentinel pointer for marking end of linked-list of committees */
     address public constant SENTINEL_COMMITTEES = address(0x1);
 
+    /** The callprefix of the Core::setup function. */
+    bytes4 public constant CORE_SETUP_CALLPREFIX = bytes4(
+        keccak256(
+            "setup(address,bytes20,uint256,uint256,bytes32,uint256,uint256,uint256,uint256,bytes32,uint256)"
+        )
+    );
 
     /* Structs */
 
@@ -103,6 +110,10 @@ contract Consensus {
 
     /** Axiom contract for validators */
     address public axiom;
+
+    address public coreMasterCopy;
+
+    address public committeeMasterCopy;
 
     /* Modifiers */
 
@@ -312,9 +323,12 @@ contract Consensus {
     {
     }
 
-    function newChain(
+    function newMetaChain(
         bytes20 _chainId,
-        address coreAddress
+        uint256 _epochLength,
+        uint256 _gasTarget,
+        bytes32 _source,
+        uint256 _sourceBlockHeight
     )
         external
         onlyAxiom
@@ -325,7 +339,23 @@ contract Consensus {
             'Chain already exists.'
         );
 
-        assignments[_chainId] = _chainId;
+        // TODO: add validations.
+        // @dev, calling new core becomes cyclic, TODO: update details why it is done like this.
+        address core = newCore(
+            _chainId,
+            _epochLength,
+            0,
+            bytes(0),
+            _gasTarget,
+            0,  // TODO: Remove this param
+            0,
+            0,
+            _source,
+            _sourceBlockHeight
+        );
+
+        assignments[_chainId] = core;
+        anchors[_chainId] = _chainId;
     }
 
     /**
@@ -441,6 +471,64 @@ contract Consensus {
                 abi.encode(committee.committeeDecision())
             ),
             "Committee decision does not match with committee lock."
+        );
+    }
+
+    function newCore(
+        bytes20 _chainId,
+        uint256 _epochLength,
+        uint256 _height,
+        bytes32 _parent,
+        uint256 _gasTarget,
+        uint256 _gasPrice,
+        uint256 _dynasty,
+        uint256 _accumulatedGas,
+        bytes32 _source,
+        uint256 _sourceBlockHeight
+    )
+        private
+        returns (address core_)
+    {
+        bytes memory coreSetupData = abi.encodeWithSelector(
+            CORE_SETUP_CALLPREFIX,
+            address(this),
+            _chainId,
+            _epochLength,
+            _height,
+            _parent,
+            _gasTarget,
+            _gasPrice,
+            _dynasty,
+            _accumulatedGas,
+            _source,
+            _sourceBlockHeight
+        );
+
+        core_ = axiom.deployProxyContract(
+            coreMasterCopy,
+            coreSetupData
+        );
+    }
+
+    function newCommittee(
+        uint256 _committeeSize,
+        bytes32 _dislocation,
+        bytes32 _proposal
+    )
+        private
+        returns (address committee_)
+    {
+        bytes memory committeeSetupData = abi.encodeWithSelector(
+            COMMITTEE_SETUP_CALLPREFIX,
+            address(this),
+            _committeeSize,
+            _dislocation,
+            _proposal
+        );
+
+        committee_ = axiom.deployProxyContract(
+            committeeMasterCopy,
+            committeeSetupData
         );
     }
 }

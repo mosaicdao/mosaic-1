@@ -19,8 +19,9 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../consensus/ConsensusModule.sol";
 import "../reputation/ReputationI.sol";
 import "../version/MosaicVersion.sol";
+import "../proxies/MasterCopyNonUpgradable.sol";
 
-contract Core is ConsensusModule, MosaicVersion {
+contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion {
 
     using SafeMath for uint256;
 

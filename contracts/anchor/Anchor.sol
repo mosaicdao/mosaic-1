@@ -78,7 +78,6 @@ contract Anchor is AnchorI, ConsensusModule, CircularBufferUint {
         uint256 _maxStateRoots,
         address _consensus
     )
-        ConsensusModule(_consensus)
         CircularBufferUint(_maxStateRoots)
         public
     {
@@ -88,7 +87,7 @@ contract Anchor is AnchorI, ConsensusModule, CircularBufferUint {
         );
 
         remoteChainId = _remoteChainId;
-
+        consensus = _consensus;
         stateRoots[_blockHeight] = _stateRoot;
         CircularBufferUint.store(_blockHeight);
     }
