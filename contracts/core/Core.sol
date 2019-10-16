@@ -132,8 +132,8 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     /**
      * Define a super-majority fraction used for reaching consensus;
      */
-    uint256 public constant CORE_SUPER_MAJORITY_NUMERATOR = uint256(5);
-    uint256 public constant CORE_SUPER_MAJORITY_DENOMINATOR = uint256(6);
+    uint256 public constant CORE_SUPER_MAJORITY_NUMERATOR = uint256(2);
+    uint256 public constant CORE_SUPER_MAJORITY_DENOMINATOR = uint256(3);
 
     /** For open metablocks the voting window is reset to future infinity */
     uint256 public constant CORE_OPEN_VOTES_WINDOW = uint256(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
@@ -218,7 +218,7 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     // VoteMessage public sealedVoteMessage;
 
     /** Map kernel height to linked list of proposals */
-    mapping(uint256 => mapping(bytes32 => bytes32)) public proposals;
+    mapping(uint256 => mapping(bytes32 => bytes32)) proposals;
 
     /** Map proposal hash to VoteCount struct */
     mapping(bytes32 => VoteCount) public voteCounts;
@@ -342,6 +342,7 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     )
         external
         whileMetablockOpen
+        returns (bytes32 proposal_)
     {
         require(_kernelHash == openKernelHash,
             "A metablock can only be proposed for the open Kernel in this core.");
@@ -372,7 +373,7 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
             _committeeLock
         );
 
-        bytes32 proposal = hashVoteMessage(
+        proposal_ = hashVoteMessage(
             transitionHash,
             _source,
             _target,
@@ -381,7 +382,7 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         );
 
         // insert proposal, reverts if proposal already inserted
-        insertProposal(_dynasty, proposal);
+        insertProposal(_dynasty, proposal_);
     }
 
     function registerVote(

@@ -36,11 +36,11 @@ async function assertValidatorHeight(
   assert.isOk(
     beginHeight.eq(expBeginHeight),
   );
-  
+
   assert.isOk(
     endHeight.eq(expEndHeight),
   );
-}
+};
 
 contract('Core::joinDuringCreation', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
@@ -110,7 +110,6 @@ contract('Core::joinDuringCreation', (accounts) => {
 
     it('should open after enough validators join', async () => {
       const minVal = await config.core.minimumValidatorCount.call();
-      const joinLim = await config.core.joinLimit.call();
 
       for (let i = 0; i < minVal.toNumber(10) - 1; i++) {
         let validator = accountProvider.get();

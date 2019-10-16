@@ -16,6 +16,8 @@
 
 const BN = require('bn.js');
 
+const web3 = require('../test_lib/web3.js');
+
 const Core = artifacts.require('Core');
 const MockConsensus = artifacts.require('MockConsensus');
 
@@ -117,6 +119,11 @@ async function calculcateQuorum(core, count) {
     .div(denumerator);
 }
 
+function randomSha3() {
+  let randomString = Math.random().toString(36).substring(2, 15);
+  return web3.utils.sha3(randomString);
+}
+
 module.exports = {
   createConsensusCore,
   createCore,
@@ -126,4 +133,5 @@ module.exports = {
   isCoreHalted,
   isCoreCorrupted,
   calculcateQuorum,
+  randomSha3,
 };

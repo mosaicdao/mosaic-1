@@ -23,6 +23,7 @@ const CoreUtils = require('./utils.js');
 const Core = artifacts.require('Core');
 
 let config = {};
+let proposal = {};
 
 async function openCore(
   accountProvider,
@@ -38,6 +39,48 @@ async function openCore(
   assert.isOk(
     CoreUtils.isCoreOpened(coreStatus),
   );
+};
+
+async function proposeMetaBlock(
+  core,
+  kernelHash,
+  originObservation,
+  dynasty,
+  accumulatedGas,
+  committeeLock,
+  source,
+  target,
+  sourceBlockHeight,
+  targetBlockHeight,
+  txOptions = {},
+) {
+  let proposalHash = await core.proposeMetablock.call(
+    kernelHash,
+    originObservation,
+    dynasty,
+    accumulatedGas,
+    committeeLock,
+    source,
+    target,
+    sourceBlockHeight,
+    targetBlockHeight,
+    txOptions
+  );
+
+  await core.proposeMetablock(
+    kernelHash,
+    originObservation,
+    dynasty,
+    accumulatedGas,
+    committeeLock,
+    source,
+    target,
+    sourceBlockHeight,
+    targetBlockHeight,
+    txOptions
+  );
+
+  return proposalHash;
 };
 
 contract('Core::proposeMetablock', (accounts) => {
@@ -56,6 +99,22 @@ contract('Core::proposeMetablock', (accounts) => {
       sourceBlockHeight: new BN(0),
       deployer: accountProvider.get(),
     };
+
+    proposal = {
+      kernelHash: Utils.ZERO_BYTES32,
+      originObservation: CoreUtils.randomSha3(),
+      dynasty: new BN(1),
+      accumulatedGas: new BN(1),
+      committeeLock: CoreUtils.randomSha3(),
+      source: CoreUtils.randomSha3(),
+      target: CoreUtils.randomSha3(),
+      sourceBlockHeight: config.sourceBlockHeight
+        .add(config.epochLength
+          .mul(new BN(2))),
+      targetBlockHeight: config.sourceBlockHeight
+        .add(config.epochLength
+          .mul(new BN(3))),
+    }
 
     config.mockConsensus = await CoreUtils.createConsensusCore(
       config.chainId,
@@ -77,11 +136,40 @@ contract('Core::proposeMetablock', (accounts) => {
     Object.freeze(config);
 
     await openCore(accountProvider, config.core);
+
+    proposal.kernelHash = await config.core.openKernelHash.call();
   });
 
   contract('Positive Tests', () => {
     it('should accept proposals', async () => {
+      let eoa = accountProvider.get();
 
+      let proposalHash = await proposeMetaBlock(
+        config.core,
+        proposal.kernelHash,
+        proposal.originObservation,
+        proposal.dynasty,
+        proposal.accumulatedGas,
+        proposal.committeeLock,
+        proposal.source,
+        proposal.target,
+        proposal.sourceBlockHeight,
+        proposal.targetBlockHeight,
+        {
+          from: eoa,
+        },
+      );
+
+      let voteCount = await config.core.voteCounts.call(proposalHash);
+      assert.isOk(
+        voteCount.height.eq(config.height),
+      );
+      assert.isOk(
+        voteCount.dynasty.eq(proposal.dynasty),
+      );
+      assert.isOk(
+        voteCount.count.eq(new BN(0)),
+      );
     });
   });
 
