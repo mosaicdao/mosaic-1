@@ -87,7 +87,7 @@ contract Anchor is AnchorI, ConsensusModule, CircularBufferUint {
         );
 
         remoteChainId = _remoteChainId;
-        consensus = _consensus;
+        consensus = ConsensusI(_consensus);
         stateRoots[_blockHeight] = _stateRoot;
         CircularBufferUint.store(_blockHeight);
     }

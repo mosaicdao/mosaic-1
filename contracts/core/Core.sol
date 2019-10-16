@@ -20,26 +20,13 @@ import "../consensus/ConsensusModule.sol";
 import "../reputation/ReputationI.sol";
 import "../version/MosaicVersion.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
+import "./CoreStatusEnum.sol";
 
-contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion {
+contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreStatusEnum {
 
     using SafeMath for uint256;
 
-    /* Enum and structs */
-
-    /** Enum of Core state machine */
-    enum Status {
-        // core accepts initial set of validators
-        creation,
-        // core has an open kernel without precommitment to a proposal
-        opened,
-        // core has precommitted to to a proposal for the open kernel
-        precommitted,
-        // core has failed to get a proposal committed when challenged for being halted
-        halted,
-        // precommitted proposal is rejected by consensus committee
-        corrupted
-    }
+    /* Structs */
 
     /** The kernel of a meta-block header */
     struct Kernel {
@@ -148,7 +135,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion {
     bytes20 public chainId;
 
     /** Core status */
-    Status public coreStatus;
+    CoreStatus public coreStatus;
 
     /** Epoch length */
     uint256 public epochLength;
@@ -218,29 +205,29 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion {
 
     modifier duringCreation()
     {
-        require(coreStatus == Status.creation,
+        require(coreStatus == CoreStatus.creation,
             "The core must be under creation.");
         _;
     }
 
     modifier whileRunning()
     {
-        require(coreStatus == Status.opened ||
-            coreStatus == Status.precommitted,
+        require(coreStatus == CoreStatus.opened ||
+            coreStatus == CoreStatus.precommitted,
             "The core must be running.");
         _;
     }
 
     modifier whileMetablockOpen()
     {
-        require(coreStatus == Status.opened,
+        require(coreStatus == CoreStatus.opened,
             "The core must have an open metablock kernel.");
         _;
     }
 
     modifier whileMetablockPrecommitted()
     {
-        require(coreStatus == Status.precommitted,
+        require(coreStatus == CoreStatus.precommitted,
             "The core must be precommitted.");
         _;
     }
@@ -286,9 +273,9 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion {
             )
         );
 
-        consensus = _consensus;
+        consensus = ConsensusI(_consensus);
 
-        coreStatus = Status.creation;
+        coreStatus = CoreStatus.creation;
 
         epochLength = _epochLength;
 
@@ -517,7 +504,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion {
         if (countValidators >= minimumValidatorCount) {
             quorum = calculateQuorum(countValidators);
             precommitClosureBlockHeight = CORE_OPEN_VOTES_WINDOW;
-            coreStatus = Status.opened;
+            coreStatus = CoreStatus.opened;
         }
     }
 
@@ -579,8 +566,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion {
         require(precommit == bytes32(0) ||
             precommit == _proposal,
             "Once locked, precommit cannot be changed.");
-        if (coreStatus == Status.opened) {
-            coreStatus = Status.precommitted;
+        if (coreStatus == CoreStatus.opened) {
+            coreStatus = CoreStatus.precommitted;
             precommit = _proposal;
             precommitClosureBlockHeight = block.number.add(CORE_LAST_VOTES_WINDOW);
             consensus.registerPrecommit(_proposal);

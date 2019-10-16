@@ -258,7 +258,7 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule {
             "Proposal must not be zero."
         );
 
-        consensus = _consensus;
+        consensus = ConsensusI(_consensus);
 
         committeeStatus = CommitteeStatus.Open;
 

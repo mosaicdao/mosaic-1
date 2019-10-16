@@ -3,6 +3,7 @@ pragma solidity >=0.5.0 <0.6.0;
 import "../proxies/Proxy.sol";
 import "../proxies/ProxyFactory.sol";
 import "../consensus/ConsensusI.sol";
+import "../anchor/Anchor.sol"; // TODO: change this to factory
 
 contract Axiom {
 
@@ -59,12 +60,17 @@ contract Axiom {
     /** Committeee master copy contract address */
     address public committeeMasterCopy;
 
+    /** Reputation master copy contract address */
+    address public reputationMasterCopy;
+
     /** Consensus contract address */
     address public consensus;
 
     /** Reputation contract address */
     address public reputation;
 
+    /** ProxyFactory contract address */
+    ProxyFactory public proxyFactory;
     /* Special Member Functions */
 
     // TODO: add documentation.
@@ -108,6 +114,7 @@ contract Axiom {
         committeeMasterCopy = _committeeMasterCopy;
         reputationMasterCopy = _reputationMasterCopy;
 
+        proxyFactory = new ProxyFactory();
     }
 
 
@@ -127,27 +134,32 @@ contract Axiom {
         onlyTechGov
     {
         require(
-            consensus == address(0),
+            address(consensus) == address(0),
             "Consensus is already setup."
         );
 
         // Deploy the consensus proxy contract.
-        consensus = new Proxy(consensusMasterCopy);
+        Proxy consensusProxy = new Proxy(consensusMasterCopy);
 
+        consensus = address(consensusProxy);
 
         bytes memory reputationSetupData = abi.encodeWithSelector(
             REPUTATION_SETUP_CALLPREFIX,
             consensus,
-            _tokenRules,
-            gnosisSafeProxy_,
-            _sessionKeys,
-            _sessionKeysSpendingLimits,
-            _sessionKeysExpirationHeights
+            _mOST,
+            _stakeMOSTAmount,
+            _wETH,
+            _stakeWETHAmount,
+            _cashableEarningsPerMille,
+            _initialReputation,
+            _withdrawalCooldownPeriodInBlocks
         );
 
-        reputation = new ProxyFactory(
-            reputationMasterCopy,
-            reputationSetupData
+        reputation = address(
+            proxyFactory.createProxy(
+                reputationMasterCopy,
+                reputationSetupData
+            )
         );
 
 
@@ -157,7 +169,7 @@ contract Axiom {
             reputation
         );
 
-        callProxyData(consensus, consensusSetupData);
+        callProxyData(consensusProxy, consensusSetupData);
 
     }
 
@@ -174,38 +186,36 @@ contract Axiom {
         onlyTechGov
     {
         // New anchor.
-        address anchor = new Anchor(
+        Anchor anchor = new Anchor(
             _remoteChainId,
             _sourceBlockHeight,
             _stateRoot,
             _maxStateRoots,
-            consenses
+            consensus
         );
 
-        consensus.newMetaChain(
-            bytes20(anchor),
+        ConsensusI(consensus).newMetaChain(
+            bytes20(address(anchor)),
             _epochLength,
             _gasTarget,
             _source,
             _sourceBlockHeight
         );
-        
-        // New core.
-        // Link both
     }
 
     function deployProxyContract(
         address masterCopy,
-        bytes memory data
+        bytes calldata data
     )
         external
         onlyConsensus
         returns (address deployedAddress_)
     {
-        deployedAddress_ = new ProxyFactory(
+        Proxy proxyContract = proxyFactory.createProxy(
             masterCopy,
             data
         );
+        deployedAddress_ = address(proxyContract);
     }
 
 

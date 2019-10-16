@@ -18,45 +18,45 @@ import "../../consensus/Consensus.sol";
 
 contract ConsensusTest is Consensus {
 
-    constructor(uint256 _committeeSize)
-        public
-        Consensus(_committeeSize)
-    {
-
-    }
-
-    function setCoreStatus(
-        address _core,
-        bytes20 _status
-    )
-        external
-    {
-        coreStatuses[_core] = _status;
-    }
-
-    function setPreCommit(
-        address _core,
-        bytes32 _proposal,
-        uint256 _committeeFormationBlockheight
-    )
-        external
-    {
-        precommits[_core] = Precommit(
-            _proposal,
-            _committeeFormationBlockheight
-        );
-    }
-
-    function setCommittee(
-        address _committeeAddress,
-        address _value
-    )
-        external
-    {
-        committees[_committeeAddress] = _value;
-    }
-
-    function setReputation(address _reputation) external {
-        reputation = ReputationI(_reputation);
-    }
+//    constructor(uint256 _committeeSize)
+//        public
+//        Consensus(_committeeSize)
+//    {
+//
+//    }
+//
+//    function setCoreStatus(
+//        address _core,
+//        bytes20 _status
+//    )
+//        external
+//    {
+//        coreStatuses[_core] = _status;
+//    }
+//
+//    function setPreCommit(
+//        address _core,
+//        bytes32 _proposal,
+//        uint256 _committeeFormationBlockheight
+//    )
+//        external
+//    {
+//        precommits[_core] = Precommit(
+//            _proposal,
+//            _committeeFormationBlockheight
+//        );
+//    }
+//
+//    function setCommittee(
+//        address _committeeAddress,
+//        address _value
+//    )
+//        external
+//    {
+//        committees[_committeeAddress] = _value;
+//    }
+//
+//    function setReputation(address _reputation) external {
+//        reputation = ReputationI(_reputation);
+//    }
 }

@@ -20,11 +20,13 @@ import "../anchor/AnchorI.sol";
 import "../block/Block.sol";
 import "../committee/Committee.sol";
 import "../core/Core.sol";
+import "../core/CoreStatusEnum.sol";
 import "../EIP20I.sol";
 import "../reputation/ReputationI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
+import "../axiom/AxiomI.sol";
 
-contract Consensus is MasterCopyNonUpgradable {
+contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum {
 
     /* Usings */
 
@@ -39,15 +41,6 @@ contract Consensus is MasterCopyNonUpgradable {
     /** Committee formation mixing length */
     uint256 public constant COMMITTEE_FORMATION_LENGTH = uint8(7);
 
-    /** Core status Active */
-    bytes20 public constant CORE_STATUS_ACTIVE = bytes20(keccak256("CORE_STATUS_ACTIVE"));
-
-    /** Core status Halted */
-    bytes20 public constant CORE_STATUS_HALTED = bytes20(keccak256("CORE_STATUS_HALTED"));
-
-    /** Core status Corrupted */
-    bytes20 public constant CORE_STATUS_CORRUPTED = bytes20(keccak256("CORE_STATUS_CORRUPTED"));
-
     /** Sentinel pointer for marking end of linked-list of committees */
     address public constant SENTINEL_COMMITTEES = address(0x1);
 
@@ -57,6 +50,14 @@ contract Consensus is MasterCopyNonUpgradable {
             "setup(address,bytes20,uint256,uint256,bytes32,uint256,uint256,uint256,uint256,bytes32,uint256)"
         )
     );
+
+    /** The callprefix of the Committee::setup function. */
+    bytes4 public constant COMMITTEE_SETUP_CALLPREFIX = bytes4(
+        keccak256(
+            "setup(address,uint256,bytes32,bytes32)"
+        )
+    );
+
 
     /* Structs */
 
@@ -88,7 +89,7 @@ contract Consensus is MasterCopyNonUpgradable {
     mapping(bytes20 /* chainId */ => bytes32 /* MetablockHash */) public metablockHeaderTips;
 
     /** Core statuses */
-    mapping(address /* core */ => bytes20 /* coreStatus */) public coreStatuses;
+    mapping(address /* core */ => CoreStatus /* coreStatus */) public coreStatuses;
 
     /** Assigned core for a given chainId */
     mapping(bytes20 /* chainId */ => address /* core */) public assignments;
@@ -109,7 +110,7 @@ contract Consensus is MasterCopyNonUpgradable {
     ReputationI public reputation;
 
     /** Axiom contract for validators */
-    address public axiom;
+    AxiomI public axiom;
 
     address public coreMasterCopy;
 
@@ -140,7 +141,7 @@ contract Consensus is MasterCopyNonUpgradable {
     modifier onlyAxiom()
     {
         require(
-            axiom == msg.sender,
+            address(axiom) == msg.sender,
             "Caller must be axiom address."
         );
 
@@ -172,7 +173,7 @@ contract Consensus is MasterCopyNonUpgradable {
 
         committeeSize = _committeeSize;
         reputation = ReputationI(_reputation);
-        axiom = msg.sender;
+        axiom = AxiomI(msg.sender);
 
         committees[SENTINEL_COMMITTEES] = SENTINEL_COMMITTEES;
     }
@@ -345,7 +346,7 @@ contract Consensus is MasterCopyNonUpgradable {
             _chainId,
             _epochLength,
             0,
-            bytes(0),
+            bytes32(0),
             _gasTarget,
             0,  // TODO: Remove this param
             0,
@@ -355,7 +356,7 @@ contract Consensus is MasterCopyNonUpgradable {
         );
 
         assignments[_chainId] = core;
-        anchors[_chainId] = _chainId;
+        anchors[_chainId] = address(_chainId);
     }
 
     /**
@@ -371,7 +372,7 @@ contract Consensus is MasterCopyNonUpgradable {
 //            'Core does not exist.'
 //        );
 //
-//        coreStatuses[_core] = CORE_STATUS_HALTED;
+//        coreStatuses[_core] = CoreStatus.halted;
 //        // @ben, what other things need to done here?
 //    }
 
@@ -389,7 +390,7 @@ contract Consensus is MasterCopyNonUpgradable {
 //            'Core does not exist.'
 //        );
 //
-//        coreStatuses[_core] = CORE_STATUS_CORRUPTED;
+//        coreStatuses[_core] = CoreStatus.corrupted;
 //        // @ben, what other things need to done here?
 //    }
 
@@ -399,10 +400,10 @@ contract Consensus is MasterCopyNonUpgradable {
         view
         returns (bool)
     {
-        bytes20 status = coreStatuses[_core];
-        return status != bytes20(0) &&
-            status != CORE_STATUS_HALTED &&
-            status != CORE_STATUS_CORRUPTED;
+        CoreStatus status = coreStatuses[_core];
+        return status != CoreStatus.undefined &&
+            status != CoreStatus.halted &&
+            status != CoreStatus.corrupted;
     }
 
     /** insert new Committee */
@@ -413,8 +414,8 @@ contract Consensus is MasterCopyNonUpgradable {
             proposals[_proposal] == Committee(0),
             "There already exists a committee for the proposal."
         );
-        // TODO: implement proxy pattern
-        Committee committee_ = new Committee(committeeSize, _dislocation, _proposal);
+
+        Committee committee_ = newCommittee(committeeSize, _dislocation, _proposal);
         committees[address(committee_)] = committees[SENTINEL_COMMITTEES];
         committees[SENTINEL_COMMITTEES] = address(committee_);
 
@@ -508,6 +509,8 @@ contract Consensus is MasterCopyNonUpgradable {
             coreMasterCopy,
             coreSetupData
         );
+
+        coreStatuses[core_] = CoreStatus.creation;
     }
 
     function newCommittee(
@@ -516,7 +519,7 @@ contract Consensus is MasterCopyNonUpgradable {
         bytes32 _proposal
     )
         private
-        returns (address committee_)
+        returns (Committee committee_)
     {
         bytes memory committeeSetupData = abi.encodeWithSelector(
             COMMITTEE_SETUP_CALLPREFIX,
@@ -526,9 +529,11 @@ contract Consensus is MasterCopyNonUpgradable {
             _proposal
         );
 
-        committee_ = axiom.deployProxyContract(
+        address committeeAddress = axiom.deployProxyContract(
             committeeMasterCopy,
             committeeSetupData
         );
+
+        committee_ = Committee(committeeAddress);
     }
 }

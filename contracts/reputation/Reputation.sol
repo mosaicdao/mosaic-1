@@ -192,7 +192,7 @@ contract Reputation is ConsensusModule {
         external
     {
         require(
-            mOST == address(0) && wETH == address(0),
+            address(mOST) == address(0) && address(wETH) == address(0),
             "Reputation is already setup."
         );
 
@@ -221,7 +221,7 @@ contract Reputation is ConsensusModule {
             "Cashable earnings is not in valid range: [0, 1000]."
         );
 
-        consensus = _consensus;
+        consensus = ConsensusI(_consensus);
         mOST = EIP20I(_mOST);
         wETH = EIP20I(_wETH);
         stakeMOSTAmount = _stakeMOSTAmount;

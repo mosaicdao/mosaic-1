@@ -23,6 +23,13 @@ interface ConsensusI {
 
     function registerPrecommit(bytes32 _precommitment) external;
 
-    function newChain(bytes20 _chainId, address coreAddress) external;
+    function newMetaChain(
+        bytes20 _chainId,
+        uint256 _epochLength,
+        uint256 _gasTarget,
+        bytes32 _source,
+        uint256 _sourceBlockHeight
+    )
+        external;
 
 }
