@@ -389,7 +389,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     function newMetaChain(
         bytes20 _chainId,
         uint256 _epochLength,
-        uint256 _gasTarget,
         bytes32 _source,
         uint256 _sourceBlockHeight
     )
@@ -409,7 +408,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             _epochLength,
             0,
             bytes32(0),
-            _gasTarget,
+            gasTargetDelta,
             0,  // TODO: Remove this param
             0,
             0,

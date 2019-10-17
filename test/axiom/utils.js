@@ -66,10 +66,24 @@ async function setupConsensusWithConfig(axiom, config) {
     config.txOptions,
   );
 }
+
+async function newMetaChainWithConfig(axiom, config) {
+  return axiom.newMetaChain(
+    config.epochLength,
+    config.source,
+    config.sourceBlockHeight,
+    config.remoteChainId,
+    config.stateRoot,
+    config.maxStateRoots,
+    config.txOptions,
+  );
+}
+
 module.exports = {
   deployAxiom,
   deployAxiomWithConfig,
   ConsensusSetupCallPrefix,
   ReputationSetupCallPrefix,
   setupConsensusWithConfig,
+  newMetaChainWithConfig,
 };

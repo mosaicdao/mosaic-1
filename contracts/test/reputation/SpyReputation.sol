@@ -19,7 +19,7 @@ import "../../reputation/ReputationI.sol";
 import '../../reputation/ReputationI.sol';
 import "../../proxies/MasterCopyNonUpgradable.sol";
 
-contract SpyReputation is MasterCopyNonUpgradable {
+contract SpyReputation is MasterCopyNonUpgradable, ReputationI {
 
     mapping(address /* validator */ => bool /* isActive */) public activeValidators;
 
@@ -78,5 +78,25 @@ contract SpyReputation is MasterCopyNonUpgradable {
 
     function getReservedStorageSlotForProxy() external view returns (address) {
         return reservedStorageSlotForProxy;
+    }
+
+    function join(
+        address _validator,
+        address _withdrawalAddress
+    )
+        external
+    {
+        // This is not used in test so break
+        require(false, 'This should not be called for unit tests.');
+    }
+
+    function logout(address _validator) external {
+        // This is not used in test so break
+        require(false, 'This should not be called for unit tests.');
+    }
+
+    function getReputation(address _validator) external view returns (uint256) {
+        // This is not used in test so break
+        require(false, 'This should not be called for unit tests.');
     }
 }

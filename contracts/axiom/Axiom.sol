@@ -6,7 +6,7 @@ import "../consensus/ConsensusI.sol";
 import "../anchor/Anchor.sol"; // TODO: change this to factory, when new anchor is implemented.
 import "./AxiomI.sol";
 
-contract Axiom is AxiomI{
+contract Axiom is AxiomI {
 
     /* Constants */
 
@@ -46,6 +46,7 @@ contract Axiom is AxiomI{
 
         _;
     }
+
 
     /* Storage */
 
@@ -210,9 +211,20 @@ contract Axiom is AxiomI{
         callProxyData(consensusProxy, consensusSetupData);
     }
 
+    /**
+     * @notice Setup a new meta chain. Only technical governance address can
+     *         call this function.
+     * @param _epochLength Epoch length.
+     * @param _source Source blockhash.
+     * @param _sourceBlockHeight Source block height.
+     * @param _remoteChainId The chain id of the chain that is tracked by this
+     *                       anchor.
+     * @param _stateRoot State root hash of given _sourceBlockHeight.
+     * @param _maxStateRoots The max number of state roots to store in the
+     *                       circular buffer.
+     */
     function newMetaChain(
         uint256 _epochLength,
-        uint256 _gasTarget,
         bytes32 _source,
         uint256 _sourceBlockHeight,
         uint256 _remoteChainId,
@@ -234,7 +246,6 @@ contract Axiom is AxiomI{
         ConsensusI(consensus).newMetaChain(
             bytes20(address(anchor)),
             _epochLength,
-            _gasTarget,
             _source,
             _sourceBlockHeight
         );

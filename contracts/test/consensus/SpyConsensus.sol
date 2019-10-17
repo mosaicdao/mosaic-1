@@ -1,8 +1,9 @@
 pragma solidity ^0.5.0;
 
 import "../../proxies/MasterCopyNonUpgradable.sol";
+import "../../consensus/ConsensusI.sol";
 
-contract SpyConsensus is MasterCopyNonUpgradable {
+contract SpyConsensus is MasterCopyNonUpgradable, ConsensusI {
 
     uint256 public committeeSize;
     uint256 public minValidators;
@@ -10,6 +11,11 @@ contract SpyConsensus is MasterCopyNonUpgradable {
     uint256 public gasTargetDelta;
     uint256 public coinbaseSplitPercentage;
     address public reputation;
+
+    bytes20 public chainId;
+    uint256 public epochLength;
+    bytes32 public source;
+    uint256 public sourceBlockHeight;
 
     function setup(
         uint256 _committeeSize,
@@ -31,5 +37,35 @@ contract SpyConsensus is MasterCopyNonUpgradable {
 
     function getReservedStorageSlotForProxy() external view returns (address) {
         return reservedStorageSlotForProxy;
+    }
+
+    function newMetaChain(
+        bytes20 _chainId,
+        uint256 _epochLength,
+        bytes32 _source,
+        uint256 _sourceBlockHeight
+    )
+        external
+    {
+        chainId = _chainId;
+        epochLength = _epochLength;
+        source = _source;
+        sourceBlockHeight = _sourceBlockHeight;
+    }
+
+    function coreValidatorThresholds()
+        external
+        view
+        returns (
+            uint256 minimumValidatorCount_,
+            uint256 joinLimit_
+    ) {
+        // This is not used in test so break
+        require(false, 'This should not be called for unit tests.');
+    }
+
+    function registerPrecommit(bytes32 _precommitment) external {
+        // This is not used in test so break
+        require(false, 'This should not be called for unit tests.');
     }
 }

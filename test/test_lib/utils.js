@@ -273,6 +273,8 @@ Utils.prototype = {
     return hash.substring(0, 10);
   },
 
+  getRandomHash: () => web3.utils.sha3(`${Date.now()}`),
+
   /** Receives accounts list and gives away each time one. */
   AccountProvider: class AccountProvider {
     constructor(accounts) {

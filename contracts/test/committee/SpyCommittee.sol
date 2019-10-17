@@ -1,5 +1,8 @@
 pragma solidity ^0.5.0;
 
+import "../../proxies/MasterCopyNonUpgradable.sol";
+import "../../committee/CommitteeI.sol";
+
 // Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +17,7 @@ pragma solidity ^0.5.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-contract SpyCommittee {
+contract SpyCommittee is MasterCopyNonUpgradable, CommitteeI{
 
     bool public isEnterCommitteeFunctionCalled;
 
@@ -48,4 +51,10 @@ contract SpyCommittee {
         isEnterCommitteeFunctionCalled = true;
         return enterCommitteeResult;
     }
+
+    function committeeDecision() external view returns (bytes32) {
+        // This is not used in test so break
+        require(false, 'This should not be called for unit tests.');
+    }
+
 }
