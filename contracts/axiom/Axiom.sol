@@ -131,10 +131,30 @@ contract Axiom is AxiomI{
 
     /* External functions */
 
+    /**
+     * @notice Setup consensus contract, this can be only called once by
+     *          technical governance address.
+     * @param _committeeSize Max committee size that can be formed.
+     * @param _minValidators Minimum number of validators that must join a
+     *                       created core to open.
+     * @param _joinLimit Maximum number of validators that can join in a core.
+     * @param _gasTargetDelta Gas target delta to open new metablock.
+     * @param _coinbaseSplitPercentage Coinbase split percentage.
+     * @param _mOST mOST token address.
+     * @param _stakeMOSTAmount Amount of mOST that will be staked by validators.
+     * @param _wETH wEth token address.
+     * @param _stakeWETHAmount Amount of wEth that will be staked by validators.
+     * @param _cashableEarningsPerMille Fraction of the total amount that can
+     *                                  be cashed by validators.
+     * @param _initialReputation Initial reputations that will be set when
+     *                           validators joins.
+     * @param _withdrawalCooldownPeriodInBlocks Cooling period for withdrawal
+     *                                          after logout.
+     */
     function setupConsensus(
         uint256 _committeeSize,
-        uint256 _minCoreSize,
-        uint256 _maxCoreSize,
+        uint256 _minValidators,
+        uint256 _joinLimit,
         uint256 _gasTargetDelta,
         uint256 _coinbaseSplitPercentage,
         address _mOST,
@@ -177,19 +197,17 @@ contract Axiom is AxiomI{
             )
         );
 
-
         bytes memory consensusSetupData = abi.encodeWithSelector(
             CONSENSUS_SETUP_CALLPREFIX,
             _committeeSize,
-            _minCoreSize,
-            _maxCoreSize,
+            _minValidators,
+            _joinLimit,
             _gasTargetDelta,
             _coinbaseSplitPercentage,
             reputation
         );
 
         callProxyData(consensusProxy, consensusSetupData);
-
     }
 
     function newMetaChain(

@@ -48,9 +48,28 @@ async function deployAxiomWithConfig(config) {
     config.txOptions,
   );
 }
+
+async function setupConsensusWithConfig(axiom, config) {
+  return axiom.setupConsensus(
+    config.committeeSize,
+    config.minValidators,
+    config.joinLimit,
+    config.gasTargetDelta,
+    config.coinbaseSplitPercentage,
+    config.mOST,
+    config.stakeMOSTAmount,
+    config.wETH,
+    config.stakeWETHAmount,
+    config.cashableEarningsPerMille,
+    config.initialReputation,
+    config.withdrawalCooldownPeriodInBlocks,
+    config.txOptions,
+  );
+}
 module.exports = {
   deployAxiom,
   deployAxiomWithConfig,
   ConsensusSetupCallPrefix,
   ReputationSetupCallPrefix,
+  setupConsensusWithConfig,
 };

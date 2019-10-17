@@ -75,10 +75,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     uint256 public committeeSize;
 
     /** Minimum number of validators that must join a created core to open */
-    uint256 public minCoreSize;
+    uint256 public minValidators;
 
-    /** Maximum number of validatirs that can join in a core */
-    uint256 public maxCoreSize;
+    /** Maximum number of validators that can join in a core */
+    uint256 public joinLimit;
 
     /** Gas target delta to open new metablock */
     uint256 public gasTargetDelta;
@@ -153,8 +153,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
     function setup(
         uint256 _committeeSize,
-        uint256 _minCoreSize,
-        uint256 _maxCoreSize,
+        uint256 _minValidators,
+        uint256 _joinLimit,
         uint256 _gasTargetDelta,
         uint256 _coinbaseSplitPercentage,
         address _reputation
@@ -173,13 +173,13 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
 
         require(
-            _minCoreSize > 0,
-            "Min core size is 0."
+            _minValidators > 0,
+            "Min validator size is 0."
         );
 
         require(
-            _maxCoreSize > _minCoreSize,
-            "Max core size is less than min core."
+            _joinLimit > 0,
+            "Join limit is 0."
         );
 
         require(
@@ -198,8 +198,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
 
         committeeSize = _committeeSize;
-        minCoreSize = _minCoreSize;
-        maxCoreSize = _maxCoreSize;
+        minValidators = _minValidators;
+        joinLimit = _joinLimit;
         gasTargetDelta = _gasTargetDelta;
         coinbaseSplitPercentage = _coinbaseSplitPercentage;
         reputation = ReputationI(_reputation);
