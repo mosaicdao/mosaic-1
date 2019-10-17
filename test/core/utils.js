@@ -33,7 +33,6 @@ async function createConsensusCore(
   sourceBlockHeight,
   txOptions = {},
 ) {
-
   const mockConsensus = await MockConsensus.new(
     chainId,
     epochLength,
@@ -50,7 +49,8 @@ async function createConsensusCore(
   return mockConsensus;
 }
 
-async function createCore(
+async function setupCore(
+  consensus,
   chainId,
   epochLength,
   minValidators,
@@ -65,7 +65,9 @@ async function createCore(
   sourceBlockHeight,
   txOptions = {},
 ) {
-  return Core.new(
+  const core = await Core.new();
+  await core.setup(
+    consensus,
     chainId,
     epochLength,
     minValidators,
@@ -80,14 +82,16 @@ async function createCore(
     sourceBlockHeight,
     txOptions,
   );
+  return core;
 }
 
 const CoreStatus = {
-  creation: new BN(0),
-  opened: new BN(1),
-  precommitted: new BN(2),
-  halted: new BN(3),
-  corrupted: new BN(4),
+  undefined: new BN(0),
+  creation: new BN(1),
+  opened: new BN(2),
+  precommitted: new BN(3),
+  halted: new BN(4),
+  corrupted: new BN(5),
 }
 
 function isCoreCreated(status) {
@@ -126,7 +130,7 @@ function randomSha3() {
 
 module.exports = {
   createConsensusCore,
-  createCore,
+  setupCore,
   isCoreCreated,
   isCoreOpened,
   isCorePrecommitted,

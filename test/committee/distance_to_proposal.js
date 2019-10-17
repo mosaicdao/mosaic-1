@@ -32,11 +32,12 @@ contract('Committee::distanceToProposal', (accounts) => {
       consensus: accountProvider.get(),
     };
     config.committee = await CommitteeUtils.createCommittee(
+      config.consensus,
       config.committeeSize,
       config.dislocation,
       config.proposal,
       {
-        from: config.consensus,
+        from: accountProvider.get(),
       },
     );
     Object.freeze(config);

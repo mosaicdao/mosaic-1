@@ -46,21 +46,23 @@ contract('Committee:enterCommittee', async (accounts) => {
     };
 
     config.committee.contract = await CommitteeUtils.createCommittee(
+      config.committee.consensus,
       config.committee.size,
       config.committee.dislocation,
       config.committee.proposal,
       {
-        from: config.committee.consensus,
+        from: accountProvider.get(),
       },
     );
     config.committee.sentinelMembers = await config.committee.contract.SENTINEL_MEMBERS.call();
 
     config.committee3.contract = await CommitteeUtils.createCommittee(
+      config.committee3.consensus,
       config.committee3.size,
       config.committee3.dislocation,
       config.committee3.proposal,
       {
-        from: config.committee3.consensus,
+        from: accountProvider.get(),
       },
     );
     config.committee3.sentinelMembers = await config.committee3.contract.SENTINEL_MEMBERS.call();
@@ -240,11 +242,12 @@ contract('Committee:enterCommittee', async (accounts) => {
       const numberOfValidators = 299;
 
       const committee = await CommitteeUtils.createCommittee(
+        consensus,
         committeeSize,
         dislocation,
         proposal,
         {
-          from: consensus,
+          from: accountProvider.get(),
         },
       );
 
@@ -294,11 +297,12 @@ contract('Committee:enterCommittee', async (accounts) => {
       const numberOfValidators = 299;
 
       const committee = await CommitteeUtils.createCommittee(
+        consensus,
         committeeSize,
         dislocation,
         proposal,
         {
-          from: consensus,
+          from: accountProvider.get(),
         },
       );
 
@@ -347,11 +351,12 @@ contract('Committee:enterCommittee', async (accounts) => {
       const numberOfValidators = 299;
 
       const committee = await CommitteeUtils.createCommittee(
+        consensus,
         committeeSize,
         dislocation,
         proposal,
         {
-          from: consensus,
+          from: accountProvider.get(),
         },
       );
 
