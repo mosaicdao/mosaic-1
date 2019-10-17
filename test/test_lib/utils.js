@@ -211,6 +211,13 @@ Utils.prototype = {
     });
   }),
 
+  getCode: address => new Promise((resolve) => {
+    web3.eth.getCode(address)
+      .then((code) => {
+        resolve(code);
+      });
+  }),
+
   validateEvents: (eventLogs, expectedData) => {
     assert.equal(
       eventLogs.length,
@@ -261,6 +268,11 @@ Utils.prototype = {
     web3.eth.abi.encodeParameter('string', structDescriptor),
   ),
 
+  getCallPrefix: (structDescriptor) => {
+    const hash = web3.utils.sha3(structDescriptor);
+    return hash.substring(0, 10);
+  },
+
   /** Receives accounts list and gives away each time one. */
   AccountProvider: class AccountProvider {
     constructor(accounts) {
@@ -275,6 +287,8 @@ Utils.prototype = {
       return account;
     }
   },
+
+  isAddress: address => web3.utils.isAddress(address),
 
   ResultType,
 

@@ -3,7 +3,7 @@ pragma solidity >=0.5.0 <0.6.0;
 import "../proxies/Proxy.sol";
 import "../proxies/ProxyFactory.sol";
 import "../consensus/ConsensusI.sol";
-import "../anchor/Anchor.sol"; // TODO: change this to factory
+import "../anchor/Anchor.sol"; // TODO: change this to factory, when new anchor is implemented.
 import "./AxiomI.sol";
 
 contract Axiom is AxiomI{
@@ -41,7 +41,7 @@ contract Axiom is AxiomI{
     {
         require(
             techGov == msg.sender,
-            "Caller must be techinal governance address."
+            "Caller must be technical governance address."
         );
 
         _;
@@ -72,9 +72,19 @@ contract Axiom is AxiomI{
 
     /** ProxyFactory contract address */
     ProxyFactory public proxyFactory;
+
+
     /* Special Member Functions */
 
-    // TODO: add documentation.
+    /**
+     * Constructor for Axiom contract
+     *
+     * @param _techGov Technical governance address.
+     * @param _consensusMasterCopy Consensus master copy contract address.
+     * @param _coreMasterCopy Core master copy contract address.
+     * @param _committeeMasterCopy Committee master copy contract address.
+     * @param _reputationMasterCopy Reputation master copy contract address.
+     */
     constructor(
         address _techGov,
         address _consensusMasterCopy,
@@ -86,7 +96,7 @@ contract Axiom is AxiomI{
     {
         require(
             _techGov != address(0),
-            "Tech gov adress is 0."
+            "Tech gov address is 0."
         );
 
         require(
@@ -194,7 +204,7 @@ contract Axiom is AxiomI{
         external
         onlyTechGov
     {
-        // New anchor.
+        // Task: When new Anchor is implemented, use proxy pattern for deployment.
         Anchor anchor = new Anchor(
             _remoteChainId,
             _sourceBlockHeight,
