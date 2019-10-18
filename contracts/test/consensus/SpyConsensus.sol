@@ -2,6 +2,7 @@ pragma solidity ^0.5.0;
 
 import "../../proxies/MasterCopyNonUpgradable.sol";
 import "../../consensus/ConsensusI.sol";
+import "../../axiom/AxiomI.sol";
 
 contract SpyConsensus is MasterCopyNonUpgradable, ConsensusI {
 
@@ -16,6 +17,8 @@ contract SpyConsensus is MasterCopyNonUpgradable, ConsensusI {
     uint256 public epochLength;
     bytes32 public source;
     uint256 public sourceBlockHeight;
+
+    address public deployedContractAddress;
 
     function setup(
         uint256 _committeeSize,
@@ -53,18 +56,29 @@ contract SpyConsensus is MasterCopyNonUpgradable, ConsensusI {
         sourceBlockHeight = _sourceBlockHeight;
     }
 
+    function deployProxyContract(
+        address axiom,
+        address _masterCopy,
+        bytes calldata _data
+    )
+        external
+    {
+        deployedContractAddress = AxiomI(axiom).deployProxyContract(_masterCopy, _data);
+    }
+
+
     function coreValidatorThresholds()
         external
         view
         returns (
-            uint256 minimumValidatorCount_,
-            uint256 joinLimit_
+            uint256,
+            uint256
     ) {
         // This is not used in test so break
         require(false, 'This should not be called for unit tests.');
     }
 
-    function registerPrecommit(bytes32 _precommitment) external {
+    function registerPrecommit(bytes32) external {
         // This is not used in test so break
         require(false, 'This should not be called for unit tests.');
     }

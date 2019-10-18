@@ -35,6 +35,7 @@ contract('Axiom::setupConsensus', (accounts) => {
       SpyConsensus: await SpyConsensus.new(),
       SpyReputation: await SpyReputation.new(),
     };
+    Object.freeze(contracts);
 
     constructionParams = {
       techGov: accountProvider.get(),
@@ -46,6 +47,7 @@ contract('Axiom::setupConsensus', (accounts) => {
         from: accountProvider.get(),
       },
     };
+    Object.freeze(constructionParams);
 
     config = {
       committeeSize: new BN(3),
@@ -64,7 +66,6 @@ contract('Axiom::setupConsensus', (accounts) => {
         from: constructionParams.techGov,
       },
     };
-    Object.freeze(constructionParams);
     Object.freeze(config);
 
     axiom = await AxiomUtils.deployAxiomWithConfig(constructionParams);

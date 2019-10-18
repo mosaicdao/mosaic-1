@@ -292,6 +292,8 @@ Utils.prototype = {
 
   isAddress: address => web3.utils.isAddress(address),
 
+  isNonNullAddress: address => web3.utils.isAddress(address) && address !== this.NULL_ADDRESS,
+
   ResultType,
 
   ZERO_BYTES32:

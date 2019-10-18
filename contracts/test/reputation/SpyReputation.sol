@@ -81,8 +81,8 @@ contract SpyReputation is MasterCopyNonUpgradable, ReputationI {
     }
 
     function join(
-        address _validator,
-        address _withdrawalAddress
+        address,
+        address
     )
         external
     {
@@ -90,12 +90,12 @@ contract SpyReputation is MasterCopyNonUpgradable, ReputationI {
         require(false, 'This should not be called for unit tests.');
     }
 
-    function logout(address _validator) external {
+    function logout(address) external {
         // This is not used in test so break
         require(false, 'This should not be called for unit tests.');
     }
 
-    function getReputation(address _validator) external view returns (uint256) {
+    function getReputation(address) external view returns (uint256) {
         // This is not used in test so break
         require(false, 'This should not be called for unit tests.');
     }

@@ -251,17 +251,29 @@ contract Axiom is AxiomI {
         );
     }
 
+    /**
+     * @notice Deploy proxy contract. This can be called only by consensus
+     *         contract.
+     * @param _masterCopy Master copy contract address.
+     * @param _data Setup function call data.
+     * @return Deployed contract address.
+     */
     function deployProxyContract(
-        address masterCopy,
-        bytes calldata data
+        address _masterCopy,
+        bytes calldata _data
     )
         external
         onlyConsensus
         returns (address deployedAddress_)
     {
+        require(
+            _masterCopy != address(0),
+            'Master copy address is 0.'
+        );
+
         Proxy proxyContract = proxyFactory.createProxy(
-            masterCopy,
-            data
+            _masterCopy,
+            _data
         );
         deployedAddress_ = address(proxyContract);
     }
