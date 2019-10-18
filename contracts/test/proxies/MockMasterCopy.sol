@@ -31,6 +31,7 @@ contract MockMasterCopy is MasterCopyNonUpgradable {
         uint256 _mockCount
     )
         external
+        pure
         returns(bytes memory setupData_)
     {
         setupData_ = abi.encodeWithSelector(

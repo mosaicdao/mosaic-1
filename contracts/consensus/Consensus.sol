@@ -48,7 +48,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /** The callprefix of the Core::setup function. */
     bytes4 public constant CORE_SETUP_CALLPREFIX = bytes4(
         keccak256(
-            "setup(address,bytes20,uint256,uint256,bytes32,uint256,uint256,uint256,uint256,bytes32,uint256)"
+            "setup(address,bytes20,uint256,uint256,uint256,address,uint256,bytes32,uint256,uint256,uint256,bytes32,uint256)"
         )
     );
 
@@ -110,11 +110,13 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /** Reputation contract for validators */
     ReputationI public reputation;
 
-    /** Axiom contract for validators */
+    /** Axiom contract address */
     AxiomI public axiom;
 
+    /** Core master copy contract address */
     address public coreMasterCopy;
 
+    /** Committee master copy contract address */
     address public committeeMasterCopy;
 
     /* Modifiers */
@@ -149,8 +151,19 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         _;
     }
 
+
     /* External functions */
 
+    /**
+     * @notice Setup consensus contract. This can be called only once.
+     * @param _committeeSize Max committee size that can be formed.
+     * @param _minValidators Minimum number of validators that must join a
+     *                       created core to open.
+     * @param _joinLimit Maximum number of validators that can join in a core.
+     * @param _gasTargetDelta Gas target delta to open new metablock.
+     * @param _coinbaseSplitPercentage Coinbase split percentage.
+     * @param _reputation Reputation contract address.
+     */
     function setup(
         uint256 _committeeSize,
         uint256 _minValidators,
@@ -172,14 +185,15 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             "Committee size is 0."
         );
 
+        // TODO: Check what should be the minimum number of validators.
         require(
-            _minValidators > 0,
-            "Min validator size is 0."
+            _minValidators > 2,
+            "Min validator size must be greater than 2."
         );
 
         require(
-            _joinLimit > 0,
-            "Join limit is 0."
+            _joinLimit > _minValidators,
+            "Join limit is less than minimum validator count."
         );
 
         require(
@@ -188,8 +202,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
 
         require(
-            _coinbaseSplitPercentage <= uint256(100),
-            "Coin base split percentage is greater than 100"
+            _coinbaseSplitPercentage <= 1000,
+            "Coin base split percentage is not in valid range: [0, 1000]."
         );
 
         require(
@@ -209,11 +223,19 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         committees[SENTINEL_COMMITTEES] = SENTINEL_COMMITTEES;
     }
 
-    /** Core register precommit */
+    /**
+     * @notice Register a proposal for commit. This can be called only by the valid
+     *         core address.
+     * @param _proposal Precommit proposal.
+     */
     function registerPrecommit(bytes32 _proposal)
         external
         onlyCore
     {
+        require(
+            _proposal != bytes32(0),
+            'Proposal is 0.'
+        );
         // onlyCore asserts msg.sender is active core
         Precommit storage precommit = precommits[msg.sender];
         require(
@@ -222,10 +244,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
         precommit.proposal = _proposal;
         precommit.committeeFormationBlockHeight = block.number.add(uint256(COMMITTEE_FORMATION_DELAY));
-
     }
 
-    /**  */
+    /**
+     * @notice Form a new committee to validate the precommit proposal.
+     * @param _core Core contract address.
+     */
     function formCommittee(address _core)
         external
     {
@@ -259,7 +283,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         startCommittee(seed, precommit.proposal);
     }
 
-    /** enter a validator into the committee */
+    /**
+     * @notice Enter a validator into the committee.
+     * @param _committeeAddress Committee address that validator wants to enter.
+     * @param _validator Validator address to enter.
+     * @param _furtherMember Validator address that is further member compared to `_validator` address
+     */
     function enterCommittee(
         address _committeeAddress,
         address _validator,
@@ -282,6 +311,24 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
     }
 
+    /**
+     * @notice Commit a proposal. This verifies the committee lock of the
+     *         proposal, anchors the state root and opens a new matablock.
+     * @param _chainId Chain id.
+     * @param _rlpBlockHeader RLP ecoded block header.
+     * @param _kernelHash Kernel hash
+     * @param _originObservation Observation of the origin chain.
+     * @param _dynasty The dynasty number where the meta-block closes
+     *                 on the auxiliary chain.
+     * @param _accumulatedGas The total consumed gas on auxiliary within this
+     *                        meta-block.
+     * @param _committeeLock The committee lock that hashes the transaction
+     *                       root on the auxiliary chain.
+     * @param _source Source block hash.
+     * @param _target Target block hash.
+     * @param _sourceBlockHeight Source block height.
+     * @param _targetBlockHeight Target block height.
+     */
     function commit(
         bytes20 _chainId,
         bytes calldata _rlpBlockHeader,
@@ -303,7 +350,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             "Block header does not match with vote message source."
         );
 
-        verifyCommitteeLock(
+        (bytes32 proposal, address core) = verifyCommitteeLock(
             _chainId,
             _kernelHash,
             _originObservation,
@@ -316,6 +363,15 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             _targetBlockHeight
         );
 
+        Precommit storage precommit = precommits[core];
+        require(
+            proposal == precommit.proposal,
+            'There is no precommit for the specified core.'
+        );
+
+        // Delete the precommit.
+        delete precommits[core];
+
         address anchorAddress = anchors[_chainId];
         require(
             anchorAddress != address(0),
@@ -324,15 +380,33 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
         Block.Header memory blockHeader = Block.decodeHeader(_rlpBlockHeader);
 
+        // Anchor state root.
         AnchorI(anchorAddress).anchorStateRoot(
             blockHeader.height,
             blockHeader.stateRoot
         );
 
-        // TODO: delete precommit on commit
+        // Open a new metablock.
+        CoreI(core).openMetablock(
+            _originObservation,
+            _dynasty,
+            _accumulatedGas,
+            _committeeLock,
+            _source,
+            _target,
+            _sourceBlockHeight,
+            _targetBlockHeight,
+            gasTargetDelta
+        );
     }
 
-    /** Validator joins */
+    /**
+     * @notice Validator joins the core, when core status is opened or
+     *         precommitted. This is called by validator address.
+     * @param _chainId Chain id that validator wants to join.
+     * @param _core Core address that validator wants to join.
+     * @param _withdrawalAddress A withdrawal address of newly joined validator.
+     */
     function join(
         bytes20 _chainId,
         address _core,
@@ -340,9 +414,30 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     )
         external
     {
-        joinReputation(_chainId, _core, _withdrawalAddress);
+        // Validate the join params.
+        validateJoinParams(_chainId, _core, _withdrawalAddress);
+
+        // Specified core must have open or precommitted status.
+        CoreStatus status = coreStatuses[_core];
+        require(
+            status == CoreStatus.opened || status == CoreStatus.precommitted,
+            'Core status is not opened or precommitted.'
+        );
+
+        // Join in reputation contract.
+        reputation.join(msg.sender, _withdrawalAddress);
+
+        // Join in core contract.
         CoreI(_core).join(msg.sender);
     }
+
+    /**
+     * @notice Validator joins the core, when core status is creation.
+     *         This is called by validator address.
+     * @param _chainId Chain id that validator wants to join.
+     * @param _core Core address that validator wants to join.
+     * @param _withdrawalAddress A withdrawal address of newly joined validator.
+     */
 
     function joinDuringCreation(
         bytes20 _chainId,
@@ -351,11 +446,28 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     )
         external
     {
-        joinReputation(_chainId, _core, _withdrawalAddress);
+        // Validate the join params.
+        validateJoinParams(_chainId, _core, _withdrawalAddress);
+
+        // Specified core must be have creation status.
+        CoreStatus status = coreStatuses[_core];
+        require(
+            status == CoreStatus.creation,
+            'Core status is not creation.'
+        );
+
+        // Join in reputation contract.
+        reputation.join(msg.sender, _withdrawalAddress);
+
+        // Join in core contract.
         CoreI(_core).joinDuringCreation(msg.sender);
     }
 
-    /** Validator logs out */
+    /**
+     * @notice  Validator logs out. This can be called by validator address.
+     * @param _chainId Chain id that validator wants to logout.
+     * @param _core Core address that validator wants to logout.
+     */
     function logout(
         bytes20 _chainId,
         address _core
@@ -401,17 +513,14 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             'Chain already exists.'
         );
 
-        // TODO: add validations.
-        // @dev, calling new core becomes cyclic, TODO: update details why it is done like this.
         address core = newCore(
             _chainId,
             _epochLength,
-            0,
-            bytes32(0),
-            gasTargetDelta,
-            0,  // TODO: Remove this param
-            0,
-            0,
+            0, // height
+            bytes32(0), // parent hash
+            gasTargetDelta, // gas target
+            0,  // dynasty
+            0, // accumulated gas
             _source,
             _sourceBlockHeight
         );
@@ -498,16 +607,18 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     )
         private
         view
+        returns (
+            bytes32 proposal_,
+            address coreAddress_
+        )
     {
-        address coreAddress = assignments[_chainId];
+        coreAddress_ = assignments[_chainId];
         require(
-            isCore(coreAddress),
+            isCore(coreAddress_),
             "There is no core for the specified chain id."
         );
 
-        // TODO: verify precommit at this step.
-
-        bytes32 proposal = CoreI(coreAddress).assertPrecommit(
+        proposal_ = CoreI(coreAddress_).assertPrecommit(
             _kernelHash,
             _originObservation,
             _dynasty,
@@ -519,7 +630,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             _targetBlockHeight
         );
 
-        CommitteeI committee = proposals[proposal];
+        CommitteeI committee = proposals[proposal_];
 
         require(
             committee != CommitteeI(0),
@@ -545,7 +656,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         uint256 _height,
         bytes32 _parent,
         uint256 _gasTarget,
-        uint256 _gasPrice,
         uint256 _dynasty,
         uint256 _accumulatedGas,
         bytes32 _source,
@@ -559,10 +669,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             address(this),
             _chainId,
             _epochLength,
+            minValidators,
+            joinLimit,
+            address(reputation),
             _height,
             _parent,
             _gasTarget,
-            _gasPrice,
             _dynasty,
             _accumulatedGas,
             _source,
@@ -573,8 +685,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             coreMasterCopy,
             coreSetupData
         );
-
-        coreStatuses[core_] = CoreStatus.creation;
     }
 
     function newCommittee(
@@ -601,12 +711,13 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         committee_ = CommitteeI(committeeAddress);
     }
 
-    function joinReputation(
+    function validateJoinParams(
         bytes20 _chainId,
         address _core,
         address _withdrawalAddress
     )
         private
+        view
     {
         require(
             _chainId != bytes20(0),
@@ -624,10 +735,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
 
         require(
-            isCore(_core),
-            "There is no core for the specified chain id"
+            _withdrawalAddress != address(0),
+            "Withdrawal address is 0."
         );
-
-        reputation.join(msg.sender, _withdrawalAddress);
     }
 }
