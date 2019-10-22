@@ -23,6 +23,7 @@ const AnchorTruffleArtifact = require('../../build/contracts/Anchor.json');
 
 const SpyConsensus = artifacts.require('SpyConsensus');
 const SpyReputation = artifacts.require('SpyReputation');
+const EPOCH_LENGTH = 100;
 
 let config = {};
 let contracts = {};
@@ -74,9 +75,6 @@ contract('Axiom::newMetaChain', (accounts) => {
     await AxiomUtils.setupConsensusWithConfig(axiom, config);
 
     newMetaChainParams = {
-      epochLength: new BN(3),
-      source: Utils.getRandomHash(),
-      sourceBlockHeight: new BN(3000),
       remoteChainId: new BN(1405),
       stateRoot: Utils.getRandomHash(),
       maxStateRoots: new BN(10),
@@ -127,6 +125,9 @@ contract('Axiom::newMetaChain', (accounts) => {
     });
 
     it('should validate the spied values of the consensus proxy contract', async () => {
+      const blockHeight = await Utils.getBlockNumber();
+      const blockHash = await Utils.getBlockHash(blockHeight);
+
       await AxiomUtils.newMetaChainWithConfig(axiom, newMetaChainParams);
 
       const consensusContractAddress = await axiom.consensus.call();
@@ -134,7 +135,7 @@ contract('Axiom::newMetaChain', (accounts) => {
 
       const epochLength = await consensusProxyContract.epochLength.call();
       assert.strictEqual(
-        epochLength.eq(newMetaChainParams.epochLength),
+        epochLength.eqn(EPOCH_LENGTH),
         true,
         'Epoch length value is not set in the contract.',
       );
@@ -142,17 +143,16 @@ contract('Axiom::newMetaChain', (accounts) => {
       const source = await consensusProxyContract.source.call();
       assert.strictEqual(
         source,
-        newMetaChainParams.source,
+        blockHash,
         'Source value is not set in the contract.',
       );
 
       const sourceBlockHeight = await consensusProxyContract.sourceBlockHeight.call();
       assert.strictEqual(
-        sourceBlockHeight.eq(newMetaChainParams.sourceBlockHeight),
+        sourceBlockHeight.eq(blockHeight),
         true,
         'Source block height value is not set in the contract.',
       );
-
     });
   });
 });

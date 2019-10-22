@@ -189,6 +189,11 @@ Utils.prototype = {
     });
   }),
 
+  /** Get block hash */
+  getBlockHash: blockNumber => new Promise((resolve) => {
+    web3.eth.getBlock(blockNumber).then(block => resolve(block.hash));
+  }),
+
   /** Get account balance. */
   getBalance: address => new Promise((resolve, reject) => {
     web3.eth.getBalance(address, (error, result) => {
@@ -199,6 +204,11 @@ Utils.prototype = {
       }
     });
   }),
+
+  getStorageAt: (address, index) => new Promise(
+    resolve => web3.eth.getStorageAt(address, index)
+      .then(result => resolve(result)),
+  ),
 
   /** Get gas price. */
   getGasPrice: () => new Promise((resolve, reject) => {
@@ -275,6 +285,8 @@ Utils.prototype = {
 
   getRandomHash: () => web3.utils.sha3(`${Date.now()}`),
 
+  getRandomNumber: max => Math.floor(Math.random() * Math.floor(max)),
+
   /** Receives accounts list and gives away each time one. */
   AccountProvider: class AccountProvider {
     constructor(accounts) {
@@ -290,9 +302,14 @@ Utils.prototype = {
     }
   },
 
+  encodeFunctionSignature: signature => web3.eth.abi.encodeFunctionSignature(signature),
+  encodeParameters: (types, params) => web3.eth.abi.encodeParameters(types, params),
+
   isAddress: address => web3.utils.isAddress(address),
 
   isNonNullAddress: address => web3.utils.isAddress(address) && address !== this.NULL_ADDRESS,
+
+  toChecksumAddress: address => web3.utils.toChecksumAddress(address),
 
   ResultType,
 

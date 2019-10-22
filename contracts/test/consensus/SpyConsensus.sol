@@ -56,16 +56,23 @@ contract SpyConsensus is MasterCopyNonUpgradable, ConsensusI {
         sourceBlockHeight = _sourceBlockHeight;
     }
 
-    function deployProxyContract(
-        address axiom,
-        address _masterCopy,
+    function callNewCore(
+        AxiomI _axiom,
         bytes calldata _data
     )
         external
     {
-        deployedContractAddress = AxiomI(axiom).deployProxyContract(_masterCopy, _data);
+        deployedContractAddress = _axiom.newCore(_data);
     }
 
+    function callNewCommittee(
+        AxiomI _axiom,
+        bytes calldata _data
+    )
+    external
+    {
+        deployedContractAddress = _axiom.newCommittee(_data);
+    }
 
     function coreValidatorThresholds()
         external
@@ -75,11 +82,11 @@ contract SpyConsensus is MasterCopyNonUpgradable, ConsensusI {
             uint256
     ) {
         // This is not used in test so break
-        require(false, 'This should not be called for unit tests.');
+        require(false, "This should not be called for unit tests.");
     }
 
     function registerPrecommit(bytes32) external {
         // This is not used in test so break
-        require(false, 'This should not be called for unit tests.');
+        require(false, "This should not be called for unit tests.");
     }
 }

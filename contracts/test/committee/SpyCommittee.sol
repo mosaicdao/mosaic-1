@@ -19,6 +19,11 @@ import "../../committee/CommitteeI.sol";
 
 contract SpyCommittee is MasterCopyNonUpgradable, CommitteeI{
 
+    address public spyConsensus;
+    uint256 public spyCommitteeSize;
+    bytes32 public spyDislocation;
+    bytes32 public spyProposal;
+
     bool public isEnterCommitteeFunctionCalled;
 
     bool public enterCommitteeResult;
@@ -54,7 +59,20 @@ contract SpyCommittee is MasterCopyNonUpgradable, CommitteeI{
 
     function committeeDecision() external view returns (bytes32) {
         // This is not used in test so break
-        require(false, 'This should not be called for unit tests.');
+        require(false, "This should not be called for unit tests.");
     }
 
+    function setup(
+        address _consensus,
+        uint256 _committeeSize,
+        bytes32 _dislocation,
+        bytes32 _proposal
+    )
+        external
+    {
+        spyConsensus = _consensus;
+        spyCommitteeSize = _committeeSize;
+        spyDislocation = _dislocation;
+        spyProposal = _proposal;
+    }
 }

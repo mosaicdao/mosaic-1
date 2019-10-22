@@ -15,9 +15,17 @@
 'use strict';
 
 const Axiom = artifacts.require('Axiom');
+const Utils = require('../test_lib/utils.js');
 
-const ConsensusSetupCallPrefix = 'setup(uint256,uint256,uint256,uint256,uint256,address)';
-const ReputationSetupCallPrefix = 'setup(address,address,uint256,address,uint256,uint256,uint256,uint256)';
+const ConsensusSetupParamTypes = 'uint256,uint256,uint256,uint256,uint256,address';
+const ReputationSetupParamTypes = 'address,address,uint256,address,uint256,uint256,uint256,uint256';
+const CoreSetupParamTypes = 'address,bytes20,uint256,uint256,uint256,address,uint256,bytes32,uint256,uint256,uint256,bytes32,uint256';
+const CommitteeSetupParamTypes = 'address,uint256,bytes32,bytes32';
+
+const ConsensusSetupFunctionSignature = `setup(${ConsensusSetupParamTypes})`;
+const ReputationSetupFunctionSignature = `setup(${ReputationSetupParamTypes})`;
+const CoreSetupFunctionSignature = `setup(${CoreSetupParamTypes})`;
+const CommitteeSetupFunctionSignature = `setup(${CommitteeSetupParamTypes})`;
 
 async function deployAxiom(
   techGov,
@@ -69,9 +77,6 @@ async function setupConsensusWithConfig(axiom, config) {
 
 async function newMetaChainWithConfig(axiom, config) {
   return axiom.newMetaChain(
-    config.epochLength,
-    config.source,
-    config.sourceBlockHeight,
     config.remoteChainId,
     config.stateRoot,
     config.maxStateRoots,
@@ -79,11 +84,51 @@ async function newMetaChainWithConfig(axiom, config) {
   );
 }
 
+async function encodeNewCoreParams(coreParams) {
+  const callPrefix = await Utils.encodeFunctionSignature(CoreSetupFunctionSignature);
+  const callData = await Utils.encodeParameters(
+    CoreSetupParamTypes.split(','),
+    [
+      coreParams.consensus,
+      coreParams.chainId,
+      coreParams.epochLength.toString(10),
+      coreParams.minValidators.toString(10),
+      coreParams.joinLimit.toString(10),
+      coreParams.reputation,
+      coreParams.height.toString(10),
+      coreParams.parent,
+      coreParams.gasTarget.toString(10),
+      coreParams.dynasty.toString(10),
+      coreParams.accumulatedGas.toString(10),
+      coreParams.source,
+      coreParams.sourceBlockHeight.toString(10),
+    ],
+
+  );
+  return `${callPrefix}${callData.substring(2)}`;
+}
+
+async function encodeNewCommitteeParams(committeeParams) {
+  const callPrefix = await Utils.encodeFunctionSignature(CommitteeSetupFunctionSignature);
+  const callData = await Utils.encodeParameters(
+    CommitteeSetupParamTypes.split(','),
+    [
+      committeeParams.consensus,
+      committeeParams.committeeSize.toString(10),
+      committeeParams.dislocation,
+      committeeParams.proposal,
+    ],
+  );
+  return `${callPrefix}${callData.substring(2)}`;
+}
+
 module.exports = {
   deployAxiom,
   deployAxiomWithConfig,
-  ConsensusSetupCallPrefix,
-  ReputationSetupCallPrefix,
+  ConsensusSetupCallPrefix: ConsensusSetupFunctionSignature,
+  ReputationSetupCallPrefix: ReputationSetupFunctionSignature,
   setupConsensusWithConfig,
   newMetaChainWithConfig,
+  encodeNewCoreParams,
+  encodeNewCommitteeParams,
 };

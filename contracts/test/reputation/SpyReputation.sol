@@ -16,7 +16,7 @@ import "../../reputation/ReputationI.sol";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import '../../reputation/ReputationI.sol';
+import "../../reputation/ReputationI.sol";
 import "../../proxies/MasterCopyNonUpgradable.sol";
 
 contract SpyReputation is MasterCopyNonUpgradable, ReputationI {
@@ -87,16 +87,16 @@ contract SpyReputation is MasterCopyNonUpgradable, ReputationI {
         external
     {
         // This is not used in test so break
-        require(false, 'This should not be called for unit tests.');
+        require(false, "This should not be called for unit tests.");
     }
 
     function logout(address) external {
         // This is not used in test so break
-        require(false, 'This should not be called for unit tests.');
+        require(false, "This should not be called for unit tests.");
     }
 
     function getReputation(address) external view returns (uint256) {
         // This is not used in test so break
-        require(false, 'This should not be called for unit tests.');
+        require(false, "This should not be called for unit tests.");
     }
 }

@@ -12,7 +12,7 @@ contract ProxyFactory {
     /// @param masterCopy Address of master copy.
     /// @param data Payload for message call sent to new proxy contract.
     function createProxy(address masterCopy, bytes memory data)
-        public
+        internal
         returns (Proxy proxy)
     {
         proxy = new Proxy(masterCopy);
@@ -24,15 +24,15 @@ contract ProxyFactory {
         emit ProxyCreation(proxy);
     }
 
-    /// @dev Allows to retrieve the runtime code of a deployed Proxy. This can be used to check that the expected Proxy was deployed.
-    function proxyRuntimeCode() public pure returns (bytes memory) {
-        return type(Proxy).runtimeCode;
-    }
-
-    /// @dev Allows to retrieve the creation code used for the Proxy deployment. With this it is easily possible to calculate predicted address.
-    function proxyCreationCode() public pure returns (bytes memory) {
-        return type(Proxy).creationCode;
-    }
+//    /// @dev Allows to retrieve the runtime code of a deployed Proxy. This can be used to check that the expected Proxy was deployed.
+//    function proxyRuntimeCode() public pure returns (bytes memory) {
+//        return type(Proxy).runtimeCode;
+//    }
+//
+//    /// @dev Allows to retrieve the creation code used for the Proxy deployment. With this it is easily possible to calculate predicted address.
+//    function proxyCreationCode() public pure returns (bytes memory) {
+//        return type(Proxy).creationCode;
+//    }
 
 //    /// @dev Allows to create new proxy contact using CREATE2 but it doesn't run the initializer.
 //    ///      This method is only meant as an utility to be called from other methods

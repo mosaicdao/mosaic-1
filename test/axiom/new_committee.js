@@ -22,24 +22,24 @@ const ProxyTruffleArtifact = require('../../build/contracts/Proxy.json');
 
 const SpyConsensus = artifacts.require('SpyConsensus');
 const SpyReputation = artifacts.require('SpyReputation');
-const MockMasterCopy = artifacts.require('MockMasterCopy');
+const SpyCommittee = artifacts.require('SpyCommittee');
 
-const count = 2;
 let constructionParams = {};
 let contracts = {};
 let config = {};
 let axiom;
 let mockedConsensus;
 let callData;
+let newCommitteeParams;
 
-contract('Axiom::deployProxyContract', (accounts) => {
+contract('Axiom::newCommittee', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
 
   beforeEach(async () => {
     contracts = {
       SpyConsensus: await SpyConsensus.new(),
       SpyReputation: await SpyReputation.new(),
-      MockMasterCopy: await MockMasterCopy.new(),
+      SpyCommittee: await SpyCommittee.new(),
     };
     Object.freeze(contracts);
 
@@ -47,7 +47,7 @@ contract('Axiom::deployProxyContract', (accounts) => {
       techGov: accountProvider.get(),
       consensusMasterCopy: contracts.SpyConsensus.address,
       coreMasterCopy: accountProvider.get(),
-      committeeMasterCopy: accountProvider.get(),
+      committeeMasterCopy: contracts.SpyCommittee.address,
       reputationMasterCopy: contracts.SpyReputation.address,
       txOptions: {
         from: accountProvider.get(),
@@ -78,42 +78,38 @@ contract('Axiom::deployProxyContract', (accounts) => {
     await AxiomUtils.setupConsensusWithConfig(axiom, config);
     const mockedConsensusAddress = await axiom.consensus.call();
     mockedConsensus = await SpyConsensus.at(mockedConsensusAddress);
-    callData = await contracts.MockMasterCopy.getSetupData.call(count);
+
+    newCommitteeParams = {
+      consensus: accountProvider.get(),
+      committeeSize: new BN(Utils.getRandomNumber(1000)),
+      dislocation: Utils.getRandomHash(),
+      proposal: Utils.getRandomHash(),
+    };
+    Object.freeze(newCommitteeParams);
+
+    callData = await AxiomUtils.encodeNewCommitteeParams(newCommitteeParams);
   });
 
   contract('Negative Tests', () => {
     it('should fail when caller is not consensus contract address', async () => {
       await Utils.expectRevert(
-        axiom.deployProxyContract(contracts.MockMasterCopy.address, callData),
+        axiom.newCommittee(callData),
         'Caller must be consensus address.',
-      );
-    });
-
-    it('should fail when master copy address is 0', async () => {
-      await Utils.expectRevert(
-        mockedConsensus.deployProxyContract(
-          axiom.address,
-          Utils.NULL_ADDRESS,
-          callData,
-        ),
-        'Master copy address is 0.',
       );
     });
   });
 
   contract('Positive Tests', () => {
     it('should deploy proxy contact address', async () => {
-      await mockedConsensus.deployProxyContract(
+      await mockedConsensus.callNewCommittee(
         axiom.address,
-        contracts.MockMasterCopy.address,
         callData,
       );
     });
 
     it('should return deployed contract address', async () => {
-      await mockedConsensus.deployProxyContract(
+      await mockedConsensus.callNewCommittee(
         axiom.address,
-        contracts.MockMasterCopy.address,
         callData,
       );
 
@@ -133,35 +129,56 @@ contract('Axiom::deployProxyContract', (accounts) => {
     });
 
     it('deployed proxy contract should have the correct master copy address', async () => {
-      await mockedConsensus.deployProxyContract(
+      await mockedConsensus.callNewCommittee(
         axiom.address,
-        contracts.MockMasterCopy.address,
         callData,
       );
 
       const deployedContractAddress = await mockedConsensus.deployedContractAddress.call();
-
-      const proxyContract = await MockMasterCopy.at(deployedContractAddress);
-      const masterCopyAddress = await proxyContract.getReservedStorageSlotForProxy.call();
+      const masterCopyAddress = await Utils.getStorageAt(deployedContractAddress, 0);
 
       assert.strictEqual(
-        masterCopyAddress,
-        contracts.MockMasterCopy.address,
+        Utils.toChecksumAddress(masterCopyAddress),
+        contracts.SpyCommittee.address,
         'Master copy address is not set.',
       );
+    });
 
-      const isSetupCalled = await proxyContract.isSetupCalled.call();
-      assert.strictEqual(
-        isSetupCalled,
-        true,
-        'Setup of deployed proxy contract is not called.',
+    it('Check if the core contract was called with correct setup params', async () => {
+      await mockedConsensus.callNewCommittee(
+        axiom.address,
+        callData,
       );
 
-      const mockCount = await proxyContract.mockCount.call();
+      const deployedContractAddress = await mockedConsensus.deployedContractAddress.call();
+      const spyCommittee = await SpyCommittee.at(deployedContractAddress);
+
+      const spyConsensus = await spyCommittee.spyConsensus.call();
       assert.strictEqual(
-        mockCount.eqn(count),
+        spyConsensus,
+        newCommitteeParams.consensus,
+        'Consensus address in spy core contract is not set.',
+      );
+
+      const spyCommitteeSize = await spyCommittee.spyCommitteeSize.call();
+      assert.strictEqual(
+        spyCommitteeSize.eq(newCommitteeParams.committeeSize),
         true,
-        'Mock count in deployed proxy contract is not set.',
+        'Committee size value in spy core contract is not set.',
+      );
+
+      const spyDislocation = await spyCommittee.spyDislocation.call();
+      assert.strictEqual(
+        spyDislocation,
+        newCommitteeParams.dislocation,
+        'Dislocation value in spy core contract is not set.',
+      );
+
+      const spyProposal = await spyCommittee.spyProposal.call();
+      assert.strictEqual(
+        spyProposal,
+        newCommitteeParams.proposal,
+        'Proposal value in spy core contract is not set.',
       );
     });
   });

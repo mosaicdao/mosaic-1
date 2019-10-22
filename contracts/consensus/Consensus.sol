@@ -113,11 +113,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /** Axiom contract address */
     AxiomI public axiom;
 
-    /** Core master copy contract address */
-    address public coreMasterCopy;
-
-    /** Committee master copy contract address */
-    address public committeeMasterCopy;
 
     /* Modifiers */
 
@@ -234,7 +229,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     {
         require(
             _proposal != bytes32(0),
-            'Proposal is 0.'
+            "Proposal is 0."
         );
         // onlyCore asserts msg.sender is active core
         Precommit storage precommit = precommits[msg.sender];
@@ -366,7 +361,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         Precommit storage precommit = precommits[core];
         require(
             proposal == precommit.proposal,
-            'There is no precommit for the specified core.'
+            "There is no precommit for the specified core."
         );
 
         // Delete the precommit.
@@ -421,7 +416,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         CoreStatus status = coreStatuses[_core];
         require(
             status == CoreStatus.opened || status == CoreStatus.precommitted,
-            'Core status is not opened or precommitted.'
+            "Core status is not opened or precommitted."
         );
 
         // Join in reputation contract.
@@ -453,7 +448,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         CoreStatus status = coreStatuses[_core];
         require(
             status == CoreStatus.creation,
-            'Core status is not creation.'
+            "Core status is not creation."
         );
 
         // Join in reputation contract.
@@ -510,7 +505,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
         require(
             assignments[_chainId] == address(0),
-            'Chain already exists.'
+            "Chain already exists."
         );
 
         address core = newCore(
@@ -681,8 +676,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             _sourceBlockHeight
         );
 
-        core_ = axiom.deployProxyContract(
-            coreMasterCopy,
+        core_ = axiom.newCore(
             coreSetupData
         );
     }
@@ -703,8 +697,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             _proposal
         );
 
-        address committeeAddress = axiom.deployProxyContract(
-            committeeMasterCopy,
+        address committeeAddress = axiom.newCommittee(
             committeeSetupData
         );
 

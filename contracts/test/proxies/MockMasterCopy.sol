@@ -17,7 +17,7 @@ contract MockMasterCopy is MasterCopyNonUpgradable {
     function setup(uint256 _mockCount) external {
         require(
             isSetupCalled == false,
-            'Setup can be called only once,'
+            "Setup can be called only once,"
         );
         isSetupCalled = true;
         mockCount = _mockCount;

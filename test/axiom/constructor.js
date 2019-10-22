@@ -164,24 +164,6 @@ contract('Axiom::constructor', (accounts) => {
       );
     });
 
-    it('should deploy proxy factory contract', async () => {
-      const axiom = await AxiomUtils.deployAxiomWithConfig(config);
-
-      const proxyFactoryAddress = await axiom.proxyFactory.call();
-      assert.strictEqual(
-        Utils.isAddress(proxyFactoryAddress),
-        true,
-        'Proxy factory should be a valid address.',
-      );
-
-      const contractByteCode = await Utils.getCode(proxyFactoryAddress);
-      assert.strictEqual(
-        contractByteCode.substring(2), // Remove 0x
-        ProxyFactoryTruffleArtifact.bytecode.substring(66), // Remove 0x and 32 starting bytes
-        'ProxyFactory contract byte code must match the compiled binary.',
-      );
-    });
-
     it('should get correct value for reputation setup call prefix', async () => {
       const axiom = await AxiomUtils.deployAxiomWithConfig(config);
 
@@ -205,6 +187,19 @@ contract('Axiom::constructor', (accounts) => {
         callPrefix,
         expectedCallPrefix,
         'Call prefix for consensus should match.',
+      );
+    });
+
+    it('should get correct value for epochLength constant', async () => {
+      const axiom = await AxiomUtils.deployAxiomWithConfig(config);
+
+      const epochLength = await axiom.EPOCH_LENGTH.call();
+      const expectedEpochLength = 100;
+
+      assert.strictEqual(
+        epochLength.eqn(expectedEpochLength),
+        true,
+        `Epoch length ${epochLength.toString(10)} from contract must be equal to ${expectedEpochLength}`,
       );
     });
   });

@@ -1,14 +1,35 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-import "../proxies/Proxy.sol";
+// Copyright 2019 OpenST Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 import "../proxies/ProxyFactory.sol";
 import "../consensus/ConsensusI.sol";
-import "../anchor/Anchor.sol"; // TODO: change this to factory, when new anchor is implemented.
+import "../anchor/Anchor.sol"; // TASK: change this to factory, when new anchor is implemented.
 import "./AxiomI.sol";
 
-contract Axiom is AxiomI {
+contract Axiom is AxiomI, ProxyFactory {
+
+    /* Usings */
+
+    using SafeMath for uint256;
+
 
     /* Constants */
+
+    /** Epoch length */
+    uint256 public constant EPOCH_LENGTH = uint256(100);
 
     /** The callprefix of the Reputation::setup function. */
     bytes4 public constant REPUTATION_SETUP_CALLPREFIX = bytes4(
@@ -30,7 +51,7 @@ contract Axiom is AxiomI {
     modifier onlyConsensus()
     {
         require(
-            consensus == msg.sender,
+            address(consensus) == msg.sender,
             "Caller must be consensus address."
         );
 
@@ -66,13 +87,10 @@ contract Axiom is AxiomI {
     address public reputationMasterCopy;
 
     /** Consensus contract address */
-    address public consensus;
+    ConsensusI public consensus;
 
     /** Reputation contract address */
-    address public reputation;
-
-    /** ProxyFactory contract address */
-    ProxyFactory public proxyFactory;
+    ReputationI public reputation;
 
 
     /* Special Member Functions */
@@ -125,8 +143,6 @@ contract Axiom is AxiomI {
         coreMasterCopy = _coreMasterCopy;
         committeeMasterCopy = _committeeMasterCopy;
         reputationMasterCopy = _reputationMasterCopy;
-
-        proxyFactory = new ProxyFactory();
     }
 
 
@@ -175,9 +191,9 @@ contract Axiom is AxiomI {
         );
 
         // Deploy the consensus proxy contract.
-        Proxy consensusProxy = new Proxy(consensusMasterCopy);
+        Proxy consensusProxy = createProxy(consensusMasterCopy, "");
 
-        consensus = address(consensusProxy);
+        consensus = ConsensusI(address(consensusProxy));
 
         bytes memory reputationSetupData = abi.encodeWithSelector(
             REPUTATION_SETUP_CALLPREFIX,
@@ -191,10 +207,12 @@ contract Axiom is AxiomI {
             _withdrawalCooldownPeriodInBlocks
         );
 
-        reputation = address(
-            proxyFactory.createProxy(
-                reputationMasterCopy,
-                reputationSetupData
+        reputation = ReputationI(
+            address(
+                createProxy(
+                    reputationMasterCopy,
+                    reputationSetupData
+                )
             )
         );
 
@@ -212,11 +230,40 @@ contract Axiom is AxiomI {
     }
 
     /**
+     * @notice Deploy Core proxy contract. This can be called only by consensus
+     *         contract.
+     * @param _data Setup function call data.
+     * @return Deployed contract address.
+     */
+    function newCore(
+        bytes calldata _data
+    )
+        external
+        onlyConsensus
+        returns (address deployedAddress_)
+    {
+        return deployProxyContract(coreMasterCopy, _data);
+    }
+
+    /**
+     * @notice Deploy Committee proxy contract. This can be called only by consensus
+     *         contract.
+     * @param _data Setup function call data.
+     * @return Deployed contract address.
+     */
+    function newCommittee(
+        bytes calldata _data
+    )
+        external
+        onlyConsensus
+        returns (address deployedAddress_)
+    {
+        return deployProxyContract(committeeMasterCopy, _data);
+    }
+
+    /**
      * @notice Setup a new meta chain. Only technical governance address can
      *         call this function.
-     * @param _epochLength Epoch length.
-     * @param _source Source blockhash.
-     * @param _sourceBlockHeight Source block height.
      * @param _remoteChainId The chain id of the chain that is tracked by this
      *                       anchor.
      * @param _stateRoot State root hash of given _sourceBlockHeight.
@@ -224,9 +271,6 @@ contract Axiom is AxiomI {
      *                       circular buffer.
      */
     function newMetaChain(
-        uint256 _epochLength,
-        bytes32 _source,
-        uint256 _sourceBlockHeight,
         uint256 _remoteChainId,
         bytes32 _stateRoot,
         uint256 _maxStateRoots
@@ -234,22 +278,27 @@ contract Axiom is AxiomI {
         external
         onlyTechGov
     {
+        uint256 blockNumber = block.number.sub(1);
+
         // Task: When new Anchor is implemented, use proxy pattern for deployment.
         Anchor anchor = new Anchor(
             _remoteChainId,
-            _sourceBlockHeight,
+            blockNumber,
             _stateRoot,
             _maxStateRoots,
-            consensus
+            address(consensus)
         );
 
-        ConsensusI(consensus).newMetaChain(
+        consensus.newMetaChain(
             bytes20(address(anchor)),
-            _epochLength,
-            _source,
-            _sourceBlockHeight
+            EPOCH_LENGTH,
+            blockhash(blockNumber),
+            blockNumber
         );
     }
+
+
+    /* Private Functions */
 
     /**
      * @notice Deploy proxy contract. This can be called only by consensus
@@ -260,10 +309,9 @@ contract Axiom is AxiomI {
      */
     function deployProxyContract(
         address _masterCopy,
-        bytes calldata _data
+        bytes memory _data
     )
-        external
-        onlyConsensus
+        private
         returns (address deployedAddress_)
     {
         require(
@@ -271,15 +319,12 @@ contract Axiom is AxiomI {
             'Master copy address is 0.'
         );
 
-        Proxy proxyContract = proxyFactory.createProxy(
+        Proxy proxyContract = createProxy(
             _masterCopy,
             _data
         );
         deployedAddress_ = address(proxyContract);
     }
-
-
-    /* Private Functions */
 
     function callProxyData(
         Proxy _proxy,
