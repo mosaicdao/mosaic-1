@@ -21,6 +21,35 @@ const web3 = require('../test_lib/web3.js');
 const Core = artifacts.require('Core');
 const MockConsensus = artifacts.require('MockConsensus');
 
+const CoreStatus = {
+  creation: new BN(0),
+  opened: new BN(1),
+  precommitted: new BN(2),
+  halted: new BN(3),
+  corrupted: new BN(4),
+};
+
+
+function isCoreCreated(status) {
+  return CoreStatus.creation.cmp(status) === 0;
+}
+
+function isCoreOpened(status) {
+  return CoreStatus.opened.cmp(status) === 0;
+}
+
+function isCorePrecommitted(status) {
+  return CoreStatus.precommitted.cmp(status) === 0;
+}
+
+function isCoreHalted(status) {
+  return CoreStatus.halted.cmp(status) === 0;
+}
+
+function isCoreCorrupted(status) {
+  return CoreStatus.corrupted.cmp(status) === 0;
+}
+
 async function createConsensusCore(
   chainId,
   epochLength,
@@ -33,7 +62,6 @@ async function createConsensusCore(
   sourceBlockHeight,
   txOptions = {},
 ) {
-
   const mockConsensus = await MockConsensus.new(
     chainId,
     epochLength,
@@ -82,37 +110,29 @@ async function createCore(
   );
 }
 
-const CoreStatus = {
-  creation: new BN(0),
-  opened: new BN(1),
-  precommitted: new BN(2),
-  halted: new BN(3),
-  corrupted: new BN(4),
+async function openCore(
+  accountProvider,
+  consensus,
+  core,
+) {
+  const minVal = await core.minimumValidatorCount.call();
+
+  const joinValidatorPromises = [];
+  for (let i = 0; i < minVal.toNumber(10); i += 1) {
+    const validator = accountProvider.get();
+    joinValidatorPromises.push(consensus.joinDuringCreation(validator));
+  }
+  await Promise.all(joinValidatorPromises);
+
+  const coreStatus = await core.coreStatus.call();
+  assert.isOk(
+    isCoreOpened(coreStatus),
+  );
 }
 
-function isCoreCreated(status) {
-  return CoreStatus.creation.cmp(status) === 0;
-}
-
-function isCoreOpened(status) {
-  return CoreStatus.opened.cmp(status) === 0;
-}
-
-function isCorePrecommitted(status) {
-  return CoreStatus.precommitted.cmp(status) === 0;
-}
-
-function isCoreHalted(status) {
-  return CoreStatus.halted.cmp(status) === 0;
-}
-
-function isCoreCorrupted(status) {
-  return CoreStatus.corrupted.cmp(status) === 0;
-}
-
-async function calculcateQuorum(core, count) {
-  let numerator = await core.CORE_SUPER_MAJORITY_NUMERATOR.call();
-  let denumerator = await core.CORE_SUPER_MAJORITY_DENOMINATOR.call();
+async function calculateQuorum(core, count) {
+  const numerator = await core.CORE_SUPER_MAJORITY_NUMERATOR.call();
+  const denumerator = await core.CORE_SUPER_MAJORITY_DENOMINATOR.call();
 
   return count
     .mul(numerator)
@@ -120,18 +140,19 @@ async function calculcateQuorum(core, count) {
 }
 
 function randomSha3() {
-  let randomString = Math.random().toString(36).substring(2, 15);
+  const randomString = Math.random().toString(36).substring(2, 15);
   return web3.utils.sha3(randomString);
 }
 
 module.exports = {
   createConsensusCore,
   createCore,
+  openCore,
   isCoreCreated,
   isCoreOpened,
   isCorePrecommitted,
   isCoreHalted,
   isCoreCorrupted,
-  calculcateQuorum,
+  calculateQuorum,
   randomSha3,
 };

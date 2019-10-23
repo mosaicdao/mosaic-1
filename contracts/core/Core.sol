@@ -237,14 +237,17 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
 
     modifier duringCreation()
     {
-        require(coreStatus == Status.creation,
-            "The core must be under creation.");
+        require(
+            coreStatus == Status.creation,
+            "The core must be under creation."
+        );
         _;
     }
 
     modifier whileRunning()
     {
-        require(coreStatus == Status.opened ||
+        require(
+            coreStatus == Status.opened ||
             coreStatus == Status.precommitted,
             "The core must be running.");
         _;
@@ -252,26 +255,33 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
 
     modifier whileMetablockOpen()
     {
-        require(coreStatus == Status.opened,
-            "The core must have an open metablock kernel.");
+        require(
+            coreStatus == Status.opened,
+            "The core must have an open metablock kernel."
+        );
         _;
     }
 
     modifier whileMetablockPrecommitted()
     {
-        require(coreStatus == Status.precommitted,
-            "The core must be precommitted.");
+        require(
+            coreStatus == Status.precommitted,
+            "The core must be precommitted."
+        );
         _;
     }
 
     modifier duringPrecommitmentWindow()
     {
-        require(block.number <= precommitClosureBlockHeight,
-            "The precommitment window must be open.");
+        require(
+            block.number <= precommitClosureBlockHeight,
+            "The precommitment window must be open."
+        );
         _;
     }
 
-    /* External and public functions */
+
+    /* Special Functions */
 
     constructor(
         bytes20 _chainId,
@@ -290,7 +300,47 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         ConsensusModule(msg.sender) // Core is constructed by Consenus
         public
     {
-        // note: consider adding requirement checks
+        require(
+            _chainId != bytes20(0),
+            "Chain id is 0."
+        );
+
+        require(
+            _epochLength != uint256(0),
+            "Epoch length is 0."
+        );
+
+        require(
+            _minValidators != uint256(0),
+            "Min validators count is 0."
+        );
+
+        require(
+            _joinLimit != uint256(0),
+            "Validator's join limit is 0."
+        );
+
+        require(
+            _reputation != ReputationI(0),
+            "Reputation contract's address is null."
+        );
+
+        require(
+            (_height == uint256(0) && _parent == bytes32(0))
+            || (_height != uint256(0) && _parent != bytes32(0)),
+            "Height and parent can be 0 only together."
+        );
+
+        require(
+            _accumulatedGas != uint256(0),
+            "Metablock's accumulated gas is 0."
+        );
+
+        require(
+            _source != bytes32(0),
+            "Metablock's source is 0."
+        );
+
         domainSeparator = keccak256(
             abi.encode(
                 DOMAIN_SEPARATOR_TYPEHASH,
@@ -324,6 +374,9 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
 
         newProposalSet();
     }
+
+
+    /* External and public functions */
 
     /**
      * Propose transition object and vote message from seal

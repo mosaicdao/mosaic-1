@@ -18,21 +18,38 @@ const BN = require('bn.js');
 
 const { AccountProvider } = require('../test_lib/utils.js');
 const Utils = require('../test_lib/utils.js');
-const web3 = require('../test_lib/web3.js');
 
 const CoreUtils = require('./utils.js');
 
+let correctArgs = {};
 let config = {};
 
-// TASK: improve constructor to constrain inputs
-// TASK: complete tests
+async function createCore(args, consensus) {
+  return CoreUtils.createCore(
+    args.chainId,
+    args.epochLength,
+    args.minValidators,
+    args.joinLimit,
+    args.reputation,
+    args.height,
+    args.parent,
+    args.gasTarget,
+    args.dynasty,
+    args.accumulatedGas,
+    args.source,
+    args.sourceBlockHeight,
+    {
+      from: consensus,
+    },
+  );
+}
 
 contract('Core::constructor', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
 
   beforeEach(async () => {
-    config = {
-      chainId: Utils.NULL_ADDRESS,
+    correctArgs = {
+      chainId: accountProvider.get(),
       epochLength: new BN(100),
       minValidators: new BN(3),
       joinLimit: new BN(5),
@@ -40,40 +57,190 @@ contract('Core::constructor', (accounts) => {
       parent: Utils.ZERO_BYTES32,
       gasTarget: new BN(0),
       dynasty: new BN(0),
-      accumulatedGas: new BN(0),
-      source: Utils.ZERO_BYTES32,
+      accumulatedGas: new BN(1),
+      source: CoreUtils.randomSha3(),
       sourceBlockHeight: new BN(0),
-      consensus: accountProvider.get(),
       reputation: accountProvider.get(),
+    };
+
+    config = {
+      consensus: accountProvider.get(),
     };
     Object.freeze(config);
   });
 
-  contract('Positive Tests', () => {
-    it('should construct', async () => {
-      const core = await CoreUtils.createCore(
-        config.chainId,
-        config.epochLength,
-        config.minValidators,
-        config.joinLimit,
-        config.reputation,
-        config.height,
-        config.parent,
-        config.gasTarget,
-        config.dynasty,
-        config.accumulatedGas,
-        config.source,
-        config.sourceBlockHeight,
-        {
-          from: config.consensus,
-        },
+  contract('Negative Tests', async () => {
+    it('should revert as chain id is 0', async () => {
+      const args = correctArgs;
+      args.chainId = Utils.ZERO_BYTES20;
+
+      await Utils.expectRevert(
+        createCore(args, config.consensus),
+        'Chain id is 0.',
+      );
+    });
+
+    it('should revert as epoch length is 0', async () => {
+      const args = correctArgs;
+      args.epochLength = 0;
+
+      await Utils.expectRevert(
+        createCore(args, config.consensus),
+        'Epoch length is 0.',
+      );
+    });
+
+    it('should revert as min validators\' count is 0', async () => {
+      const args = correctArgs;
+      args.minValidators = 0;
+
+      await Utils.expectRevert(
+        createCore(args, config.consensus),
+        'Min validators count is 0.',
+      );
+    });
+
+    it('should revert as reputation\'s contract address is 0', async () => {
+      const args = correctArgs;
+      args.reputation = Utils.NULL_ADDRESS;
+
+      await Utils.expectRevert(
+        createCore(args, config.consensus),
+        'Reputation contract\'s address is null.',
+      );
+    });
+
+    it('should revert as height is 0 and parent is not', async () => {
+      const args = correctArgs;
+      args.height = 0;
+      args.parent = CoreUtils.randomSha3();
+
+      await Utils.expectRevert(
+        createCore(args, config.consensus),
+        'Height and parent can be 0 only together.',
+      );
+    });
+
+    it('should revert as parent is 0 and height is not', async () => {
+      const args = correctArgs;
+      args.height = 1;
+      args.parent = Utils.ZERO_BYTES32;
+
+      await Utils.expectRevert(
+        createCore(args, config.consensus),
+        'Height and parent can be 0 only together.',
+      );
+    });
+
+    it('should revert as accumulated gas is 0', async () => {
+      const args = correctArgs;
+      args.accumulatedGas = 0;
+
+      await Utils.expectRevert(
+        createCore(args, config.consensus),
+        'Metablock\'s accumulated gas is 0.',
+      );
+    });
+
+    it('should revert as metablock\'s source is 0', async () => {
+      const args = correctArgs;
+      args.source = Utils.ZERO_BYTES32;
+
+      await Utils.expectRevert(
+        createCore(args, config.consensus),
+        'Metablock\'s source is 0.',
+      );
+    });
+  });
+
+  contract('Positive Tests', async () => {
+    it('should construct with correct arguments', async () => {
+      const core = await createCore(correctArgs, config.consensus);
+
+      const consensus = await core.consensus();
+      assert.strictEqual(
+        consensus,
+        config.consensus,
+        `Consensus contract is set to ${consensus} and is not ${config.consensus}.`,
       );
 
-      const consensus = await core.consensus.call();
+      const coreStatus = await core.coreStatus();
+      assert.isOk(
+        CoreUtils.isCoreCreated(coreStatus),
+        'Core status should be set to created on construction.',
+      );
+
+      const epochLength = await core.epochLength();
+      assert.isOk(
+        epochLength.cmp(correctArgs.epochLength) === 0,
+        `Epoch length is set to ${epochLength} and is not ${correctArgs.epochLength}`,
+      );
+
+      const reputation = await core.reputation();
       assert.strictEqual(
-        consensus === config.consensus,
-        true,
-        `Consensus contract is set to ${consensus} and is not ${config.consensus}.`,
+        reputation,
+        correctArgs.reputation,
+        `Reputation is set to ${reputation} and is not ${correctArgs.reputation}`,
+      );
+
+      const minimumValidatorCount = await core.minimumValidatorCount();
+      assert.isOk(
+        minimumValidatorCount.cmp(correctArgs.minValidators) === 0,
+        `Min validators's count is set to ${minimumValidatorCount} `
+        + `and is not ${correctArgs.minValidators}`,
+      );
+
+      const joinLimit = await core.joinLimit();
+      assert.isOk(
+        joinLimit.cmp(correctArgs.joinLimit) === 0,
+        `Join limit is set to ${joinLimit} and is not ${correctArgs.joinLimit}`,
+      );
+
+      const creationKernelHeight = await core.creationKernelHeight();
+      assert.isOk(
+        creationKernelHeight.cmp(correctArgs.height) === 0,
+        `Creation kernel height is set to ${creationKernelHeight} `
+        + `and is not ${correctArgs.height}`,
+      );
+
+      const kernel = await core.kernels(correctArgs.height);
+      assert.strictEqual(
+        kernel.parent,
+        correctArgs.parent,
+        `Creation kernel's parent is set to ${kernel.parent} and is not ${correctArgs.parent}`,
+      );
+
+      assert.isOk(
+        kernel.gasTarget.cmp(correctArgs.gasTarget) === 0,
+        `Creation kernel's gas target is set to ${kernel.gasTarget} `
+        + `and is not ${correctArgs.gasTarget}`,
+      );
+
+      const committedDynasty = await core.committedDynasty();
+      assert.isOk(
+        committedDynasty.cmp(correctArgs.dynasty) === 0,
+        `Dynasty is set to ${committedDynasty} and is not ${correctArgs.dynasty}`,
+      );
+
+      const committedAccumulatedGas = await core.committedAccumulatedGas();
+      assert.isOk(
+        committedAccumulatedGas.cmp(correctArgs.accumulatedGas) === 0,
+        `Accumulated gas is set to ${committedAccumulatedGas} `
+        + `and is not ${correctArgs.accumulatedGas}`,
+      );
+
+      const committedSource = await core.committedSource();
+      assert.strictEqual(
+        committedSource,
+        correctArgs.source,
+        `Source is set to ${committedSource} and is not ${correctArgs.source}`,
+      );
+
+      const committedSourceBlockHeight = await core.committedSourceBlockHeight();
+      assert.isOk(
+        committedSourceBlockHeight.cmp(correctArgs.sourceBlockHeight) === 0,
+        `Source block height is set to ${committedSourceBlockHeight} `
+        + `and is not ${correctArgs.sourceBlockHeight}`,
       );
     });
   });
