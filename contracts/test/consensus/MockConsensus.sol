@@ -16,22 +16,22 @@ pragma solidity ^0.5.0;
 
 import "../../consensus/ConsensusI.sol";
 import "../../reputation/ReputationI.sol";
-import "../../core/CoreI.sol";
-import "../../core/Core.sol";
+import "../core/MockCore.sol";
 
 contract MockConsensus is ConsensusI, ReputationI {
 
-    /** Storage */
+    /* Storage */
 
     uint256 public constant MIN_VALIDATOR = uint256(10);
 
     uint256 public constant JOIN_LIMIT = uint256(15);
 
-    CoreI public core;
+    MockCore public mockCore;
 
     mapping(address => uint256) public rep;
 
-    /** Constructor of Mock consensus */
+
+    /* Special Functions */
 
     constructor(
         bytes20 _chainId,
@@ -46,7 +46,7 @@ contract MockConsensus is ConsensusI, ReputationI {
     )
         public
     {
-        core = new Core(
+        mockCore = new MockCore(
             _chainId,
             _epochLength,
             MIN_VALIDATOR,
@@ -62,27 +62,28 @@ contract MockConsensus is ConsensusI, ReputationI {
         );
     }
 
-    /** External functions */
+
+    /* External Functions */
 
     function joinDuringCreation(address _validator)
         external
     {
         rep[_validator] = uint256(1);
-        core.joinDuringCreation(_validator);
+        mockCore.joinDuringCreation(_validator);
     }
 
     function join(address _validator)
         external
     {
         rep[_validator] = uint256(1);
-        core.join(_validator);
+        mockCore.join(_validator);
     }
 
     function logout(address _validator)
         external
     {
         rep[_validator] = uint256(0);
-        core.logout(_validator);
+        mockCore.logout(_validator);
     }
 
     function isActive(address _validator)
@@ -104,7 +105,7 @@ contract MockConsensus is ConsensusI, ReputationI {
     function reputation()
         external
         view
-        returns (ReputationI reputation_)
+        returns (ReputationI)
     {
         return this;
     }

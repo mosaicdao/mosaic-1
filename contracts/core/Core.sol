@@ -608,6 +608,20 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         }
     }
 
+    /**
+     * @notice Joins a validator while core is in creation state.
+     *         Once the minimum number of validators joined, core is opened,
+     *         with the metablock parameters specified in the constructor
+     *         and joined validators during creation.
+     *
+     * @dev Function requires:
+     *          - only consensus can call
+     *          - core is in creation state
+     *          - a validator's address is not null
+     *          - a validator has not already joined
+     *
+     * @param _validator A validator's address to join.
+     */
     function joinDuringCreation(address _validator)
         external
         onlyConsensus
@@ -792,20 +806,33 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     }
 
     /**
-     * insert validator in the core
-     * sets begin height and end height of validator
+     * @notice Inserts a validator in the core and sets begin and end heights
+     *         of validator.
+     *
+     * @dev Function requires:
+     *          - validator's address is not null
+     *          - begin height is greater or equal than open kernel height
+     *          - validator is not part of the core
      */
     function insertValidator(address _validator, uint256 _beginHeight)
         internal
     {
-        require(_validator != address(0),
-            "Validator must not be null address.");
-        require(_beginHeight >= openKernelHeight,
-            "Begin height cannot be less than kernel height.");
-        require(validatorEndHeight[_validator] == 0,
-            "Validator must not already be part of this core.");
-        require(validatorBeginHeight[_validator] == 0,
-            "Validator must not have a non-zero begin height");
+        require(
+            _validator != address(0),
+            "Validator must not be null address."
+        );
+        require(
+            _beginHeight >= openKernelHeight,
+            "Begin height cannot be less than kernel height."
+        );
+        require(
+            validatorEndHeight[_validator] == 0,
+            "Validator must not already be part of this core."
+        );
+        require(
+            validatorBeginHeight[_validator] == 0,
+            "Validator must not have a non-zero begin height"
+        );
         validatorBeginHeight[_validator] = _beginHeight;
         validatorEndHeight[_validator] = MAX_FUTURE_END_HEIGHT;
         // update validator count upon new metablock opening
