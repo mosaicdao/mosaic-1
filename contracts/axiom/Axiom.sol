@@ -156,7 +156,7 @@ contract Axiom is AxiomI, ProxyFactory {
      *                       created core to open.
      * @param _joinLimit Maximum number of validators that can join in a core.
      * @param _gasTargetDelta Gas target delta to open new metablock.
-     * @param _coinbaseSplitPercentage Coinbase split percentage.
+     * @param _coinbaseSplitPerMille Coinbase split per mille.
      * @param _mOST mOST token address.
      * @param _stakeMOSTAmount Amount of mOST that will be staked by validators.
      * @param _wETH wEth token address.
@@ -173,7 +173,7 @@ contract Axiom is AxiomI, ProxyFactory {
         uint256 _minValidators,
         uint256 _joinLimit,
         uint256 _gasTargetDelta,
-        uint256 _coinbaseSplitPercentage,
+        uint256 _coinbaseSplitPerMille,
         address _mOST,
         uint256 _stakeMOSTAmount,
         address _wETH,
@@ -222,7 +222,7 @@ contract Axiom is AxiomI, ProxyFactory {
             _minValidators,
             _joinLimit,
             _gasTargetDelta,
-            _coinbaseSplitPercentage,
+            _coinbaseSplitPerMille,
             reputation
         );
 

@@ -10,7 +10,7 @@ contract SpyConsensus is MasterCopyNonUpgradable, ConsensusI {
     uint256 public minValidators;
     uint256 public joinLimit;
     uint256 public gasTargetDelta;
-    uint256 public coinbaseSplitPercentage;
+    uint256 public coinbaseSplitPerMille;
     address public reputation;
 
     bytes20 public chainId;
@@ -25,7 +25,7 @@ contract SpyConsensus is MasterCopyNonUpgradable, ConsensusI {
         uint256 _minValidators,
         uint256 _joinLimit,
         uint256 _gasTargetDelta,
-        uint256 _coinbaseSplitPercentage,
+        uint256 _coinbaseSplitPerMille,
         address _reputation
     )
         external
@@ -34,7 +34,7 @@ contract SpyConsensus is MasterCopyNonUpgradable, ConsensusI {
         minValidators =_minValidators;
         joinLimit = _joinLimit;
         gasTargetDelta = _gasTargetDelta;
-        coinbaseSplitPercentage = _coinbaseSplitPercentage;
+        coinbaseSplitPerMille = _coinbaseSplitPerMille;
         reputation = _reputation;
     }
 

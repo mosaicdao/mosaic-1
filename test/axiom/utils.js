@@ -27,6 +27,11 @@ const ReputationSetupFunctionSignature = `setup(${ReputationSetupParamTypes})`;
 const CoreSetupFunctionSignature = `setup(${CoreSetupParamTypes})`;
 const CommitteeSetupFunctionSignature = `setup(${CommitteeSetupParamTypes})`;
 
+const ConsensusSetupCallPrefix = Utils.encodeFunctionSignature(ConsensusSetupFunctionSignature);
+const ReputationSetupCallPrefix = Utils.encodeFunctionSignature(ReputationSetupFunctionSignature);
+const CoreSetupCallPrefix = Utils.encodeFunctionSignature(CoreSetupFunctionSignature);
+const CommitteeSetupCallPrefix = Utils.encodeFunctionSignature(CommitteeSetupFunctionSignature);
+
 async function deployAxiom(
   techGov,
   consensusMasterCopy,
@@ -63,7 +68,7 @@ async function setupConsensusWithConfig(axiom, config) {
     config.minValidators,
     config.joinLimit,
     config.gasTargetDelta,
-    config.coinbaseSplitPercentage,
+    config.coinbaseSplitPermille,
     config.mOST,
     config.stakeMOSTAmount,
     config.wETH,
@@ -123,10 +128,20 @@ async function encodeNewCommitteeParams(committeeParams) {
 }
 
 module.exports = {
+  ConsensusSetupParamTypes,
+  ReputationSetupParamTypes,
+  CoreSetupParamTypes,
+  CommitteeSetupParamTypes,
+  ConsensusSetupFunctionSignature,
+  ReputationSetupFunctionSignature,
+  CoreSetupFunctionSignature,
+  CommitteeSetupFunctionSignature,
+  ConsensusSetupCallPrefix,
+  ReputationSetupCallPrefix,
+  CoreSetupCallPrefix,
+  CommitteeSetupCallPrefix,
   deployAxiom,
   deployAxiomWithConfig,
-  ConsensusSetupCallPrefix: ConsensusSetupFunctionSignature,
-  ReputationSetupCallPrefix: ReputationSetupFunctionSignature,
   setupConsensusWithConfig,
   newMetaChainWithConfig,
   encodeNewCoreParams,

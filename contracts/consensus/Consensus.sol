@@ -83,8 +83,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /** Gas target delta to open new metablock */
     uint256 public gasTargetDelta;
 
-    /** Coinbase split percentage */
-    uint256 public coinbaseSplitPercentage;
+    /** Coinbase split per mille */
+    uint256 public coinbaseSplitPerMille;
 
     /** Block hash of heads of Metablockchains */
     mapping(bytes20 /* chainId */ => bytes32 /* MetablockHash */) public metablockHeaderTips;
@@ -156,7 +156,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      *                       created core to open.
      * @param _joinLimit Maximum number of validators that can join in a core.
      * @param _gasTargetDelta Gas target delta to open new metablock.
-     * @param _coinbaseSplitPercentage Coinbase split percentage.
+     * @param _coinbaseSplitPerMille Coinbase split per mille.
      * @param _reputation Reputation contract address.
      */
     function setup(
@@ -164,14 +164,14 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         uint256 _minValidators,
         uint256 _joinLimit,
         uint256 _gasTargetDelta,
-        uint256 _coinbaseSplitPercentage,
+        uint256 _coinbaseSplitPerMille,
         address _reputation
     )
         external
     {
         // This function must be called only once.
         require(
-            committeeSize == 0 && address(reputation) == address(0),
+            address(axiom) == address(0),
             "Consensus is already setup."
         );
 
@@ -182,12 +182,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
         // TODO: Check what should be the minimum number of validators.
         require(
-            _minValidators > 2,
-            "Min validator size must be greater than 2."
+            _minValidators > uint256(4),
+            "Min validator size must be greater than 4."
         );
 
         require(
-            _joinLimit > _minValidators,
+            _joinLimit >= _minValidators,
             "Join limit is less than minimum validator count."
         );
 
@@ -197,8 +197,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
 
         require(
-            _coinbaseSplitPercentage <= 1000,
-            "Coin base split percentage is not in valid range: [0, 1000]."
+            _coinbaseSplitPerMille <= uint256(1000),
+            "Coin base split per mille is not in valid range: 0..1000."
         );
 
         require(
@@ -210,7 +210,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         minValidators = _minValidators;
         joinLimit = _joinLimit;
         gasTargetDelta = _gasTargetDelta;
-        coinbaseSplitPercentage = _coinbaseSplitPercentage;
+        coinbaseSplitPerMille = _coinbaseSplitPerMille;
         reputation = ReputationI(_reputation);
 
         axiom = AxiomI(msg.sender);
@@ -339,60 +339,60 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     )
         external
     {
-        bytes32 blockHash = keccak256(_rlpBlockHeader);
-        require(
-            blockHash == _source,
-            "Block header does not match with vote message source."
-        );
-
-        (bytes32 proposal, address core) = verifyCommitteeLock(
-            _chainId,
-            _kernelHash,
-            _originObservation,
-            _dynasty,
-            _accumulatedGas,
-            _committeeLock,
-            _source,
-            _target,
-            _sourceBlockHeight,
-            _targetBlockHeight
-        );
-
-        Precommit storage precommit = precommits[core];
-        require(
-            proposal == precommit.proposal,
-            "There is no precommit for the specified core."
-        );
-
-        // Delete the precommit.
-        delete precommits[core];
-
-        address anchorAddress = anchors[_chainId];
-        require(
-            anchorAddress != address(0),
-            "There is no anchor for the specified chain id."
-        );
-
-        Block.Header memory blockHeader = Block.decodeHeader(_rlpBlockHeader);
-
-        // Anchor state root.
-        AnchorI(anchorAddress).anchorStateRoot(
-            blockHeader.height,
-            blockHeader.stateRoot
-        );
-
-        // Open a new metablock.
-        CoreI(core).openMetablock(
-            _originObservation,
-            _dynasty,
-            _accumulatedGas,
-            _committeeLock,
-            _source,
-            _target,
-            _sourceBlockHeight,
-            _targetBlockHeight,
-            gasTargetDelta
-        );
+//        bytes32 blockHash = keccak256(_rlpBlockHeader);
+//        require(
+//            blockHash == _source,
+//            "Block header does not match with vote message source."
+//        );
+//
+//        (bytes32 proposal, address core) = verifyCommitteeLock(
+//            _chainId,
+//            _kernelHash,
+//            _originObservation,
+//            _dynasty,
+//            _accumulatedGas,
+//            _committeeLock,
+//            _source,
+//            _target,
+//            _sourceBlockHeight,
+//            _targetBlockHeight
+//        );
+//
+//        Precommit storage precommit = precommits[core];
+//        require(
+//            proposal == precommit.proposal,
+//            "There is no precommit for the specified core."
+//        );
+//
+//        // Delete the precommit.
+//        delete precommits[core];
+//
+//        address anchorAddress = anchors[_chainId];
+//        require(
+//            anchorAddress != address(0),
+//            "There is no anchor for the specified chain id."
+//        );
+//
+//        Block.Header memory blockHeader = Block.decodeHeader(_rlpBlockHeader);
+//
+//        // Anchor state root.
+//        AnchorI(anchorAddress).anchorStateRoot(
+//            blockHeader.height,
+//            blockHeader.stateRoot
+//        );
+//
+//        // Open a new metablock.
+//        CoreI(core).openMetablock(
+//            _originObservation,
+//            _dynasty,
+//            _accumulatedGas,
+//            _committeeLock,
+//            _source,
+//            _target,
+//            _sourceBlockHeight,
+//            _targetBlockHeight,
+//            gasTargetDelta
+//        );
     }
 
     /**

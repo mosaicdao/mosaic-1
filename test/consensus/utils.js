@@ -1,5 +1,3 @@
-pragma solidity ^0.5.0;
-
 // Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,21 +12,26 @@ pragma solidity ^0.5.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../reputation/ReputationI.sol";
+const SentinelCommittee = '0x0000000000000000000000000000000000000001';
+const CommitteeFormationDelay = 14;
+const CommitteeFormationLength = 7;
 
-interface ConsensusI {
-    function reputation() external view returns (ReputationI reputation_);
+async function setup(consensus, setupConfig) {
 
-    // function coreValidatorThresholds() external view returns (uint256 minimumValidatorCount_, uint256 joinLimit_);
-
-    function registerPrecommit(bytes32 _precommitment) external;
-
-    function newMetaChain(
-        bytes20 _chainId,
-        uint256 _epochLength,
-        bytes32 _source,
-        uint256 _sourceBlockHeight
-    )
-        external;
-
+  return consensus.setup(
+    setupConfig.committeeSize,
+    setupConfig.minValidators,
+    setupConfig.joinLimit,
+    setupConfig.gasTargetDelta,
+    setupConfig.coinbaseSplitPerMille,
+    setupConfig.reputation,
+    setupConfig.txOptions,
+  );
 }
+
+module.exports = {
+  SentinelCommittee,
+  CommitteeFormationDelay,
+  CommitteeFormationLength,
+  setup,
+};

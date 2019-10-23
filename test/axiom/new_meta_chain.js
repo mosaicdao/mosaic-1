@@ -57,7 +57,7 @@ contract('Axiom::newMetaChain', (accounts) => {
       minValidators: new BN(4),
       joinLimit: new BN(10),
       gasTargetDelta: new BN(1000000000000000),
-      coinbaseSplitPercentage: new BN(50),
+      coinbaseSplitPermille: new BN(50),
       mOST: accountProvider.get(),
       stakeMOSTAmount: new BN(300000),
       wETH: accountProvider.get(),

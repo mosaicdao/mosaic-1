@@ -54,7 +54,7 @@ contract('Axiom::setupConsensus', (accounts) => {
       minValidators: new BN(4),
       joinLimit: new BN(10),
       gasTargetDelta: new BN(1000000000000000),
-      coinbaseSplitPercentage: new BN(50),
+      coinbaseSplitPermille: new BN(50),
       mOST: accountProvider.get(),
       stakeMOSTAmount: new BN(300000),
       wETH: accountProvider.get(),
@@ -182,9 +182,9 @@ contract('Axiom::setupConsensus', (accounts) => {
         'Gas target delta value is not set in the contract.',
       );
 
-      const coinbaseSplitPercentage = await consensusProxyContract.coinbaseSplitPercentage.call();
+      const coinbaseSplitPermille = await consensusProxyContract.coinbaseSplitPerMille.call();
       assert.strictEqual(
-        coinbaseSplitPercentage.eq(config.coinbaseSplitPercentage),
+        coinbaseSplitPermille.eq(config.coinbaseSplitPermille),
         true,
         'Coin base split percentage value is not set in the contract.',
       );

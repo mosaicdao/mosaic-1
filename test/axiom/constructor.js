@@ -168,7 +168,7 @@ contract('Axiom::constructor', (accounts) => {
       const axiom = await AxiomUtils.deployAxiomWithConfig(config);
 
       const callPrefix = await axiom.REPUTATION_SETUP_CALLPREFIX.call();
-      const expectedCallPrefix = Utils.getCallPrefix(AxiomUtils.ReputationSetupCallPrefix);
+      const expectedCallPrefix = AxiomUtils.ReputationSetupCallPrefix;
 
       assert.strictEqual(
         callPrefix,
@@ -181,7 +181,7 @@ contract('Axiom::constructor', (accounts) => {
       const axiom = await AxiomUtils.deployAxiomWithConfig(config);
 
       const callPrefix = await axiom.CONSENSUS_SETUP_CALLPREFIX.call();
-      const expectedCallPrefix = Utils.getCallPrefix(AxiomUtils.ConsensusSetupCallPrefix);
+      const expectedCallPrefix = AxiomUtils.ConsensusSetupCallPrefix;
 
       assert.strictEqual(
         callPrefix,
