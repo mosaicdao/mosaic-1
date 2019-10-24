@@ -72,6 +72,16 @@ async function joinDuringCreation(consensus, joinParams) {
     joinParams.txOptions,
   );
 }
+
+async function callNewMetaChainOnConsensus(spyAxiom, params) {
+  await spyAxiom.callNewMetaChainOnConsensus(
+    params.consensus,
+    params.chainId,
+    params.epochLength,
+    params.source,
+    params.sourceBlockHeight,
+  );
+}
 module.exports = {
   SentinelCommittee,
   CommitteeFormationDelay,
@@ -82,4 +92,5 @@ module.exports = {
   getDislocation,
   join,
   joinDuringCreation,
+  callNewMetaChainOnConsensus,
 };
