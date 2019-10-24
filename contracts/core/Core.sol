@@ -379,8 +379,42 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     /* External and public functions */
 
     /**
-     * Propose transition object and vote message from seal
-     * for the open kernel.
+     * @notice Propose transition object and vote message from seal
+     *         for the open kernel.
+     *
+     * @dev Function requires:
+     *          - core is opened
+     *          - the given kernel hash matches to the opened kernel hash in core
+     *          - origin observation is not 0
+     *          - dynasty is strictly greater than committed dynasty
+     *          - accumulated gas is strictly greater than committed
+     *            accumulated gas
+     *          - committee lock (transition root hash) is not 0
+     *          - source blockhash is not 0
+     *          - target blockhash is not 0
+     *          - source block height is strictly greater than committed
+     *            block height
+     *          - source block height is a checkpoint
+     *          - source block hash does not match with the committed source
+     *            block hash
+     *          - target block height is +1 epoch of the source block height
+     *          - a proposal matching with the input parameters does
+     *            not exist in the core
+     *
+     * @param _kernelHash Kernel hash of a proposed metablock.
+     * @param _originObservation Origin observation of a proposed metablock.
+     * @param _dynasty Dynasty of a proposed metablock.
+     * @param _accumulatedGas Accumulated gas in a proposed metablock.
+     * @param _committeeLock Committe lock (transition root hash) of a proposed
+     *                       metablock.
+     * @param _source Source blockhash of a vote message for a proposed metablock.
+     * @param _target Target blockhash of a vote message for a proposed metablock.
+     * @param _sourceBlockHeight Source block height of a vote message for a
+     *                           proposed metablock.
+     * @param _targetBlockHeight Target block height of a vote message for a
+     *                           proposed metablock.
+     *
+     * @return proposal_ Returns a proposal based on input parameters.
      */
     function proposeMetablock(
         bytes32 _kernelHash,
@@ -397,26 +431,50 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         whileMetablockOpen
         returns (bytes32 proposal_)
     {
-        require(_kernelHash == openKernelHash,
-            "A metablock can only be proposed for the open Kernel in this core.");
-        require(_originObservation != bytes32(0),
-            "Origin observation cannot be null.");
-        require(_dynasty > committedDynasty,
-            "Dynasty must strictly increase.");
-        require(_accumulatedGas > committedAccumulatedGas,
-            "Accumulated gas must strictly increase.");
-        require(_committeeLock != bytes32(0),
-            "Committee lock cannot be null.");
-        require(_source != bytes32(0),
-            "Source blockhash must not be null.");
-        require(_source != committedSource,
-            "Source blockhash cannot equal sealed source blockhash.");
-        require(_sourceBlockHeight > committedSourceBlockHeight,
-            "Source block height must strictly increase.");
-        require((_sourceBlockHeight % epochLength) == 0,
-            "Source block height must be a checkpoint.");
-        require(_targetBlockHeight == _sourceBlockHeight.add(epochLength),
-            "Target block height must equal source block height plus one.");
+        require(
+            _kernelHash == openKernelHash,
+            "A metablock can only be proposed for the open Kernel in this core."
+        );
+        require(
+            _originObservation != bytes32(0),
+            "Origin observation cannot be null."
+        );
+        require(
+            _dynasty > committedDynasty,
+            "Dynasty must strictly increase."
+        );
+        require(
+            _accumulatedGas > committedAccumulatedGas,
+            "Accumulated gas must strictly increase."
+        );
+        require(
+            _committeeLock != bytes32(0),
+            "Committee lock cannot be null."
+        );
+        require(
+            _source != bytes32(0),
+            "Source blockhash must not be null."
+        );
+        require(
+            _target != bytes32(0),
+            "Target blockhash must not be null."
+        );
+        require(
+            _source != committedSource,
+            "Source blockhash cannot equal sealed source blockhash."
+        );
+        require(
+            _sourceBlockHeight > committedSourceBlockHeight,
+            "Source block height must strictly increase."
+        );
+        require(
+            (_sourceBlockHeight % epochLength) == 0,
+            "Source block height must be a checkpoint."
+        );
+        require(
+            _targetBlockHeight == _sourceBlockHeight.add(epochLength),
+            "Target block height must equal source block height plus one."
+        );
 
         bytes32 transitionHash = hashTransition(
             _kernelHash,
@@ -741,18 +799,28 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     }
 
     /**
-     * start new linked list for proposals
+     * @notice Start new linked list for proposals at open kernel height.
      */
     function newProposalSet()
         internal
     {
-        require(proposals[openKernelHeight][SENTINEL_PROPOSALS] == bytes32(0),
-            "Proposal set has already been initialised at this height.");
+        require(
+            proposals[openKernelHeight][SENTINEL_PROPOSALS] == bytes32(0),
+            "Proposal set has already been initialised at this height."
+        );
         proposals[openKernelHeight][SENTINEL_PROPOSALS] = SENTINEL_PROPOSALS;
     }
 
     /**
-     * insert proposal
+     * @notice Inserts a proposal.
+     *
+     * @dev Function requires:
+     *          - proposal hash is not 0
+     *          - proposal does not exist
+     *          - proposal is not a sentinel proposal
+     *
+     * @param _dynasty Dynasty of a metablock of a proposal.
+     * @param _proposal Proposal hash.
      */
     function insertProposal(
         uint256 _dynasty,
@@ -760,15 +828,21 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     )
         internal
     {
-        VoteCount storage voteCount = voteCounts[_proposal];
-
         // note: redundant because we always calculate the proposal hash
-        require(_proposal != bytes32(0),
-            "Proposal must not be null.");
-        require(proposals[openKernelHeight][_proposal] == bytes32(0),
-            "Proposal can only be inserted once.");
-        require(_proposal != SENTINEL_PROPOSALS,
-            "Proposal must not be sentinel for proposals.");
+        require(
+            _proposal != bytes32(0),
+            "Proposal must not be null."
+        );
+        require(
+            _proposal != SENTINEL_PROPOSALS,
+            "Proposal must not be sentinel for proposals."
+        );
+        require(
+            proposals[openKernelHeight][_proposal] == bytes32(0),
+            "Proposal can only be inserted once."
+        );
+
+        VoteCount storage voteCount = voteCounts[_proposal];
 
         // vote registered for open kernel
         voteCount.height = openKernelHeight;
