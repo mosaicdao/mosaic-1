@@ -15,6 +15,10 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 
 interface CoreI {
+    function precommit() external returns (bytes32);
+
+    function openKernelHash() external returns (bytes32);
+
     function joinDuringCreation(address _validator) external;
 
     function join(address _validator) external;

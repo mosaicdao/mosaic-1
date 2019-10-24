@@ -98,6 +98,20 @@ contract('Consensus::join', (accounts) => {
     it('should verify data from spy contract', async () => {
       await consensusUtil.callNewMetaChainOnConsensus(contracts.SpyAxiom, inputParams);
       const newCoreCallData = await contracts.SpyAxiom.spyNewCoreCallData.call();
+
+      /*
+        The static values in the below code is based on the SpyAxiom::setupConsensus
+        function setupConsensus(Consensus _consensus) public  {
+                _consensus.setup(
+                    uint256(100),
+                    uint256(5),
+                    uint256(6),
+                    uint256(99999),
+                    uint256(200),
+                    address(1)
+                );
+            }
+       */
       const expectedCallData = await axiomUtil.encodeNewCoreParams({
         consensus: contracts.Consensus.address,
         chainId: inputParams.chainId,

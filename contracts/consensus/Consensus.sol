@@ -339,60 +339,64 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     )
         external
     {
-//        bytes32 blockHash = keccak256(_rlpBlockHeader);
-//        require(
-//            blockHash == _source,
-//            "Block header does not match with vote message source."
-//        );
-//
-//        (bytes32 proposal, address core) = verifyCommitteeLock(
-//            _chainId,
-//            _kernelHash,
-//            _originObservation,
-//            _dynasty,
-//            _accumulatedGas,
-//            _committeeLock,
-//            _source,
-//            _target,
-//            _sourceBlockHeight,
-//            _targetBlockHeight
-//        );
-//
-//        Precommit storage precommit = precommits[core];
-//        require(
-//            proposal == precommit.proposal,
-//            "There is no precommit for the specified core."
-//        );
-//
-//        // Delete the precommit.
-//        delete precommits[core];
-//
-//        address anchorAddress = anchors[_chainId];
-//        require(
-//            anchorAddress != address(0),
-//            "There is no anchor for the specified chain id."
-//        );
-//
-//        Block.Header memory blockHeader = Block.decodeHeader(_rlpBlockHeader);
-//
-//        // Anchor state root.
-//        AnchorI(anchorAddress).anchorStateRoot(
-//            blockHeader.height,
-//            blockHeader.stateRoot
-//        );
-//
-//        // Open a new metablock.
-//        CoreI(core).openMetablock(
-//            _originObservation,
-//            _dynasty,
-//            _accumulatedGas,
-//            _committeeLock,
-//            _source,
-//            _target,
-//            _sourceBlockHeight,
-//            _targetBlockHeight,
-//            gasTargetDelta
-//        );
+        require(
+            _source == keccak256(_rlpBlockHeader),
+            "Block header does not match with vote message source."
+        );
+
+        // Make sure that core is valid for given chain id.
+        address core = assignments[_chainId];
+        require(
+            isCore(core),
+            "There is no core for the specified chain id."
+        );
+
+        /*
+         * @dev: Please check the following carefully.
+         * Here we assume that the given input parameters are correct. The
+         * actual validation of input parameter will happen in Core::openMetablock.
+         * Here we will make sure that precommit in consensus and core contract
+         * are same. Core::openMetablock will verify that commit formed by input
+         * params is equal to precommit.
+         */
+        bytes32 precommitProposal = precommits[core].proposal;
+
+        // Make sure that precommitProposal exists.
+        require(
+            precommitProposal != bytes32(0),
+            "There is no precommit for the specified core."
+        );
+
+        // Delete the precommit. This will avoid any re-entrancy with same params.
+        delete precommits[core];
+
+        // Verify kernel hash.
+        require(
+            _kernelHash == CoreI(core).openKernelHash(),
+            "Provided kernel hash must be open kernel hash."
+        );
+
+        // Verify commit proposal.
+        verifyCommitProposal(core, precommitProposal);
+
+        // Verify committee lock.
+        verifyCommitteeLock(precommitProposal, _committeeLock);
+
+        // Anchor state root.
+        anchorStateRoot(_chainId, _rlpBlockHeader);
+
+        // Open a new metablock.
+        CoreI(core).openMetablock(
+            _originObservation,
+            _dynasty,
+            _accumulatedGas,
+            _committeeLock,
+            _source,
+            _target,
+            _sourceBlockHeight,
+            _targetBlockHeight,
+            gasTargetDelta
+        );
     }
 
     /**
@@ -588,44 +592,48 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         proposals[_proposal] = committee_;
     }
 
-    function verifyCommitteeLock(
+    function anchorStateRoot(
         bytes20 _chainId,
-        bytes32 _kernelHash,
-        bytes32 _originObservation,
-        uint256 _dynasty,
-        uint256 _accumulatedGas,
-        bytes32 _committeeLock,
-        bytes32 _source,
-        bytes32 _target,
-        uint256 _sourceBlockHeight,
-        uint256 _targetBlockHeight
+        bytes memory _rlpBlockHeader
+    )
+        private
+    {
+        address anchorAddress = anchors[_chainId];
+        require(
+            anchorAddress != address(0),
+            "There is no anchor for the specified chain id."
+        );
+
+        Block.Header memory blockHeader = Block.decodeHeader(_rlpBlockHeader);
+
+        // Anchor state root.
+        AnchorI(anchorAddress).anchorStateRoot(
+            blockHeader.height,
+            blockHeader.stateRoot
+        );
+    }
+
+    function verifyCommitProposal(
+        address _core,
+        bytes32 _commitProposal
+    )
+        private
+    {
+        bytes32 precommitProposal = CoreI(_core).precommit();
+        require(
+            precommitProposal == _commitProposal,
+            "Proposal is not precommitted."
+        );
+    }
+
+    function verifyCommitteeLock(
+        bytes32 _commitProposal,
+        bytes32 _committeeLock
     )
         private
         view
-        returns (
-            bytes32 proposal_,
-            address coreAddress_
-        )
     {
-        coreAddress_ = assignments[_chainId];
-        require(
-            isCore(coreAddress_),
-            "There is no core for the specified chain id."
-        );
-
-        proposal_ = CoreI(coreAddress_).assertPrecommit(
-            _kernelHash,
-            _originObservation,
-            _dynasty,
-            _accumulatedGas,
-            _committeeLock,
-            _source,
-            _target,
-            _sourceBlockHeight,
-            _targetBlockHeight
-        );
-
-        CommitteeI committee = proposals[proposal_];
+        CommitteeI committee = proposals[_commitProposal];
 
         require(
             committee != CommitteeI(0),
