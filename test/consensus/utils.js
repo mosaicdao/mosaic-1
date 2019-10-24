@@ -12,9 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+const web3 = require('../test_lib/web3.js');
+
 const SentinelCommittee = '0x0000000000000000000000000000000000000001';
 const CommitteeFormationDelay = 14;
 const CommitteeFormationLength = 7;
+const BlockSegmentLength = 256;
 
 const CoreStatus = {
   undefined: 0,
@@ -27,7 +30,6 @@ const CoreStatus = {
 Object.freeze(CoreStatus);
 
 async function setup(consensus, setupConfig) {
-
   return consensus.setup(
     setupConfig.committeeSize,
     setupConfig.minValidators,
@@ -39,10 +41,26 @@ async function setup(consensus, setupConfig) {
   );
 }
 
+async function getDislocation(committeeFormationBlockHeight) {
+  // Calculate the expected dislocation.
+  let segment = committeeFormationBlockHeight;
+  const seedGenerators = [];
+  for (let i = 0; i < CommitteeFormationLength; i += 1) {
+    // eslint-disable-next-line no-await-in-loop
+    const block = await web3.eth.getBlock(segment);
+    seedGenerators[i] = block.hash.substring(2);
+    segment = segment.subn(1);
+  }
+  const dislocation = web3.utils.soliditySha3(`0x${seedGenerators.join('')}`);
+  return dislocation;
+}
+
 module.exports = {
   SentinelCommittee,
   CommitteeFormationDelay,
   CommitteeFormationLength,
+  BlockSegmentLength,
   CoreStatus,
   setup,
+  getDislocation,
 };
