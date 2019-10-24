@@ -180,7 +180,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             "Committee size is 0."
         );
 
-        // TODO: Check what should be the minimum number of validators.
         require(
             _minValidators > uint256(4),
             "Min validator size must be greater than 4."
@@ -488,7 +487,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     }
 
     /**
-     * @notice  Validator logs out. This can be called by validator address.
+     * @notice Validator logs out. This can be called by validator address.
      * @param _chainId Chain id that validator wants to logout.
      * @param _core Core address that validator wants to logout.
      */
@@ -522,6 +521,14 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         reputation.logout(msg.sender);
     }
 
+    /**
+     * @notice Create a new meta chain. This can be called only by axiom
+     *         contract address.
+     * @param _chainId Chain id for new meta-chain.
+     * @param _epochLength Epoch length for new meta-chain.
+     * @param _source Source block hash.
+     * @param _sourceBlockHeight Source block height.
+     */
     function newMetaChain(
         bytes20 _chainId,
         uint256 _epochLength,
@@ -552,57 +559,34 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         assignments[_chainId] = core;
         anchors[_chainId] = address(_chainId);
     }
+    // Task: Pending functions related to halting and corrupting of core.
 
     /**
-     * Halt new core
+     * @notice Check if the core address is valid.
+     * @param _core Core contract address.
+     * Returns true if the specified address is a core.
      */
-//    function haltCore(
-//        address _core
-//    )
-//    internal
-//    {
-//        require(
-//            isCore(_core),
-//            'Core does not exist.'
-//        );
-//
-//        coreStatuses[_core] = CoreStatus.halted;
-//        // @ben, what other things need to done here?
-//    }
-
-    /**
-     * Mark core as corrupted.
-     */
-//    function markCoreCorrupted(
-//        address _core
-//    )
-//    internal
-//    {
-//        // TODO: if halted core can be marked corrupted, then modify this check.
-//        require(
-//            isCore(_core),
-//            'Core does not exist.'
-//        );
-//
-//        coreStatuses[_core] = CoreStatus.corrupted;
-//        // @ben, what other things need to done here?
-//    }
-
-    /** Returns true if the specified address is a core. */
     function isCore(address _core)
         internal
         view
         returns (bool)
     {
-        // @Ben, shouldnt we just check if the coreStatuses is creation, opened or precommitted
+        // Task: should'nt we just check if the coreStatuses is creation, opened or precommitted
         CoreStatus status = coreStatuses[_core];
         return status != CoreStatus.undefined &&
             status != CoreStatus.halted &&
             status != CoreStatus.corrupted;
     }
 
-    /** insert new Committee */
-    function startCommittee(bytes32 _dislocation, bytes32 _proposal)
+    /**
+     * @notice Start a new committee.
+     * @param _dislocation Hash to shuffle validators.
+     * @param _proposal Proposal under consideration for committee.
+     */
+    function startCommittee(
+        bytes32 _dislocation,
+        bytes32 _proposal
+    )
         internal
     {
         require(
@@ -617,6 +601,14 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         proposals[_proposal] = committee_;
     }
 
+
+    /* External functions */
+
+    /**
+     * @notice Anchor a new state root for specified chain id.
+     * @param _chainId Chain id.
+     * @param _rlpBlockHeader RLP encoded block header
+     */
     function anchorStateRoot(
         bytes20 _chainId,
         bytes memory _rlpBlockHeader
@@ -638,6 +630,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
     }
 
+    /**
+     * @notice Verify if the given commit proposal is same as that precommit in
+     *         core contract
+     * @param _core Core contract address.
+     * @param _commitProposal Commit proposal.
+     */
     function verifyCommitProposal(
         address _core,
         bytes32 _commitProposal
@@ -651,6 +649,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
     }
 
+    /**
+     * @notice Verify if the committee lock given in the commit proposal
+     *         matches the committee decision.
+     * @param _commitProposal Proposal to commit.
+     * @param _committeeLock Committee lock specified in the proposal.
+     */
     function verifyCommitteeLock(
         bytes32 _commitProposal,
         bytes32 _committeeLock
@@ -678,6 +682,19 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
     }
 
+    /**
+     * @notice Deploy a new core contract.
+     * @param _chainId Chain id for which the core should be deployed.
+     * @param _epochLength Epoch length for new core.
+     * @param _height Kernel height.
+     * @param _parent Kernel parent hash.
+     * @param _gasTarget Gas target to close the meta block.
+     * @param _dynasty Committed dynasty number.
+     * @param _accumulatedGas Accumulated gas.
+     * @param _source Source block hash
+     * @param _sourceBlockHeight Source block height.
+     * returns Deployed core contract address.
+     */
     function newCore(
         bytes20 _chainId,
         uint256 _epochLength,
@@ -714,6 +731,13 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
     }
 
+    /**
+     * @notice Deploy a new committee contract.
+     * @param _committeeSize Committee size.
+     * @param _dislocation Hash to shuffle validators.
+     * @param _proposal Proposal under consideration for committee.
+     * returns Contract address of new deployed committee contract.
+     */
     function newCommittee(
         uint256 _committeeSize,
         bytes32 _dislocation,
@@ -737,6 +761,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         committee_ = CommitteeI(committeeAddress);
     }
 
+    /**
+     * @notice Validate the params for joining the core.
+     * @param _chainId Chain id.
+     * @param _core Core contract address.
+     * @param _withdrawalAddress Withdrawal address.
+     */
     function validateJoinParams(
         bytes20 _chainId,
         address _core,

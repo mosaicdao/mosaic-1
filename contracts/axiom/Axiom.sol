@@ -326,6 +326,11 @@ contract Axiom is AxiomI, ProxyFactory {
         deployedAddress_ = address(proxyContract);
     }
 
+    /**
+     * @notice Call a function.
+     * @param _proxy Proxy contract address.
+     * @param _data Function call data.
+     */
     function callProxyData(
         Proxy _proxy,
         bytes memory _data
