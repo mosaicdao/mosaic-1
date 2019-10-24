@@ -19,7 +19,7 @@ contract SpyAxiom is AxiomI{
             address(1)
         );
     }
-    
+
     function newCore(
         bytes calldata _data
     )
