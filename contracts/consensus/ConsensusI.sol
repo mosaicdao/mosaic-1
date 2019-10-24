@@ -26,8 +26,11 @@ interface ConsensusI {
         view
         returns (ReputationI reputation_);
 
-    // TODO: enable this.
-    // function coreValidatorThresholds() external view returns (uint256 minimumValidatorCount_, uint256 joinLimit_);
+    /** Get minimum validator and join limit count. */
+    function coreValidatorThresholds()
+        external
+        view
+        returns (uint256 minimumValidatorCount_, uint256 joinLimit_);
 
     /**
      * @notice Register a proposal for commit.

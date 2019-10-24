@@ -77,10 +77,8 @@ contract SpyConsensus is MasterCopyNonUpgradable, ConsensusI {
     function coreValidatorThresholds()
         external
         view
-        returns (
-            uint256,
-            uint256
-    ) {
+        returns (uint256, uint256)
+    {
         // This is not used in test so break
         require(false, "This should not be called for unit tests.");
     }

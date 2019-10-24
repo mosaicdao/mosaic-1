@@ -559,6 +559,16 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         assignments[_chainId] = core;
         anchors[_chainId] = address(_chainId);
     }
+
+    /** Get minimum validator and join limit count. */
+    function coreValidatorThresholds()
+        external
+        view
+        returns (uint256 minimumValidatorCount_, uint256 joinLimit_)
+    {
+        minimumValidatorCount_ = minValidators;
+        joinLimit_ = joinLimit;
+    }
     // Task: Pending functions related to halting and corrupting of core.
 
     /**
