@@ -340,8 +340,33 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         external
     {
         require(
+            _chainId != bytes20(0),
+            "Chain id is 0."
+        );
+
+        require(
+            _source != bytes32(0),
+            "Source is 0."
+        );
+
+        require(
+            _target != bytes32(0),
+            "Target is 0."
+        );
+
+        require(
+            _targetBlockHeight > _sourceBlockHeight,
+            "Target block height is less than or equal to source block height."
+        );
+
+        require(
             _source == keccak256(_rlpBlockHeader),
             "Block header does not match with vote message source."
+        );
+
+        require(
+            _originObservation != bytes32(0),
+            "Origin observation is 0."
         );
 
         // Make sure that core is valid for given chain id.
@@ -373,7 +398,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         // Verify kernel hash.
         require(
             _kernelHash == CoreI(core).openKernelHash(),
-            "Provided kernel hash must be open kernel hash."
+            "Provided kernel hash must be equal to open kernel hash."
         );
 
         // Verify commit proposal.

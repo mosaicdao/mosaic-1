@@ -82,6 +82,23 @@ async function callNewMetaChainOnConsensus(spyAxiom, params) {
     params.sourceBlockHeight,
   );
 }
+
+async function commit(consensus, params) {
+  await consensus.commit(
+    params.chainId,
+    params.rlpBlockHeader,
+    params.kernelHash,
+    params.originObservation,
+    params.dynasty.toString(10),
+    params.accumulatedGas.toString(10),
+    params.committeeLock,
+    params.source,
+    params.target,
+    params.sourceBlockHeight.toString(10),
+    params.targetBlockHeight.toString(10),
+    params.txOptions,
+  );
+}
 module.exports = {
   SentinelCommittee,
   CommitteeFormationDelay,
@@ -93,4 +110,5 @@ module.exports = {
   join,
   joinDuringCreation,
   callNewMetaChainOnConsensus,
+  commit,
 };

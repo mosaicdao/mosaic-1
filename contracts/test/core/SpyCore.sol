@@ -5,6 +5,9 @@ import "../../proxies/MasterCopyNonUpgradable.sol";
 
 contract SpyCore is MasterCopyNonUpgradable, CoreI{
 
+    bytes32 public mockedOpenKernelHash;
+    bytes32 public mockedPrecommit;
+
     address public spyConsensus;
     bytes20 public spyChainId;
     uint256 public spyEpochLength;
@@ -20,6 +23,16 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
     uint256 public spySourceBlockHeight;
 
     address public spyValidator;
+
+    bytes32 public spyCommittedOriginObservation;
+    uint256 public spyCommittedDynasty;
+    uint256 public spyCommittedAccumulatedGas;
+    bytes32 public spyCommittedCommitteeLock;
+    bytes32 public spyCommittedSource;
+    bytes32 public spyCommittedTarget;
+    uint256 public spyCommittedSourceBlockHeight;
+    uint256 public spyCommittedTargetBlockHeight;
+    uint256 public spyDeltaGasTarget;
 
     function setup(
         address _consensus,
@@ -66,20 +79,27 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
     }
 
     function openMetablock(
-        bytes32,
-        uint256,
-        uint256,
-        bytes32,
-        bytes32,
-        bytes32,
-        uint256,
-        uint256,
-        uint256
+        bytes32 _committedOriginObservation,
+        uint256 _committedDynasty,
+        uint256 _committedAccumulatedGas,
+        bytes32 _committedCommitteeLock,
+        bytes32 _committedSource,
+        bytes32 _committedTarget,
+        uint256 _committedSourceBlockHeight,
+        uint256 _committedTargetBlockHeight,
+        uint256 _deltaGasTarget
     )
         external
     {
-        // This is not used in test so break
-        require(false, "This should not be called for unit tests.");
+        spyCommittedOriginObservation = _committedOriginObservation;
+        spyCommittedDynasty = _committedDynasty;
+        spyCommittedAccumulatedGas = _committedAccumulatedGas;
+        spyCommittedCommitteeLock = _committedCommitteeLock;
+        spyCommittedSource = _committedSource;
+        spyCommittedTarget = _committedTarget;
+        spyCommittedSourceBlockHeight = _committedSourceBlockHeight;
+        spyCommittedTargetBlockHeight = _committedTargetBlockHeight;
+        spyDeltaGasTarget = _deltaGasTarget;
     }
 
     function assertPrecommit(
@@ -99,5 +119,20 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
     {
         // This is not used in test so break
         require(false, "This should not be called for unit tests.");
+    }
+
+    function mockPrecommit(bytes32 _precommitHash) external {
+        mockedPrecommit = _precommitHash;
+    }
+    function precommit() external returns (bytes32) {
+        return mockedPrecommit;
+    }
+
+    function mockOpenKernelHash(bytes32 _kernelHash) external {
+        mockedOpenKernelHash = _kernelHash;
+    }
+
+    function openKernelHash() external returns (bytes32) {
+        return mockedOpenKernelHash;
     }
 }

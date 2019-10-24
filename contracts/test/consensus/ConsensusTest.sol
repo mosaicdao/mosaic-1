@@ -68,4 +68,22 @@ contract ConsensusTest is Consensus {
     {
         assignments[_chainId] = _core;
     }
+
+    function setCommitteeProposal(
+        address _committeeAddress,
+        bytes32 _proposal
+    )
+        external
+    {
+        proposals[_proposal] = CommitteeI(_committeeAddress);
+    }
+
+    function setAnchor(
+        bytes20 _chainId,
+        address _anchor
+    )
+        external
+    {
+        anchors[_chainId] = _anchor;
+    }
 }
