@@ -21,7 +21,7 @@ const axiomUtil = require('../axiom/utils');
 const SpyAxiom = artifacts.require('SpyAxiom');
 const Consensus = artifacts.require('Consensus');
 
-contract('Consensus::join', (accounts) => {
+contract('Consensus::newMetaChain', (accounts) => {
   const accountProvider = new Utils.AccountProvider(accounts);
   let contracts = {};
   let inputParams = {};

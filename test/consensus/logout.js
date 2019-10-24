@@ -21,7 +21,7 @@ const Consensus = artifacts.require('ConsensusTest');
 const SpyReputation = artifacts.require('SpyReputation');
 const SpyCore = artifacts.require('SpyCore');
 
-contract('Consensus::join', (accounts) => {
+contract('Consensus::logout', (accounts) => {
   const accountProvider = new Utils.AccountProvider(accounts);
 
   let contracts = {};

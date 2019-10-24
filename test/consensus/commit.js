@@ -31,7 +31,7 @@ const anchorBlockHeight = 1;
 let contracts = {};
 let commitParams = {};
 
-contract('Consensus::join', (accounts) => {
+contract('Consensus::commit', (accounts) => {
   const accountProvider = new Utils.AccountProvider(accounts);
   let committeeSecret;
   beforeEach(async () => {
