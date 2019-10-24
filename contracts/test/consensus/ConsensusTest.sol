@@ -18,34 +18,34 @@ import "../../consensus/Consensus.sol";
 
 contract ConsensusTest is Consensus {
 
-//    constructor(uint256 _committeeSize)
-//        public
-//        Consensus(_committeeSize)
-//    {
-//
-//    }
-//
-//    function setCoreStatus(
-//        address _core,
-//        bytes20 _status
-//    )
-//        external
-//    {
-//        coreStatuses[_core] = _status;
-//    }
-//
-//    function setPreCommit(
-//        address _core,
-//        bytes32 _proposal,
-//        uint256 _committeeFormationBlockheight
-//    )
-//        external
-//    {
-//        precommits[_core] = Precommit(
-//            _proposal,
-//            _committeeFormationBlockheight
-//        );
-//    }
+    constructor()
+        public
+        Consensus()
+    {
+
+    }
+
+    function setCoreStatus(
+        address _core,
+        CoreStatus _status
+    )
+        external
+    {
+        coreStatuses[_core] = _status;
+    }
+
+    function setPreCommit(
+        address _core,
+        bytes32 _proposal,
+        uint256 _committeeFormationBlockheight
+    )
+        external
+    {
+        precommits[_core] = Precommit(
+            _proposal,
+            _committeeFormationBlockheight
+        );
+    }
 //
 //    function setCommittee(
 //        address _committeeAddress,

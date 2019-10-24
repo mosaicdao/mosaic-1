@@ -16,6 +16,16 @@ const SentinelCommittee = '0x0000000000000000000000000000000000000001';
 const CommitteeFormationDelay = 14;
 const CommitteeFormationLength = 7;
 
+const CoreStatus = {
+  undefined: 0,
+  creation: 1,
+  opened: 2,
+  precommitted: 3,
+  halted: 4,
+  corrupted: 5,
+};
+Object.freeze(CoreStatus);
+
 async function setup(consensus, setupConfig) {
 
   return consensus.setup(
@@ -33,5 +43,6 @@ module.exports = {
   SentinelCommittee,
   CommitteeFormationDelay,
   CommitteeFormationLength,
+  CoreStatus,
   setup,
 };
