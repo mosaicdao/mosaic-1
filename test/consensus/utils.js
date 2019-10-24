@@ -63,6 +63,15 @@ async function join(consensus, joinParams) {
     joinParams.txOptions,
   );
 }
+
+async function joinDuringCreation(consensus, joinParams) {
+  await consensus.joinDuringCreation(
+    joinParams.chainId,
+    joinParams.core,
+    joinParams.withdrawalAddress,
+    joinParams.txOptions,
+  );
+}
 module.exports = {
   SentinelCommittee,
   CommitteeFormationDelay,
@@ -72,4 +81,5 @@ module.exports = {
   setup,
   getDislocation,
   join,
+  joinDuringCreation,
 };

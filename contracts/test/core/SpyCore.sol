@@ -53,9 +53,8 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
         spySource = _source;
         spySourceBlockHeight = _sourceBlockHeight;
     }
-    function joinDuringCreation(address) external {
-        // This is not used in test so break
-        require(false, "This should not be called for unit tests.");
+    function joinDuringCreation(address _validator) external {
+        spyValidator = _validator;
     }
 
     function join(address _validator) external {
