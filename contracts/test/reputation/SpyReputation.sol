@@ -91,9 +91,8 @@ contract SpyReputation is MasterCopyNonUpgradable, ReputationI {
         spyWithdrawalAddress = _withdrawalAddress;
     }
 
-    function logout(address) external {
-        // This is not used in test so break
-        require(false, "This should not be called for unit tests.");
+    function logout(address _validator) external {
+        validator = _validator;
     }
 
     function getReputation(address) external view returns (uint256) {

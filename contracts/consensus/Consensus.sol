@@ -486,7 +486,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
         require(
             isCore(_core),
-            "There is no core for the specified chain id"
+            "There is no core for the specified chain id."
         );
 
         CoreI(_core).logout(msg.sender);
