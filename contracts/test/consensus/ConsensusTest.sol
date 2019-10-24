@@ -59,4 +59,13 @@ contract ConsensusTest is Consensus {
     function setReputation(address _reputation) external {
         reputation = ReputationI(_reputation);
     }
+
+    function setAssignment(
+        bytes20 _chainId,
+        address _core
+    )
+        external
+    {
+        assignments[_chainId] = _core;
+    }
 }

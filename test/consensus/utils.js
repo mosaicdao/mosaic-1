@@ -55,6 +55,14 @@ async function getDislocation(committeeFormationBlockHeight) {
   return dislocation;
 }
 
+async function join(consensus, joinParams) {
+  await consensus.join(
+    joinParams.chainId,
+    joinParams.core,
+    joinParams.withdrawalAddress,
+    joinParams.txOptions,
+  );
+}
 module.exports = {
   SentinelCommittee,
   CommitteeFormationDelay,
@@ -63,4 +71,5 @@ module.exports = {
   CoreStatus,
   setup,
   getDislocation,
+  join,
 };

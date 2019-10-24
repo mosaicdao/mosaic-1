@@ -34,6 +34,7 @@ contract SpyReputation is MasterCopyNonUpgradable, ReputationI {
     uint256 public initialReputation;
     uint256 public withdrawalCooldownPeriodInBlocks;
 
+    address public spyWithdrawalAddress;
 
     function setIsActive(
         address _validator,
@@ -81,13 +82,13 @@ contract SpyReputation is MasterCopyNonUpgradable, ReputationI {
     }
 
     function join(
-        address,
-        address
+        address _validator,
+        address _withdrawalAddress
     )
         external
     {
-        // This is not used in test so break
-        require(false, "This should not be called for unit tests.");
+        validator = _validator;
+        spyWithdrawalAddress = _withdrawalAddress;
     }
 
     function logout(address) external {

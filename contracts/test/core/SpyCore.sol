@@ -19,6 +19,8 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
     bytes32 public spySource;
     uint256 public spySourceBlockHeight;
 
+    address public spyValidator;
+
     function setup(
         address _consensus,
         bytes20 _chainId,
@@ -56,9 +58,8 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
         require(false, "This should not be called for unit tests.");
     }
 
-    function join(address) external {
-        // This is not used in test so break
-        require(false, "This should not be called for unit tests.");
+    function join(address _validator) external {
+        spyValidator = _validator;
     }
 
     function logout(address) external {
