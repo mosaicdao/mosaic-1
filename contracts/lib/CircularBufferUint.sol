@@ -41,7 +41,7 @@ contract CircularBufferUint {
     uint256 private index;
 
 
-    /* Constructor */
+    /* Internal functions */
 
     /**
      * @notice Create a new buffer with the size `_maxItems`.
@@ -49,7 +49,7 @@ contract CircularBufferUint {
      * @param _maxItems Defines how many items this buffer stores before
      *                  overwriting older items.
      */
-    constructor(uint256 _maxItems) public {
+    function setMaxItems(uint256 _maxItems) internal {
         require(
             _maxItems > 0,
             "The max number of items to store in a circular buffer must be greater than 0."
@@ -57,9 +57,6 @@ contract CircularBufferUint {
 
         items.length = _maxItems;
     }
-
-
-    /* Internal functions */
 
     /**
      * @notice Store a new item in the circular buffer.
