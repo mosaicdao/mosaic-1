@@ -30,6 +30,8 @@ contract MockConsensus is ConsensusI, ReputationI {
 
     mapping(address => uint256) public rep;
 
+    mapping(address => bytes32) public precommitts;
+
 
     /* Special Functions */
 
@@ -102,6 +104,12 @@ contract MockConsensus is ConsensusI, ReputationI {
         return rep[_validator];
     }
 
+    function setReputation(address _validator, uint256 _newReputation)
+        external
+    {
+        rep[_validator] = _newReputation;
+    }
+
     function reputation()
         external
         view
@@ -122,6 +130,14 @@ contract MockConsensus is ConsensusI, ReputationI {
     function registerPrecommit(bytes32 _precommitment)
         external
     {
-        // do nothing for now
+        precommitts[msg.sender] = _precommitment;
+    }
+
+    function isPrecommitted(address _core)
+        external
+        view
+        returns (bool)
+    {
+        return precommitts[_core] != bytes32(0);
     }
 }

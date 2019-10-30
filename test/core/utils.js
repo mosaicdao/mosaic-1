@@ -15,6 +15,7 @@
 'use strict';
 
 const BN = require('bn.js');
+const EthUtils = require('ethereumjs-util');
 
 const web3 = require('../test_lib/web3.js');
 
@@ -48,6 +49,14 @@ function isCoreHalted(status) {
 
 function isCoreCorrupted(status) {
   return CoreStatus.corrupted.cmp(status) === 0;
+}
+
+async function createValidator() {
+  const account = await web3.eth.accounts.create();
+  return {
+    address: account.address,
+    privateKey: account.privateKey,
+  };
 }
 
 async function createConsensusCore(
@@ -111,22 +120,74 @@ async function createCore(
 }
 
 async function openCore(
-  accountProvider,
   consensus,
   core,
 ) {
   const minVal = await core.minimumValidatorCount.call();
 
-  const joinValidatorPromises = [];
+  const validators = [];
   for (let i = 0; i < minVal.toNumber(10); i += 1) {
-    const validator = accountProvider.get();
-    joinValidatorPromises.push(consensus.joinDuringCreation(validator));
+    // eslint-disable-next-line no-await-in-loop
+    const validator = await createValidator();
+    // eslint-disable-next-line no-await-in-loop
+    await consensus.joinDuringCreation(validator.address);
+    validators.push(validator);
   }
-  await Promise.all(joinValidatorPromises);
 
   const coreStatus = await core.coreStatus.call();
   assert.isOk(
     isCoreOpened(coreStatus),
+  );
+
+  return {
+    validators,
+  };
+}
+
+async function signProposal(proposalHash, privateKey) {
+  const proposalSignature = EthUtils.ecsign(
+    EthUtils.toBuffer(proposalHash),
+    EthUtils.toBuffer(privateKey),
+  );
+
+  return {
+    r: EthUtils.bufferToHex(proposalSignature.r),
+    s: EthUtils.bufferToHex(proposalSignature.s),
+    v: web3.utils.toDecimal(proposalSignature.v),
+  };
+}
+
+async function precommitCore(
+  core,
+  proposalHash,
+  validators,
+) {
+  const quorum = await core.quorum();
+
+  assert(quorum > 0);
+  assert(quorum <= validators.length);
+
+  for (let i = 0; i < quorum; i += 1) {
+    // eslint-disable-next-line no-await-in-loop
+    const signature = await signProposal(
+      proposalHash, validators[i].privateKey,
+    );
+
+    // eslint-disable-next-line no-await-in-loop
+    await core.registerVote(
+      proposalHash, signature.r, signature.s, signature.v,
+    );
+  }
+
+  const precommit = await core.precommit();
+  assert.strictEqual(
+    precommit,
+    proposalHash,
+  );
+
+  const coreStatus = await core.coreStatus();
+  assert.isOk(
+    isCorePrecommitted(coreStatus),
   );
 }
 
@@ -147,7 +208,10 @@ function randomSha3() {
 module.exports = {
   createConsensusCore,
   createCore,
+  createValidator,
+  signProposal,
   openCore,
+  precommitCore,
   isCoreCreated,
   isCoreOpened,
   isCorePrecommitted,

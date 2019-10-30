@@ -19,7 +19,10 @@ import "../reputation/ReputationI.sol";
 interface ConsensusI {
     function reputation() external view returns (ReputationI reputation_);
 
-    function coreValidatorThresholds() external view returns (uint256 minimumValidatorCount_, uint256 joinLimit_);
+    function coreValidatorThresholds()
+        external
+        view
+        returns (uint256 minimumValidatorCount_, uint256 joinLimit_);
 
     function registerPrecommit(bytes32 _precommitment) external;
 }

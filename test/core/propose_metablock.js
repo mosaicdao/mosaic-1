@@ -112,7 +112,7 @@ contract('Core::proposeMetablock', async (accounts) => {
     config.core = await Core.at(coreAddress);
     Object.freeze(config);
 
-    await CoreUtils.openCore(accountProvider, config.mockConsensus, config.core);
+    await CoreUtils.openCore(config.mockConsensus, config.core);
 
     proposal.kernelHash = await config.core.openKernelHash();
   });

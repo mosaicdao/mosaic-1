@@ -133,7 +133,6 @@ contract('Core::joinDuringCreation', async (accounts) => {
       assertConfigInCreation(config.mockCore);
 
       await CoreUtils.openCore(
-        accountProvider,
         config.mockConsensus,
         config.mockCore,
       );

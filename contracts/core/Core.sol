@@ -371,8 +371,6 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         committedAccumulatedGas = _accumulatedGas;
         committedSource = _source;
         committedSourceBlockHeight = _sourceBlockHeight;
-
-        newProposalSet();
     }
 
 
@@ -496,6 +494,22 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         insertProposal(_dynasty, proposal_);
     }
 
+    /**
+     * @notice Registers a validator's vote for the given proposal.
+     *         If the validator has already registered a vote for currently
+     *         opened kernel height, it gets updated (only if dynasty number
+     *         of the new vote is higher then the previous one).
+     *
+     * @dev Function requires:
+     *          - core is in precommitment window
+     *          - proposal is not 0
+     *          - if core has precommitted, the given proposal matches with it
+     *          - proposal exists at open kernel height
+     *          - validator active in this core
+     *          - validator is active
+     *          - validator has not already cast the same vote
+     *          - vote gets updated only if the new vote is at higher dynsaty
+     */
     function registerVote(
         bytes32 _proposal,
         bytes32 _r,
@@ -505,29 +519,46 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         external
         duringPrecommitmentWindow
     {
-        require(_proposal != bytes32(0),
-            "Proposal can not be null.");
+        require(
+            _proposal != bytes32(0),
+            "Proposal can not be null."
+        );
         if (precommit != bytes32(0)) {
-            require(_proposal == precommit,
-                "Core has precommitted, only votes for precommitment are relevant.");
+            require(
+                _proposal == precommit,
+                "Core has precommitted, only votes for precommitment are relevant."
+            );
         }
 
-        require(proposals[openKernelHeight][_proposal] != bytes32(0),
-            "Proposal must be registered at open metablock height.");
+        require(
+            proposals[openKernelHeight][_proposal] != bytes32(0),
+            "Proposal must be registered at open metablock height."
+        );
+
         address validator = ecrecover(_proposal, _v, _r, _s);
         // check validator is registered to this core
-        require(isValidator(validator),
-            "Validator ,ust be active in this core.");
-        require(reputation.isActive(validator),
-             "Validator must be active.");
+        require(
+            isValidator(validator),
+            "Validator must be active in this core."
+        );
+        require(
+            reputation.isActive(validator),
+            "Validator must be active."
+        );
+
         bytes32 castVote = votes[validator];
-        require(castVote != _proposal,
-            "Vote has already been cast.");
+        require(
+            castVote != _proposal,
+            "Vote has already been cast."
+        );
+
         VoteCount storage castVoteCount = voteCounts[castVote];
         VoteCount storage registerVoteCount = voteCounts[_proposal];
-        if (castVoteCount.height == openKernelHeight) {
-            require(castVoteCount.dynasty < registerVoteCount.dynasty,
-                "Vote can only be recast for higher dynasty numbers.");
+        if (castVoteCount.count != 0 && castVoteCount.height == openKernelHeight) {
+            require(
+                castVoteCount.dynasty < registerVoteCount.dynasty,
+                "Vote can only be recast for higher dynasty numbers."
+            );
             castVoteCount.count = castVoteCount.count.sub(1);
         }
         votes[validator] = _proposal;
@@ -704,6 +735,8 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
                 creationKernel.gasTarget
             );
             coreStatus = Status.opened;
+
+            newProposalSet();
         }
     }
 
@@ -750,9 +783,10 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         countLogOutMessages = countLogOutMessages.add(1);
     }
 
-    /** Validator is active if open kernel height is
-     * - greater or equal than validator's begin height
-     * - and, less or equal than validator's end height
+    /**
+     * @notice Validator is active if open kernel height is
+     *           - greater or equal than validator's begin height
+     *           - and, less or equal than validator's end height
      */
     function isValidator(address _account)
         public
@@ -781,15 +815,17 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     /* Internal and private functions */
 
     /**
-     * precommit to a given proposal and lock core validators
-     * to associated responsability
+     * @notice Precommits to a given proposal and lock core validators
+     *         to associated responsability.
      */
     function registerPrecommit(bytes32 _proposal)
         internal
     {
-        require(precommit == bytes32(0) ||
-            precommit == _proposal,
-            "Once locked, precommit cannot be changed.");
+        require(
+            precommit == bytes32(0) || precommit == _proposal,
+            "Once locked, precommit cannot be changed."
+        );
+
         if (coreStatus == Status.opened) {
             coreStatus = Status.precommitted;
             precommit = _proposal;
