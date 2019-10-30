@@ -569,6 +569,26 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     }
 
     /**
+     * @notice Asserts that given parameters are hashing to the precommit.
+     *
+     * @dev Function requires:
+     *          - core has precommitted
+     *
+     * @param _kernelHash Kernel hash of a provided metablock.
+     * @param _originObservation Origin observation of a provided metablock.
+     * @param _dynasty Dynasty of a provided metablock.
+     * @param _accumulatedGas Accumulated gas in a provided metablock.
+     * @param _committeeLock Committe lock (transition root hash) of a provided
+     *                       metablock.
+     * @param _source Source blockhash of a vote message for a
+     *                provided metablock.
+     * @param _target Target blockhash of a vote message for a
+     *                provided metablock.
+     * @param _sourceBlockHeight Source block height of a vote message for a
+     *                           provided metablock.
+     * @param _targetBlockHeight Target block height of a vote message for a
+     *                           provided metablock.
+     *
      */
     function assertPrecommit(
         bytes32 _kernelHash,
@@ -585,10 +605,10 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         view
         returns (bytes32 proposal_)
     {
-        require(precommit != bytes32(0),
-            "Core is has not precommitted to a proposal.");
-        require(_kernelHash == openKernelHash,
-            "KernelHash must be the open kernel");
+        require(
+            precommit != bytes32(0),
+            "Core has not precommitted to a proposal."
+        );
 
         bytes32 transitionHash = hashTransition(
             _kernelHash,
@@ -606,8 +626,10 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
             _targetBlockHeight
         );
 
-        require(proposal_ == precommit,
-            "Provided metablock does not match precommit.");
+        require(
+            proposal_ == precommit,
+            "Provided metablock does not match precommit."
+        );
     }
 
     function openMetablock(
