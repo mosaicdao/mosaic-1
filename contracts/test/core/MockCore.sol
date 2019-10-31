@@ -75,6 +75,22 @@ contract MockCore is Core {
         );
     }
 
+    function updatedValidators(uint256 _height)
+        external
+        view
+        returns (address[] memory)
+    {
+        return kernels[_height].updatedValidators;
+    }
+
+    function updatedReputations(uint256 _height)
+        external
+        view
+        returns (uint256[] memory)
+    {
+        return kernels[_height].updatedReputation;
+    }
+
     function updatedValidatorsCount(uint256 _height)
         external
         view

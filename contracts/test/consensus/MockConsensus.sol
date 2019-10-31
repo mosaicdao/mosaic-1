@@ -133,6 +133,32 @@ contract MockConsensus is ConsensusI, ReputationI {
         precommitts[msg.sender] = _precommitment;
     }
 
+    function openMetablock(
+        bytes32 _committedOriginObservation,
+        uint256 _committedDynasty,
+        uint256 _committedAccumulatedGas,
+        bytes32 _committedCommitteeLock,
+        bytes32 _committedSource,
+        bytes32 _committedTarget,
+        uint256 _committedSourceBlockHeight,
+        uint256 _committedTargetBlockHeight,
+        uint256 _deltaGasTarget
+    )
+        external
+    {
+        mockCore.openMetablock(
+            _committedOriginObservation,
+            _committedDynasty,
+            _committedAccumulatedGas,
+            _committedCommitteeLock,
+            _committedSource,
+            _committedTarget,
+            _committedSourceBlockHeight,
+            _committedTargetBlockHeight,
+            _deltaGasTarget
+        );
+    }
+
     function isPrecommitted(address _core)
         external
         view

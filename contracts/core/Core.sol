@@ -601,7 +601,7 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         uint256 _sourceBlockHeight,
         uint256 _targetBlockHeight
     )
-        external
+        public
         view
         returns (bytes32 proposal_)
     {
@@ -632,6 +632,30 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         );
     }
 
+    /**
+     * @notice Opens a new metablock if a proposal is precommitted.
+     *
+     * @dev Function requires:
+     *          - core has precommitted
+     *          - only consensus can call
+     *          - input parameters match to an open metablock
+     *
+     * @param _committedOriginObservation Origin observation of an open
+     *                                    metablock.
+     * @param _committedDynasty Dynasty of an open metablock.
+     * @param _committedAccumulatedGas Accumulated gas in an open metablock.
+     * @param _committedCommitteeLock Committe lock (transition root hash) of
+     *                                an open metablock.
+     * @param _committedSource Source blockhash of a vote message for
+     *                         an open metablock.
+     * @param _committedTarget Target blockhash of a vote message for
+     *                         an open metablock.
+     * @param _committedSourceBlockHeight Source block height of a vote message
+     *                                    for an open metablock.
+     * @param _committedTargetBlockHeight Target block height of a vote message
+     *                                    for an open metablock.
+     * @param _deltaGasTarget Gas target delta for a new metablock.
+     */
     function openMetablock(
         bytes32 _committedOriginObservation,
         uint256 _committedDynasty,
@@ -649,24 +673,17 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     {
         assert(precommit != bytes32(0));
 
-        bytes32 transitionHash = hashTransition(
+        assertPrecommit(
             openKernelHash,
             _committedOriginObservation,
             _committedDynasty,
             _committedAccumulatedGas,
-            _committedCommitteeLock
-        );
-
-        bytes32 committedProposal = hashVoteMessage(
-            transitionHash,
+            _committedCommitteeLock,
             _committedSource,
             _committedTarget,
             _committedSourceBlockHeight,
             _committedTargetBlockHeight
         );
-
-        require(precommit == committedProposal,
-            "Precommit does not equal committed metablock.");
 
         committedDynasty = _committedDynasty;
         committedAccumulatedGas = _committedAccumulatedGas;
@@ -1005,7 +1022,7 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         uint256[] memory _updatedReputation,
         uint256 _gasTarget
     )
-        internal
+        public
         view
         returns (bytes32 hash_)
     {
