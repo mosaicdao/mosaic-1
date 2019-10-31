@@ -14,22 +14,41 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "./MessageBox.sol";
-import "./Proof.sol";
+import "./StateRootI.sol";
+import "./MessageBusProxy.sol";
 
-contract MessageBus is MessageBox, Proof {
+contract MessageBusAdapter is MessageBusProxy {
 
-    /* Constants */
-
-    bytes32 public constant MESSAGE_TYPEHASH = keccak256(
-        abi.encode(
-            "Message(bytes32 intentHash,uint256 nonce,uint256 gasPrice,uint256 gasLimit,address sender)"
+    bytes4 public constant SETUP_CALLPREFIX = bytes4(
+        keccak256(
+            "setup(address,address,uint256)"
         )
     );
-    //TODO: is domain separator needed? This is not used for signing.
+
+    bytes4 public constant DECLARE_MESSAGE_CALLPREFIX = bytes4(
+        keccak256(
+            "declareMessage(bytes32,uint256,uint256,uint256,address)"
+        )
+    );
+
+    bytes4 public constant CONFIRM_MESSAGE_CALLPREFIX = bytes4(
+        keccak256(
+            "confirmMessage(bytes32,uint256,uint256,uint256,address,uint256,bytes)"
+        )
+    );
 
 
-    /* Internal Functions */
+    /**
+     * @notice Constructor function sets address of message bus master copy contract.
+     * @param _messageBusMasterCopy Message bus contract master copy address.
+     */
+    constructor(address _messageBusMasterCopy)
+        public
+        MessageBusProxy(_messageBusMasterCopy)
+    {
+
+    }
+
 
     /**
      * @notice Setup the proof contract. This can be called only once.
@@ -38,21 +57,20 @@ contract MessageBus is MessageBox, Proof {
      * @param _maxStorageRootItems Defines how many storage roots should be
      *                             stored in circular buffer.
      */
-    function setup(
+    function setupMessageBus(
         address _storageAccount,
         StateRootI _stateRootProvider,
         uint256 _maxStorageRootItems
     )
         internal
     {
-        /* @dev: Please note that no validations are done here. Proof::setup
-         *       already has the validations for the input params, so avoided
-         *       the duplications here.
-         */
-        Proof.initialize(
-            _storageAccount,
-            _stateRootProvider,
-            _maxStorageRootItems
+        executeDelegateCall(
+            abi.encodeWithSelector(
+                SETUP_CALLPREFIX,
+                _storageAccount,
+                _stateRootProvider,
+                _maxStorageRootItems
+            )
         );
     }
 
@@ -76,20 +94,16 @@ contract MessageBus is MessageBox, Proof {
         internal
         returns (bytes32 messageHash_)
     {
-        messageHash_ = messageHash(
-            _intentHash,
-            _nonce,
-            _gasPrice,
-            _gasLimit,
-            _sender
+        messageHash_ = executeDelegateCall(
+            abi.encodeWithSelector(
+                DECLARE_MESSAGE_CALLPREFIX,
+                _intentHash,
+                _nonce,
+                _gasPrice,
+                _gasLimit,
+                _sender
+            )
         );
-
-        require(
-            outbox[messageHash_] == false,
-            "Message already exists in the outbox."
-        );
-
-        outbox[messageHash_] = true;
     }
 
     /**
@@ -118,63 +132,16 @@ contract MessageBus is MessageBox, Proof {
         internal
         returns (bytes32 messageHash_)
     {
-        messageHash_ = messageHash(
-            _intentHash,
-            _nonce,
-            _gasPrice,
-            _gasLimit,
-            _sender
-        );
-
-        require(
-            inbox[messageHash_] == false,
-            "Message already exists in the inbox."
-        );
-
-        inbox[messageHash_] = true;
-
-        // Get the storage path to verify proof.
-        bytes memory path = Proof.storagePath(
-            OUTBOX_OFFSET,
-            messageHash_
-        );
-
-        Proof.proveStorageExistence(
-            path,
-            keccak256(abi.encodePacked(true)),
-            _blockHeight,
-            _rlpParentNodes
-        );
-    }
-
-    /**
-     * @notice Generate message hash from the input params
-     * @param _intentHash Intent hash of message.
-     * @param _nonce Nonce of sender.
-     * @param _gasPrice Gas price.
-     * @param _gasLimit Gas limit.
-     * @param _sender Sender address.
-     * @return messageHash_ Message hash.
-     */
-    function messageHash(
-        bytes32 _intentHash,
-        uint256 _nonce,
-        uint256 _gasPrice,
-        uint256 _gasLimit,
-        address _sender
-    )
-        internal
-        pure
-        returns (bytes32 messageHash_)
-    {
-        messageHash_ = keccak256(
-            abi.encode(
-                MESSAGE_TYPEHASH,
+        messageHash_ = executeDelegateCall(
+            abi.encodeWithSelector(
+                CONFIRM_MESSAGE_CALLPREFIX,
                 _intentHash,
                 _nonce,
                 _gasPrice,
                 _gasLimit,
-                _sender
+                _sender,
+                _blockHeight,
+                _rlpParentNodes
             )
         );
     }

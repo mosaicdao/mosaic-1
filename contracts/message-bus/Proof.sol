@@ -34,7 +34,7 @@ contract Proof is CircularBufferUint{
     bytes public encodedAccountPath;
 
     /** Maps blockHeight to storageRoot. */
-    mapping(uint256 => bytes32) internal storageRoots;
+    mapping(uint256 => bytes32) public storageRoots;
 
     /* Internal Functions */
 
