@@ -722,6 +722,10 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
      *         is slashed, to retro-actively remove the vote from the
      *         current open metablock.
      *
+     * @dev Function requires:
+     *          - only consensus can call
+     *          - core is in running state
+     *
      * @param _validator Address of a validator to remove a vote.
      */
     function removeVote(
