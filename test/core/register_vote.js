@@ -533,8 +533,9 @@ contract('Core::registerVote', (accounts) => {
         precommitClosureBlockHeight.eq(new BN(quorumBlockNumber).add(CORE_LAST_VOTES_WINDOW)),
       );
 
+      const isPrecommitted = await config.consensus.isPrecommitted(config.core.address);
       assert.isOk(
-        config.consensus.isPrecommitted(config.core),
+        isPrecommitted,
       );
     });
   });
