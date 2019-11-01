@@ -718,8 +718,11 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     }
 
     /**
-     * remove vote can be called by consensus when a validator
-     * is slashed, to retro-actively remove the vote from the current open metablock
+     * @notice Remove vote can be called by consensus when a validator
+     *         is slashed, to retro-actively remove the vote from the
+     *         current open metablock.
+     *
+     * @param _validator Address of a validator to remove a vote.
      */
     function removeVote(
         address _validator
@@ -918,7 +921,7 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     }
 
     /**
-     * @notice Start new linked list for proposals at open kernel height.
+     * @notice Starts new linked list for proposals at open kernel height.
      */
     function newProposalSet()
         internal
@@ -1160,8 +1163,9 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         );
     }
 
-    /** @notice takes the VoteMessage parameters and returns
-     *          the typed VoteMessage hash
+    /**
+    * @notice Takes the VoteMessage parameters and returns
+     *        the typed VoteMessage hash.
      */
     function hashVoteMessage(
         bytes32 _transitionHash,

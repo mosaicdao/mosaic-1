@@ -88,6 +88,12 @@ contract MockConsensus is ConsensusI, ReputationI {
         mockCore.logout(_validator);
     }
 
+    function removeVote(address _validator)
+        external
+    {
+        mockCore.removeVote(_validator);
+    }
+
     function isActive(address _validator)
         external
         view
