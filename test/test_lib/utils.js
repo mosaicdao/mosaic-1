@@ -17,9 +17,22 @@ const BN = require('bn.js');
 const web3 = require('./web3.js');
 
 async function advanceBlock() {
-  return web3.currentProvider.send(
-    'evm_mine',
-  );
+  return new Promise((resolve, reject) => {
+    web3.currentProvider.send({
+      method: 'evm_mine',
+      jsonrpc: '2.0',
+      id: 1337,
+    },
+    (err) => {
+      if (err) {
+        return reject(err);
+      }
+
+      const newBlockHash = web3.eth.getBlock('latest').hash;
+
+      return resolve(newBlockHash);
+    });
+  });
 }
 
 const ResultType = {

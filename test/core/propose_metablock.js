@@ -29,7 +29,6 @@ let proposal = {};
 async function proposeMetaBlock(
   core,
   proposalArgs,
-  txOptions = {},
 ) {
   const proposalHash = await core.proposeMetablock.call(
     proposalArgs.kernelHash,
@@ -41,7 +40,6 @@ async function proposeMetaBlock(
     proposalArgs.target,
     proposalArgs.sourceBlockHeight,
     proposalArgs.targetBlockHeight,
-    txOptions,
   );
 
   await core.proposeMetablock(
@@ -54,7 +52,6 @@ async function proposeMetaBlock(
     proposalArgs.target,
     proposalArgs.sourceBlockHeight,
     proposalArgs.targetBlockHeight,
-    txOptions,
   );
 
   return proposalHash;
