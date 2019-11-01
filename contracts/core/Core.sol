@@ -823,6 +823,20 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         nextKernel.updatedReputation.push(uint256(1));
     }
 
+    /**
+     * @notice Logs out the validator.
+     *
+     * @dev Function requires:
+     *          - only consensus can call
+     *          - core is in a running state
+     *          - validators' minimum limit has not been reached
+     *          - maximum number of validators to logout in a single metablock
+     *            has not been reached
+     *          - given validator address is not 0
+     *          - validator has joined
+     *
+     * @param _validator An address of the validator to logout.
+     */
     function logout(address _validator)
         external
         onlyConsensus
@@ -1017,17 +1031,35 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         // update validator count upon new metablock opening
     }
 
+    /**
+     * @notice Removes a validator.
+     *
+     * @dev Function requires:
+     *          - address of a validator is not 0
+     *          - the given end height of a validator is bigger than open
+     *            kernel height
+     *          - validator must have begun
+     *          - validatvalidator must be active
+     */
     function removeValidator(address _validator, uint256 _endHeight)
         internal
     {
-        require(_validator != address(0),
-            "Validator must not be null address.");
-        require(_endHeight > openKernelHeight,
-            "End height cannot be less or equal than kernel height.");
-        require(validatorBeginHeight[_validator] <= openKernelHeight,
-            "Validator must have begun.");
-        require(validatorEndHeight[_validator] == MAX_FUTURE_END_HEIGHT,
-            "Validator must be active.");
+        require(
+            _validator != address(0),
+            "Validator must not be null address."
+        );
+        require(
+            _endHeight > openKernelHeight,
+            "End height cannot be less or equal than kernel height."
+        );
+        require(
+            validatorBeginHeight[_validator] <= openKernelHeight,
+            "Validator must have begun."
+        );
+        require(
+            validatorEndHeight[_validator] == MAX_FUTURE_END_HEIGHT,
+            "Validator must be active."
+        );
         validatorEndHeight[_validator] = _endHeight;
         // update validator count upon new metablock opening
     }
