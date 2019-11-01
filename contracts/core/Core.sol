@@ -779,26 +779,48 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         }
     }
 
+    /**
+     * @notice Joins a validator.
+     *
+     * @dev Function requires:
+     *          - only consensus can call
+     *          - core is in a running state
+     *          - validators' join limit for the core has not been reached
+     *          - maximum number of validators to join in a single metablock
+     *            has not been reached
+     *          - given validator address is not 0
+     *          - validator has not joined
+     *
+     * @param _validator Address of a validator to join.
+     */
     function join(address _validator)
         external
         onlyConsensus
         whileRunning
     {
-        require(countValidators
+        require(
+            countValidators
             .add(countJoinMessages)
             .sub(countLogOutMessages) < joinLimit,
-            "Join limit is reached for this core.");
-        require(countJoinMessages < MAX_DELTA_VALIDATORS,
-            "Maximum number of validators that can join in one metablock is reached.");
+            "Join limit is reached for this core."
+        );
+        require(
+            countJoinMessages < MAX_DELTA_VALIDATORS,
+            "Maximum number of validators that can join in one metablock is reached."
+        );
+
+        countJoinMessages = countJoinMessages.add(1);
+
         uint256 nextKernelHeight = openKernelHeight.add(1);
+
         // insertValidator requires validator cannot join twice
         // insert validator starting from next metablock height
         insertValidator(_validator, nextKernelHeight);
+
         Kernel storage nextKernel = kernels[nextKernelHeight];
         nextKernel.updatedValidators.push(_validator);
-        // TASK: reputation can be uint64, and initial rep set properly
+        // TASK: reputation can be uint64, and initial rep set properly.
         nextKernel.updatedReputation.push(uint256(1));
-        countJoinMessages = countJoinMessages.add(1);
     }
 
     function logout(address _validator)
@@ -806,19 +828,27 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         onlyConsensus
         whileRunning
     {
-        require(countValidators
+        require(
+            countValidators
             .add(countJoinMessages)
             .sub(countLogOutMessages) > minimumValidatorCount,
-            "Validator minimum limit reached.");
-        require(countLogOutMessages < MAX_DELTA_VALIDATORS,
-            "Maximum number of validators that can log out in one metablock is reached.");
+            "Validator minimum limit reached."
+        );
+        require(
+            countLogOutMessages < MAX_DELTA_VALIDATORS,
+            "Maximum number of validators that can log out in one metablock is reached."
+        );
+
         uint256 nextKernelHeight = openKernelHeight.add(1);
+
         // removeValidator performs necessary requirements
         // remove validator from next metablock height
         removeValidator(_validator, nextKernelHeight);
+
         Kernel storage nextKernel = kernels[nextKernelHeight];
         nextKernel.updatedValidators.push(_validator);
         nextKernel.updatedReputation.push(uint256(0));
+
         countLogOutMessages = countLogOutMessages.add(1);
     }
 
