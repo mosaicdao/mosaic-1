@@ -975,19 +975,24 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     }
 
     /**
-     * clean proposals
+     * @notice Clean proposals.
+     *
      * note: improve logic, to be done partially in case too much gas needed
-     *       double-check if logic is correct
+     *       double-check if logic is correct.
      */
     function cleanProposals(uint256 _height)
         internal
     {
-        require(_height < openKernelHeight,
-            "Only proposals of older kernels can be cleaned out.");
+        require(
+            _height < openKernelHeight,
+            "Only proposals of older kernels can be cleaned out."
+        );
         bytes32 currentProposal = proposals[_height][SENTINEL_PROPOSALS];
         bytes32 deleteProposal = SENTINEL_PROPOSALS;
-        require(currentProposal != bytes32(0),
-            "There are no proposals to clear out.");
+        require(
+            currentProposal != bytes32(0),
+            "There are no proposals to clear out."
+        );
         while (currentProposal != SENTINEL_PROPOSALS) {
             delete proposals[_height][deleteProposal];
             delete voteCounts[deleteProposal];
