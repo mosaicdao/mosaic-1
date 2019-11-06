@@ -14,33 +14,33 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../message-bus/MessageOutbox.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
+import "../message-bus/MessageInbox.sol";
 import "../consensus/ConsensusModule1.sol";
 import "./KernelBase.sol";
 
-contract KernelGateway is MasterCopyNonUpgradable, MessageOutbox, ConsensusModule1, KernelBase {
+contract KernelCoGateway is MasterCopyNonUpgradable, MessageInbox, ConsensusModule1, KernelBase {
+
 
     /* Events */
 
-    event OpenedNewKernelGateway(bytes32 kernelMessageHash);
+    event ConfirmedOpenKernelGateway(bytes32 kernelMessageHash);
+
 
     /* External Functions */
 
-    /**
-     * @notice Setup kernel gateway contract.
-     * @param _chainId Chain identifier.
-     * @param _kernelCoGateway KernelCoGateway contract address.
-     */
     function setup(
         bytes20 _chainId,
-        address _kernelCoGateway
+        address _kernelGateway,
+        uint8 _outboxStorageIndex,
+        StateRootI _stateRootProvider,
+        uint256 _maxStorageRootItems
     )
         external
     {
         require(
             chainId == bytes20(0),
-            "Kernel gateway is already setup."
+            "Kernel cogateway is already setup."
         );
 
         require(
@@ -49,7 +49,7 @@ contract KernelGateway is MasterCopyNonUpgradable, MessageOutbox, ConsensusModul
         );
 
         require(
-            _kernelCoGateway != address(0),
+            _kernelGateway != address(0),
             "KernelCoGateway address is 0."
         );
 
@@ -57,35 +57,30 @@ contract KernelGateway is MasterCopyNonUpgradable, MessageOutbox, ConsensusModul
         consensus = ConsensusI(msg.sender);
 
         // Setup message out box.
-        MessageOutbox.setupMessageOutbox(
+        MessageInbox.setupMessageInbox(
             _chainId,
-            _kernelCoGateway
+            _kernelGateway,
+            _outboxStorageIndex,
+            _stateRootProvider,
+            _maxStorageRootItems
         );
     }
 
-    /**
-     * @notice Declare new kernel opening. Only consensus contract can call
-     *         this function.
-     * @param _height The height of meta-block.
-     * @param _parent The hash of this block's parent.
-     * @param _updatedValidators  The array of addresses of the updated validators.
-     * @param _updatedReputation The array of reputation that corresponds to
-     *                        the updated validators.
-     * @param _gasTarget The gas target for this metablock
-     * @return Kernel message hash.
-     */
-    function openNewKernel(
+    function confirmOpenKernel(
         uint256 _height,
         bytes32 _parent,
         address[] calldata _updatedValidators,
         uint256[] calldata _updatedReputation,
-        uint256 _gasTarget
+        uint256 _gasTarget,
+        uint256 _gasPrice,
+        uint256 _gasLimit,
+        address _sender,
+        uint256 _blockHeight,
+        bytes calldata _rlpParentNodes
     )
-        onlyConsensus
         external
         returns (bytes32 kernelMessageHash_)
     {
-
         require(
             _height > latestKernelHeight,
             "Last declared kernel height is greater than the provided height"
@@ -96,22 +91,14 @@ contract KernelGateway is MasterCopyNonUpgradable, MessageOutbox, ConsensusModul
             "Last declared gas target is greater than the provided gas target"
         );
 
+        require(
+            _sender != address(0),
+            "Sender address is 0."
+        );
+
         latestKernelHeight = _height;
         latestGasTarget = _gasTarget;
 
-        /* @dev: Here the kernelHash is not used instead kernelIntentHash is
-         *       used. For the kernelHash, the verifying contract used in
-         *       domain separator is core address. This means that in the
-         *       KernelCoGateway the core address needs to be provided at the
-         *       setup. If the new core is created then the core address needs
-         *       to be updated in KernelCoGateway or deploy a new set of kernel
-         *       gateways.
-         *       Kernel gateway is more related to message passing
-         *       between the chains. The message bus itself has the logic
-         *       related to domain separator and this function can only be
-         *       called by consensus contract, so its safe to use the
-         *       kernelType hash as an intent hash here.
-         */
         bytes32 kernelIntentHash = kernelTypeHash(
             _height,
             _parent,
@@ -123,17 +110,18 @@ contract KernelGateway is MasterCopyNonUpgradable, MessageOutbox, ConsensusModul
         // Check if the kernel is already open.
         require(
             kernelMessages[kernelIntentHash] == bytes32(0),
-            "Open kernel already exists."
+            "Kernel opening already confirmed."
         );
 
-        // Declare message in outbox.
-        // TODO: Check with team for the gas price and gas limit values.
-        kernelMessageHash_ = MessageOutbox.declareMessage(
+        // Confirm message in inbox.
+        kernelMessageHash_ = MessageInbox.confirmMessage(
             kernelIntentHash,
-             nonce,
-            0, // Gas price is 0
-            0, // Gas limit is 0
-            address(consensus)
+            nonce,
+            _gasPrice, // Gas price is 0
+            _gasLimit, // Gas limit is 0
+            _sender,
+            _blockHeight,
+            _rlpParentNodes
         );
 
         // Increment the nonce
@@ -143,6 +131,7 @@ contract KernelGateway is MasterCopyNonUpgradable, MessageOutbox, ConsensusModul
         // TODO: Update the logic to delete the kernel message hash.
         kernelMessages[kernelIntentHash] = kernelMessageHash_;
 
-        emit OpenedNewKernelGateway(kernelMessageHash_);
+        emit ConfirmedOpenKernelGateway(kernelMessageHash_);
+
     }
 }

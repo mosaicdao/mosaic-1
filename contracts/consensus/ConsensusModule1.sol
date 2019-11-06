@@ -14,11 +14,21 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "./MessageBox.sol";
-import "./Proof.sol";
-import "./MessageInbox.sol";
-import "./MessageOutbox.sol";
+import "./ConsensusI.sol";
+// TODO: This contract is temporary, Delete this.
 
-contract MessageBus is MessageInbox, MessageOutbox {
+contract ConsensusModule1 {
 
+    /** Consensus contract for which this committee was formed. */
+    ConsensusI public consensus;
+
+    modifier onlyConsensus()
+    {
+        require(
+            msg.sender == address(consensus),
+            "Only the consensus contract can call this function."
+        );
+
+        _;
+    }
 }

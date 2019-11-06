@@ -14,29 +14,66 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../proxies/MasterCopyNonUpgradable.sol";
+import "../version/MosaicVersion.sol";
 
-contract MessageBox is MasterCopyNonUpgradable {
+contract MessageBox is MosaicVersion {
 
-    /** Mapping to indicate that message hash exists in outbox. */
-    mapping(bytes32 => bool) public outbox;
+    /* Constants */
 
-    /** Mapping to indicate that message hash exists in inbox. */
-    mapping(bytes32 => bool) public inbox;
+    /** EIP-712 domain separator name for Core */
+    string public constant DOMAIN_SEPARATOR_NAME = "Message-Gateway";
+
+    /** EIP-712 domain separator for Core */
+    bytes32 public constant DOMAIN_SEPARATOR_TYPEHASH = keccak256(
+        "EIP712Domain(string name,string version,bytes20 chainId,address verifyingContract,bytes32 salt)"
+    );
+
+    /** Message type hash */
+    bytes32 public constant MESSAGE_TYPEHASH = keccak256(
+        abi.encode(
+            "Message(bytes32 intentHash,uint256 nonce,uint256 gasPrice,uint256 gasLimit,address sender)"
+        )
+    );
 
     /**
-     * Position of outbox in struct MessageBox.
-     * This is used to generate storage Merkel proof.
-     * @dev: This is 1 considering that master copy address is always
-     * at location 0
+     * @notice Generate message hash from the input params
+     * @param _intentHash Intent hash of message.
+     * @param _nonce Nonce of sender.
+     * @param _gasPrice Gas price.
+     * @param _gasLimit Gas limit.
+     * @param _sender Sender address.
+     * @return messageHash_ Message hash.
      */
-    uint8 public constant OUTBOX_OFFSET = 1;
+    function _messageHash(
+        bytes32 _intentHash,
+        uint256 _nonce,
+        uint256 _gasPrice,
+        uint256 _gasLimit,
+        address _sender,
+        bytes32 _domainSeparator
+    )
+        internal
+        pure
+        returns (bytes32 messageHash_)
+    {
+        bytes32 typedMessageHash = keccak256(
+            abi.encode(
+                MESSAGE_TYPEHASH,
+                _intentHash,
+                _nonce,
+                _gasPrice,
+                _gasLimit,
+                _sender
+            )
+        );
 
-    /**
-     * Position of inbox in struct MessageBox.
-     * This is used to generate storage merkel proof.
-     * @dev: This is 1 considering that master copy address is always
-     * at location 0 and outbox is at location 1.
-     */
-    uint8 public constant INBOX_OFFSET = 2;
+        messageHash_ = keccak256(
+            abi.encodePacked(
+                byte(0x19),
+                byte(0x01),
+                _domainSeparator,
+                typedMessageHash
+            )
+        );
+    }
 }
