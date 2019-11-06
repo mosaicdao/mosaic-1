@@ -18,6 +18,8 @@ import "./MessageBox.sol";
 
 contract MessageOutbox is MessageBox {
 
+    /* Variables */
+
     /** Mapping to indicate that message hash exists in outbox. */
     mapping(bytes32 => bool) public outbox;
 
@@ -25,10 +27,49 @@ contract MessageOutbox is MessageBox {
     bytes32 public outboxDomainSeparator;
 
     /** Message inbox address */
-    address messageInbox;
+    address public messageInbox;
+
+
+    /* External Functions. */
+
+    /**
+     * @notice Generate outbox message hash from the input params
+     * @param _intentHash Intent hash of message.
+     * @param _nonce Nonce of sender.
+     * @param _gasPrice Gas price.
+     * @param _gasLimit Gas limit.
+     * @param _sender Sender address.
+     * @return messageHash_ Message hash.
+     */
+    function outboxMessageHash(
+        bytes32 _intentHash,
+        uint256 _nonce,
+        uint256 _gasPrice,
+        uint256 _gasLimit,
+        address _sender
+    )
+        external
+        view
+        returns (bytes32 messageHash_)
+    {
+        messageHash_ = _messageHash(
+            _intentHash,
+            _nonce,
+            _gasPrice,
+            _gasLimit,
+            _sender,
+            outboxDomainSeparator
+        );
+    }
+
 
     /* Internal Functions. */
 
+    /**
+     * @notice Setup message outbox.
+     * @param _chainId Chain identifier.
+     * @param _messageInbox MessageInbox contract address.
+     */
     function setupMessageOutbox(
         bytes20 _chainId,
         address _messageInbox
@@ -106,27 +147,5 @@ contract MessageOutbox is MessageBox {
         );
 
         outbox[messageHash_] = true;
-    }
-
-
-    function outboxMessageHash(
-        bytes32 _intentHash,
-        uint256 _nonce,
-        uint256 _gasPrice,
-        uint256 _gasLimit,
-        address _sender
-    )
-        external
-        view
-        returns (bytes32 messageHash_)
-    {
-        messageHash_ = _messageHash(
-            _intentHash,
-            _nonce,
-            _gasPrice,
-            _gasLimit,
-            _sender,
-            outboxDomainSeparator
-        );
     }
 }

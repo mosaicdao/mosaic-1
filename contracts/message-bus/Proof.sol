@@ -36,6 +36,7 @@ contract Proof is CircularBufferUint{
     /** Maps blockHeight to storageRoot. */
     mapping(uint256 => bytes32) public storageRoots;
 
+
     /* Internal Functions */
 
     /**

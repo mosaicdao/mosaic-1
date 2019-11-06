@@ -19,16 +19,35 @@ import "../message-bus/MessageInbox.sol";
 import "../consensus/ConsensusModule1.sol";
 import "./KernelBase.sol";
 
-contract KernelCoGateway is MasterCopyNonUpgradable, MessageInbox, ConsensusModule1, KernelBase {
-
-
+contract KernelCoGateway is
+    MasterCopyNonUpgradable, // Always keep this always at location 0
+    MessageInbox,
+    ConsensusModule1, // TODO: replace this with ConsensusModule
+    KernelBase
+{
     /* Events */
 
     event ConfirmedOpenKernelGateway(bytes32 kernelMessageHash);
 
 
+    /* Constants */
+
+    /** This is the storage index of MessageInbox::inbox mapping. */
+    uint8 constant public INBOX_OFFSET = 1;
+
+
     /* External Functions */
 
+    /**
+     * @notice Setup kernel cogateway contract.
+     * @param _chainId Chain identifier.
+     * @param _kernelGateway KernelGateway contract address.
+     * @param _outboxStorageIndex Storage index of outbox mapping in
+     *                            KernelGateway contract.
+     * @param _stateRootProvider State root provider contract address.
+     * @param _maxStorageRootItems Defines how many storage roots should be
+     *                             stored in circular buffer.
+     */
     function setup(
         bytes20 _chainId,
         address _kernelGateway,
@@ -38,9 +57,10 @@ contract KernelCoGateway is MasterCopyNonUpgradable, MessageInbox, ConsensusModu
     )
         external
     {
+        // Make sure that this function is called only once.
         require(
             chainId == bytes20(0),
-            "Kernel cogateway is already setup."
+            "KernelCoGateway is already setup."
         );
 
         require(
@@ -50,7 +70,7 @@ contract KernelCoGateway is MasterCopyNonUpgradable, MessageInbox, ConsensusModu
 
         require(
             _kernelGateway != address(0),
-            "KernelCoGateway address is 0."
+            "KernelGateway address is 0."
         );
 
         chainId = _chainId;
@@ -66,6 +86,45 @@ contract KernelCoGateway is MasterCopyNonUpgradable, MessageInbox, ConsensusModu
         );
     }
 
+    /**
+     *  @notice Verify merkle proof of a KernelGateway contract address.
+     *          Trust factor is brought by state roots of the contract which
+     *          implements StateRootInterface.
+     *  @param _blockHeight Block height at which KernelGateway contract is to be
+     *                      proven.
+     *  @param _rlpAccount RLP encoded account node object.
+     *  @param _rlpParentNodes RLP encoded value of account proof parent nodes.
+     *  @return `true` if KernelGateway account is proved.
+     */
+    function proveKernelGateway(
+        uint256 _blockHeight,
+        bytes calldata _rlpAccount,
+        bytes calldata _rlpParentNodes
+    )
+        external
+    {
+        MessageInbox.proveStorageAccount(
+            _blockHeight,
+            _rlpAccount,
+            _rlpParentNodes
+        );
+    }
+
+    /**
+     * @notice Confirm that a new kernel is opened by providing the merkel proof.
+     * @param _height The height of meta-block.
+     * @param _parent The hash of this block's parent.
+     * @param _updatedValidators  The array of addresses of the updated validators.
+     * @param _updatedReputation The array of reputation that corresponds to
+     *                        the updated validators.
+     * @param _gasTarget The gas target for this metablock.
+     * @param _gasPrice Gas price.
+     * @param _gasLimit Gas limit.
+     * @param _sender Sender address.
+     * @param _blockHeight Block height for fetching storage root.
+     * @param _rlpParentNodes RLP encoded parent node data to prove in
+     *                        message outbox.
+     */
     function confirmOpenKernel(
         uint256 _height,
         bytes32 _parent,

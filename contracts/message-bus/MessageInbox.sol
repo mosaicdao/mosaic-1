@@ -18,7 +18,7 @@ import "./MessageBox.sol";
 import "./StateRootI.sol";
 import "./Proof.sol";
 
-contract MessageInbox is MessageBox, Proof{
+contract MessageInbox is MessageBox, Proof {
 
     /** Mapping to indicate that message hash exists in inbox. */
     mapping(bytes32 => bool) public inbox;
@@ -33,6 +33,51 @@ contract MessageInbox is MessageBox, Proof{
     uint8 outboxStorageIndex;
 
 
+    /* External Functions. */
+
+    /**
+     * @notice Generate inbox message hash from the input params
+     * @param _intentHash Intent hash of message.
+     * @param _nonce Nonce of sender.
+     * @param _gasPrice Gas price.
+     * @param _gasLimit Gas limit.
+     * @param _sender Sender address.
+     * @return messageHash_ Message hash.
+     */
+    function inboxMessageHash(
+        bytes32 _intentHash,
+        uint256 _nonce,
+        uint256 _gasPrice,
+        uint256 _gasLimit,
+        address _sender
+    )
+        external
+        view
+        returns (bytes32 messageHash_)
+    {
+        messageHash_ = _messageHash(
+            _intentHash,
+            _nonce,
+            _gasPrice,
+            _gasLimit,
+            _sender,
+            inboxDomainSeparator
+        );
+    }
+
+
+    /* Internal Functions. */
+
+    /**
+     * @notice Setup message inbox.
+     * @param _chainId Chain identifier.
+     * @param _messageOutbox MessageOutbox contract address.
+     * @param _outboxStorageIndex Storage index of outbox mapping in
+     *                            MessageOutbox contract.
+     * @param _stateRootProvider State root provider contract address.
+     * @param _maxStorageRootItems Defines how many storage roots should be
+     *                             stored in circular buffer.
+     */
     function setupMessageInbox(
         bytes20 _chainId,
         address _messageOutbox,
@@ -90,32 +135,26 @@ contract MessageInbox is MessageBox, Proof{
     }
 
     /**
-     * @notice Generate message hash from the input params
-     * @param _intentHash Intent hash of message.
-     * @param _nonce Nonce of sender.
-     * @param _gasPrice Gas price.
-     * @param _gasLimit Gas limit.
-     * @param _sender Sender address.
-     * @return messageHash_ Message hash.
+     * @notice Verify merkle proof of a storage contract address.
+     *         Trust factor is brought by state roots of the contract which
+     *         implements StateRootInterface.
+     * @param _blockHeight Block height at which Gateway/CoGateway is to be
+     *                     proven.
+     * @param _rlpAccount RLP encoded account node object.
+     * @param _rlpParentNodes RLP encoded value of account proof parent nodes.
+     * @return `true` if Gateway account is proved
      */
-    function inboxMessageHash(
-        bytes32 _intentHash,
-        uint256 _nonce,
-        uint256 _gasPrice,
-        uint256 _gasLimit,
-        address _sender
+    function proveStorageAccount(
+        uint256 _blockHeight,
+        bytes memory _rlpAccount,
+        bytes memory _rlpParentNodes
     )
-        external
-        view
-        returns (bytes32 messageHash_)
+        internal
     {
-        messageHash_ = _messageHash(
-            _intentHash,
-            _nonce,
-            _gasPrice,
-            _gasLimit,
-            _sender,
-            inboxDomainSeparator
+        Proof.proveStorageAccount(
+            _blockHeight,
+            _rlpAccount,
+            _rlpParentNodes
         );
     }
 
@@ -174,6 +213,4 @@ contract MessageInbox is MessageBox, Proof{
             _rlpParentNodes
         );
     }
-
-
 }

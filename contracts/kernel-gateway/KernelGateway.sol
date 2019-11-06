@@ -19,11 +19,22 @@ import "../proxies/MasterCopyNonUpgradable.sol";
 import "../consensus/ConsensusModule1.sol";
 import "./KernelBase.sol";
 
-contract KernelGateway is MasterCopyNonUpgradable, MessageOutbox, ConsensusModule1, KernelBase {
-
+contract KernelGateway is
+    MasterCopyNonUpgradable, // Always keep this always at location 0
+    MessageOutbox,
+    ConsensusModule1, // TODO: replace this with ConsensusModule
+    KernelBase
+{
     /* Events */
 
     event OpenedNewKernelGateway(bytes32 kernelMessageHash);
+
+
+    /* Constants */
+
+    /** This is the storage index of MessageOutbox::outbox mapping. */
+    uint8 constant public OUTBOX_OFFSET = 1;
+
 
     /* External Functions */
 
@@ -38,6 +49,7 @@ contract KernelGateway is MasterCopyNonUpgradable, MessageOutbox, ConsensusModul
     )
         external
     {
+        // Make sure that this function is called only once.
         require(
             chainId == bytes20(0),
             "Kernel gateway is already setup."
