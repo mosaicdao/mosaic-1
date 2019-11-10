@@ -43,16 +43,16 @@ interface ConsensusI {
 
     /**
      * @notice Create a new meta chain.
-     * @param _chainId Chain id for new meta-chain.
+     * @param _anchor anchor of the new meta-chain.
      * @param _epochLength Epoch length for new meta-chain.
-     * @param _source Source block hash.
-     * @param _sourceBlockHeight Source block height.
+     * @param _rootBlockHash root block hash.
+     * @param _rootBlockHeight root block height.
      */
     function newMetaChain(
-        bytes20 _chainId,
+        address _anchor,
         uint256 _epochLength,
-        bytes32 _source,
-        uint256 _sourceBlockHeight
+        bytes32 _rootBlockHash,
+        uint256 _rootBlockHeight
     )
         external;
 }

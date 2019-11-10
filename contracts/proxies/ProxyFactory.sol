@@ -1,6 +1,7 @@
 pragma solidity ^0.5.3;
 import "./Proxy.sol";
 
+// TODO: add copyright + reference
 
 /// @title Proxy Factory - Allows to create new proxy contact and execute a message call to the new proxy within one transaction.
 /// @author Stefan George - <stefan@gnosis.pm>

@@ -52,7 +52,8 @@ contract SpyAxiom is AxiomI{
         external
     {
         _consensus.newMetaChain(
-            _chainId,
+            // TODO: align unit tests
+            address(_chainId),
             _epochLength,
             _source,
             _sourceBlockHeight

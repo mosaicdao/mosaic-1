@@ -104,6 +104,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /** Linked-list of committees */
     mapping(address => address) public committees;
 
+// NOTE: consider either storing a linked list; or getting rid of it
     /** Assigned anchor for a given chainId */
     mapping(bytes20 => address) public anchors;
 
@@ -169,6 +170,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     )
         external
     {
+        // TODO: create domain separator
+        
         // This function must be called only once.
         require(
             address(axiom) == address(0),
@@ -522,42 +525,43 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     }
 
     /**
-     * @notice Create a new meta chain. This can be called only by axiom
-     *         contract address.
-     * @param _chainId Chain id for new meta-chain.
+     * @notice Create a new meta chain given an achor.
+     *         This can be called only by axiom.
+     * @param _anchor anchor of the new meta-chain.
      * @param _epochLength Epoch length for new meta-chain.
-     * @param _source Source block hash.
-     * @param _sourceBlockHeight Source block height.
+     * @param _rootBlockHash root block hash.
+     * @param _rootBlockHeight root block height.
      */
     function newMetaChain(
-        bytes20 _chainId,
+        address _anchor,
         uint256 _epochLength,
-        bytes32 _source,
-        uint256 _sourceBlockHeight
+        bytes32 _rootBlockHash,
+        uint256 _rootBlockHeight
     )
         external
         onlyAxiom
     {
+        bytes20 chainId = bytes20(_anchor);
 
         require(
-            assignments[_chainId] == address(0),
-            "Chain already exists."
+            assignments[chainId] == address(0),
+            "A core is already assigned to this metachain."
         );
 
         address core = newCore(
-            _chainId,
+            chainId,
             _epochLength,
-            0, // height
+            uint256(0), // metablock height
             bytes32(0), // parent hash
             gasTargetDelta, // gas target
-            0,  // dynasty
-            0, // accumulated gas
-            _source,
-            _sourceBlockHeight
+            uint256(0), // dynasty
+            uint256(0), // accumulated gas
+            _rootBlockHash,
+            _rootBlockHeight
         );
 
-        assignments[_chainId] = core;
-        anchors[_chainId] = address(_chainId);
+        assignments[chainId] = core;
+        anchors[chainId] = _anchor;
     }
 
     /** Get minimum validator and join limit count. */
