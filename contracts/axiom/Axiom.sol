@@ -305,8 +305,7 @@ contract Axiom is AxiomI, ProxyFactory {
     /* Private Functions */
 
     /**
-     * @notice Deploy proxy contract. This can be called only by consensus
-     *         contract.
+     * @notice Deploy proxy contract.
      * @param _masterCopy Master copy contract address.
      * @param _data Setup function call data.
      * @return Deployed contract address.

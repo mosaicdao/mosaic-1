@@ -16,16 +16,15 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
+import "./ConsensusI.sol";
 import "../anchor/AnchorI.sol";
+import "../axiom/AxiomI.sol";
 import "../block/Block.sol";
 import "../committee/CommitteeI.sol";
 import "../core/CoreI.sol";
 import "../core/CoreStatusEnum.sol";
-import "../EIP20I.sol";
 import "../reputation/ReputationI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
-import "../axiom/AxiomI.sol";
-import "./ConsensusI.sol";
 
 contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
@@ -231,9 +230,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     {
         require(
             _proposal != bytes32(0),
-            "Proposal is 0."
+            "Proposal must not be null."
         );
         // onlyCore asserts msg.sender is active core
+        // TODO: we can additional 
         Precommit storage precommit = precommits[msg.sender];
         require(
             precommit.proposal == bytes32(0),
@@ -475,11 +475,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         // Validate the join params.
         validateJoinParams(_chainId, _core, _withdrawalAddress);
 
-        // Specified core must be have creation status.
-        CoreStatus status = coreStatuses[_core];
+        // Specified core must have creation status.
         require(
-            status == CoreStatus.creation,
-            "Core status is not creation."
+            isCore(_core),
+            "Core must be in an active state."
         );
 
         // Join in reputation contract.
@@ -585,11 +584,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         view
         returns (bool)
     {
-        // Task: should'nt we just check if the coreStatuses is creation, opened or precommitted
         CoreStatus status = coreStatuses[_core];
-        return status != CoreStatus.undefined &&
-            status != CoreStatus.halted &&
-            status != CoreStatus.corrupted;
+        return status >= CoreStatus.creation;
     }
 
     /**
