@@ -34,6 +34,10 @@ contract ConsensusModule {
     constructor(address _consensus)
         public
     {
+        require(
+            _consensus != address(0),
+            "consensus token address is 0."
+        );
         consensus = ConsensusI(_consensus);
     }
 }

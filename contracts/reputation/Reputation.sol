@@ -81,7 +81,7 @@ contract Reputation is ConsensusModule {
     uint256 public stakeWETHAmount;
 
     /** A per mille of earnings that validator can cash out immediately. */
-    uint256 cashableEarningsPerMille;
+    uint256 public cashableEarningsPerMille;
 
     /** An initial reputation for a newly joined validator. */
     uint256 public initialReputation;
