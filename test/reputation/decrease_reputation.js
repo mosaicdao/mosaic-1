@@ -14,13 +14,16 @@
 
 'use strict';
 
-const { AccountProvider } = require('../test_lib/utils.js');
+const BN = require('bn.js');
+
+const { AccountProvider, NULL_ADDRESS } = require('../test_lib/utils.js');
+const { ValidatorStatus } = require('./utils.js');
 const Utils = require('../test_lib/utils.js');
 
 const Reputation = artifacts.require('Reputation');
 const MockToken = artifacts.require('MockToken');
 
-contract('Reputation::increaseReputation', (accounts) => {
+contract('Reputation::decreaseReputation', (accounts) => {
   let constructorArgs;
   let validator;
   let accountProvider;
@@ -44,7 +47,7 @@ contract('Reputation::increaseReputation', (accounts) => {
       wETH: wETH.address,
       stakeWETHAmount: 100,
       cashableEarningsPerMille: 100,
-      initialReputation: 10,
+      initialReputation: 100,
       withdrawalCooldownPeriodInBlocks: 10,
     };
 
@@ -78,15 +81,15 @@ contract('Reputation::increaseReputation', (accounts) => {
     );
   });
 
-  it('should increase reputation', async () => {
-    const delta = 100;
-    const returnedValues = await reputation.increaseReputation.call(
+  it('should decrease reputation with given delta', async () => {
+    const delta = 10;
+    const returnedValues = await reputation.decreaseReputation.call(
       validator.address,
       delta,
       { from: constructorArgs.consensus },
     );
 
-    const response = await reputation.increaseReputation(
+    const response = await reputation.decreaseReputation(
       validator.address,
       delta,
       { from: constructorArgs.consensus },
@@ -100,24 +103,41 @@ contract('Reputation::increaseReputation', (accounts) => {
     const validatorObject = await reputation.validators.call(validator.address);
 
     assert.isOk(
-      validatorObject.reputation.eqn(constructorArgs.initialReputation + delta),
-      `Reputation should be ${constructorArgs.initialReputation + delta}`
+      validatorObject.reputation.eqn(constructorArgs.initialReputation - delta),
+      `Reputation should be ${constructorArgs.initialReputation - delta}`
       + ` but found ${validatorObject.reputation.toString(10)}`,
     );
 
     assert.isOk(
-      returnedValues.eqn(constructorArgs.initialReputation + delta),
-      `Reputation should be ${constructorArgs.initialReputation + delta}`
+      returnedValues.eqn(constructorArgs.initialReputation - delta),
+      `Reputation should be ${constructorArgs.initialReputation - delta}`
       + ` but found ${validatorObject.reputation.toString(10)}`,
     );
   });
 
 
+  it('should set reputation to zero if delta is more than current reputation', async () => {
+    const delta = 1000;
+
+    await reputation.decreaseReputation(
+      validator.address,
+      delta,
+      { from: constructorArgs.consensus },
+    );
+
+    const validatorObject = await reputation.validators.call(validator.address);
+
+    assert.isOk(
+      validatorObject.reputation.eqn(0),
+      `Reputation should be ${0} but found ${validatorObject.reputation.toString(10)}`,
+    );
+  });
+
   it('should fail for unknown validator', async () => {
-    const delta = 100;
+    const delta = 10;
     const unknownValidator = accountProvider.get();
 
-    await Utils.expectRevert(reputation.increaseReputation(
+    await Utils.expectRevert(reputation.decreaseReputation(
       unknownValidator,
       delta,
       { from: constructorArgs.consensus },
@@ -126,10 +146,10 @@ contract('Reputation::increaseReputation', (accounts) => {
   });
 
   it('should fail if transaction is done by account other than consensus', async () => {
-    const delta = 100;
+    const delta = 10;
     const otherAccount = accountProvider.get();
 
-    await Utils.expectRevert(reputation.increaseReputation(
+    await Utils.expectRevert(reputation.decreaseReputation(
       validator.address,
       delta,
       { from: otherAccount },
@@ -141,7 +161,7 @@ contract('Reputation::increaseReputation', (accounts) => {
     await reputation.logout(validator.address, { from: constructorArgs.consensus });
     const delta = 100;
 
-    await Utils.expectRevert(reputation.increaseReputation(
+    await Utils.expectRevert(reputation.decreaseReputation(
       validator.address,
       delta,
       { from: constructorArgs.consensus },
@@ -156,7 +176,7 @@ contract('Reputation::increaseReputation', (accounts) => {
 
     const delta = 100;
 
-    await Utils.expectRevert(reputation.increaseReputation(
+    await Utils.expectRevert(reputation.decreaseReputation(
       validator.address,
       delta,
       { from: constructorArgs.consensus },
@@ -168,7 +188,7 @@ contract('Reputation::increaseReputation', (accounts) => {
     await reputation.slash(validator.address, { from: constructorArgs.consensus });
     const delta = 100;
 
-    await Utils.expectRevert(reputation.increaseReputation(
+    await Utils.expectRevert(reputation.decreaseReputation(
       validator.address,
       delta,
       { from: constructorArgs.consensus },
