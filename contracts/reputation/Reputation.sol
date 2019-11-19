@@ -460,7 +460,7 @@ contract Reputation is ConsensusModule {
      *          - a validator has joined
      *          - a validator has not withdrawn
      *
-     * @param _validator A validator address to join.
+     * @param _validator A validator address to slash.
      */
     function slash(address _validator)
         external
