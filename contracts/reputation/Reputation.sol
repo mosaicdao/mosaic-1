@@ -312,8 +312,7 @@ contract Reputation is ConsensusModule {
     {
         ValidatorInfo storage v = validators[_validator];
 
-        // TODO: use safemath
-        uint256 cashableEarnings = (_amount * cashableEarningsPerMille) / 1000;
+        uint256 cashableEarnings = _amount.mul(cashableEarningsPerMille).div(1000);
 
         v.cashableEarnings = v.cashableEarnings.add(cashableEarnings);
 
