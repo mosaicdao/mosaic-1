@@ -180,26 +180,30 @@ contract Reputation is ConsensusModule {
      *          - a stake amount to join in wETH is positive
      *          - a cashable earnings per mille is in [0, 1000] range
      */
-    constructor(
+    function setup(
         address _consensus,
-        EIP20I _mOST,
+        address _mOST,
         uint256 _stakeMOSTAmount,
-        EIP20I _wETH,
+        address _wETH,
         uint256 _stakeWETHAmount,
         uint256 _cashableEarningsPerMille,
         uint256 _initialReputation,
         uint256 _withdrawalCooldownPeriodInBlocks
     )
-        ConsensusModule(_consensus)
-        public
+        external
     {
         require(
-            _mOST != EIP20I(0),
+            address(mOST) == address(0) && address(wETH) == address(0),
+            "Reputation is already setup."
+        );
+
+        require(
+            _mOST != address(0),
             "mOST token address is 0."
         );
 
         require(
-            _wETH != EIP20I(0),
+            _wETH != address(0),
             "wETH token address is 0."
         );
 
@@ -218,8 +222,9 @@ contract Reputation is ConsensusModule {
             "Cashable earnings is not in valid range: [0, 1000]."
         );
 
-        mOST = _mOST;
-        wETH = _wETH;
+        consensus = ConsensusI(_consensus);
+        mOST = EIP20I(_mOST);
+        wETH = EIP20I(_wETH);
         stakeMOSTAmount = _stakeMOSTAmount;
         stakeWETHAmount = _stakeWETHAmount;
         initialReputation = _initialReputation;

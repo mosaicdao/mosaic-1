@@ -15,6 +15,10 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 
 interface CoreI {
+    function precommit() external returns (bytes32);
+
+    function openKernelHash() external returns (bytes32);
+
     function joinDuringCreation(address _validator) external;
 
     function join(address _validator) external;
@@ -31,5 +35,22 @@ interface CoreI {
         uint256 _committedSourceBlockHeight,
         uint256 _committedTargetBlockHeight,
         uint256 _deltaGasTarget
-    ) external;
+    )
+        external;
+
+    function assertPrecommit(
+        bytes32 _kernelHash,
+        bytes32 _originObservation,
+        uint256 _dynasty,
+        uint256 _accumulatedGas,
+        bytes32 _committeeLock,
+        bytes32 _source,
+        bytes32 _target,
+        uint256 _sourceBlockHeight,
+        uint256 _targetBlockHeight
+    )
+        external
+        view
+        returns (bytes32 proposal_);
 }
+

@@ -171,11 +171,12 @@ contract('Committee::revealCommit', async (accounts) => {
     config.committee.proposal = config.committee.positionA;
 
     config.committee.contract = await CommitteeUtils.createCommittee(
+      config.committee.consensus,
       config.committee.size,
       config.committee.dislocation,
       config.committee.proposal,
       {
-        from: config.committee.consensus,
+        from: accountProvider.get(),
       },
     );
 

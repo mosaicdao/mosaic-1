@@ -38,11 +38,12 @@ contract('Committee::closeCommitPhase', async (accounts) => {
     };
 
     config.committee.contract = await CommitteeUtils.createCommittee(
+      config.committee.consensus,
       config.committee.size,
       config.committee.dislocation,
       config.committee.proposal,
       {
-        from: config.committee.consensus,
+        from: accountProvider.get(),
       },
     );
 
@@ -81,6 +82,7 @@ contract('Committee::closeCommitPhase', async (accounts) => {
   contract('Negative Tests', async () => {
     it('should fail if committee is not in commit phase status', async () => {
       const committee = await CommitteeUtils.createCommittee(
+        config.committee.consensus,
         3,
         web3.utils.sha3('dislocation'),
         web3.utils.sha3('proposal'),

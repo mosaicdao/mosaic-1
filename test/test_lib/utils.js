@@ -178,6 +178,22 @@ Utils.prototype = {
     assert(false, 'Did not fail assert as expected.');
   },
 
+  /** Get block number. */
+  getBlockNumber: () => new Promise((resolve, reject) => {
+    web3.eth.getBlockNumber((error, result) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(new BN(result));
+      }
+    });
+  }),
+
+  /** Get block hash */
+  getBlockHash: blockNumber => new Promise((resolve) => {
+    web3.eth.getBlock(blockNumber).then(block => resolve(block.hash));
+  }),
+
   /** Get account balance. */
   getBalance: address => new Promise((resolve, reject) => {
     web3.eth.getBalance(address, (error, result) => {
@@ -189,6 +205,11 @@ Utils.prototype = {
     });
   }),
 
+  getStorageAt: (address, index) => new Promise(
+    resolve => web3.eth.getStorageAt(address, index)
+      .then(result => resolve(result)),
+  ),
+
   /** Get gas price. */
   getGasPrice: () => new Promise((resolve, reject) => {
     web3.eth.getGasPrice((error, result) => {
@@ -198,6 +219,13 @@ Utils.prototype = {
         resolve(result);
       }
     });
+  }),
+
+  getCode: address => new Promise((resolve) => {
+    web3.eth.getCode(address)
+      .then((code) => {
+        resolve(code);
+      });
   }),
 
   validateEvents: (eventLogs, expectedData) => {
@@ -250,6 +278,15 @@ Utils.prototype = {
     web3.eth.abi.encodeParameter('string', structDescriptor),
   ),
 
+  getCallPrefix: (structDescriptor) => {
+    const hash = web3.utils.sha3(structDescriptor);
+    return hash.substring(0, 10);
+  },
+
+  getRandomHash: () => web3.utils.sha3(`${Date.now()}`),
+
+  getRandomNumber: max => Math.floor(Math.random() * Math.floor(max)),
+
   /** Receives accounts list and gives away each time one. */
   AccountProvider: class AccountProvider {
     constructor(accounts) {
@@ -264,6 +301,15 @@ Utils.prototype = {
       return account;
     }
   },
+
+  encodeFunctionSignature: signature => web3.eth.abi.encodeFunctionSignature(signature),
+  encodeParameters: (types, params) => web3.eth.abi.encodeParameters(types, params),
+
+  isAddress: address => web3.utils.isAddress(address),
+
+  isNonNullAddress: address => web3.utils.isAddress(address) && address !== this.NULL_ADDRESS,
+
+  toChecksumAddress: address => web3.utils.toChecksumAddress(address),
 
   ResultType,
 
