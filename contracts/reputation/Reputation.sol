@@ -32,6 +32,8 @@ contract Reputation is ConsensusModule {
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     );
 
+    address public constant burner = address(0);
+
 
     /* Enums */
 
@@ -440,7 +442,7 @@ contract Reputation is ConsensusModule {
      *          - a validator has joined
      *          - a validator has not withdrawn
      *
-     * TODO: The earnings and stakes of a validator must be burned.
+     * @param _validator A validator address to join.
      */
     function slash(address _validator)
         external
@@ -451,9 +453,17 @@ contract Reputation is ConsensusModule {
         ValidatorInfo storage v = validators[_validator];
 
         v.status = ValidatorStatus.Slashed;
+        uint256 totalmOSTAmountToBurn = v.lockedEarnings
+            .add(v.cashableEarnings)
+            .add(stakeMOSTAmount);
 
         v.lockedEarnings = 0;
         v.cashableEarnings = 0;
+
+        delete validators[_validator];
+
+        assert(mOST.transfer(burner, totalmOSTAmountToBurn));
+        assert(wETH.transfer(burner, stakeWETHAmount));
     }
 
     /**
