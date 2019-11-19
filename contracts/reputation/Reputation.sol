@@ -120,17 +120,6 @@ contract Reputation is ConsensusModule {
         _;
     }
 
-    // note: dead-code, should be removed
-    modifier wasSlashed(address _validator)
-    {
-        require(
-            validators[_validator].status == ValidatorStatus.Slashed,
-            "Validator was not slashed."
-        );
-
-        _;
-    }
-
     modifier isHonest(address _validator)
     {
         require(
@@ -171,6 +160,16 @@ contract Reputation is ConsensusModule {
         _;
     }
 
+    modifier hasNotSlashed(address _validator)
+    {
+        require(
+            validators[_validator].status != ValidatorStatus.Slashed,
+            "Validator has slashed."
+        );
+
+        _;
+    }
+
 
     /* Special Member Functions */
 
@@ -181,6 +180,21 @@ contract Reputation is ConsensusModule {
      *          - a stake amount to join in mOST is positive
      *          - a stake amount to join in wETH is positive
      *          - a cashable earnings per mille is in [0, 1000] range
+     *
+     * @param _consensus Address of consensus contract.
+     * @param _mOST Address of EIP20 mOST token.
+     * @param _stakeMOSTAmount Amount of mOST token in wei required to be
+     *                         staked by each validator on join.
+     * @param _wETH Address of EIP20 wETH token.
+     * @param _stakeWETHAmount Amount of wETH token in wei required to be
+     *                         staked by each validator on join.
+     * @param _cashableEarningsPerMille Number ranging from [0-1000] which
+     *                                  defines cashable earning per mille.
+     * @param _initialReputation Initial reputation assigned when a validator
+     *                           joins.
+     * @param _withdrawalCooldownPeriodInBlocks Defines block delay between
+     *                                          logout and withdraw operation
+     *                                          for a validator.
      */
     constructor(
         address _consensus,
@@ -218,6 +232,11 @@ contract Reputation is ConsensusModule {
         require(
             _cashableEarningsPerMille <= 1000,
             "Cashable earnings is not in valid range: [0, 1000]."
+        );
+
+        require(
+            _withdrawalCooldownPeriodInBlocks > 0,
+            "Withdrawal cooldown period in blocks must be greater than zero."
         );
 
         mOST = _mOST;
@@ -448,6 +467,7 @@ contract Reputation is ConsensusModule {
         onlyConsensus
         hasJoined(_validator)
         hasNotWithdrawn(_validator)
+        hasNotSlashed(_validator)
     {
         ValidatorInfo storage v = validators[_validator];
 
@@ -534,7 +554,11 @@ contract Reputation is ConsensusModule {
         );
     }
 
-    /**  */
+    /**
+     * @notice Returns reputation of a validator.
+     *
+     * @param _validator An address of a validator.
+     */
     function getReputation(address _validator)
         external
         view

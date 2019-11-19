@@ -156,6 +156,6 @@ contract('Reputation::slash', (accounts) => {
       validator.address,
       { from: constructorArgs.consensus },
     ),
-    'Validator has not joined.');
+    'Validator has slashed.');
   });
 });

@@ -215,4 +215,22 @@ contract('Reputation::constructor', (accounts) => {
       'Cashable earnings is not in valid range:',
     );
   });
+
+  it('should fail to construct with withdrawal cooldown period in blocks is zero', async () => {
+    constructorArgs.withdrawalCooldownPeriodInBlocks = 0;
+
+    await Utils.expectRevert(
+      Reputation.new(
+        constructorArgs.consensus,
+        constructorArgs.mOST,
+        constructorArgs.stakeMOSTAmount,
+        constructorArgs.wETH,
+        constructorArgs.stakeWETHAmount,
+        constructorArgs.cashableEarningsPerMille,
+        constructorArgs.initialReputation,
+        constructorArgs.withdrawalCooldownPeriodInBlocks,
+      ),
+      'Withdrawal cooldown period in blocks must be greater than zero.',
+    );
+  });
 });
