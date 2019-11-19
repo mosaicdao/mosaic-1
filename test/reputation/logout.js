@@ -15,12 +15,13 @@
 'use strict';
 
 const { AccountProvider } = require('../test_lib/utils.js');
+const { ValidatorStatus } = require('./utils.js');
 const Utils = require('../test_lib/utils.js');
 
 const Reputation = artifacts.require('Reputation');
 const MockToken = artifacts.require('MockToken');
 
-contract('Reputation::decreaseReputation', (accounts) => {
+contract('Reputation::logout', (accounts) => {
   let constructorArgs;
   let validator;
   let accountProvider;
@@ -78,17 +79,9 @@ contract('Reputation::decreaseReputation', (accounts) => {
     );
   });
 
-  it('should decrease reputation with given delta', async () => {
-    const delta = 10;
-    const returnedValues = await reputation.decreaseReputation.call(
+  it('should be able to logout', async () => {
+    const response = await reputation.logout(
       validator.address,
-      delta,
-      { from: constructorArgs.consensus },
-    );
-
-    const response = await reputation.decreaseReputation(
-      validator.address,
-      delta,
       { from: constructorArgs.consensus },
     );
 
@@ -100,55 +93,33 @@ contract('Reputation::decreaseReputation', (accounts) => {
     const validatorObject = await reputation.validators.call(validator.address);
 
     assert.isOk(
-      validatorObject.reputation.eqn(constructorArgs.initialReputation - delta),
-      `Reputation should be ${constructorArgs.initialReputation - delta}`
-      + ` but found ${validatorObject.reputation.toString(10)}`,
+      validatorObject.status.eqn(ValidatorStatus.LoggedOut),
+      `Expected status is ${ValidatorStatus.LoggedOut} but found ${validatorObject.status}`,
     );
+    const expectedWithdrawalBlockHeight = response.receipt.blockNumber
+      + constructorArgs.withdrawalCooldownPeriodInBlocks;
 
     assert.isOk(
-      returnedValues.eqn(constructorArgs.initialReputation - delta),
-      `Reputation should be ${constructorArgs.initialReputation - delta}`
-      + ` but found ${validatorObject.reputation.toString(10)}`,
-    );
-  });
-
-
-  it('should set reputation to zero if delta is more than current reputation', async () => {
-    const delta = 1000;
-
-    await reputation.decreaseReputation(
-      validator.address,
-      delta,
-      { from: constructorArgs.consensus },
-    );
-
-    const validatorObject = await reputation.validators.call(validator.address);
-
-    assert.isOk(
-      validatorObject.reputation.eqn(0),
-      `Reputation should be ${0} but found ${validatorObject.reputation.toString(10)}`,
+      validatorObject.withdrawalBlockHeight.eqn(expectedWithdrawalBlockHeight),
+      `Expected withdrawal block height is ${expectedWithdrawalBlockHeight} but found  ${validatorObject.withdrawalBlockHeight.toString(10)}`,
     );
   });
 
   it('should fail for unknown validator', async () => {
-    const delta = 10;
     const unknownValidator = accountProvider.get();
 
-    await Utils.expectRevert(reputation.decreaseReputation(
+    await Utils.expectRevert(reputation.logout(
       unknownValidator,
-      delta,
       { from: constructorArgs.consensus },
     ),
     'Validator is not active.');
   });
 
   it('should fail if transaction is done by account other than consensus', async () => {
-    const delta = 10;
     const otherAccount = accountProvider.get();
 
-    await Utils.expectRevert(reputation.decreaseReputation(
+    await Utils.expectRevert(reputation.logout(
       validator.address,
-      delta,
       { from: otherAccount },
     ),
     'Only the consensus contract can call this function.');
@@ -156,11 +127,9 @@ contract('Reputation::decreaseReputation', (accounts) => {
 
   it('should fail for logged out validator', async () => {
     await reputation.logout(validator.address, { from: constructorArgs.consensus });
-    const delta = 100;
 
-    await Utils.expectRevert(reputation.decreaseReputation(
+    await Utils.expectRevert(reputation.logout(
       validator.address,
-      delta,
       { from: constructorArgs.consensus },
     ),
     'Validator is not active.');
@@ -171,11 +140,8 @@ contract('Reputation::decreaseReputation', (accounts) => {
     await Utils.advanceBlocks(constructorArgs.withdrawalCooldownPeriodInBlocks + 1);
     await reputation.withdraw(validator.address, { from: constructorArgs.consensus });
 
-    const delta = 100;
-
-    await Utils.expectRevert(reputation.decreaseReputation(
+    await Utils.expectRevert(reputation.logout(
       validator.address,
-      delta,
       { from: constructorArgs.consensus },
     ),
     'Validator is not active.');
@@ -183,11 +149,9 @@ contract('Reputation::decreaseReputation', (accounts) => {
 
   it('should fail for slashed validator', async () => {
     await reputation.slash(validator.address, { from: constructorArgs.consensus });
-    const delta = 100;
 
-    await Utils.expectRevert(reputation.decreaseReputation(
+    await Utils.expectRevert(reputation.logout(
       validator.address,
-      delta,
       { from: constructorArgs.consensus },
     ),
     'Validator is not active.');
