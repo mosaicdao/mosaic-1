@@ -460,8 +460,6 @@ contract Reputation is ConsensusModule {
         v.lockedEarnings = 0;
         v.cashableEarnings = 0;
 
-        delete validators[_validator];
-
         assert(mOST.transfer(burner, totalmOSTAmountToBurn));
         assert(wETH.transfer(burner, stakeWETHAmount));
     }
