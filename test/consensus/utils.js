@@ -23,11 +23,11 @@ const MaximumCoinbaseSplitPerMille = 1000;
 
 const CoreStatus = {
   undefined: 0,
-  creation: 1,
-  opened: 2,
-  precommitted: 3,
-  halted: 4,
-  corrupted: 5,
+  halted: 1,
+  corrupted: 2,
+  creation: 3,
+  opened: 4,
+  precommitted: 5,
 };
 Object.freeze(CoreStatus);
 

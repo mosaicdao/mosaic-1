@@ -53,14 +53,12 @@ contract('Consensus::registerPrecommit', (accounts) => {
         inputParams.coreAddress1,
         consensusUtil.CoreStatus.creation,
       );
-
       await consensus.registerPrecommit(
         inputParams.proposal1,
         {
           from: inputParams.coreAddress1,
         },
       );
-
       await Utils.expectRevert(
         consensus.registerPrecommit(
           inputParams.proposal2,

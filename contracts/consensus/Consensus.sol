@@ -239,6 +239,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /**
      * @notice Register a proposal for commit. This can be called only by the valid
      *         core address.
+     *
+     * @dev Function requires:
+     *          - msg.sender should be valid core address in creation state.
+     *          - proposal should not be null.
+     *          - precommit of same core should not exist.
+     *
      * @param _proposal Precommit proposal.
      */
     function registerPrecommit(bytes32 _proposal)
@@ -249,7 +255,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             _proposal != bytes32(0),
             "Proposal should not be null."
         );
-        // onlyCore asserts msg.sender is active core
         // TODO: we can additional 
         Precommit storage precommit = precommits[msg.sender];
         require(
