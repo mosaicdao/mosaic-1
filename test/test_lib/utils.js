@@ -17,11 +17,9 @@ const BN = require('bn.js');
 const web3 = require('./web3.js');
 
 async function advanceBlock() {
-  return web3.currentProvider.send({
-    jsonrpc: '2.0',
-    method: 'evm_mine',
-    id: new Date().getTime(),
-  });
+  return web3.currentProvider.send(
+    'evm_mine',
+  );
 }
 
 const ResultType = {
