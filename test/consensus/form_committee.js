@@ -22,7 +22,7 @@ const axiomUtil = require('../axiom/utils.js');
 const Consensus = artifacts.require('ConsensusTest');
 const SpyAxiom = artifacts.require('SpyAxiom');
 
-contract('Consensus::formCommittee', (accoungstts) => {
+contract('Consensus::formCommittee', (accounts) => {
   let consensus;
   let axiom;
   const testInputs = {};

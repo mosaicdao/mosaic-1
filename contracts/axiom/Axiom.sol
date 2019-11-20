@@ -251,7 +251,6 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
         return deployProxyContract(committeeMasterCopy, _data);
     }
 
-    event Test(uint256 height);
     /**
      * @notice Setup a new meta chain. Only technical governance address can
      *         call this function.
@@ -282,7 +281,7 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
             _maxStateRoots,
             address(consensus)
         );
-        emit Test(blockHeader.height);
+
         consensus.newMetaChain(
             address(anchor),
             EPOCH_LENGTH,
