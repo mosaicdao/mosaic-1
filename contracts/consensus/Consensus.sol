@@ -653,7 +653,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /* Internal functions */
 
     /**
-     * @notice Check if the core address is active or not.
+     * @notice Check if the core address is active.
      * @param _core Core contract address.
      * Returns true if the specified address is a core.
      */
