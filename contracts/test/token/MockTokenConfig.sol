@@ -13,31 +13,17 @@ pragma solidity ^0.5.0;
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+// 
+// ----------------------------------------------------------------------------
+// Contracts: MockTokenConfig 
+//
+// http://www.simpletoken.org/
+//
+// ----------------------------------------------------------------------------
 
-import "./ConsensusI.sol";
 
-contract ConsensusModule {
+contract MockTokenConfig {
 
-    /** Consensus contract for which this committee was formed. */
-    ConsensusI public consensus;
-
-    modifier onlyConsensus()
-    {
-        require(
-            msg.sender == address(consensus),
-            "Only the consensus contract can call this function."
-        );
-
-        _;
-    }
-
-    constructor(address _consensus)
-        public
-    {
-        require(
-            _consensus != address(0),
-            "consensus token address is 0."
-        );
-        consensus = ConsensusI(_consensus);
-    }
+    string  public constant TOKEN_SYMBOL   = "MOCK";
+    string  public constant TOKEN_NAME     = "Mock Token";
 }
