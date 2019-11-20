@@ -267,6 +267,14 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
     /**
      * @notice Form a new committee to validate the precommit proposal.
+     *
+     * @dev Function requires:
+     *          - precommitment of the core to a proposal doesn't exist.
+     *          - block height must be higher than set committee formation
+     *            height.
+     *          - committee formation blocksegment length must be in 256 most
+     *            recent blocks.
+     *
      * @param _core Core contract address.
      */
     function formCommittee(address _core)
@@ -624,6 +632,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
     /**
      * @notice Start a new committee.
+
+     * @dev Function requires:
+     *          - Committee for the proposal should not exist.
+
      * @param _dislocation Hash to shuffle validators.
      * @param _proposal Proposal under consideration for committee.
      */
