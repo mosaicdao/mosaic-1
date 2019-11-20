@@ -44,6 +44,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /** Sentinel pointer for marking end of linked-list of committees */
     address public constant SENTINEL_COMMITTEES = address(0x1);
 
+    /** Minimum required validators */
+    uint256 public constant MIN_REQUIRED_VALIDATORS = uint8(5);
+
+    /** Maximum coinbase split per mille */
+    uint256 public constant MAX_COINBASE_SPLIT_PER_MILLE = uint16(1000);
+
     /** The callprefix of the Core::setup function. */
     bytes4 public constant CORE_SETUP_CALLPREFIX = bytes4(
         keccak256(
@@ -77,7 +83,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     uint256 public minValidators;
 
     /** Maximum number of validators that can join in a core */
-    uint256 public joinLimit;
+    uint256 public maxValidators;
 
     /** Gas target delta to open new metablock */
     uint256 public gasTargetDelta;
@@ -150,11 +156,11 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /* External functions */
 
     /**
-     * @notice Setup consensus contract. This can be called only once.
+     * @notice Setup consensus contract. Setup method can be called only once.
      * @param _committeeSize Max committee size that can be formed.
      * @param _minValidators Minimum number of validators that must join a
      *                       created core to open.
-     * @param _joinLimit Maximum number of validators that can join in a core.
+     * @param _maxValidators Maximum number of validators that can join a core.
      * @param _gasTargetDelta Gas target delta to open new metablock.
      * @param _coinbaseSplitPerMille Coinbase split per mille.
      * @param _reputation Reputation contract address.
@@ -162,7 +168,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     function setup(
         uint256 _committeeSize,
         uint256 _minValidators,
-        uint256 _joinLimit,
+        uint256 _maxValidators,
         uint256 _gasTargetDelta,
         uint256 _coinbaseSplitPerMille,
         address _reputation
@@ -183,13 +189,13 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
 
         require(
-            _minValidators > uint256(4),
-            "Min validator size must be greater than 4."
+            _minValidators >= uint256(MIN_REQUIRED_VALIDATORS),
+            "Min validator size must be greater or equal to 5."
         );
 
         require(
-            _joinLimit >= _minValidators,
-            "Join limit is less than minimum validator count."
+            _maxValidators >= _minValidators,
+            "Max validator size is less than minimum validator count."
         );
 
         require(
@@ -198,8 +204,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
 
         require(
-            _coinbaseSplitPerMille <= uint256(1000),
-            "Coin base split per mille is not in valid range: 0..1000."
+            _coinbaseSplitPerMille <= MAX_COINBASE_SPLIT_PER_MILLE,
+            "Coin base split per mille should be in range: 0..1000."
         );
 
         require(
@@ -209,7 +215,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
         committeeSize = _committeeSize;
         minValidators = _minValidators;
-        joinLimit = _joinLimit;
+        maxValidators = _maxValidators;
         gasTargetDelta = _gasTargetDelta;
         coinbaseSplitPerMille = _coinbaseSplitPerMille;
         reputation = ReputationI(_reputation);
@@ -257,22 +263,26 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             precommit.committeeFormationBlockHeight != uint256(0),
             "There does not exist a precommitment of the core to a proposal."
         );
+
         require(
             block.number > precommit.committeeFormationBlockHeight,
             "Block height must be higher than set committee formation height."
         );
+
         require(
             block.number
                 .sub(uint256(COMMITTEE_FORMATION_LENGTH))
                 .sub(uint256(256)) < precommit.committeeFormationBlockHeight,
             "Committee formation blocksegment length must be in 256 most recent blocks."
         );
+
         uint256 segmentHeight = precommit.committeeFormationBlockHeight;
         bytes32[] memory seedGenerator = new bytes32[](uint256(COMMITTEE_FORMATION_LENGTH));
         for (uint8 i = 0; i < COMMITTEE_FORMATION_LENGTH; i++) {
             seedGenerator[i] = blockhash(segmentHeight);
             segmentHeight = segmentHeight.sub(1);
         }
+
         bytes32 seed = keccak256(
             abi.encodePacked(seedGenerator)
         );
@@ -297,10 +307,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             committees[_committeeAddress] != address(0),
             "Committee does not exist."
         );
+
         require(
             reputation.isActive(_validator),
             "Validator is not active."
         );
+
         CommitteeI committee = CommitteeI(_committeeAddress);
         require(
             committee.enterCommittee(_validator, _furtherMember),
@@ -567,10 +579,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     function coreValidatorThresholds()
         external
         view
-        returns (uint256 minimumValidatorCount_, uint256 joinLimit_)
+        returns (uint256 minimumValidatorCount_, uint256 maxValidators_)
     {
         minimumValidatorCount_ = minValidators;
-        joinLimit_ = joinLimit;
+        maxValidators_ = maxValidators;
     }
     // Task: Pending functions related to halting and corrupting of core.
 
@@ -725,7 +737,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             _chainId,
             _epochLength,
             minValidators,
-            joinLimit,
+            maxValidators,
             address(reputation),
             _height,
             _parent,

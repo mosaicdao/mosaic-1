@@ -18,6 +18,8 @@ const SentinelCommittee = '0x0000000000000000000000000000000000000001';
 const CommitteeFormationDelay = 14;
 const CommitteeFormationLength = 7;
 const BlockSegmentLength = 256;
+const MinimumRequiredValidators = 5;
+const MaximumCoinbaseSplitPerMille = 1000;
 
 const CoreStatus = {
   undefined: 0,
@@ -33,7 +35,7 @@ async function setup(consensus, setupConfig) {
   return consensus.setup(
     setupConfig.committeeSize,
     setupConfig.minValidators,
-    setupConfig.joinLimit,
+    setupConfig.maxValidators,
     setupConfig.gasTargetDelta,
     setupConfig.coinbaseSplitPerMille,
     setupConfig.reputation,
@@ -105,6 +107,8 @@ module.exports = {
   CommitteeFormationLength,
   BlockSegmentLength,
   CoreStatus,
+  MinimumRequiredValidators,
+  MaximumCoinbaseSplitPerMille,
   setup,
   getDislocation,
   join,

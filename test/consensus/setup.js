@@ -27,10 +27,11 @@ contract('Consensus::setup', (accounts) => {
   let setupParams = {};
   let consensus;
   beforeEach(async () => {
+    consensus = await Consensus.new();
     setupParams = {
       committeeSize: new BN(Utils.getRandomNumber(500)),
       minValidators: new BN(5),
-      joinLimit: new BN(7),
+      maxValidators: new BN(7),
       gasTargetDelta: new BN(Utils.getRandomNumber(999999)),
       coinbaseSplitPerMille: new BN(Utils.getRandomNumber(1000)),
       reputation: accountProvider.get(),
@@ -39,8 +40,6 @@ contract('Consensus::setup', (accounts) => {
       },
     };
     Object.freeze(setupParams);
-
-    consensus = await Consensus.new();
   });
 
   contract('Negative Tests', () => {
@@ -56,7 +55,7 @@ contract('Consensus::setup', (accounts) => {
       );
     });
 
-    it('should fail when minimum validators are less than equal to 4', async () => {
+    it('should fail when minimum validators are less or equal to 5', async () => {
       const params = Object.assign(
         {},
         setupParams,
@@ -64,19 +63,19 @@ contract('Consensus::setup', (accounts) => {
       );
       await Utils.expectRevert(
         ConsensusUtils.setup(consensus, params),
-        'Min validator size must be greater than 4.',
+        'Min validator size must be greater or equal to 5.',
       );
     });
 
-    it('should fail when join limit is less than minimum validators', async () => {
+    it('should fail when max validator size is less than minimum validators', async () => {
       const params = Object.assign(
         {},
         setupParams,
-        { joinLimit: new BN(3) },
+        { maxValidators: new BN(3) },
       );
       await Utils.expectRevert(
         ConsensusUtils.setup(consensus, params),
-        'Join limit is less than minimum validator count.',
+        'Max validator size is less than minimum validator count.',
       );
     });
 
@@ -92,7 +91,7 @@ contract('Consensus::setup', (accounts) => {
       );
     });
 
-    it('should fail when coin base split per mille is less than equal to 1000', async () => {
+    it('should fail when coin base split per mille is not in range 0..1000', async () => {
       const params = Object.assign(
         {},
         setupParams,
@@ -100,11 +99,11 @@ contract('Consensus::setup', (accounts) => {
       );
       await Utils.expectRevert(
         ConsensusUtils.setup(consensus, params),
-        'Coin base split per mille is not in valid range: 0..1000.',
+        'Coin base split per mille should be in range: 0..1000.',
       );
     });
 
-    it('should fail when reputation address is 0', async () => {
+    it('should fail when reputation contract address is 0', async () => {
       const params = Object.assign(
         {},
         setupParams,
@@ -126,10 +125,6 @@ contract('Consensus::setup', (accounts) => {
   });
 
   contract('Positive Tests', () => {
-    it('should setup given sensible parameters', async () => {
-      await ConsensusUtils.setup(consensus, setupParams);
-    });
-
     it('should set the variables', async () => {
       await ConsensusUtils.setup(consensus, setupParams);
 
@@ -149,12 +144,12 @@ contract('Consensus::setup', (accounts) => {
         + ` equal to ${setupParams.minValidators.toString(10)}.`,
       );
 
-      const joinLimit = await consensus.joinLimit.call();
+      const maxValidators = await consensus.maxValidators.call();
       assert.strictEqual(
-        joinLimit.eq(setupParams.joinLimit),
+        maxValidators.eq(setupParams.maxValidators),
         true,
-        `Join limit value ${joinLimit.toString(10)} from contract must be`
-        + ` equal to ${setupParams.joinLimit.toString(10)}.`,
+        `Maximum validator value ${maxValidators.toString(10)} from contract must be`
+        + ` equal to ${setupParams.maxValidators.toString(10)}.`,
       );
 
       const gasTargetDelta = await consensus.gasTargetDelta.call();
@@ -169,7 +164,7 @@ contract('Consensus::setup', (accounts) => {
       assert.strictEqual(
         coinbaseSplitPerMille.eq(setupParams.coinbaseSplitPerMille),
         true,
-        `Coin base split parmille value ${coinbaseSplitPerMille.toString(10)} from contract must be`
+        `Coin base split permille value ${coinbaseSplitPerMille.toString(10)} from contract must be`
         + ` equal to ${setupParams.coinbaseSplitPerMille.toString(10)}.`,
       );
 
@@ -198,7 +193,17 @@ contract('Consensus::setup', (accounts) => {
     });
   });
 
-  contract('Assure constants', () => {
+  contract('Verify constants', () => {
+    it('Verify minimum required validators size', async () => {
+      const minimumRequiredValidators = await consensus.MIN_REQUIRED_VALIDATORS.call();
+      await assert.strictEqual(
+        minimumRequiredValidators.eqn(ConsensusUtils.MinimumRequiredValidators),
+        true,
+        `Minimum required value from contract ${minimumRequiredValidators} `
+        + `must be equal to expected value ${ConsensusUtils.MinimumRequiredValidators}`,
+      );
+    });
+
     it('Verify committee formation delay constant value', async () => {
       const committeeFormationDelay = await consensus.COMMITTEE_FORMATION_DELAY.call();
       await assert.strictEqual(
@@ -245,6 +250,16 @@ contract('Consensus::setup', (accounts) => {
         committeeSetupCallPrefix,
         AxiomUtils.CommitteeSetupCallPrefix,
         'Committee setup call must be equal to expected value',
+      );
+    });
+
+    it('Verify maximum coinbase split per mille', async () => {
+      const maximumCoinbaseSplitPerMille = await consensus.MAX_COINBASE_SPLIT_PER_MILLE.call();
+      await assert.strictEqual(
+        maximumCoinbaseSplitPerMille.eqn(ConsensusUtils.MaximumCoinbaseSplitPerMille),
+        true,
+        `Maximum coinbase split per mille value from contract ${maximumCoinbaseSplitPerMille} `
+        + `must be equal to expected value ${ConsensusUtils.MaximumCoinbaseSplitPerMille}`,
       );
     });
   });
