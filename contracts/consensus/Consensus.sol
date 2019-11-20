@@ -318,9 +318,9 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      * @notice Enter a validator into the committee.
      *
      * @dev Function requires:
-     *          - Committee address should be present.
-     *          - Validator should be active.
-     *          - Validator successfully should enter a committee.
+     *          - committee address should be present.
+     *          - validator should be active.
+     *          - validator successfully should enter a committee.
      *
      * @param _committeeAddress Committee address that validator wants to enter.
      * @param _validator Validator address to enter.
@@ -649,6 +649,9 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     }
     // Task: Pending functions related to halting and corrupting of core.
 
+
+    /* Internal functions */
+
     /**
      * @notice Check if the core address is active or not.
      * @param _core Core contract address.
@@ -667,7 +670,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      * @notice Start a new committee.
 
      * @dev Function requires:
-     *          - Committee for the proposal should not exist.
+     *          - committee for the proposal should not exist.
      *
      * @param _dislocation Hash to shuffle validators.
      * @param _proposal Proposal under consideration for committee.
@@ -691,10 +694,14 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     }
 
 
-    /* External functions */
+    /* Private functions */
 
     /**
      * @notice Anchor a new state root for specified chain id.
+
+     * @dev Function requires:
+     *          - anchor for specified chain id should exist.
+     *
      * @param _chainId Chain id.
      * @param _rlpBlockHeader RLP encoded block header
      */
@@ -721,7 +728,11 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
     /**
      * @notice Verify if the given commit proposal is same as that precommit in
-     *         core contract
+     *         core contract.
+     *
+     * @dev Function requires:
+     *          - proposal should be precommitted.
+     *
      * @param _core Core contract address.
      * @param _commitProposal Commit proposal.
      */
@@ -741,6 +752,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /**
      * @notice Verify if the committee lock given in the commit proposal
      *         matches the committee decision.
+     *
+     * @dev Function requires:
+     *          - committee should match to the specified vote message.
+     *          - committee proposal is decided.
+     *          - committee decision should match with committee lock.
+     *
      * @param _commitProposal Proposal to commit.
      * @param _committeeLock Committee lock specified in the proposal.
      */
@@ -760,7 +777,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
         require(
             committee.committeeDecision() != bytes32(0),
-            "Committee has not decide on the proposal."
+            "Committee has not decided on the proposal."
         );
 
         require(
