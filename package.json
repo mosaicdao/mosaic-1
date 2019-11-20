@@ -38,7 +38,7 @@
     "mocha": "6.2.0",
     "openzeppelin-solidity": "2.1.1",
     "solium": "1.2.4",
-    "truffle": "5.0.0-beta.2",
+    "truffle": "5.1.0",
     "web3": "1.0.0-beta.55"
   }
 }
