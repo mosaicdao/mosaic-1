@@ -107,7 +107,7 @@ contract('Consensus::joinDuringCreation', (accounts) => {
       await consensus.setCoreStatus(core.address, consensusUtil.CoreStatus.undefined);
       await Utils.expectRevert(
         consensusUtil.joinDuringCreation(consensus, joinParams),
-        'Core status is not creation.',
+        'Core must be in an active state.',
       );
     });
 
@@ -115,7 +115,7 @@ contract('Consensus::joinDuringCreation', (accounts) => {
       await consensus.setCoreStatus(core.address, consensusUtil.CoreStatus.halted);
       await Utils.expectRevert(
         consensusUtil.joinDuringCreation(consensus, joinParams),
-        'Core status is not creation.',
+        'Core must be in an active state.',
       );
     });
 
@@ -123,30 +123,30 @@ contract('Consensus::joinDuringCreation', (accounts) => {
       await consensus.setCoreStatus(core.address, consensusUtil.CoreStatus.corrupted);
       await Utils.expectRevert(
         consensusUtil.joinDuringCreation(consensus, joinParams),
-        'Core status is not creation.',
+        'Core must be in an active state.',
       );
     });
 
-    it('should fail when core status is opened', async () => {
-      await consensus.setCoreStatus(core.address, consensusUtil.CoreStatus.opened);
-      await Utils.expectRevert(
-        consensusUtil.joinDuringCreation(consensus, joinParams),
-        'Core status is not creation.',
-      );
-    });
-
-    it('should fail when core status is precommited', async () => {
-      await consensus.setCoreStatus(core.address, consensusUtil.CoreStatus.precommitted);
-      await Utils.expectRevert(
-        consensusUtil.joinDuringCreation(consensus, joinParams),
-        'Core status is not creation.',
-      );
-    });
   });
 
   contract('Positive Tests', () => {
     it('should pass when core status is creation', async () => {
       await consensus.setCoreStatus(core.address, consensusUtil.CoreStatus.creation);
+      await consensusUtil.joinDuringCreation(consensus, joinParams);
+    });
+
+    it('should pass when core status is opened', async () => {
+      await consensus.setCoreStatus(core.address, consensusUtil.CoreStatus.opened);
+      await consensusUtil.joinDuringCreation(consensus, joinParams);
+    });
+
+    it('should pass when core status is opened', async () => {
+      await consensus.setCoreStatus(core.address, consensusUtil.CoreStatus.opened);
+      await consensusUtil.joinDuringCreation(consensus, joinParams);
+    });
+
+    it('should pass when core status is precommited', async () => {
+      await consensus.setCoreStatus(core.address, consensusUtil.CoreStatus.precommitted);
       await consensusUtil.joinDuringCreation(consensus, joinParams);
     });
 

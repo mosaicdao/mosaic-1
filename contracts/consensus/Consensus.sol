@@ -353,6 +353,19 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /**
      * @notice Commit a proposal. This verifies the committee lock of the
      *         proposal, anchors the state root and opens a new matablock.
+     *
+     * @dev Function requires:
+     *          - chain id should not be 0.
+     *          - source block hash should not be 0.
+     *          - target block hash should not be 0.
+     *          - target block height should be greater than source block
+     *            height.
+     *          - block header should match with vote message source.
+     *          - origin observation should not be 0.
+     *          - core for the specified chain id should exist.
+     *          - precommit for the specified core doesn't exist.
+     *          - provided kernel hash should be equal to open kernel hash.
+     *
      * @param _chainId Chain id.
      * @param _rlpBlockHeader RLP ecoded block header.
      * @param _kernelHash Kernel hash
@@ -471,6 +484,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /**
      * @notice Validator joins the core, when core status is opened or
      *         precommitted. This is called by validator address.
+     *
+     * @dev Function requires:
+     *          - core status should be opened or precommitted.
+     *
      * @param _chainId Chain id that validator wants to join.
      * @param _core Core address that validator wants to join.
      * @param _withdrawalAddress A withdrawal address of newly joined validator.
@@ -502,6 +519,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /**
      * @notice Validator joins the core, when core status is creation.
      *         This is called by validator address.
+     *
+     * @dev Function requires:
+     *          - core should be in an active state.
+     *
      * @param _chainId Chain id that validator wants to join.
      * @param _core Core address that validator wants to join.
      * @param _withdrawalAddress A withdrawal address of newly joined validator.
@@ -531,7 +552,14 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     }
 
     /**
-     * @notice Validator logs out. This can be called by validator address.
+     * @notice Validator logs out. This is called by validator address.
+     *
+     * @dev Function requires:
+     *          - chain id should not be 0.
+     *          - core address should not be 0.
+     *          - core should be assigned for the specified chain id.
+     *          - core for the specified chain id should exist.
+     *
      * @param _chainId Chain id that validator wants to logout.
      * @param _core Core address that validator wants to logout.
      */
@@ -566,8 +594,13 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     }
 
     /**
-     * @notice Create a new meta chain given an achor.
+     * @notice Creates a new meta chain given an achor.
      *         This can be called only by axiom.
+     *
+     * @dev Function requires:
+     *          - msg.sender should be axiom contract.
+     *          - core is not assigned to metachain.
+     *
      * @param _anchor anchor of the new meta-chain.
      * @param _epochLength Epoch length for new meta-chain.
      * @param _rootBlockHash root block hash.
@@ -617,7 +650,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     // Task: Pending functions related to halting and corrupting of core.
 
     /**
-     * @notice Check if the core address is valid.
+     * @notice Check if the core address is active or not.
      * @param _core Core contract address.
      * Returns true if the specified address is a core.
      */
@@ -635,7 +668,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
      * @dev Function requires:
      *          - Committee for the proposal should not exist.
-
+     *
      * @param _dislocation Hash to shuffle validators.
      * @param _proposal Proposal under consideration for committee.
      */
@@ -819,6 +852,13 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
     /**
      * @notice Validate the params for joining the core.
+     *
+     * @dev Function requires:
+     *          - chain Id should not be 0.
+     *          - core address should not be 0.
+     *          - core should be assigned for the specified chain id.
+     *          - withdrawal address can't be 0.
+     *
      * @param _chainId Chain id.
      * @param _core Core contract address.
      * @param _withdrawalAddress Withdrawal address.
