@@ -157,6 +157,17 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
     /**
      * @notice Setup consensus contract. Setup method can be called only once.
+     *
+     * @dev Function requires:
+     *          - Consensus contract should not be already setup.
+     *          - Committee size should be greater than 0.
+     *          - Minimum validator size must be greater or equal to 5.
+     *          - Maximum validator size should be greater or equal to minimum
+     *            validator size.
+     *          - Gas target delta should be greater than 0.
+     *          - Coin base split per mille should be in range: 0..1000.
+     *          - Reputation contract address should be 0.
+     *
      * @param _committeeSize Max committee size that can be formed.
      * @param _minValidators Minimum number of validators that must join a
      *                       created core to open.
@@ -195,7 +206,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
         require(
             _maxValidators >= _minValidators,
-            "Max validator size is less than minimum validator count."
+            "Max validator size is less than minimum validator size."
         );
 
         require(
@@ -236,7 +247,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     {
         require(
             _proposal != bytes32(0),
-            "Proposal must not be null."
+            "Proposal should not be null."
         );
         // onlyCore asserts msg.sender is active core
         // TODO: we can additional 

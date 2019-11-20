@@ -75,7 +75,7 @@ contract('Consensus::setup', (accounts) => {
       );
       await Utils.expectRevert(
         ConsensusUtils.setup(consensus, params),
-        'Max validator size is less than minimum validator count.',
+        'Max validator size is less than minimum validator size.',
       );
     });
 
