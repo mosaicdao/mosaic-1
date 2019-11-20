@@ -34,7 +34,7 @@
     "eslint-config-airbnb-base": "13.1.0",
     "eslint-plugin-import": "2.17.3",
     "ethlint": "1.2.4",
-    "ganache-cli": "^6.7.0",
+    "ganache-cli": "6.7.0",
     "mocha": "6.2.0",
     "openzeppelin-solidity": "2.1.1",
     "solium": "1.2.4",

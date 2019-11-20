@@ -17,9 +17,11 @@ const BN = require('bn.js');
 const web3 = require('./web3.js');
 
 async function advanceBlock() {
-  return web3.currentProvider.send(
-    'evm_mine',
-  );
+  return web3.currentProvider.send({
+    jsonrpc: '2.0',
+    method: 'evm_mine',
+    id: new Date().getTime(),
+  });
 }
 
 const ResultType = {
@@ -236,8 +238,6 @@ Utils.prototype = {
       });
     });
   },
-
-  advanceBlock,
 
   advanceBlocks: async (amount) => {
     for (let i = 0; i < amount; i += 1) {
