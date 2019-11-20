@@ -20,6 +20,7 @@ const { AccountProvider } = require('../test_lib/utils.js');
 const Utils = require('../test_lib/utils.js');
 
 const CoreUtils = require('./utils.js');
+
 const Core = artifacts.require('Core');
 
 let config = {};
@@ -40,7 +41,7 @@ async function assertValidatorHeight(
   assert.isOk(
     endHeight.eq(expEndHeight),
   );
-};
+}
 
 contract('Core::joinDuringCreation', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
@@ -97,7 +98,7 @@ contract('Core::joinDuringCreation', (accounts) => {
         validator,
         config.height,
         MaxFutureEndHeight,
-      )
+      );
       const coreStatus = await config.core.coreStatus.call();
       assert.isOk(
         CoreUtils.isCoreCreated(coreStatus),
@@ -111,32 +112,34 @@ contract('Core::joinDuringCreation', (accounts) => {
     it('should open after enough validators join', async () => {
       const minVal = await config.core.minimumValidatorCount.call();
 
-      for (let i = 0; i < minVal.toNumber(10) - 1; i++) {
-        let validator = accountProvider.get();
+      for (let i = 0; i < minVal.toNumber(10) - 1; i += 1) {
+        const validator = accountProvider.get();
+        /* eslint-disable */
         await config.mockConsensus.joinDuringCreation(validator);
-        let valCount = await config.core.countValidators.call();
+        const valCount = await config.core.countValidators.call();
         assert.isOk(
           valCount.eqn(i + 1),
         );
-        let coreStatus = await config.core.coreStatus.call();
+        const coreStatus = await config.core.coreStatus.call();
         assert.isOk(
           CoreUtils.isCoreCreated(coreStatus),
         );
+        /* eslint-enable */
       }
 
-      let validator = accountProvider.get();
+      const validator = accountProvider.get();
       await config.mockConsensus.joinDuringCreation(validator);
-      let valCount = await config.core.countValidators.call();
+      const valCount = await config.core.countValidators.call();
       assert.isOk(
         valCount.eq(minVal),
       );
-      let coreStatus = await config.core.coreStatus.call();
+      const coreStatus = await config.core.coreStatus.call();
       assert.isOk(
         CoreUtils.isCoreOpened(coreStatus),
       );
 
-      let quorum = await config.core.quorum.call();
-      let calcQuorum = await CoreUtils.calculcateQuorum(config.core, minVal);
+      const quorum = await config.core.quorum.call();
+      const calcQuorum = await CoreUtils.calculcateQuorum(config.core, minVal);
       assert.isOk(
         quorum.eq(calcQuorum),
       );

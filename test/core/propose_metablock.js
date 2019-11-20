@@ -20,6 +20,7 @@ const { AccountProvider } = require('../test_lib/utils.js');
 const Utils = require('../test_lib/utils.js');
 
 const CoreUtils = require('./utils.js');
+
 const Core = artifacts.require('Core');
 
 let config = {};
@@ -31,15 +32,18 @@ async function openCore(
 ) {
   const minVal = await core.minimumValidatorCount.call();
 
-  for (let i = 0; i < minVal.toNumber(10); i++) {
-    let validator = accountProvider.get();
-    await config.mockConsensus.joinDuringCreation(validator);
+  const joinDuringCreationPromises = [];
+  for (let i = 0; i < minVal.toNumber(10); i += 1) {
+    const validator = accountProvider.get();
+    joinDuringCreationPromises.push(config.mockConsensus.joinDuringCreation(validator));
   }
-  let coreStatus = await config.core.coreStatus.call();
+
+  await Promise.all(joinDuringCreationPromises);
+  const coreStatus = await config.core.coreStatus.call();
   assert.isOk(
     CoreUtils.isCoreOpened(coreStatus),
   );
-};
+}
 
 async function proposeMetaBlock(
   core,
@@ -54,7 +58,7 @@ async function proposeMetaBlock(
   targetBlockHeight,
   txOptions = {},
 ) {
-  let proposalHash = await core.proposeMetablock.call(
+  const proposalHash = await core.proposeMetablock.call(
     kernelHash,
     originObservation,
     dynasty,
@@ -64,7 +68,7 @@ async function proposeMetaBlock(
     target,
     sourceBlockHeight,
     targetBlockHeight,
-    txOptions
+    txOptions,
   );
 
   await core.proposeMetablock(
@@ -77,11 +81,11 @@ async function proposeMetaBlock(
     target,
     sourceBlockHeight,
     targetBlockHeight,
-    txOptions
+    txOptions,
   );
 
   return proposalHash;
-};
+}
 
 contract('Core::proposeMetablock', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
@@ -114,7 +118,7 @@ contract('Core::proposeMetablock', (accounts) => {
       targetBlockHeight: config.sourceBlockHeight
         .add(config.epochLength
           .mul(new BN(3))),
-    }
+    };
 
     config.mockConsensus = await CoreUtils.createConsensusCore(
       config.chainId,
@@ -142,9 +146,9 @@ contract('Core::proposeMetablock', (accounts) => {
 
   contract('Positive Tests', () => {
     it('should accept proposals', async () => {
-      let eoa = accountProvider.get();
+      const eoa = accountProvider.get();
 
-      let proposalHash = await proposeMetaBlock(
+      const proposalHash = await proposeMetaBlock(
         config.core,
         proposal.kernelHash,
         proposal.originObservation,
@@ -160,7 +164,7 @@ contract('Core::proposeMetablock', (accounts) => {
         },
       );
 
-      let voteCount = await config.core.voteCounts.call(proposalHash);
+      const voteCount = await config.core.voteCounts.call(proposalHash);
       assert.isOk(
         voteCount.height.eq(config.height),
       );
@@ -172,5 +176,4 @@ contract('Core::proposeMetablock', (accounts) => {
       );
     });
   });
-
 });
