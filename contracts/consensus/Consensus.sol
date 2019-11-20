@@ -303,6 +303,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
     /**
      * @notice Enter a validator into the committee.
+     *
+     * @dev Function requires:
+     *          - Committee address should be present.
+     *          - Validator should be active.
+     *          - Validator successfully should enter a committee.
+     *
      * @param _committeeAddress Committee address that validator wants to enter.
      * @param _validator Validator address to enter.
      * @param _furtherMember Validator address that is further member compared to `_validator` address
