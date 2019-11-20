@@ -320,7 +320,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      * @dev Function requires:
      *          - committee address should be present.
      *          - validator should be active.
-     *          - validator successfully should enter a committee.
+     *          - validator successfully enter a committee.
      *
      * @param _committeeAddress Committee address that validator wants to enter.
      * @param _validator Validator address to enter.
@@ -789,7 +789,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     }
 
     /**
-     * @notice Deploy a new core contract.
+     * @notice Deploys a new core contract.
      * @param _chainId Chain id for which the core should be deployed.
      * @param _epochLength Epoch length for new core.
      * @param _height Kernel height.
@@ -871,7 +871,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      * @notice Validate the params for joining the core.
      *
      * @dev Function requires:
-     *          - chain Id should not be 0.
+     *          - chain id should not be 0.
      *          - core address should not be 0.
      *          - core should be assigned for the specified chain id.
      *          - withdrawal address can't be 0.

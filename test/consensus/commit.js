@@ -253,7 +253,7 @@ contract('Consensus::commit', (accounts) => {
       await contracts.Consensus.setCommitteeProposal(contracts.SpyCommittee.address, proposal);
       await Utils.expectRevert(
         consensusUtil.commit(contracts.Consensus, commitParams),
-        'Committee has not decide on the proposal.',
+        'Committee has not decided on the proposal.',
       );
     });
 
