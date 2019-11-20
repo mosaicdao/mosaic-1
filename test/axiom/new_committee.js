@@ -94,13 +94,13 @@ contract('Axiom::newCommittee', (accounts) => {
     it('should fail when caller is not consensus contract address', async () => {
       await Utils.expectRevert(
         axiom.newCommittee(callData),
-        'Caller must be consensus address.',
+        'Only the consensus contract can call this function.',
       );
     });
   });
 
   contract('Positive Tests', () => {
-    it('should deploy proxy contact address', async () => {
+    it('should deploy proxy contract address', async () => {
       await mockedConsensus.callNewCommittee(
         axiom.address,
         callData,

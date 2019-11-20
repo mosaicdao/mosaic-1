@@ -16,6 +16,7 @@
 
 const BN = require('bn.js');
 const { AccountProvider } = require('../test_lib/utils.js');
+const web3 = require('../test_lib/web3.js');
 const Utils = require('../test_lib/utils.js');
 const AxiomUtils = require('./utils.js');
 const AnchorTruffleArtifact = require('../../build/contracts/Anchor.json');
@@ -75,9 +76,9 @@ contract('Axiom::newMetaChain', (accounts) => {
     await AxiomUtils.setupConsensusWithConfig(axiom, config);
 
     newMetaChainParams = {
-      remoteChainId: new BN(1405),
-      stateRoot: Utils.getRandomHash(),
       maxStateRoots: new BN(10),
+      rlpBlockHeader: '0xf901f9a083cafc574e1f51ba9dc0568fc617a08ea2429fb384059c972f13b19fa1c8dd55a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347948888f1f195afa192cfee860698584c030f4c9db1a0ef1552a40b7165c3cd773806b9e0c165b75356e0314bf0706f279c729f51e017a05fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67a0bc37d79753ad738a6dac4921e57392f145d8887476de3f783dfa7edae9283e52b90100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008302000001832fefd8825208845506eb0780a0bd4472abb6659ebe3ee06ee4d7b72a00a9f4d001caca51342001075469aff49888a13a5a8c8f2bb1c4',
+      sourceBlockHeight: new BN(1),
       txOptions: {
         from: constructionParams.techGov,
       },
@@ -87,6 +88,7 @@ contract('Axiom::newMetaChain', (accounts) => {
 
   contract('Negative Tests', () => {
     it('should fail when called by non technical governance address', async () => {
+      newMetaChainParams.txOptions.from = accountProvider.get();
       newMetaChainParams = Object.assign(
         {},
         newMetaChainParams,
@@ -114,9 +116,8 @@ contract('Axiom::newMetaChain', (accounts) => {
       const consensusContractAddress = await axiom.consensus.call();
       const consensusProxyContract = await SpyConsensus.at(consensusContractAddress);
 
-
-      const chainId = await consensusProxyContract.chainId.call();
-      const contractByteCode = await Utils.getCode(chainId);
+      const anchor = await consensusProxyContract.anchor.call();
+      const contractByteCode = await Utils.getCode(anchor);
       assert.strictEqual(
         contractByteCode,
         AnchorTruffleArtifact.deployedBytecode,
@@ -125,8 +126,7 @@ contract('Axiom::newMetaChain', (accounts) => {
     });
 
     it('should validate the spied values of the consensus proxy contract', async () => {
-      const blockHeight = await Utils.getBlockNumber();
-      const blockHash = await Utils.getBlockHash(blockHeight);
+      const blockHash = web3.utils.sha3(newMetaChainParams.rlpBlockHeader);
 
       await AxiomUtils.newMetaChainWithConfig(axiom, newMetaChainParams);
 
@@ -149,7 +149,7 @@ contract('Axiom::newMetaChain', (accounts) => {
 
       const sourceBlockHeight = await consensusProxyContract.sourceBlockHeight.call();
       assert.strictEqual(
-        sourceBlockHeight.eq(blockHeight),
+        sourceBlockHeight.eq(newMetaChainParams.sourceBlockHeight),
         true,
         'Source block height value is not set in the contract.',
       );
