@@ -14,10 +14,11 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../proxies/ProxyFactory.sol";
-import "../consensus/ConsensusI.sol";
-import "../anchor/Anchor.sol"; // TASK: change this to factory, when new anchor is implemented.
 import "./AxiomI.sol";
+import "../anchor/Anchor.sol"; // TASK: change this to factory, when new anchor is implemented.
+import "../block/Block.sol";
+import "../consensus/ConsensusI.sol";
+import "../proxies/ProxyFactory.sol";
 
 contract Axiom is AxiomI, ProxyFactory {
 
@@ -264,36 +265,39 @@ contract Axiom is AxiomI, ProxyFactory {
     /**
      * @notice Setup a new meta chain. Only technical governance address can
      *         call this function.
-     * @param _remoteChainId The chain id of the chain that is tracked by this
-     *                       anchor.
-     * @param _stateRoot State root hash of given _sourceBlockHeight.
      * @param _maxStateRoots The max number of state roots to store in the
      *                       circular buffer.
+     * @param _rootRlpBlockHeader RLP encoded block header of root block.
      */
     function newMetaChain(
-        uint256 _remoteChainId,
-        bytes32 _stateRoot,
-        uint256 _maxStateRoots
+        uint256 _maxStateRoots,
+        bytes calldata _rootRlpBlockHeader
     )
         external
         onlyTechGov
     {
-        uint256 blockNumber = block.number.sub(1);
+        require(
+            address(consensus) != address(0),
+            "Consensus must be setup."
+        );
+
+        bytes32 source = keccak256(_rootRlpBlockHeader);
+
+        Block.Header memory blockHeader = Block.decodeHeader(_rootRlpBlockHeader);
 
         // Task: When new Anchor is implemented, use proxy pattern for deployment.
         Anchor anchor = new Anchor(
-            _remoteChainId,
-            blockNumber,
-            _stateRoot,
+            blockHeader.height,
+            blockHeader.stateRoot,
             _maxStateRoots,
             address(consensus)
         );
 
         consensus.newMetaChain(
-            bytes20(address(anchor)),
+            address(anchor),
             EPOCH_LENGTH,
-            blockhash(blockNumber),
-            blockNumber
+            source,
+            blockHeader.height
         );
     }
 
@@ -301,8 +305,7 @@ contract Axiom is AxiomI, ProxyFactory {
     /* Private Functions */
 
     /**
-     * @notice Deploy proxy contract. This can be called only by consensus
-     *         contract.
+     * @notice Deploy proxy contract.
      * @param _masterCopy Master copy contract address.
      * @param _data Setup function call data.
      * @return Deployed contract address.
