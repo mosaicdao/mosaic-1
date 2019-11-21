@@ -28,30 +28,31 @@ contract('Consensus::formCommittee', (accounts) => {
   let axiom;
   const testInputs = {};
   const accountProvider = new Utils.AccountProvider(accounts);
+
+  beforeEach(async () => {
+    consensus = await Consensus.new();
+    axiom = await SpyAxiom.new();
+
+    await axiom.setupConsensus(consensus.address);
+
+    // Populate the input data.
+    testInputs.committeeSize = new BN(100);
+    testInputs.coreAddress = accountProvider.get();
+    testInputs.proposal = Utils.getRandomHash();
+
+    await consensus.setCoreStatus(
+      testInputs.coreAddress,
+      CoreStatusUtils.CoreStatus.creation,
+    );
+
+    await consensus.registerPrecommit(
+      testInputs.proposal,
+      {
+        from: testInputs.coreAddress,
+      },
+    );
+  });
   contract('Negative Tests', async () => {
-    beforeEach(async () => {
-      consensus = await Consensus.new();
-      axiom = await SpyAxiom.new();
-      await axiom.setupConsensus(consensus.address);
-
-      // Populate the input data.
-      testInputs.committeeSize = new BN(100);
-      testInputs.coreAddress = accountProvider.get();
-      testInputs.proposal = Utils.getRandomHash();
-
-      await consensus.setCoreStatus(
-        testInputs.coreAddress,
-        CoreStatusUtils.CoreStatus.creation,
-      );
-
-      await consensus.registerPrecommit(
-        testInputs.proposal,
-        {
-          from: testInputs.coreAddress,
-        },
-      );
-    });
-
     it('should fail when pre-commit proposal does not exists for a given core address', async () => {
       const coreAddress = accountProvider.get();
 
@@ -143,27 +144,6 @@ contract('Consensus::formCommittee', (accounts) => {
   contract('Positive Tests', () => {
     let committeeFormationBlockHeight;
     beforeEach(async () => {
-      consensus = await Consensus.new();
-      axiom = await SpyAxiom.new();
-
-      await axiom.setupConsensus(consensus.address);
-
-      // Populate the input data.
-      testInputs.committeeSize = new BN(100);
-      testInputs.coreAddress = accountProvider.get();
-      testInputs.proposal = Utils.getRandomHash();
-
-      await consensus.setCoreStatus(
-        testInputs.coreAddress,
-        CoreStatusUtils.CoreStatus.creation,
-      );
-
-      await consensus.registerPrecommit(
-        testInputs.proposal,
-        {
-          from: testInputs.coreAddress,
-        },
-      );
       const initialBlockNumber = await Utils.getBlockNumber();
       committeeFormationBlockHeight = initialBlockNumber
         .addn(consensusUtil.CommitteeFormationDelay);
