@@ -55,7 +55,6 @@ contract('Committee::activateCommittee', async (accounts) => {
       CommitteeUtils.compare,
     );
 
-    config.committee.furthestMember = dist[config.committee.size + 1].address;
     config.committee.closestMember = dist[0].address;
     config.committee.member = dist[1].address;
 

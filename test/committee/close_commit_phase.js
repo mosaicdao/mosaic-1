@@ -38,11 +38,12 @@ contract('Committee::closeCommitPhase', async (accounts) => {
     };
 
     config.committee.contract = await CommitteeUtils.createCommittee(
+      config.committee.consensus,
       config.committee.size,
       config.committee.dislocation,
       config.committee.proposal,
       {
-        from: config.committee.consensus,
+        from: accountProvider.get(),
       },
     );
 
@@ -56,7 +57,6 @@ contract('Committee::closeCommitPhase', async (accounts) => {
       CommitteeUtils.compare,
     );
 
-    config.committee.furthestMember = dist[config.committee.size + 1].address;
     config.committee.closestMember = dist[0].address;
     config.committee.member = dist[1].address;
 

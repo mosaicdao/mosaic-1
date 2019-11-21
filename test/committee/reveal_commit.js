@@ -273,11 +273,12 @@ contract('Committee::revealCommit', async (accounts) => {
     it('should fail if committee is in open phase status', async () => {
       const consensus = accountProvider.get();
       const committee = await CommitteeUtils.createCommittee(
+        consensus,
         7,
         web3.utils.sha3('dislocation'),
         web3.utils.sha3('proposal'),
         {
-          from: consensus,
+          from: accountProvider.get(),
         },
       );
 
@@ -308,11 +309,12 @@ contract('Committee::revealCommit', async (accounts) => {
     it('should fail if committee is in cool down phase status', async () => {
       const consensus = accountProvider.get();
       const committee = await CommitteeUtils.createCommittee(
+        consensus,
         7,
         web3.utils.sha3('dislocation'),
         web3.utils.sha3('proposal'),
         {
-          from: consensus,
+          from: accountProvider.get(),
         },
       );
 
@@ -350,11 +352,12 @@ contract('Committee::revealCommit', async (accounts) => {
     it('should fail if committee is in invalid phase status', async () => {
       const consensus = accountProvider.get();
       const committee = await CommitteeUtils.createCommittee(
+        consensus,
         7,
         web3.utils.sha3('dislocation'),
         web3.utils.sha3('proposal'),
         {
-          from: consensus,
+          from: accountProvider.get(),
         },
       );
 
