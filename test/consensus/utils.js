@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+'use strict';
+
 const web3 = require('../test_lib/web3.js');
 
 const SentinelCommittee = '0x0000000000000000000000000000000000000001';

@@ -14,8 +14,6 @@
 
 'use strict';
 
-const BN = require('bn.js');
-
 const web3 = require('../test_lib/web3.js');
 
 const Core = artifacts.require('Core');
