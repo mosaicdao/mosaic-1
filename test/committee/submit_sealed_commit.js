@@ -40,8 +40,9 @@ function createCommitteeMember(account, proposal) {
 
 contract('Committee::submitSealedCommit', async (accounts) => {
   const accountProvider = new AccountProvider(accounts);
-
+  let members;
   beforeEach(async () => {
+    members = [];
     config = {
       committee: {
         size: 3,
@@ -60,9 +61,6 @@ contract('Committee::submitSealedCommit', async (accounts) => {
       },
     );
 
-    config.committee.sentinelMembers = await config.committee.contract.SENTINEL_MEMBERS.call();
-
-    const members = [];
     for (let i = 0; i < config.committee.size; i += 1) {
       members.push(
         accountProvider.get(),
@@ -117,7 +115,7 @@ contract('Committee::submitSealedCommit', async (accounts) => {
       );
     });
 
-    it('should fail if committee is not in commit phase status', async () => {
+    it('should fail if committee is in open phase status', async () => {
       const consensus = accountProvider.get();
       const committee = await CommitteeUtils.createCommittee(
         3,
@@ -128,22 +126,87 @@ contract('Committee::submitSealedCommit', async (accounts) => {
         },
       );
 
-      const sentinelMembers = await config.committee.contract.SENTINEL_MEMBERS.call();
+      await CommitteeUtils.enterMembers(
+        committee,
+        members,
+        consensus,
+      );
 
-      const member = accountProvider.get();
-      await committee.enterCommittee(
-        member,
-        sentinelMembers,
-        {
-          from: consensus,
-        },
+      const status = await committee.committeeStatus.call();
+      assert.isOk(
+        CommitteeUtils.isCommitteeOpen(status),
+        'Committee status is not open upon creation.',
       );
 
       await Utils.expectRevert(
         committee.submitSealedCommit(
           crypto.randomBytes(32),
           {
-            from: member,
+            from: members[0],
+          },
+        ),
+        'Committee must be in the commit phase.',
+      );
+    });
+
+    it('should fail if committee is in cool down phase status', async () => {
+      const consensus = accountProvider.get();
+      const committee = await CommitteeUtils.createCommittee(
+        3,
+        web3.utils.sha3('dislocation'),
+        web3.utils.sha3('proposal'),
+        {
+          from: consensus,
+        },
+      );
+
+      await CommitteeUtils.enterMembers(
+        committee,
+        members,
+        consensus,
+      );
+
+      await committee.cooldownCommittee(
+        {
+          from: members[0],
+        },
+      );
+
+      const status = await committee.committeeStatus.call();
+      assert.isOk(
+        CommitteeUtils.isCoolingDown(status),
+        'Committee status is not in cooling down phase.',
+      );
+
+      await Utils.expectRevert(
+        committee.submitSealedCommit(
+          crypto.randomBytes(32),
+          {
+            from: members[0],
+          },
+        ),
+        'Committee must be in the commit phase.',
+      );
+    });
+
+    it('should fail if committee is in reveal phase status', async () => {
+      await CommitteeUtils.passCommitTimeoutBlockHeight(config.committee.contract);
+
+      await config.committee.contract.closeCommitPhase({
+        from: accountProvider.get(),
+      });
+
+      const status = await config.committee.contract.committeeStatus.call();
+      assert.isOk(
+        CommitteeUtils.isInRevealPhase(status),
+        'Committee status is not in reveal phase.',
+      );
+
+      await Utils.expectRevert(
+        config.committee.contract.submitSealedCommit(
+          crypto.randomBytes(32),
+          {
+            from: members[0],
           },
         ),
         'Committee must be in the commit phase.',

@@ -66,7 +66,7 @@ contract('Committee:challengeCommittee', async (accounts) => {
 
     config.committee.furthestMember = dist[config.committee.size + 1].address;
     config.committee.closestMember = dist[0].address;
-    config.committee.memberToInitiateCooldown = dist[1].address;
+    config.committee.member = dist[1].address;
 
     await CommitteeUtils.enterMembers(
       config.committee.contract,
@@ -78,7 +78,7 @@ contract('Committee:challengeCommittee', async (accounts) => {
 
     await config.committee.contract.cooldownCommittee(
       {
-        from: config.committee.memberToInitiateCooldown,
+        from: config.committee.member,
       },
     );
 
@@ -86,7 +86,7 @@ contract('Committee:challengeCommittee', async (accounts) => {
   });
 
   contract('Negative Tests', async () => {
-    it('should fail if committee is not in cooling down mode', async () => {
+    it('should fail if committee is in open phase state ', async () => {
       const consensus = accountProvider.get();
       const committee = await CommitteeUtils.createCommittee(
         3,
@@ -108,6 +108,64 @@ contract('Committee:challengeCommittee', async (accounts) => {
       );
     });
 
+    it('should fail if committee is in commit phase status', async () => {
+      await CommitteeUtils.passActivationBlockHeight(config.committee.contract);
+
+      await config.committee.contract.activateCommittee(
+        {
+          from: config.committee.member,
+        },
+      );
+
+      const status = await config.committee.contract.committeeStatus.call();
+      assert.isOk(
+        CommitteeUtils.isInCommitPhase(status),
+        'Committee status is not in commit phase.',
+      );
+
+      await Utils.expectRevert(
+        config.committee.contract.challengeCommittee(
+          accountProvider.get(),
+          {
+            from: config.committee.consensus,
+          },
+        ),
+        'Committee formation must be cooling down.',
+      );
+    });
+
+    it('should fail if committee is in reveal phase status', async () => {
+      await CommitteeUtils.passActivationBlockHeight(config.committee.contract);
+
+      await config.committee.contract.activateCommittee(
+        {
+          from: config.committee.member,
+        },
+      );
+
+      await CommitteeUtils.passCommitTimeoutBlockHeight(config.committee.contract);
+
+      await config.committee.contract.closeCommitPhase({
+        from: accountProvider.get(),
+      });
+
+      const status = await config.committee.contract.committeeStatus.call();
+      assert.isOk(
+        CommitteeUtils.isInRevealPhase(status),
+        'Committee status is not in reveal phase.',
+      );
+
+      await Utils.expectRevert(
+        config.committee.contract.challengeCommittee(
+          accountProvider.get(),
+          {
+            from: config.committee.consensus,
+          },
+        ),
+        'Committee formation must be cooling down.',
+      );
+    });
+
     it('should fail if a caller is not consensus', async () => {
       await Utils.expectRevert(
         config.committee.contract.challengeCommittee(
@@ -123,7 +181,7 @@ contract('Committee:challengeCommittee', async (accounts) => {
     it('should fail if challenged member is already in the committee', async () => {
       await Utils.expectRevert(
         config.committee.contract.challengeCommittee(
-          config.committee.memberToInitiateCooldown,
+          config.committee.member,
           {
             from: config.committee.consensus,
           },

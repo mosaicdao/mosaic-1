@@ -72,9 +72,9 @@ contract('Committee:cooldownCommittee', async (accounts) => {
       await config.committee.contract.COMMITTEE_FORMATION_COOLDOWN.call()
     ).toNumber();
 
-    config.committee.memberToInitiateCooldown = accountProvider.get();
+    config.committee.member = accountProvider.get();
     await config.committee.contract.enterCommittee(
-      config.committee.memberToInitiateCooldown,
+      config.committee.member,
       config.committee.sentinelMembers,
       {
         from: config.committee.consensus,
@@ -140,10 +140,10 @@ contract('Committee:cooldownCommittee', async (accounts) => {
       );
     });
 
-    it('should fail if committee is not in open state', async () => {
+    it('should fail if committee is in cooldown state', async () => {
       await config.committee.contract.cooldownCommittee(
         {
-          from: config.committee.memberToInitiateCooldown,
+          from: config.committee.member,
         },
       );
 
@@ -152,7 +152,75 @@ contract('Committee:cooldownCommittee', async (accounts) => {
       await Utils.expectRevert(
         config.committee.contract.cooldownCommittee(
           {
-            from: config.committee.memberToInitiateCooldown,
+            from: config.committee.member,
+          },
+        ),
+        'Committee formation must be open.',
+      );
+    });
+
+    it('should fail if committee is in commit state', async () => {
+      await config.committee.contract.cooldownCommittee(
+        {
+          from: config.committee.member,
+        },
+      );
+
+      await CommitteeUtils.passActivationBlockHeight(config.committee.contract);
+
+      await config.committee.contract.activateCommittee(
+        {
+          from: config.committee.member,
+        },
+      );
+
+      const status = await config.committee.contract.committeeStatus.call();
+      assert.isOk(
+        CommitteeUtils.isInCommitPhase(status),
+        'Committee status is not is commit phase.',
+      );
+
+      await Utils.expectRevert(
+        config.committee.contract.cooldownCommittee(
+          {
+            from: config.committee.member,
+          },
+        ),
+        'Committee formation must be open.',
+      );
+    });
+
+    it('should fail if committee is in reveal state', async () => {
+      await config.committee.contract.cooldownCommittee(
+        {
+          from: config.committee.member,
+        },
+      );
+
+      await CommitteeUtils.passActivationBlockHeight(config.committee.contract);
+
+      await config.committee.contract.activateCommittee(
+        {
+          from: config.committee.member,
+        },
+      );
+
+      await CommitteeUtils.passCommitTimeoutBlockHeight(config.committee.contract);
+
+      await config.committee.contract.closeCommitPhase({
+        from: accountProvider.get(),
+      });
+
+      const status = await config.committee.contract.committeeStatus.call();
+      assert.isOk(
+        CommitteeUtils.isInRevealPhase(status),
+        'Committee status is not is commit phase.',
+      );
+
+      await Utils.expectRevert(
+        config.committee.contract.cooldownCommittee(
+          {
+            from: config.committee.member,
           },
         ),
         'Committee formation must be open.',
@@ -164,7 +232,7 @@ contract('Committee:cooldownCommittee', async (accounts) => {
     it('checks storage after successful start of cooldown', async () => {
       await config.committee.contract.cooldownCommittee(
         {
-          from: config.committee.memberToInitiateCooldown,
+          from: config.committee.member,
         },
       );
 
@@ -172,7 +240,7 @@ contract('Committee:cooldownCommittee', async (accounts) => {
       const memberInitiatedCooldown = await config.committee.contract.memberInitiatedCooldown.call();
       assert.strictEqual(
         memberInitiatedCooldown,
-        config.committee.memberToInitiateCooldown,
+        config.committee.member,
         'Member that initiated cooldown does not match.',
       );
 
