@@ -19,6 +19,28 @@ const web3 = require('../test_lib/web3.js');
 
 const Committee = artifacts.require('Committee');
 
+function getMemberDistance(accountProvider, dislocation, proposal, committeeSize, compareFn) {
+  const dist = [];
+  for (let i = 0; i < committeeSize + 2; i += 1) {
+    const account = accountProvider.get();
+    dist.push({
+      address: account,
+      distance: this.distanceToProposal(
+        dislocation,
+        account,
+        proposal,
+      ),
+    });
+  }
+
+  dist.sort(compareFn);
+  return dist;
+}
+
+function compare(a, b) {
+  return a.distance.cmp(b.distance);
+}
+
 function remove0x(str) {
   if (str.substr(0, 2) === '0x') {
     return str.substr(2);
@@ -38,9 +60,10 @@ async function createCommittee(committeeSize, dislocation, proposal, txOptions =
 
 async function enterMembers(committeeContract, members, consensus) {
   const sentinelMembers = await committeeContract.SENTINEL_MEMBERS.call();
-
+  // console.log('members in entermembers :',members);
   const enterPromises = [];
   for (let i = 0; i < members.length; i += 1) {
+    // console.log(`members :- ${members[i]}`);
     enterPromises.push(
       committeeContract.enterCommittee(
         members[i],
@@ -221,4 +244,6 @@ module.exports = {
   passCommitTimeoutBlockHeight,
   assertCommitteeMembers,
   sealCommit,
+  getMemberDistance,
+  compare,
 };

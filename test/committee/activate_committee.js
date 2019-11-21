@@ -23,12 +23,11 @@ const web3 = require('../test_lib/web3.js');
 const CommitteeUtils = require('./utils.js');
 
 let config = {};
-let members = [];
+
 contract('Committee::activateCommittee', async (accounts) => {
   const accountProvider = new AccountProvider(accounts);
 
   beforeEach(async () => {
-    members = [];
     config = {
       committee: {
         size: 7,
@@ -47,19 +46,23 @@ contract('Committee::activateCommittee', async (accounts) => {
       },
     );
 
-    config.committee.sentinelMembers = await config.committee.contract.SENTINEL_MEMBERS.call();
+    const dist = CommitteeUtils.getMemberDistance(
+      accountProvider,
+      config.committee.dislocation,
+      config.committee.proposal,
+      config.committee.size,
+      CommitteeUtils.compare,
+    );
 
-    for (let i = 0; i < config.committee.size; i += 1) {
-      members.push(
-        accountProvider.get(),
-      );
-    }
-
-    [config.committee.member] = members;
+    config.committee.furthestMember = dist[config.committee.size + 1].address;
+    config.committee.closestMember = dist[0].address;
+    config.committee.member = dist[1].address;
 
     await CommitteeUtils.enterMembers(
       config.committee.contract,
-      members,
+      dist.slice(1, config.committee.size + 1).map(
+        d => d.address,
+      ),
       config.committee.consensus,
     );
 
@@ -119,7 +122,7 @@ contract('Committee::activateCommittee', async (accounts) => {
     it('should fail if committee is in commit phase status', async () => {
       await config.committee.contract.cooldownCommittee(
         {
-          from: members[0],
+          from: config.committee.member,
         },
       );
 
@@ -127,7 +130,7 @@ contract('Committee::activateCommittee', async (accounts) => {
 
       await config.committee.contract.activateCommittee(
         {
-          from: members[0],
+          from: config.committee.member,
         },
       );
 
@@ -140,7 +143,39 @@ contract('Committee::activateCommittee', async (accounts) => {
       await Utils.expectRevert(
         config.committee.contract.activateCommittee(
           {
-            from: members[0],
+            from: config.committee.member,
+          },
+        ),
+        'Committee formation must be cooling down.',
+      );
+    });
+
+    it('should fail if committee is in invalid phase status', async () => {
+      await config.committee.contract.cooldownCommittee(
+        {
+          from: config.committee.member,
+        },
+      );
+
+      await CommitteeUtils.passActivationBlockHeight(config.committee.contract);
+
+      await config.committee.contract.challengeCommittee(
+        config.committee.closestMember,
+        {
+          from: config.committee.consensus,
+        },
+      );
+
+      const status = await config.committee.contract.committeeStatus.call();
+      assert.isOk(
+        CommitteeUtils.isInvalid(status),
+        'Committee status is not in commit phase.',
+      );
+
+      await Utils.expectRevert(
+        config.committee.contract.activateCommittee(
+          {
+            from: config.committee.member,
           },
         ),
         'Committee formation must be cooling down.',
@@ -150,7 +185,7 @@ contract('Committee::activateCommittee', async (accounts) => {
     it('should fail if committee is in reveal phase status', async () => {
       await config.committee.contract.cooldownCommittee(
         {
-          from: members[0],
+          from: config.committee.member,
         },
       );
 
@@ -158,7 +193,7 @@ contract('Committee::activateCommittee', async (accounts) => {
 
       await config.committee.contract.activateCommittee(
         {
-          from: members[0],
+          from: config.committee.member,
         },
       );
 
@@ -177,7 +212,7 @@ contract('Committee::activateCommittee', async (accounts) => {
       await Utils.expectRevert(
         config.committee.contract.activateCommittee(
           {
-            from: members[0],
+            from: config.committee.member,
           },
         ),
         'Committee formation must be cooling down.',

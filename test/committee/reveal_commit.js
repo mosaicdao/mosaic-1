@@ -156,9 +156,9 @@ async function checkCommitteeStorage(
 
 contract('Committee::revealCommit', async (accounts) => {
   const accountProvider = new AccountProvider(accounts);
-  let members = [];
+  const members = [];
   beforeEach(async () => {
-    members = [];
+    members.length = 0;
     config = {
       committee: {
         size: 7,
@@ -272,7 +272,7 @@ contract('Committee::revealCommit', async (accounts) => {
     it('should fail if committee is in open phase status', async () => {
       const consensus = accountProvider.get();
       const committee = await CommitteeUtils.createCommittee(
-        3,
+        7,
         web3.utils.sha3('dislocation'),
         web3.utils.sha3('proposal'),
         {
@@ -285,14 +285,13 @@ contract('Committee::revealCommit', async (accounts) => {
         members,
         consensus,
       );
-
+      const member = createCommitteeMember(members[0], web3.utils.sha3('position'));
       const status = await committee.committeeStatus.call();
       assert.isOk(
         CommitteeUtils.isCommitteeOpen(status),
         'Committee status is not open upon creation.',
       );
 
-      const member = config.committee.membersA[0];
       await Utils.expectRevert(
         config.committee.contract.revealCommit(
           member.position,
@@ -308,7 +307,7 @@ contract('Committee::revealCommit', async (accounts) => {
     it('should fail if committee is in cool down phase status', async () => {
       const consensus = accountProvider.get();
       const committee = await CommitteeUtils.createCommittee(
-        3,
+        7,
         web3.utils.sha3('dislocation'),
         web3.utils.sha3('proposal'),
         {
@@ -321,10 +320,11 @@ contract('Committee::revealCommit', async (accounts) => {
         members,
         consensus,
       );
+      const member = createCommitteeMember(members[0], web3.utils.sha3('position'));
 
       await committee.cooldownCommittee(
         {
-          from: members[0],
+          from: member.address,
         },
       );
 
@@ -334,9 +334,70 @@ contract('Committee::revealCommit', async (accounts) => {
         'Committee status is not is cooling down phase.',
       );
 
-      const member = config.committee.membersA[0];
       await Utils.expectRevert(
-        config.committee.contract.revealCommit(
+        committee.revealCommit(
+          member.position,
+          member.salt,
+          {
+            from: member.address,
+          },
+        ),
+        'Committee must be in the reveal phase.',
+      );
+    });
+
+    it('should fail if committee is in invalid phase status', async () => {
+      const consensus = accountProvider.get();
+      const committee = await CommitteeUtils.createCommittee(
+        7,
+        web3.utils.sha3('dislocation'),
+        web3.utils.sha3('proposal'),
+        {
+          from: consensus,
+        },
+      );
+
+      const dist = CommitteeUtils.getMemberDistance(
+        accountProvider,
+        config.committee.dislocation,
+        config.committee.proposal,
+        config.committee.size,
+        CommitteeUtils.compare,
+      );
+
+      const closestMember = dist[0].address;
+      const member = createCommitteeMember(dist[1].address, web3.utils.sha3('positionA'));
+
+      await CommitteeUtils.enterMembers(
+        committee,
+        dist.slice(1, config.committee.size + 1).map(
+          d => d.address,
+        ),
+        consensus,
+      );
+
+      console.log('member :-0 ', member);
+      await committee.cooldownCommittee(
+        {
+          from: member.address,
+        },
+      );
+
+      await committee.challengeCommittee(
+        closestMember,
+        {
+          from: consensus,
+        },
+      );
+
+      const status = await committee.committeeStatus.call();
+      assert.isOk(
+        CommitteeUtils.isInvalid(status),
+        'Committee status is not in commit phase.',
+      );
+
+      await Utils.expectRevert(
+        committee.revealCommit(
           member.position,
           member.salt,
           {

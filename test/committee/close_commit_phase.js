@@ -26,9 +26,7 @@ let config = {};
 
 contract('Committee::closeCommitPhase', async (accounts) => {
   const accountProvider = new AccountProvider(accounts);
-  let members = [];
   beforeEach(async () => {
-    members = [];
     config = {
       committee: {
         size: 3,
@@ -49,15 +47,23 @@ contract('Committee::closeCommitPhase', async (accounts) => {
 
     config.committee.sentinelMembers = await config.committee.contract.SENTINEL_MEMBERS.call();
 
-    for (let i = 0; i < config.committee.size; i += 1) {
-      members.push(
-        accountProvider.get(),
-      );
-    }
+    const dist = CommitteeUtils.getMemberDistance(
+      accountProvider,
+      config.committee.dislocation,
+      config.committee.proposal,
+      config.committee.size,
+      CommitteeUtils.compare,
+    );
+
+    config.committee.furthestMember = dist[config.committee.size + 1].address;
+    config.committee.closestMember = dist[0].address;
+    config.committee.member = dist[1].address;
 
     await CommitteeUtils.enterMembers(
       config.committee.contract,
-      members,
+      dist.slice(1, config.committee.size + 1).map(
+        d => d.address,
+      ),
       config.committee.consensus,
     );
 
@@ -79,7 +85,7 @@ contract('Committee::closeCommitPhase', async (accounts) => {
     it('should fail if committee is in cooldown phase status', async () => {
       await config.committee.contract.cooldownCommittee(
         {
-          from: members[0],
+          from: config.committee.member,
         },
       );
 
@@ -102,7 +108,7 @@ contract('Committee::closeCommitPhase', async (accounts) => {
     it('should fail if committee is in reveal phase status', async () => {
       await config.committee.contract.cooldownCommittee(
         {
-          from: members[0],
+          from: config.committee.member,
         },
       );
 
@@ -110,7 +116,7 @@ contract('Committee::closeCommitPhase', async (accounts) => {
 
       await config.committee.contract.activateCommittee(
         {
-          from: members[0],
+          from: config.committee.member,
         },
       );
 
@@ -135,6 +141,38 @@ contract('Committee::closeCommitPhase', async (accounts) => {
         'Committee must be in the commit phase.',
       );
     });
+
+    it('should fail if committee is in invalid phase status', async () => {
+      await config.committee.contract.cooldownCommittee(
+        {
+          from: config.committee.member,
+        },
+      );
+
+      await CommitteeUtils.passActivationBlockHeight(config.committee.contract);
+
+      await config.committee.contract.challengeCommittee(
+        config.committee.closestMember,
+        {
+          from: config.committee.consensus,
+        },
+      );
+
+      const status = await config.committee.contract.committeeStatus.call();
+      assert.isOk(
+        CommitteeUtils.isInvalid(status),
+        'Committee status is not in commit phase.',
+      );
+
+      await Utils.expectRevert(
+        config.committee.contract.closeCommitPhase(
+          {
+            from: accountProvider.get(),
+          },
+        ),
+        'Committee must be in the commit phase.',
+      );
+    });
   });
 
   contract('Positive Tests', async () => {
@@ -142,7 +180,7 @@ contract('Committee::closeCommitPhase', async (accounts) => {
      + 'if the commit phase timeout has been reached', async () => {
       await config.committee.contract.cooldownCommittee(
         {
-          from: members[0],
+          from: config.committee.member,
         },
       );
 
@@ -150,7 +188,7 @@ contract('Committee::closeCommitPhase', async (accounts) => {
 
       await config.committee.contract.activateCommittee(
         {
-          from: members[0],
+          from: config.committee.member,
         },
       );
 

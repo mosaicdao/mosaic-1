@@ -22,29 +22,6 @@ const CommitteeUtils = require('./utils.js');
 
 let config = {};
 
-async function fillCommittee(accountProvider, committeeContract, consensus) {
-  const memberCount = (await committeeContract.memberCount.call()).toString();
-
-  const committeeSize = (await committeeContract.committeeSize.call()).toString();
-
-  const enterPromises = [];
-
-  for (let i = 0; i < Math.max(0, committeeSize - memberCount); i += 1) {
-    const account = accountProvider.get();
-    enterPromises.push(
-      config.committee.contract.enterCommittee(
-        account,
-        config.committee.sentinelMembers,
-        {
-          from: consensus,
-        },
-      ),
-    );
-  }
-
-  return Promise.all(enterPromises);
-}
-
 contract('Committee:cooldownCommittee', async (accounts) => {
   const accountProvider = new AccountProvider(accounts);
 
@@ -73,16 +50,33 @@ contract('Committee:cooldownCommittee', async (accounts) => {
     ).toNumber();
 
     config.committee.member = accountProvider.get();
-    await config.committee.contract.enterCommittee(
-      config.committee.member,
-      config.committee.sentinelMembers,
+    config.committee.contract = await CommitteeUtils.createCommittee(
+      config.committee.size,
+      config.committee.dislocation,
+      config.committee.proposal,
       {
         from: config.committee.consensus,
       },
     );
 
-    await fillCommittee(
-      accountProvider, config.committee.contract, config.committee.consensus,
+    const dist = CommitteeUtils.getMemberDistance(
+      accountProvider,
+      config.committee.dislocation,
+      config.committee.proposal,
+      config.committee.size,
+      CommitteeUtils.compare,
+    );
+
+    config.committee.furthestMember = dist[config.committee.size + 1].address;
+    config.committee.closestMember = dist[0].address;
+    config.committee.member = dist[1].address;
+
+    await CommitteeUtils.enterMembers(
+      config.committee.contract,
+      dist.slice(1, config.committee.size + 1).map(
+        d => d.address,
+      ),
+      config.committee.consensus,
     );
 
     Object.freeze(config);
@@ -215,6 +209,38 @@ contract('Committee:cooldownCommittee', async (accounts) => {
       assert.isOk(
         CommitteeUtils.isInRevealPhase(status),
         'Committee status is not is commit phase.',
+      );
+
+      await Utils.expectRevert(
+        config.committee.contract.cooldownCommittee(
+          {
+            from: config.committee.member,
+          },
+        ),
+        'Committee formation must be open.',
+      );
+    });
+
+    it('should fail if committee is in invalid state', async () => {
+      await config.committee.contract.cooldownCommittee(
+        {
+          from: config.committee.member,
+        },
+      );
+
+      await CommitteeUtils.passActivationBlockHeight(config.committee.contract);
+
+      await config.committee.contract.challengeCommittee(
+        config.committee.closestMember,
+        {
+          from: config.committee.consensus,
+        },
+      );
+
+      const status = await config.committee.contract.committeeStatus.call();
+      assert.isOk(
+        CommitteeUtils.isInvalid(status),
+        'Committee status is not in invalid phase.',
       );
 
       await Utils.expectRevert(

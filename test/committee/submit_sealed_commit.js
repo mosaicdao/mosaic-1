@@ -149,6 +149,66 @@ contract('Committee::submitSealedCommit', async (accounts) => {
       );
     });
 
+    it('should fail if committee is in invalid phase status', async () => {
+      const consensus = accountProvider.get();
+      const committee = await CommitteeUtils.createCommittee(
+        3,
+        web3.utils.sha3('dislocation'),
+        web3.utils.sha3('proposal'),
+        {
+          from: consensus,
+        },
+      );
+
+      const dist = CommitteeUtils.getMemberDistance(
+        accountProvider,
+        config.committee.dislocation,
+        config.committee.proposal,
+        config.committee.size,
+        CommitteeUtils.compare,
+      );
+
+      const closestMember = dist[0].address;
+      const member = dist[1].address;
+
+      await CommitteeUtils.enterMembers(
+        committee,
+        dist.slice(1, config.committee.size + 1).map(
+          d => d.address,
+        ),
+        consensus,
+      );
+
+      await committee.cooldownCommittee(
+        {
+          from: member,
+        },
+      );
+
+      await committee.challengeCommittee(
+        closestMember,
+        {
+          from: consensus,
+        },
+      );
+
+      const status = await committee.committeeStatus.call();
+      assert.isOk(
+        CommitteeUtils.isInvalid(status),
+        'Committee status is not in commit phase.',
+      );
+
+      await Utils.expectRevert(
+        committee.submitSealedCommit(
+          crypto.randomBytes(32),
+          {
+            from: member,
+          },
+        ),
+        'Committee must be in the commit phase.',
+      );
+    });
+
     it('should fail if committee is in cool down phase status', async () => {
       const consensus = accountProvider.get();
       const committee = await CommitteeUtils.createCommittee(

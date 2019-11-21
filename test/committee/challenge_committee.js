@@ -20,10 +20,6 @@ const web3 = require('../test_lib/web3.js');
 
 const CommitteeUtils = require('./utils.js');
 
-function compare(a, b) {
-  return a.distance.cmp(b.distance);
-}
-
 let config = {};
 
 contract('Committee:challengeCommittee', async (accounts) => {
@@ -50,19 +46,13 @@ contract('Committee:challengeCommittee', async (accounts) => {
 
     config.committee.sentinelMembers = await config.committee.contract.SENTINEL_MEMBERS.call();
 
-    const dist = [];
-    for (let i = 0; i < config.committee.size + 2; i += 1) {
-      const account = accountProvider.get();
-      dist.push({
-        address: account,
-        distance: CommitteeUtils.distanceToProposal(
-          config.committee.dislocation,
-          account,
-          config.committee.proposal,
-        ),
-      });
-    }
-    dist.sort(compare);
+    const dist = CommitteeUtils.getMemberDistance(
+      accountProvider,
+      config.committee.dislocation,
+      config.committee.proposal,
+      config.committee.size,
+      CommitteeUtils.compare,
+    );
 
     config.committee.furthestMember = dist[config.committee.size + 1].address;
     config.committee.closestMember = dist[0].address;
