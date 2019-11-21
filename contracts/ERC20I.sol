@@ -15,7 +15,7 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 //
 // ----------------------------------------------------------------------------
-// Based on the 'final' ERC20 token standard as specified at:
+// Based on the 'final' EIP20 token standard as specified at:
 // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20-token-standard.md
 // ----------------------------------------------------------------------------
 
