@@ -20,7 +20,7 @@ import "../anchor/AnchorI.sol";
 import "../block/Block.sol";
 import "../committee/Committee.sol";
 import "../core/Core.sol";
-import "../EIP20I.sol";
+import "../ERC20I.sol";
 import "../reputation/ReputationI.sol";
 
 contract Consensus {
