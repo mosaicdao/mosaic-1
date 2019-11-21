@@ -258,7 +258,7 @@ contract Reputation is ConsensusModule {
      *          - only consensus can call
      *          - the specified validator is active
      *
-     * @param _validator A validator for which to increase a reputation.
+     * @param _validator A validator for which to increase reputation.
      * @param _delta A change (delta) to increase a validator's reputation.
      *
      * @return Returns an updated reputation.
@@ -341,20 +341,20 @@ contract Reputation is ConsensusModule {
 
         require(
             mOST.transferFrom(msg.sender, address(this), _amount),
-            "Failed to transfer earnings to the contract address"
+            "Failed to transfer earnings to the contract address."
         );
     }
 
     /**
-     * @notice Cashs out the specified amount from cashable earnings
+     * @notice Cash out the specified amount from cashable earnings
      *         of a validator.
      *
-     * @dev Function requiers:
+     * @dev Function requires:
      *          - only validator can call
      *          - validator has joined
      *          - validator was not slashed
      *          - validator has not withdrawn
-     *          - the speciefied amount is not bigger than cashable earnings
+     *          - the specified amount is not bigger than cashable earnings
      *            of a validator
      *
      * @param _amount An amount to withdraw.
@@ -448,7 +448,7 @@ contract Reputation is ConsensusModule {
 
         require(
             wETH.transferFrom(_validator, address(this), stakeWETHAmount),
-            "Failed to transfer mOST stake amount from a validator."
+            "Failed to transfer wETH stake amount from a validator."
         );
     }
 
