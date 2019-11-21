@@ -21,16 +21,6 @@ const BlockSegmentLength = 256;
 const MinimumRequiredValidators = 5;
 const MaximumCoinbaseSplitPerMille = 1000;
 
-const CoreStatus = {
-  undefined: 0,
-  halted: 1,
-  corrupted: 2,
-  creation: 3,
-  opened: 4,
-  precommitted: 5,
-};
-Object.freeze(CoreStatus);
-
 async function setup(consensus, setupConfig) {
   return consensus.setup(
     setupConfig.committeeSize,
@@ -106,7 +96,6 @@ module.exports = {
   CommitteeFormationDelay,
   CommitteeFormationLength,
   BlockSegmentLength,
-  CoreStatus,
   MinimumRequiredValidators,
   MaximumCoinbaseSplitPerMille,
   setup,

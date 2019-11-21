@@ -18,6 +18,7 @@ const BN = require('bn.js');
 
 const { AccountProvider } = require('../test_lib/utils.js');
 const Utils = require('../test_lib/utils.js');
+const CoreStatusUtils = require('../test_lib/core_status_utils');
 
 const CoreUtils = require('./utils.js');
 const Core = artifacts.require('Core');
@@ -88,7 +89,7 @@ contract('Core::joinDuringCreation', (accounts) => {
       const MaxFutureEndHeight = await config.core.MAX_FUTURE_END_HEIGHT.call();
       const coreStatus0 = await config.core.coreStatus.call();
       assert.isOk(
-        CoreUtils.isCoreCreated(coreStatus0),
+        CoreStatusUtils.isCoreCreated(coreStatus0),
       );
 
       await config.mockConsensus.joinDuringCreation(validator);
@@ -97,10 +98,10 @@ contract('Core::joinDuringCreation', (accounts) => {
         validator,
         config.height,
         MaxFutureEndHeight,
-      )
+      );
       const coreStatus = await config.core.coreStatus.call();
       assert.isOk(
-        CoreUtils.isCoreCreated(coreStatus),
+        CoreStatusUtils.isCoreCreated(coreStatus),
       );
       const valCount = await config.core.countValidators.call();
       assert.isOk(
@@ -120,7 +121,7 @@ contract('Core::joinDuringCreation', (accounts) => {
         );
         let coreStatus = await config.core.coreStatus.call();
         assert.isOk(
-          CoreUtils.isCoreCreated(coreStatus),
+          CoreStatusUtils.isCoreCreated(coreStatus),
         );
       }
 
@@ -132,7 +133,7 @@ contract('Core::joinDuringCreation', (accounts) => {
       );
       let coreStatus = await config.core.coreStatus.call();
       assert.isOk(
-        CoreUtils.isCoreOpened(coreStatus),
+        CoreStatusUtils.isCoreOpened(coreStatus),
       );
 
       let quorum = await config.core.quorum.call();

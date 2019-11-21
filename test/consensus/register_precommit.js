@@ -17,6 +17,7 @@
 const BN = require('bn.js');
 const Utils = require('../test_lib/utils.js');
 const consensusUtil = require('./utils.js');
+const CoreStatusUtils = require('../test_lib/core_status_utils');
 
 const Consensus = artifacts.require('ConsensusTest');
 
@@ -51,7 +52,7 @@ contract('Consensus::registerPrecommit', (accounts) => {
     it('should fail when a precommit already exists for a core address', async () => {
       await consensus.setCoreStatus(
         inputParams.coreAddress1,
-        consensusUtil.CoreStatus.creation,
+        CoreStatusUtils.CoreStatus.creation,
       );
       await consensus.registerPrecommit(
         inputParams.proposal1,
@@ -75,7 +76,7 @@ contract('Consensus::registerPrecommit', (accounts) => {
     it('should pass when called with correct params', async () => {
       await consensus.setCoreStatus(
         inputParams.coreAddress1,
-        consensusUtil.CoreStatus.creation,
+        CoreStatusUtils.CoreStatus.creation,
       );
 
       const tx = await consensus.registerPrecommit(
@@ -95,7 +96,7 @@ contract('Consensus::registerPrecommit', (accounts) => {
     it('should add the proposal in pre-commits mapping', async () => {
       await consensus.setCoreStatus(
         inputParams.coreAddress1,
-        consensusUtil.CoreStatus.creation,
+        CoreStatusUtils.CoreStatus.creation,
       );
 
       // The proposal must not exist by default.

@@ -127,7 +127,7 @@ contract MockConsensus is ConsensusI, ReputationI {
     }
 
     function newMetaChain(
-        bytes20 _chainId,
+        address _chainId,
         uint256 _epochLength,
         bytes32 _source,
         uint256 _sourceBlockHeight

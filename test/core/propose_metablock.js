@@ -20,6 +20,7 @@ const { AccountProvider } = require('../test_lib/utils.js');
 const Utils = require('../test_lib/utils.js');
 
 const CoreUtils = require('./utils.js');
+const CoreStatusUtils = require('../test_lib/core_status_utils');
 const Core = artifacts.require('Core');
 
 let config = {};
@@ -37,7 +38,7 @@ async function openCore(
   }
   let coreStatus = await config.core.coreStatus.call();
   assert.isOk(
-    CoreUtils.isCoreOpened(coreStatus),
+    CoreStatusUtils.isCoreOpened(coreStatus),
   );
 };
 
