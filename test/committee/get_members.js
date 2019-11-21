@@ -53,11 +53,12 @@ contract('Committee::getMembers', async (accounts) => {
     };
 
     config.committee.contract = await CommitteeUtils.createCommittee(
+      config.committee.consensus,
       config.committee.size,
       config.committee.dislocation,
       config.committee.proposal,
       {
-        from: config.committee.consensus,
+        from: accountProvider.get(),
       },
     );
 

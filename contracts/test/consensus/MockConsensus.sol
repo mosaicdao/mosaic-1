@@ -27,7 +27,7 @@ contract MockConsensus is ConsensusI, ReputationI {
 
     uint256 public constant JOIN_LIMIT = uint256(15);
 
-    CoreI public core;
+    Core public core;
 
     mapping(address => uint256) public rep;
 
@@ -46,7 +46,9 @@ contract MockConsensus is ConsensusI, ReputationI {
     )
         public
     {
-        core = new Core(
+        core = new Core();
+        core.setup(
+            address(this),
             _chainId,
             _epochLength,
             MIN_VALIDATOR,
@@ -119,6 +121,26 @@ contract MockConsensus is ConsensusI, ReputationI {
     }
 
     function registerPrecommit(bytes32 _precommitment)
+        external
+    {
+        // do nothing for now
+    }
+
+    function newMetaChain(
+        bytes20 _chainId,
+        uint256 _epochLength,
+        bytes32 _source,
+        uint256 _sourceBlockHeight
+    )
+        external
+    {
+        // do nothing for now
+    }
+
+    function join(
+        address _validator,
+        address _withdrawalAddress
+    )
         external
     {
         // do nothing for now

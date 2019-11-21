@@ -30,10 +30,4 @@ contract ConsensusModule {
 
         _;
     }
-
-    constructor(address _consensus)
-        public
-    {
-        consensus = ConsensusI(_consensus);
-    }
 }

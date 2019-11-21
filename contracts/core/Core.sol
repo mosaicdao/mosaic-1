@@ -17,30 +17,17 @@ pragma solidity ^0.5.0;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "./CoreI.sol";
+import "./CoreStatusEnum.sol";
 import "../consensus/ConsensusModule.sol";
 import "../reputation/ReputationI.sol";
 import "../version/MosaicVersion.sol";
+import "../proxies/MasterCopyNonUpgradable.sol";
 
-contract Core is ConsensusModule, MosaicVersion, CoreI {
+contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreStatusEnum, CoreI {
 
     using SafeMath for uint256;
 
-
-    /* Enum and structs */
-
-    /** Enum of Core state machine */
-    enum Status {
-        // core accepts initial set of validators
-        creation,
-        // core has an open kernel without precommitment to a proposal
-        opened,
-        // core has precommitted to to a proposal for the open kernel
-        precommitted,
-        // core has failed to get a proposal committed when challenged for being halted
-        halted,
-        // precommitted proposal is rejected by consensus committee
-        corrupted
-    }
+    /* Structs */
 
     /** The kernel of a meta-block header */
     struct Kernel {
@@ -148,7 +135,7 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     bytes20 public chainId;
 
     /** Core status */
-    Status public coreStatus;
+    CoreStatus public coreStatus;
 
     /** Epoch length */
     uint256 public epochLength;
@@ -237,29 +224,29 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
 
     modifier duringCreation()
     {
-        require(coreStatus == Status.creation,
+        require(coreStatus == CoreStatus.creation,
             "The core must be under creation.");
         _;
     }
 
     modifier whileRunning()
     {
-        require(coreStatus == Status.opened ||
-            coreStatus == Status.precommitted,
+        require(coreStatus == CoreStatus.opened ||
+            coreStatus == CoreStatus.precommitted,
             "The core must be running.");
         _;
     }
 
     modifier whileMetablockOpen()
     {
-        require(coreStatus == Status.opened,
+        require(coreStatus == CoreStatus.opened,
             "The core must have an open metablock kernel.");
         _;
     }
 
     modifier whileMetablockPrecommitted()
     {
-        require(coreStatus == Status.precommitted,
+        require(coreStatus == CoreStatus.precommitted,
             "The core must be precommitted.");
         _;
     }
@@ -271,9 +258,11 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         _;
     }
 
+
     /* External and public functions */
 
-    constructor(
+    function setup(
+        address _consensus,
         bytes20 _chainId,
         uint256 _epochLength,
         uint256 _minValidators,
@@ -287,9 +276,13 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         bytes32 _source,
         uint256 _sourceBlockHeight
     )
-        ConsensusModule(msg.sender) // Core is constructed by Consenus
-        public
+        external
     {
+        require(
+            chainId == bytes20(0),
+            "Core is already setup."
+        );
+
         // note: consider adding requirement checks
         domainSeparator = keccak256(
             abi.encode(
@@ -301,7 +294,9 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
             )
         );
 
-        coreStatus = Status.creation;
+        consensus = ConsensusI(_consensus);
+
+        coreStatus = CoreStatus.creation;
 
         epochLength = _epochLength;
 
@@ -578,7 +573,7 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
                 creationKernel.updatedReputation,
                 creationKernel.gasTarget
             );
-            coreStatus = Status.opened;
+            coreStatus = CoreStatus.opened;
         }
     }
 
@@ -665,8 +660,8 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         require(precommit == bytes32(0) ||
             precommit == _proposal,
             "Once locked, precommit cannot be changed.");
-        if (coreStatus == Status.opened) {
-            coreStatus = Status.precommitted;
+        if (coreStatus == CoreStatus.opened) {
+            coreStatus = CoreStatus.precommitted;
             precommit = _proposal;
             precommitClosureBlockHeight = block.number.add(CORE_LAST_VOTES_WINDOW);
             consensus.registerPrecommit(_proposal);

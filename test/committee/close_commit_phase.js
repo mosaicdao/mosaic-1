@@ -26,6 +26,7 @@ let config = {};
 
 contract('Committee::closeCommitPhase', async (accounts) => {
   const accountProvider = new AccountProvider(accounts);
+
   beforeEach(async () => {
     config = {
       committee: {

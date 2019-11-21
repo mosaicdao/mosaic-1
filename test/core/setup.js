@@ -18,7 +18,6 @@ const BN = require('bn.js');
 
 const { AccountProvider } = require('../test_lib/utils.js');
 const Utils = require('../test_lib/utils.js');
-const web3 = require('../test_lib/web3.js');
 
 const CoreUtils = require('./utils.js');
 
@@ -27,7 +26,7 @@ let config = {};
 // TASK: improve constructor to constrain inputs
 // TASK: complete tests
 
-contract('Core::constructor', (accounts) => {
+contract('Core::setup', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
 
   beforeEach(async () => {
@@ -49,9 +48,12 @@ contract('Core::constructor', (accounts) => {
     Object.freeze(config);
   });
 
+  // Task: Add negative tests.
+
   contract('Positive Tests', () => {
-    it('should construct', async () => {
-      const core = await CoreUtils.createCore(
+    it('should setup', async () => {
+      const core = await CoreUtils.setupCore(
+        config.consensus,
         config.chainId,
         config.epochLength,
         config.minValidators,
@@ -65,7 +67,7 @@ contract('Core::constructor', (accounts) => {
         config.source,
         config.sourceBlockHeight,
         {
-          from: config.consensus,
+          from: accountProvider.get(),
         },
       );
 
@@ -75,6 +77,7 @@ contract('Core::constructor', (accounts) => {
         true,
         `Consensus contract is set to ${consensus} and is not ${config.consensus}.`,
       );
+      // Task: Add checks for all the params.
     });
   });
 });
