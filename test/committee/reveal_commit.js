@@ -376,7 +376,6 @@ contract('Committee::revealCommit', async (accounts) => {
         consensus,
       );
 
-      console.log('member :-0 ', member);
       await committee.cooldownCommittee(
         {
           from: member.address,

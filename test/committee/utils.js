@@ -60,10 +60,8 @@ async function createCommittee(committeeSize, dislocation, proposal, txOptions =
 
 async function enterMembers(committeeContract, members, consensus) {
   const sentinelMembers = await committeeContract.SENTINEL_MEMBERS.call();
-  // console.log('members in entermembers :',members);
   const enterPromises = [];
   for (let i = 0; i < members.length; i += 1) {
-    // console.log(`members :- ${members[i]}`);
     enterPromises.push(
       committeeContract.enterCommittee(
         members[i],
