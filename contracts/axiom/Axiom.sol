@@ -50,7 +50,6 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
 
     /* Modifiers */
 
-
     modifier onlyTechGov()
     {
         require(
@@ -181,6 +180,8 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
         );
 
         // Deploy the consensus proxy contract.
+        // Setup data is blank because setup requires reputation contract address
+        // which is deployed in next step.
         Proxy consensusProxy = createProxy(consensusMasterCopy, "");
 
         consensus = ConsensusI(address(consensusProxy));
