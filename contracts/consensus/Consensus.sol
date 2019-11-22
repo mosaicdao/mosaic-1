@@ -286,8 +286,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         Precommit storage precommit = precommits[_core];
         // note it should suffice to check only one property for existence, in PoC asserting both
         require(
-            precommit.proposal != bytes32(0) &&
-            precommit.committeeFormationBlockHeight != uint256(0),
+            precommit.proposal != bytes32(0),
             "There does not exist a precommitment of the core to a proposal."
         );
 

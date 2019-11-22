@@ -70,14 +70,6 @@ contract('Consensus::formCommittee', (accounts) => {
       );
     });
 
-    it('should fail when pre-commit committee formation block height is zero for a given core address', async () => {
-      await consensus.setPreCommit(testInputs.coreAddress, testInputs.proposal, new BN(0));
-      await Utils.expectRevert(
-        consensus.formCommittee(testInputs.coreAddress),
-        'There does not exist a precommitment of the core to a proposal.',
-      );
-    });
-
     it('should fail when current block number is less than committee formation block', async () => {
       const currentBlock = await Utils.getBlockNumber();
       await consensus.setPreCommit(
@@ -144,6 +136,9 @@ contract('Consensus::formCommittee', (accounts) => {
   contract('Positive Tests', () => {
     let committeeFormationBlockHeight;
     beforeEach(async () => {
+
+      // Advance by 256 blocks
+      await Utils.advanceBlocks(consensusUtil.BlockSegmentLength);
       const initialBlockNumber = await Utils.getBlockNumber();
       committeeFormationBlockHeight = initialBlockNumber
         .addn(consensusUtil.CommitteeFormationDelay);
@@ -153,8 +148,6 @@ contract('Consensus::formCommittee', (accounts) => {
         testInputs.proposal,
         committeeFormationBlockHeight,
       );
-      // Advance by 256 blocks
-      await Utils.advanceBlocks(consensusUtil.BlockSegmentLength);
       // Advance by 7 block
       await Utils.advanceBlocks(consensusUtil.CommitteeFormationDelay);
     });
