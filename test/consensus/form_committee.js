@@ -155,7 +155,7 @@ contract('Consensus::formCommittee', (accounts) => {
       );
       // Advance by 256 blocks
       await Utils.advanceBlocks(consensusUtil.BlockSegmentLength);
-      // Advance by 7 committe formation delay
+      // Advance by 7 block
       await Utils.advanceBlocks(consensusUtil.CommitteeFormationDelay);
     });
 

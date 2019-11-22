@@ -253,7 +253,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     {
         require(
             _proposal != bytes32(0),
-            "Proposal should not be null."
+            "Proposal must not be null."
         );
         // TODO: we can additional 
         Precommit storage precommit = precommits[msg.sender];
