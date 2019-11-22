@@ -141,11 +141,6 @@ contract('Consensus::joinDuringCreation', (accounts) => {
       await consensusUtil.joinDuringCreation(consensus, joinParams);
     });
 
-    it('should pass when core status is opened', async () => {
-      await consensus.setCoreStatus(core.address, CoreStatusUtils.CoreStatus.opened);
-      await consensusUtil.joinDuringCreation(consensus, joinParams);
-    });
-
     it('should pass when core status is precommited', async () => {
       await consensus.setCoreStatus(core.address, CoreStatusUtils.CoreStatus.precommitted);
       await consensusUtil.joinDuringCreation(consensus, joinParams);
