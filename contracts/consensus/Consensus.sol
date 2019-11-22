@@ -44,6 +44,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /** Sentinel pointer for marking end of linked-list of committees */
     address public constant SENTINEL_COMMITTEES = address(0x1);
 
+    /** Minimum required validators */
+    uint256 public constant MIN_REQUIRED_VALIDATORS = uint8(5);
+
+    /** Maximum coinbase split per mille */
+    uint256 public constant MAX_COINBASE_SPLIT_PER_MILLE = uint16(1000);
+
     /** The callprefix of the Core::setup function. */
     bytes4 public constant CORE_SETUP_CALLPREFIX = bytes4(
         keccak256(
@@ -150,11 +156,22 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /* External functions */
 
     /**
-     * @notice Setup consensus contract. This can be called only once.
+     * @notice Setup consensus contract. Setup method can be called only once.
+     *
+     * @dev Function requires:
+     *          - Consensus contract should not be already setup.
+     *          - Committee size should be greater than 0.
+     *          - Minimum validator size must be greater or equal to 5.
+     *          - Maximum validator size should be greater or equal to minimum
+     *            validator size.
+     *          - Gas target delta should be greater than 0.
+     *          - Coin base split per mille should be in range: 0..1000.
+     *          - Reputation contract address should be 0.
+     *
      * @param _committeeSize Max committee size that can be formed.
      * @param _minValidators Minimum number of validators that must join a
      *                       created core to open.
-     * @param _joinLimit Maximum number of validators that can join in a core.
+     * @param _joinLimit Maximum number of validators that can join a core.
      * @param _gasTargetDelta Gas target delta to open new metablock.
      * @param _coinbaseSplitPerMille Coinbase split per mille.
      * @param _reputation Reputation contract address.
@@ -183,13 +200,13 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
 
         require(
-            _minValidators > uint256(4),
-            "Min validator size must be greater than 4."
+            _minValidators >= uint256(MIN_REQUIRED_VALIDATORS),
+            "Min validator size must be greater or equal to 5."
         );
 
         require(
             _joinLimit >= _minValidators,
-            "Join limit is less than minimum validator count."
+            "Max validator size is less than minimum validator size."
         );
 
         require(
@@ -198,8 +215,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
 
         require(
-            _coinbaseSplitPerMille <= uint256(1000),
-            "Coin base split per mille is not in valid range: 0..1000."
+            _coinbaseSplitPerMille <= MAX_COINBASE_SPLIT_PER_MILLE,
+            "Coin base split per mille should be in range: 0..1000."
         );
 
         require(
@@ -222,6 +239,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /**
      * @notice Register a proposal for commit. This can be called only by the valid
      *         core address.
+     *
+     * @dev Function requires:
+     *          - msg.sender should be valid core address in creation state.
+     *          - proposal should not be null.
+     *          - precommit of same core should not exist.
+     *
      * @param _proposal Precommit proposal.
      */
     function registerPrecommit(bytes32 _proposal)
@@ -232,7 +255,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             _proposal != bytes32(0),
             "Proposal must not be null."
         );
-        // onlyCore asserts msg.sender is active core
         // TODO: we can additional 
         Precommit storage precommit = precommits[msg.sender];
         require(
@@ -245,6 +267,17 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
     /**
      * @notice Form a new committee to validate the precommit proposal.
+     *
+     * @dev Function assumes block number is greater than 256 plus committee
+     *      formation length.
+     *
+     * @dev Function requires:
+     *          - precommitment of the core to a proposal doesn't exist.
+     *          - block height must be higher than set committee formation
+     *            height.
+     *          - committee formation blocksegment length must be in 256 most
+     *            recent blocks.
+     *
      * @param _core Core contract address.
      */
     function formCommittee(address _core)
@@ -253,26 +286,29 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         Precommit storage precommit = precommits[_core];
         // note it should suffice to check only one property for existence, in PoC asserting both
         require(
-            precommit.proposal != bytes32(0) &&
-            precommit.committeeFormationBlockHeight != uint256(0),
+            precommit.proposal != bytes32(0),
             "There does not exist a precommitment of the core to a proposal."
         );
+
         require(
             block.number > precommit.committeeFormationBlockHeight,
             "Block height must be higher than set committee formation height."
         );
+
         require(
             block.number
                 .sub(uint256(COMMITTEE_FORMATION_LENGTH))
                 .sub(uint256(256)) < precommit.committeeFormationBlockHeight,
             "Committee formation blocksegment length must be in 256 most recent blocks."
         );
+
         uint256 segmentHeight = precommit.committeeFormationBlockHeight;
         bytes32[] memory seedGenerator = new bytes32[](uint256(COMMITTEE_FORMATION_LENGTH));
         for (uint8 i = 0; i < COMMITTEE_FORMATION_LENGTH; i++) {
             seedGenerator[i] = blockhash(segmentHeight);
             segmentHeight = segmentHeight.sub(1);
         }
+
         bytes32 seed = keccak256(
             abi.encodePacked(seedGenerator)
         );
@@ -282,6 +318,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
     /**
      * @notice Enter a validator into the committee.
+     *
+     * @dev Function requires:
+     *          - committee address should be present.
+     *          - validator should be active.
+     *          - validator successfully enter a committee.
+     *
      * @param _committeeAddress Committee address that validator wants to enter.
      * @param _validator Validator address to enter.
      * @param _furtherMember Validator address that is further member compared to `_validator` address
@@ -297,10 +339,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             committees[_committeeAddress] != address(0),
             "Committee does not exist."
         );
+
         require(
             reputation.isActive(_validator),
             "Validator is not active."
         );
+
         CommitteeI committee = CommitteeI(_committeeAddress);
         require(
             committee.enterCommittee(_validator, _furtherMember),
@@ -311,6 +355,19 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /**
      * @notice Commit a proposal. This verifies the committee lock of the
      *         proposal, anchors the state root and opens a new matablock.
+     *
+     * @dev Function requires:
+     *          - chain id should not be 0.
+     *          - source block hash should not be 0.
+     *          - target block hash should not be 0.
+     *          - target block height should be greater than source block
+     *            height.
+     *          - block header should match with vote message source.
+     *          - origin observation should not be 0.
+     *          - core for the specified chain id should exist.
+     *          - precommit for the specified core doesn't exist.
+     *          - provided kernel hash should be equal to open kernel hash.
+     *
      * @param _chainId Chain id.
      * @param _rlpBlockHeader RLP ecoded block header.
      * @param _kernelHash Kernel hash
@@ -429,6 +486,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /**
      * @notice Validator joins the core, when core status is opened or
      *         precommitted. This is called by validator address.
+     *
+     * @dev Function requires:
+     *          - core status should be opened or precommitted.
+     *
      * @param _chainId Chain id that validator wants to join.
      * @param _core Core address that validator wants to join.
      * @param _withdrawalAddress A withdrawal address of newly joined validator.
@@ -460,6 +521,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /**
      * @notice Validator joins the core, when core status is creation.
      *         This is called by validator address.
+     *
+     * @dev Function requires:
+     *          - core should be in an active state.
+     *
      * @param _chainId Chain id that validator wants to join.
      * @param _core Core address that validator wants to join.
      * @param _withdrawalAddress A withdrawal address of newly joined validator.
@@ -489,7 +554,14 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     }
 
     /**
-     * @notice Validator logs out. This can be called by validator address.
+     * @notice Validator logs out. This is called by validator address.
+     *
+     * @dev Function requires:
+     *          - chain id should not be 0.
+     *          - core address should not be 0.
+     *          - core should be assigned for the specified chain id.
+     *          - core for the specified chain id should exist.
+     *
      * @param _chainId Chain id that validator wants to logout.
      * @param _core Core address that validator wants to logout.
      */
@@ -524,8 +596,13 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     }
 
     /**
-     * @notice Create a new meta chain given an achor.
+     * @notice Creates a new meta chain given an achor.
      *         This can be called only by axiom.
+     *
+     * @dev Function requires:
+     *          - msg.sender should be axiom contract.
+     *          - core is not assigned to metachain.
+     *
      * @param _anchor anchor of the new meta-chain.
      * @param _epochLength Epoch length for new meta-chain.
      * @param _rootBlockHash root block hash.
@@ -574,8 +651,11 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     }
     // Task: Pending functions related to halting and corrupting of core.
 
+
+    /* Internal functions */
+
     /**
-     * @notice Check if the core address is valid.
+     * @notice Check if the core address is active.
      * @param _core Core contract address.
      * Returns true if the specified address is a core.
      */
@@ -590,6 +670,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
     /**
      * @notice Start a new committee.
+
+     * @dev Function requires:
+     *          - committee for the proposal should not exist.
+     *
      * @param _dislocation Hash to shuffle validators.
      * @param _proposal Proposal under consideration for committee.
      */
@@ -612,10 +696,14 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     }
 
 
-    /* External functions */
+    /* Private functions */
 
     /**
      * @notice Anchor a new state root for specified chain id.
+
+     * @dev Function requires:
+     *          - anchor for specified chain id should exist.
+     *
      * @param _chainId Chain id.
      * @param _rlpBlockHeader RLP encoded block header
      */
@@ -642,7 +730,11 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
     /**
      * @notice Verify if the given commit proposal is same as that precommit in
-     *         core contract
+     *         core contract.
+     *
+     * @dev Function requires:
+     *          - proposal should be precommitted.
+     *
      * @param _core Core contract address.
      * @param _commitProposal Commit proposal.
      */
@@ -662,6 +754,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /**
      * @notice Verify if the committee lock given in the commit proposal
      *         matches the committee decision.
+     *
+     * @dev Function requires:
+     *          - committee should match to the specified vote message.
+     *          - committee proposal is decided.
+     *          - committee decision should match with committee lock.
+     *
      * @param _commitProposal Proposal to commit.
      * @param _committeeLock Committee lock specified in the proposal.
      */
@@ -681,7 +779,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
         require(
             committee.committeeDecision() != bytes32(0),
-            "Committee has not decide on the proposal."
+            "Committee has not decided on the proposal."
         );
 
         require(
@@ -693,7 +791,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     }
 
     /**
-     * @notice Deploy a new core contract.
+     * @notice Deploys a new core contract.
      * @param _chainId Chain id for which the core should be deployed.
      * @param _epochLength Epoch length for new core.
      * @param _height Kernel height.
@@ -773,6 +871,13 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
     /**
      * @notice Validate the params for joining the core.
+     *
+     * @dev Function requires:
+     *          - chain id should not be 0.
+     *          - core address should not be 0.
+     *          - core should be assigned for the specified chain id.
+     *          - withdrawal address can't be 0.
+     *
      * @param _chainId Chain id.
      * @param _core Core contract address.
      * @param _withdrawalAddress Withdrawal address.

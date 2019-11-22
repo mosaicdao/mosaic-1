@@ -12,22 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+'use strict';
+
 const web3 = require('../test_lib/web3.js');
 
 const SentinelCommittee = '0x0000000000000000000000000000000000000001';
 const CommitteeFormationDelay = 14;
 const CommitteeFormationLength = 7;
 const BlockSegmentLength = 256;
-
-const CoreStatus = {
-  undefined: 0,
-  creation: 1,
-  opened: 2,
-  precommitted: 3,
-  halted: 4,
-  corrupted: 5,
-};
-Object.freeze(CoreStatus);
+const MinimumRequiredValidators = 5;
+const MaximumCoinbaseSplitPerMille = 1000;
 
 async function setup(consensus, setupConfig) {
   return consensus.setup(
@@ -104,7 +98,8 @@ module.exports = {
   CommitteeFormationDelay,
   CommitteeFormationLength,
   BlockSegmentLength,
-  CoreStatus,
+  MinimumRequiredValidators,
+  MaximumCoinbaseSplitPerMille,
   setup,
   getDislocation,
   join,

@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+'use strict';
+
 const Assert = require('assert');
 const BN = require('bn.js');
 const web3 = require('./web3.js');
