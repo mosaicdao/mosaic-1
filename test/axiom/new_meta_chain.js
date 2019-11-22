@@ -51,8 +51,6 @@ contract('Axiom::newMetaChain', (accounts) => {
         from: accountProvider.get(),
       },
     };
-    Object.freeze(constructionParams);
-
     config = {
       committeeSize: new BN(3),
       minValidators: new BN(4),
@@ -70,8 +68,6 @@ contract('Axiom::newMetaChain', (accounts) => {
         from: constructionParams.techGov,
       },
     };
-    Object.freeze(config);
-
     axiom = await AxiomUtils.deployAxiomWithConfig(constructionParams);
     await AxiomUtils.setupConsensusWithConfig(axiom, config);
 
@@ -83,21 +79,11 @@ contract('Axiom::newMetaChain', (accounts) => {
         from: constructionParams.techGov,
       },
     };
-    Object.freeze(newMetaChainParams);
   });
 
   contract('Negative Tests', () => {
     it('should fail when called by non technical governance address', async () => {
       newMetaChainParams.txOptions.from = accountProvider.get();
-      newMetaChainParams = Object.assign(
-        {},
-        newMetaChainParams,
-        {
-          txOptions: {
-            from: accountProvider.get(),
-          },
-        },
-      );
       await Utils.expectRevert(
         AxiomUtils.newMetaChainWithConfig(axiom, newMetaChainParams),
         'Caller must be technical governance address.',
