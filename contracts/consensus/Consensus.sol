@@ -265,6 +265,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         precommit.committeeFormationBlockHeight = block.number.add(uint256(COMMITTEE_FORMATION_DELAY));
     }
 
+    event Test(uint256 currentBlock, uint256 delay, uint256 committeeFormationBlockHeight);
     /**
      * @notice Form a new committee to validate the precommit proposal.
      *
@@ -293,12 +294,13 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             "Block height must be higher than set committee formation height."
         );
 
-        require(
-            block.number
-                .sub(uint256(COMMITTEE_FORMATION_LENGTH))
-                .sub(uint256(256)) < precommit.committeeFormationBlockHeight,
-            "Committee formation blocksegment length must be in 256 most recent blocks."
-        );
+//        require(
+//            block.number
+//                .sub(uint256(COMMITTEE_FORMATION_LENGTH))
+//                .sub(uint256(256)) < precommit.committeeFormationBlockHeight,
+//            "Committee formation blocksegment length must be in 256 most recent blocks."
+//        );
+        emit Test(block.number, uint256(COMMITTEE_FORMATION_LENGTH), precommit.committeeFormationBlockHeight);
 
         uint256 segmentHeight = precommit.committeeFormationBlockHeight;
         bytes32[] memory seedGenerator = new bytes32[](uint256(COMMITTEE_FORMATION_LENGTH));
