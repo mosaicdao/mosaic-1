@@ -161,7 +161,6 @@ contract('Consensus::formCommittee', (accounts) => {
 
     it('should form committee when called with correct parameters', async () => {
       await consensus.formCommittee(testInputs.coreAddress);
-      assert.isOk(false);
     });
 
     it('should update proposals, committee mapping and sentinel committee address', async () => {

@@ -83,7 +83,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     uint256 public minValidators;
 
     /** Maximum number of validators that can join in a core */
-    uint256 public maxValidators;
+    uint256 public joinLimit;
 
     /** Gas target delta to open new metablock */
     uint256 public gasTargetDelta;
@@ -171,7 +171,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      * @param _committeeSize Max committee size that can be formed.
      * @param _minValidators Minimum number of validators that must join a
      *                       created core to open.
-     * @param _maxValidators Maximum number of validators that can join a core.
+     * @param _joinLimit Maximum number of validators that can join a core.
      * @param _gasTargetDelta Gas target delta to open new metablock.
      * @param _coinbaseSplitPerMille Coinbase split per mille.
      * @param _reputation Reputation contract address.
@@ -179,7 +179,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     function setup(
         uint256 _committeeSize,
         uint256 _minValidators,
-        uint256 _maxValidators,
+        uint256 _joinLimit,
         uint256 _gasTargetDelta,
         uint256 _coinbaseSplitPerMille,
         address _reputation
@@ -205,7 +205,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
 
         require(
-            _maxValidators >= _minValidators,
+            _joinLimit >= _minValidators,
             "Max validator size is less than minimum validator size."
         );
 
@@ -226,7 +226,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
         committeeSize = _committeeSize;
         minValidators = _minValidators;
-        maxValidators = _maxValidators;
+        joinLimit = _joinLimit;
         gasTargetDelta = _gasTargetDelta;
         coinbaseSplitPerMille = _coinbaseSplitPerMille;
         reputation = ReputationI(_reputation);
@@ -645,10 +645,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     function coreValidatorThresholds()
         external
         view
-        returns (uint256 minimumValidatorCount_, uint256 maxValidators_)
+        returns (uint256 minimumValidatorCount_, uint256 joinLimit_)
     {
         minimumValidatorCount_ = minValidators;
-        maxValidators_ = maxValidators;
+        joinLimit_ = joinLimit;
     }
     // Task: Pending functions related to halting and corrupting of core.
 
@@ -824,7 +824,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             _chainId,
             _epochLength,
             minValidators,
-            maxValidators,
+            joinLimit,
             address(reputation),
             _height,
             _parent,

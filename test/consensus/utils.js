@@ -27,7 +27,7 @@ async function setup(consensus, setupConfig) {
   return consensus.setup(
     setupConfig.committeeSize,
     setupConfig.minValidators,
-    setupConfig.maxValidators,
+    setupConfig.joinLimit,
     setupConfig.gasTargetDelta,
     setupConfig.coinbaseSplitPerMille,
     setupConfig.reputation,

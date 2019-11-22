@@ -31,7 +31,7 @@ contract('Consensus::setup', (accounts) => {
     setupParams = {
       committeeSize: new BN(Utils.getRandomNumber(500)),
       minValidators: new BN(5),
-      maxValidators: new BN(7),
+      joinLimit: new BN(7),
       gasTargetDelta: new BN(Utils.getRandomNumber(999999)),
       coinbaseSplitPerMille: new BN(Utils.getRandomNumber(1000)),
       reputation: accountProvider.get(),
@@ -71,7 +71,7 @@ contract('Consensus::setup', (accounts) => {
       const params = Object.assign(
         {},
         setupParams,
-        { maxValidators: new BN(3) },
+        { joinLimit: new BN(3) },
       );
       await Utils.expectRevert(
         ConsensusUtils.setup(consensus, params),
@@ -144,12 +144,12 @@ contract('Consensus::setup', (accounts) => {
         + ` equal to ${setupParams.minValidators.toString(10)}.`,
       );
 
-      const maxValidators = await consensus.maxValidators.call();
+      const joinLimit = await consensus.joinLimit.call();
       assert.strictEqual(
-        maxValidators.eq(setupParams.maxValidators),
+        joinLimit.eq(setupParams.joinLimit),
         true,
-        `Maximum validator value ${maxValidators.toString(10)} from contract must be`
-        + ` equal to ${setupParams.maxValidators.toString(10)}.`,
+        `Maximum validator value ${joinLimit.toString(10)} from contract must be`
+        + ` equal to ${setupParams.joinLimit.toString(10)}.`,
       );
 
       const gasTargetDelta = await consensus.gasTargetDelta.call();
