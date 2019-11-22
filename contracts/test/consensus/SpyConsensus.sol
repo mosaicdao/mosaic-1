@@ -11,9 +11,9 @@ contract SpyConsensus is MasterCopyNonUpgradable, ConsensusI {
     uint256 public joinLimit;
     uint256 public gasTargetDelta;
     uint256 public coinbaseSplitPerMille;
-    address public reputation;
+    address public reputationAddress;
 
-    bytes20 public chainId;
+    address public anchor;
     uint256 public epochLength;
     bytes32 public source;
     uint256 public sourceBlockHeight;
@@ -30,12 +30,12 @@ contract SpyConsensus is MasterCopyNonUpgradable, ConsensusI {
     )
         external
     {
-        committeeSize =_committeeSize;
-        minValidators =_minValidators;
+        committeeSize = _committeeSize;
+        minValidators = _minValidators;
         joinLimit = _joinLimit;
         gasTargetDelta = _gasTargetDelta;
         coinbaseSplitPerMille = _coinbaseSplitPerMille;
-        reputation = _reputation;
+        reputationAddress = _reputation;
     }
 
     function getReservedStorageSlotForProxy() external view returns (address) {
@@ -43,14 +43,14 @@ contract SpyConsensus is MasterCopyNonUpgradable, ConsensusI {
     }
 
     function newMetaChain(
-        bytes20 _chainId,
+        address _anchor,
         uint256 _epochLength,
         bytes32 _source,
         uint256 _sourceBlockHeight
     )
         external
     {
-        chainId = _chainId;
+        anchor = _anchor;
         epochLength = _epochLength;
         source = _source;
         sourceBlockHeight = _sourceBlockHeight;
@@ -86,5 +86,17 @@ contract SpyConsensus is MasterCopyNonUpgradable, ConsensusI {
     function registerPrecommit(bytes32) external {
         // This is not used in test so break
         require(false, "This should not be called for unit tests.");
+    }
+
+    /**
+     * @notice Get the reputation contract address.
+     * returns Reputation contract address.
+     */
+    function reputation()
+        external
+        view
+        returns (ReputationI reputation_)
+    {
+        reputation_ = ReputationI(reputationAddress);
     }
 }
