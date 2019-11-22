@@ -52,100 +52,99 @@ contract('Consensus::formCommittee', (accounts) => {
       },
     );
   });
-  // contract('Negative Tests', async () => {
-  //   it('should fail when pre-commit proposal does not exists for a given core address', async () => {
-  //     const coreAddress = accountProvider.get();
-  //
-  //     await Utils.expectRevert(
-  //       consensus.formCommittee(coreAddress),
-  //       'There does not exist a precommitment of the core to a proposal.',
-  //     );
-  //   });
-  //
-  //   it('should fail when pre-commit when proposal is 0x for a given core address', async () => {
-  //     await consensus.setPreCommit(testInputs.coreAddress, Utils.ZERO_BYTES32, new BN(10));
-  //     await Utils.expectRevert(
-  //       consensus.formCommittee(testInputs.coreAddress),
-  //       'There does not exist a precommitment of the core to a proposal.',
-  //     );
-  //   });
-  //
-  //   it('should fail when pre-commit committee formation block height is zero for a given core address', async () => {
-  //     await consensus.setPreCommit(testInputs.coreAddress, testInputs.proposal, new BN(0));
-  //     await Utils.expectRevert(
-  //       consensus.formCommittee(testInputs.coreAddress),
-  //       'There does not exist a precommitment of the core to a proposal.',
-  //     );
-  //   });
-  //
-  //   it('should fail when current block number is less than committee formation block', async () => {
-  //     const currentBlock = await Utils.getBlockNumber();
-  //     await consensus.setPreCommit(
-  //       testInputs.coreAddress,
-  //       testInputs.proposal,
-  //       currentBlock.addn(consensusUtil.CommitteeFormationDelay),
-  //     );
-  //
-  //     await Utils.expectRevert(
-  //       consensus.formCommittee(testInputs.coreAddress),
-  //       'Block height must be higher than set committee formation height.',
-  //     );
-  //   });
-  //
-  //   // it('should fail when committee formation block is not in most recent 256 blocks', async () => {
-  //   //   const initialBlockNumber = await Utils.getBlockNumber();
-  //   //   const committeeFormationDelay = 10;
-  //   //   const committeeFormationBlockHeight = initialBlockNumber.addn(committeeFormationDelay);
-  //   //   await consensus.setPreCommit(
-  //   //     testInputs.coreAddress,
-  //   //     testInputs.proposal,
-  //   //     committeeFormationBlockHeight,
-  //   //   );
-  //   //
-  //   //   const currentBlock = await Utils.getBlockNumber();
-  //   //   const advanceBlockNumber = new BN(consensusUtil.BlockSegmentLength)
-  //   //     .addn(committeeFormationDelay)
-  //   //     .addn(consensusUtil.CommitteeFormationLength)
-  //   //     .sub(currentBlock.sub(initialBlockNumber))
-  //   //     .subn(1);
-  //   //   // Additional -1 is done because the the block number will be +1 in next step.
-  //   //
-  //   //   // Advance 256 + committeeFormationBlockHeight blocks.
-  //   //   await Utils.advanceBlocks(advanceBlockNumber.toNumber(10));
-  //   //
-  //   //   await Utils.expectRevert(
-  //   //     consensus.formCommittee(testInputs.coreAddress),
-  //   //     'Committee formation blocksegment length must be in 256 most recent blocks.',
-  //   //   );
-  //   // });
-  //
-  //   it('should fail when committee is already formed', async () => {
-  //     const initialBlockNumber = await Utils.getBlockNumber();
-  //     const committeeFormationBlockHeight = initialBlockNumber
-  //       .addn(consensusUtil.CommitteeFormationDelay);
-  //
-  //     await consensus.setPreCommit(
-  //       testInputs.coreAddress,
-  //       testInputs.proposal,
-  //       committeeFormationBlockHeight,
-  //     );
-  //
-  //     await Utils.advanceBlocks(consensusUtil.CommitteeFormationDelay);
-  //
-  //     await consensus.formCommittee(testInputs.coreAddress);
-  //
-  //     await Utils.expectRevert(
-  //       consensus.formCommittee(testInputs.coreAddress),
-  //       'There already exists a committee for the proposal.',
-  //     );
-  //   });
-  // });
+  contract('Negative Tests', async () => {
+    it('should fail when pre-commit proposal does not exists for a given core address', async () => {
+      const coreAddress = accountProvider.get();
+
+      await Utils.expectRevert(
+        consensus.formCommittee(coreAddress),
+        'There does not exist a precommitment of the core to a proposal.',
+      );
+    });
+
+    it('should fail when pre-commit when proposal is 0x for a given core address', async () => {
+      await consensus.setPreCommit(testInputs.coreAddress, Utils.ZERO_BYTES32, new BN(10));
+      await Utils.expectRevert(
+        consensus.formCommittee(testInputs.coreAddress),
+        'There does not exist a precommitment of the core to a proposal.',
+      );
+    });
+
+    it('should fail when pre-commit committee formation block height is zero for a given core address', async () => {
+      await consensus.setPreCommit(testInputs.coreAddress, testInputs.proposal, new BN(0));
+      await Utils.expectRevert(
+        consensus.formCommittee(testInputs.coreAddress),
+        'There does not exist a precommitment of the core to a proposal.',
+      );
+    });
+
+    it('should fail when current block number is less than committee formation block', async () => {
+      const currentBlock = await Utils.getBlockNumber();
+      await consensus.setPreCommit(
+        testInputs.coreAddress,
+        testInputs.proposal,
+        currentBlock.addn(consensusUtil.CommitteeFormationDelay),
+      );
+
+      await Utils.expectRevert(
+        consensus.formCommittee(testInputs.coreAddress),
+        'Block height must be higher than set committee formation height.',
+      );
+    });
+
+    it('should fail when committee formation block is not in most recent 256 blocks', async () => {
+      const initialBlockNumber = await Utils.getBlockNumber();
+      const committeeFormationDelay = 10;
+      const committeeFormationBlockHeight = initialBlockNumber.addn(committeeFormationDelay);
+      await consensus.setPreCommit(
+        testInputs.coreAddress,
+        testInputs.proposal,
+        committeeFormationBlockHeight,
+      );
+
+      const currentBlock = await Utils.getBlockNumber();
+      const advanceBlockNumber = new BN(consensusUtil.BlockSegmentLength)
+        .addn(committeeFormationDelay)
+        .addn(consensusUtil.CommitteeFormationLength)
+        .sub(currentBlock.sub(initialBlockNumber))
+        .subn(1);
+      // Additional -1 is done because the the block number will be +1 in next step.
+
+      // Advance 256 + committeeFormationBlockHeight blocks.
+      await Utils.advanceBlocks(advanceBlockNumber.toNumber(10));
+
+      await Utils.expectRevert(
+        consensus.formCommittee(testInputs.coreAddress),
+        'Committee formation blocksegment length must be in 256 most recent blocks.',
+      );
+    });
+
+    it('should fail when committee is already formed', async () => {
+      const initialBlockNumber = await Utils.getBlockNumber();
+      const committeeFormationBlockHeight = initialBlockNumber
+        .addn(consensusUtil.CommitteeFormationDelay);
+
+      await consensus.setPreCommit(
+        testInputs.coreAddress,
+        testInputs.proposal,
+        committeeFormationBlockHeight,
+      );
+
+      await Utils.advanceBlocks(consensusUtil.CommitteeFormationDelay);
+
+      await consensus.formCommittee(testInputs.coreAddress);
+
+      await Utils.expectRevert(
+        consensus.formCommittee(testInputs.coreAddress),
+        'There already exists a committee for the proposal.',
+      );
+    });
+  });
 
   contract('Positive Tests', () => {
     let committeeFormationBlockHeight;
     beforeEach(async () => {
       const initialBlockNumber = await Utils.getBlockNumber();
-      console.log('initialBlockNumber', initialBlockNumber);
       committeeFormationBlockHeight = initialBlockNumber
         .addn(consensusUtil.CommitteeFormationDelay);
 
@@ -154,9 +153,10 @@ contract('Consensus::formCommittee', (accounts) => {
         testInputs.proposal,
         committeeFormationBlockHeight,
       );
+      // Advance by 256 blocks
+      await Utils.advanceBlocks(consensusUtil.BlockSegmentLength);
+      // Advance by 7 committe formation delay
       await Utils.advanceBlocks(consensusUtil.CommitteeFormationDelay);
-      const initialBlockNumber1 = await Utils.getBlockNumber();
-      console.log('initialBlockNumber1', initialBlockNumber1);
     });
 
     it('should form committee when called with correct parameters', async () => {
@@ -164,82 +164,82 @@ contract('Consensus::formCommittee', (accounts) => {
       assert.isOk(false);
     });
 
-    // it('should update proposals, committee mapping and sentinel committee address', async () => {
-    //   let committeeAddress = await consensus.proposals.call(testInputs.proposal);
-    //   assert.strictEqual(
-    //     committeeAddress,
-    //     Utils.NULL_ADDRESS,
-    //     'Committee address must be null before the committee formation.',
-    //   );
-    //
-    //   await consensus.formCommittee(testInputs.coreAddress);
-    //
-    //   committeeAddress = await consensus.proposals.call(testInputs.proposal);
-    //   assert.strictEqual(
-    //     Utils.isAddress(committeeAddress) && committeeAddress !== Utils.NULL_ADDRESS,
-    //     true,
-    //     `${committeeAddress} must be a valid non null ethereum address.`,
-    //   );
-    //
-    //   const sentinelAddress = await consensus.committees.call(committeeAddress);
-    //   assert.strictEqual(
-    //     sentinelAddress,
-    //     consensusUtil.SentinelCommittee,
-    //     `Sentinel address must be ${sentinelAddress}`,
-    //   );
-    //
-    //   const sentinalCommitteeAddress = await consensus
-    //     .committees
-    //     .call(consensusUtil.SentinelCommittee);
-    //
-    //   assert.strictEqual(
-    //     sentinalCommitteeAddress,
-    //     committeeAddress,
-    //     `Sentinel committee address must be ${committeeAddress}`,
-    //   );
-    // });
-    //
-    // it('should verify committee address', async () => {
-    //   let committeeAddress = await consensus.proposals.call(testInputs.proposal);
-    //   assert.strictEqual(
-    //     committeeAddress,
-    //     Utils.NULL_ADDRESS,
-    //     'Committee address must be null before the committee formation.',
-    //   );
-    //
-    //   await consensus.formCommittee(testInputs.coreAddress);
-    //
-    //   const mockedCommitteeAddress = await axiom.mockedCommitteeAddress.call();
-    //   committeeAddress = await consensus.proposals.call(testInputs.proposal);
-    //
-    //   assert.strictEqual(
-    //     committeeAddress,
-    //     mockedCommitteeAddress,
-    //     'Committee address must be equal to the mocked committee address.',
-    //   );
-    // });
-    //
-    // it('verify spied call data ', async () => {
-    //   await consensus.formCommittee(testInputs.coreAddress);
-    //
-    //   // testInputs.committeeSize
-    //   // Get the expected dislocation for the given committee formation height.
-    //   const expectedDislocation = await consensusUtil.getDislocation(committeeFormationBlockHeight);
-    //   // testInputs.proposal
-    //   const expectedCallData = await axiomUtil.encodeNewCommitteeParams({
-    //     consensus: consensus.address,
-    //     committeeSize: testInputs.committeeSize,
-    //     dislocation: expectedDislocation,
-    //     proposal: testInputs.proposal,
-    //   });
-    //
-    //   const spyCallData = await axiom.spyNewCommitteeCallData.call();
-    //
-    //   assert.strictEqual(
-    //     spyCallData,
-    //     expectedCallData,
-    //     'Call data in spy contract is not correct.',
-    //   );
-    // });
+    it('should update proposals, committee mapping and sentinel committee address', async () => {
+      let committeeAddress = await consensus.proposals.call(testInputs.proposal);
+      assert.strictEqual(
+        committeeAddress,
+        Utils.NULL_ADDRESS,
+        'Committee address must be null before the committee formation.',
+      );
+
+      await consensus.formCommittee(testInputs.coreAddress);
+
+      committeeAddress = await consensus.proposals.call(testInputs.proposal);
+      assert.strictEqual(
+        Utils.isAddress(committeeAddress) && committeeAddress !== Utils.NULL_ADDRESS,
+        true,
+        `${committeeAddress} must be a valid non null ethereum address.`,
+      );
+
+      const sentinelAddress = await consensus.committees.call(committeeAddress);
+      assert.strictEqual(
+        sentinelAddress,
+        consensusUtil.SentinelCommittee,
+        `Sentinel address must be ${sentinelAddress}`,
+      );
+
+      const sentinalCommitteeAddress = await consensus
+        .committees
+        .call(consensusUtil.SentinelCommittee);
+
+      assert.strictEqual(
+        sentinalCommitteeAddress,
+        committeeAddress,
+        `Sentinel committee address must be ${committeeAddress}`,
+      );
+    });
+
+    it('should verify committee address', async () => {
+      let committeeAddress = await consensus.proposals.call(testInputs.proposal);
+      assert.strictEqual(
+        committeeAddress,
+        Utils.NULL_ADDRESS,
+        'Committee address must be null before the committee formation.',
+      );
+
+      await consensus.formCommittee(testInputs.coreAddress);
+
+      const mockedCommitteeAddress = await axiom.mockedCommitteeAddress.call();
+      committeeAddress = await consensus.proposals.call(testInputs.proposal);
+
+      assert.strictEqual(
+        committeeAddress,
+        mockedCommitteeAddress,
+        'Committee address must be equal to the mocked committee address.',
+      );
+    });
+
+    it('verify spied call data ', async () => {
+      await consensus.formCommittee(testInputs.coreAddress);
+
+      // testInputs.committeeSize
+      // Get the expected dislocation for the given committee formation height.
+      const expectedDislocation = await consensusUtil.getDislocation(committeeFormationBlockHeight);
+      // testInputs.proposal
+      const expectedCallData = await axiomUtil.encodeNewCommitteeParams({
+        consensus: consensus.address,
+        committeeSize: testInputs.committeeSize,
+        dislocation: expectedDislocation,
+        proposal: testInputs.proposal,
+      });
+
+      const spyCallData = await axiom.spyNewCommitteeCallData.call();
+
+      assert.strictEqual(
+        spyCallData,
+        expectedCallData,
+        'Call data in spy contract is not correct.',
+      );
+    });
   });
 });
