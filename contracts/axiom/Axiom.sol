@@ -20,7 +20,8 @@ import "../block/Block.sol";
 import "../consensus/ConsensusI.sol";
 import "../proxies/ProxyFactory.sol";
 
-contract Axiom is AxiomI, ProxyFactory {
+
+contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
 
     /* Usings */
 
@@ -49,16 +50,6 @@ contract Axiom is AxiomI, ProxyFactory {
 
     /* Modifiers */
 
-    modifier onlyConsensus()
-    {
-        require(
-            address(consensus) == msg.sender,
-            "Caller must be consensus address."
-        );
-
-        _;
-    }
-
     modifier onlyTechGov()
     {
         require(
@@ -86,9 +77,6 @@ contract Axiom is AxiomI, ProxyFactory {
 
     /** Reputation master copy contract address */
     address public reputationMasterCopy;
-
-    /** Consensus contract address */
-    ConsensusI public consensus;
 
     /** Reputation contract address */
     ReputationI public reputation;
@@ -121,22 +109,22 @@ contract Axiom is AxiomI, ProxyFactory {
 
         require(
             _consensusMasterCopy != address(0),
-            "Consensus master copy adress is 0."
+            "Consensus master copy address is 0."
         );
 
         require(
             _coreMasterCopy != address(0),
-            "Core master copy adress is 0."
+            "Core master copy address is 0."
         );
 
         require(
             _committeeMasterCopy != address(0),
-            "Committee master copy adress is 0."
+            "Committee master copy address is 0."
         );
 
         require(
             _reputationMasterCopy != address(0),
-            "Reputation master copy adress is 0."
+            "Reputation master copy address is 0."
         );
 
         techGov = _techGov;
@@ -151,7 +139,7 @@ contract Axiom is AxiomI, ProxyFactory {
 
     /**
      * @notice Setup consensus contract, this can be only called once by
-     *          technical governance address.
+     *         technical governance address.
      * @param _committeeSize Max committee size that can be formed.
      * @param _minValidators Minimum number of validators that must join a
      *                       created core to open.
@@ -192,6 +180,8 @@ contract Axiom is AxiomI, ProxyFactory {
         );
 
         // Deploy the consensus proxy contract.
+        // Setup data is blank because setup requires reputation contract address
+        // which is deployed in next step.
         Proxy consensusProxy = createProxy(consensusMasterCopy, "");
 
         consensus = ConsensusI(address(consensusProxy));
@@ -319,7 +309,7 @@ contract Axiom is AxiomI, ProxyFactory {
     {
         require(
             _masterCopy != address(0),
-            'Master copy address is 0.'
+            "Master copy address is 0."
         );
 
         Proxy proxyContract = createProxy(
@@ -328,26 +318,4 @@ contract Axiom is AxiomI, ProxyFactory {
         );
         deployedAddress_ = address(proxyContract);
     }
-
-    /**
-     * @notice Call a function.
-     * @param _proxy Proxy contract address.
-     * @param _data Function call data.
-     */
-    function callProxyData(
-        Proxy _proxy,
-        bytes memory _data
-    )
-        private
-    {
-        if (_data.length > 0) {
-            // solium-disable-next-line security/no-inline-assembly
-            assembly {
-                if eq(call(gas, _proxy, 0, add(_data, 0x20), mload(_data), 0, 0), 0) {
-                    revert(0, 0)
-                }
-            }
-        }
-    }
-
 }
