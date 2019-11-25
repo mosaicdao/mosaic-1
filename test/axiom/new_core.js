@@ -106,7 +106,7 @@ contract('Axiom::newCore', (accounts) => {
     it('should fail when caller is not consensus contract address', async () => {
       await Utils.expectRevert(
         axiom.newCore(callData),
-        'Caller must be consensus address.',
+        'Only the consensus contract can call this function.',
       );
     });
   });

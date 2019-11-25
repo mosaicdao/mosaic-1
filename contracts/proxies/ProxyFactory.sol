@@ -27,6 +27,28 @@ contract ProxyFactory {
         emit ProxyCreation(proxy);
     }
 
+
+    /**
+     * @notice Call a function.
+     * @param _proxy Proxy contract address.
+     * @param _data Function call data.
+     */
+    function callProxyData(
+        Proxy _proxy,
+        bytes memory _data
+    )
+        internal
+    {
+        if (_data.length > 0) {
+            // solium-disable-next-line security/no-inline-assembly
+            assembly {
+                if eq(call(gas, _proxy, 0, add(_data, 0x20), mload(_data), 0, 0), 0) {
+                    revert(0, 0)
+                }
+            }
+        }
+    }
+
 //    /// @dev Allows to retrieve the runtime code of a deployed Proxy. This can be used to check that the expected Proxy was deployed.
 //    function proxyRuntimeCode() public pure returns (bytes memory) {
 //        return type(Proxy).runtimeCode;

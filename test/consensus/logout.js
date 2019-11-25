@@ -16,6 +16,7 @@
 
 const Utils = require('../test_lib/utils.js');
 const consensusUtil = require('./utils.js');
+const CoreStatusUtils = require('../test_lib/core_status_utils');
 
 const Consensus = artifacts.require('ConsensusTest');
 const SpyReputation = artifacts.require('SpyReputation');
@@ -41,7 +42,7 @@ contract('Consensus::logout', (accounts) => {
     await contracts.consensus.setReputation(contracts.reputation.address);
     await contracts.consensus.setCoreStatus(
       contracts.core.address,
-      consensusUtil.CoreStatus.opened,
+      CoreStatusUtils.CoreStatus.opened,
     );
     await contracts.consensus.setAssignment(chainId, contracts.core.address);
   });
@@ -73,7 +74,7 @@ contract('Consensus::logout', (accounts) => {
     it('should fail when core status is undefined', async () => {
       await contracts.consensus.setCoreStatus(
         contracts.core.address,
-        consensusUtil.CoreStatus.undefined,
+        CoreStatusUtils.CoreStatus.undefined,
       );
       await Utils.expectRevert(
         contracts.consensus.logout(chainId, contracts.core.address, { from: validator }),
@@ -84,7 +85,7 @@ contract('Consensus::logout', (accounts) => {
     it('should fail when core status is halted', async () => {
       await contracts.consensus.setCoreStatus(
         contracts.core.address,
-        consensusUtil.CoreStatus.halted,
+        CoreStatusUtils.CoreStatus.halted,
       );
       await Utils.expectRevert(
         contracts.consensus.logout(chainId, contracts.core.address, { from: validator }),
@@ -95,7 +96,7 @@ contract('Consensus::logout', (accounts) => {
     it('should fail when core status is corrupted', async () => {
       await contracts.consensus.setCoreStatus(
         contracts.core.address,
-        consensusUtil.CoreStatus.corrupted,
+        CoreStatusUtils.CoreStatus.corrupted,
       );
       await Utils.expectRevert(
         contracts.consensus.logout(chainId, contracts.core.address, { from: validator }),
@@ -108,7 +109,7 @@ contract('Consensus::logout', (accounts) => {
     it('should pass when core status is creation', async () => {
       await contracts.consensus.setCoreStatus(
         contracts.core.address,
-        consensusUtil.CoreStatus.creation,
+        CoreStatusUtils.CoreStatus.creation,
       );
       await contracts.consensus.logout(chainId, contracts.core.address, { from: validator });
     });
@@ -116,7 +117,7 @@ contract('Consensus::logout', (accounts) => {
     it('should pass when core status is opened', async () => {
       await contracts.consensus.setCoreStatus(
         contracts.core.address,
-        consensusUtil.CoreStatus.opened,
+        CoreStatusUtils.CoreStatus.opened,
       );
       await contracts.consensus.logout(chainId, contracts.core.address, { from: validator });
     });
@@ -124,7 +125,7 @@ contract('Consensus::logout', (accounts) => {
     it('should pass when core status is precommitted', async () => {
       await contracts.consensus.setCoreStatus(
         contracts.core.address,
-        consensusUtil.CoreStatus.precommitted,
+        CoreStatusUtils.CoreStatus.precommitted,
       );
       await contracts.consensus.logout(chainId, contracts.core.address, { from: validator });
     });

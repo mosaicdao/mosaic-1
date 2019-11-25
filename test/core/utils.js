@@ -14,8 +14,6 @@
 
 'use strict';
 
-const BN = require('bn.js');
-
 const web3 = require('../test_lib/web3.js');
 
 const Core = artifacts.require('Core');
@@ -85,35 +83,6 @@ async function setupCore(
   return core;
 }
 
-const CoreStatus = {
-  undefined: new BN(0),
-  creation: new BN(1),
-  opened: new BN(2),
-  precommitted: new BN(3),
-  halted: new BN(4),
-  corrupted: new BN(5),
-}
-
-function isCoreCreated(status) {
-  return CoreStatus.creation.cmp(status) === 0;
-}
-
-function isCoreOpened(status) {
-  return CoreStatus.opened.cmp(status) === 0;
-}
-
-function isCorePrecommitted(status) {
-  return CoreStatus.precommitted.cmp(status) === 0;
-}
-
-function isCoreHalted(status) {
-  return CoreStatus.halted.cmp(status) === 0;
-}
-
-function isCoreCorrupted(status) {
-  return CoreStatus.corrupted.cmp(status) === 0;
-}
-
 async function calculcateQuorum(core, count) {
   let numerator = await core.CORE_SUPER_MAJORITY_NUMERATOR.call();
   let denumerator = await core.CORE_SUPER_MAJORITY_DENOMINATOR.call();
@@ -131,11 +100,6 @@ function randomSha3() {
 module.exports = {
   createConsensusCore,
   setupCore,
-  isCoreCreated,
-  isCoreOpened,
-  isCorePrecommitted,
-  isCoreHalted,
-  isCoreCorrupted,
   calculcateQuorum,
   randomSha3,
 };

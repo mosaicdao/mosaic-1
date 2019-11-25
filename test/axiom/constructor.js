@@ -16,7 +16,6 @@
 
 const { AccountProvider } = require('../test_lib/utils.js');
 const Utils = require('../test_lib/utils.js');
-const ProxyFactoryTruffleArtifact = require('../../build/contracts/ProxyFactory.json');
 const AxiomUtils = require('./utils.js');
 
 let config = {};
@@ -67,7 +66,7 @@ contract('Axiom::constructor', (accounts) => {
             from: accountProvider.get(),
           },
         ),
-        'Consensus master copy adress is 0.',
+        'Consensus master copy address is 0.',
       );
     });
 
@@ -83,7 +82,7 @@ contract('Axiom::constructor', (accounts) => {
             from: accountProvider.get(),
           },
         ),
-        'Core master copy adress is 0.',
+        'Core master copy address is 0.',
       );
     });
 
@@ -99,7 +98,7 @@ contract('Axiom::constructor', (accounts) => {
             from: accountProvider.get(),
           },
         ),
-        'Committee master copy adress is 0.',
+        'Committee master copy address is 0.',
       );
     });
 
@@ -115,7 +114,7 @@ contract('Axiom::constructor', (accounts) => {
             from: accountProvider.get(),
           },
         ),
-        'Reputation master copy adress is 0.',
+        'Reputation master copy address is 0.',
       );
     });
   });
