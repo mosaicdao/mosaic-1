@@ -82,9 +82,8 @@ async function setupConsensusWithConfig(axiom, config) {
 
 async function newMetaChainWithConfig(axiom, config) {
   return axiom.newMetaChain(
-    config.remoteChainId,
-    config.stateRoot,
     config.maxStateRoots,
+    config.rlpBlockHeader,
     config.txOptions,
   );
 }

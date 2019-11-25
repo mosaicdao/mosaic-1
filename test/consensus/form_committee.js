@@ -17,6 +17,7 @@
 const BN = require('bn.js');
 const Utils = require('../test_lib/utils.js');
 const consensusUtil = require('./utils.js');
+const CoreStatusUtils = require('../test_lib/core_status_utils');
 const axiomUtil = require('../axiom/utils.js');
 
 const Consensus = artifacts.require('ConsensusTest');
@@ -41,7 +42,7 @@ contract('Consensus::formCommittee', (accounts) => {
 
     await consensus.setCoreStatus(
       testInputs.coreAddress,
-      consensusUtil.CoreStatus.creation,
+      CoreStatusUtils.CoreStatus.creation,
     );
 
     await consensus.registerPrecommit(
@@ -51,7 +52,6 @@ contract('Consensus::formCommittee', (accounts) => {
       },
     );
   });
-
   contract('Negative Tests', async () => {
     it('should fail when pre-commit proposal does not exists for a given core address', async () => {
       const coreAddress = accountProvider.get();
@@ -64,14 +64,6 @@ contract('Consensus::formCommittee', (accounts) => {
 
     it('should fail when pre-commit when proposal is 0x for a given core address', async () => {
       await consensus.setPreCommit(testInputs.coreAddress, Utils.ZERO_BYTES32, new BN(10));
-      await Utils.expectRevert(
-        consensus.formCommittee(testInputs.coreAddress),
-        'There does not exist a precommitment of the core to a proposal.',
-      );
-    });
-
-    it('should fail when pre-commit committee formation block height is zero for a given core address', async () => {
-      await consensus.setPreCommit(testInputs.coreAddress, testInputs.proposal, new BN(0));
       await Utils.expectRevert(
         consensus.formCommittee(testInputs.coreAddress),
         'There does not exist a precommitment of the core to a proposal.',
@@ -144,6 +136,9 @@ contract('Consensus::formCommittee', (accounts) => {
   contract('Positive Tests', () => {
     let committeeFormationBlockHeight;
     beforeEach(async () => {
+
+      // Advance by 256 blocks
+      await Utils.advanceBlocks(consensusUtil.BlockSegmentLength);
       const initialBlockNumber = await Utils.getBlockNumber();
       committeeFormationBlockHeight = initialBlockNumber
         .addn(consensusUtil.CommitteeFormationDelay);
@@ -153,6 +148,7 @@ contract('Consensus::formCommittee', (accounts) => {
         testInputs.proposal,
         committeeFormationBlockHeight,
       );
+      // Advance by 7 block
       await Utils.advanceBlocks(consensusUtil.CommitteeFormationDelay);
     });
 

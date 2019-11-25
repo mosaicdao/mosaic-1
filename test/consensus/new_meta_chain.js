@@ -64,7 +64,7 @@ contract('Consensus::newMetaChain', (accounts) => {
       await consensusUtil.callNewMetaChainOnConsensus(contracts.SpyAxiom, inputParams);
       await Utils.expectRevert(
         consensusUtil.callNewMetaChainOnConsensus(contracts.SpyAxiom, inputParams),
-        'Chain already exists.',
+        'A core is already assigned to this metachain.',
       );
     });
   });

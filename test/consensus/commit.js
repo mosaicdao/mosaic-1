@@ -19,6 +19,7 @@ const web3 = require('../test_lib/web3.js');
 
 const Utils = require('../test_lib/utils.js');
 const consensusUtil = require('./utils.js');
+const CoreStatusUtils = require('../test_lib/core_status_utils');
 
 const Consensus = artifacts.require('ConsensusTest');
 const SpyCore = artifacts.require('SpyCore');
@@ -131,7 +132,7 @@ contract('Consensus::commit', (accounts) => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
       await contracts.Consensus.setCoreStatus(
         contracts.SpyCore.address,
-        consensusUtil.CoreStatus.undefined,
+        CoreStatusUtils.CoreStatus.undefined,
       );
       await Utils.expectRevert(
         consensusUtil.commit(contracts.Consensus, commitParams),
@@ -143,7 +144,7 @@ contract('Consensus::commit', (accounts) => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
       await contracts.Consensus.setCoreStatus(
         contracts.SpyCore.address,
-        consensusUtil.CoreStatus.halted,
+        CoreStatusUtils.CoreStatus.halted,
       );
       await Utils.expectRevert(
         consensusUtil.commit(contracts.Consensus, commitParams),
@@ -155,7 +156,7 @@ contract('Consensus::commit', (accounts) => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
       await contracts.Consensus.setCoreStatus(
         contracts.SpyCore.address,
-        consensusUtil.CoreStatus.corrupted,
+        CoreStatusUtils.CoreStatus.corrupted,
       );
       await Utils.expectRevert(
         consensusUtil.commit(contracts.Consensus, commitParams),
@@ -167,7 +168,7 @@ contract('Consensus::commit', (accounts) => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
       await contracts.Consensus.setCoreStatus(
         contracts.SpyCore.address,
-        consensusUtil.CoreStatus.precommitted,
+        CoreStatusUtils.CoreStatus.precommitted,
       );
       await Utils.expectRevert(
         consensusUtil.commit(contracts.Consensus, commitParams),
@@ -179,7 +180,7 @@ contract('Consensus::commit', (accounts) => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
       await contracts.Consensus.setCoreStatus(
         contracts.SpyCore.address,
-        consensusUtil.CoreStatus.precommitted,
+        CoreStatusUtils.CoreStatus.precommitted,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -198,7 +199,7 @@ contract('Consensus::commit', (accounts) => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
       await contracts.Consensus.setCoreStatus(
         contracts.SpyCore.address,
-        consensusUtil.CoreStatus.precommitted,
+        CoreStatusUtils.CoreStatus.precommitted,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -218,7 +219,7 @@ contract('Consensus::commit', (accounts) => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
       await contracts.Consensus.setCoreStatus(
         contracts.SpyCore.address,
-        consensusUtil.CoreStatus.precommitted,
+        CoreStatusUtils.CoreStatus.precommitted,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -239,7 +240,7 @@ contract('Consensus::commit', (accounts) => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
       await contracts.Consensus.setCoreStatus(
         contracts.SpyCore.address,
-        consensusUtil.CoreStatus.precommitted,
+        CoreStatusUtils.CoreStatus.precommitted,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -253,7 +254,7 @@ contract('Consensus::commit', (accounts) => {
       await contracts.Consensus.setCommitteeProposal(contracts.SpyCommittee.address, proposal);
       await Utils.expectRevert(
         consensusUtil.commit(contracts.Consensus, commitParams),
-        'Committee has not decide on the proposal.',
+        'Committee has not decided on the proposal.',
       );
     });
 
@@ -261,7 +262,7 @@ contract('Consensus::commit', (accounts) => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
       await contracts.Consensus.setCoreStatus(
         contracts.SpyCore.address,
-        consensusUtil.CoreStatus.precommitted,
+        CoreStatusUtils.CoreStatus.precommitted,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -284,7 +285,7 @@ contract('Consensus::commit', (accounts) => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
       await contracts.Consensus.setCoreStatus(
         contracts.SpyCore.address,
-        consensusUtil.CoreStatus.precommitted,
+        CoreStatusUtils.CoreStatus.precommitted,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -307,7 +308,7 @@ contract('Consensus::commit', (accounts) => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
       await contracts.Consensus.setCoreStatus(
         contracts.SpyCore.address,
-        consensusUtil.CoreStatus.precommitted,
+        CoreStatusUtils.CoreStatus.precommitted,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -337,7 +338,7 @@ contract('Consensus::commit', (accounts) => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
       await contracts.Consensus.setCoreStatus(
         contracts.SpyCore.address,
-        consensusUtil.CoreStatus.precommitted,
+        CoreStatusUtils.CoreStatus.precommitted,
       );
       proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -356,7 +357,7 @@ contract('Consensus::commit', (accounts) => {
     it('should pass when core status is creation', async () => {
       await contracts.Consensus.setCoreStatus(
         contracts.SpyCore.address,
-        consensusUtil.CoreStatus.creation,
+        CoreStatusUtils.CoreStatus.creation,
       );
       await consensusUtil.commit(contracts.Consensus, commitParams);
     });
@@ -364,7 +365,7 @@ contract('Consensus::commit', (accounts) => {
     it('should pass when core status is opened', async () => {
       await contracts.Consensus.setCoreStatus(
         contracts.SpyCore.address,
-        consensusUtil.CoreStatus.opened,
+        CoreStatusUtils.CoreStatus.opened,
       );
       await consensusUtil.commit(contracts.Consensus, commitParams);
     });

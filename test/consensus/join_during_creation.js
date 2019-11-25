@@ -16,6 +16,7 @@
 
 const Utils = require('../test_lib/utils.js');
 const consensusUtil = require('./utils.js');
+const CoreStatusUtils = require('../test_lib/core_status_utils');
 
 const Consensus = artifacts.require('ConsensusTest');
 const SpyReputation = artifacts.require('SpyReputation');
@@ -36,7 +37,7 @@ contract('Consensus::joinDuringCreation', (accounts) => {
     core = await SpyCore.new();
 
     await consensus.setReputation(reputation.address);
-    await consensus.setCoreStatus(core.address, consensusUtil.CoreStatus.creation);
+    await consensus.setCoreStatus(core.address, CoreStatusUtils.CoreStatus.creation);
 
     joinParams = {
       chainId: '0x0000000000000000000000000000000000000222',
@@ -104,49 +105,44 @@ contract('Consensus::joinDuringCreation', (accounts) => {
     });
 
     it('should fail when core status is undefined', async () => {
-      await consensus.setCoreStatus(core.address, consensusUtil.CoreStatus.undefined);
+      await consensus.setCoreStatus(core.address, CoreStatusUtils.CoreStatus.undefined);
       await Utils.expectRevert(
         consensusUtil.joinDuringCreation(consensus, joinParams),
-        'Core status is not creation.',
+        'Core must be in an active state.',
       );
     });
 
     it('should fail when core status is halted', async () => {
-      await consensus.setCoreStatus(core.address, consensusUtil.CoreStatus.halted);
+      await consensus.setCoreStatus(core.address, CoreStatusUtils.CoreStatus.halted);
       await Utils.expectRevert(
         consensusUtil.joinDuringCreation(consensus, joinParams),
-        'Core status is not creation.',
+        'Core must be in an active state.',
       );
     });
 
     it('should fail when core status is corrupted', async () => {
-      await consensus.setCoreStatus(core.address, consensusUtil.CoreStatus.corrupted);
+      await consensus.setCoreStatus(core.address, CoreStatusUtils.CoreStatus.corrupted);
       await Utils.expectRevert(
         consensusUtil.joinDuringCreation(consensus, joinParams),
-        'Core status is not creation.',
+        'Core must be in an active state.',
       );
     });
 
-    it('should fail when core status is opened', async () => {
-      await consensus.setCoreStatus(core.address, consensusUtil.CoreStatus.opened);
-      await Utils.expectRevert(
-        consensusUtil.joinDuringCreation(consensus, joinParams),
-        'Core status is not creation.',
-      );
-    });
-
-    it('should fail when core status is precommited', async () => {
-      await consensus.setCoreStatus(core.address, consensusUtil.CoreStatus.precommitted);
-      await Utils.expectRevert(
-        consensusUtil.joinDuringCreation(consensus, joinParams),
-        'Core status is not creation.',
-      );
-    });
   });
 
   contract('Positive Tests', () => {
     it('should pass when core status is creation', async () => {
-      await consensus.setCoreStatus(core.address, consensusUtil.CoreStatus.creation);
+      await consensus.setCoreStatus(core.address, CoreStatusUtils.CoreStatus.creation);
+      await consensusUtil.joinDuringCreation(consensus, joinParams);
+    });
+
+    it('should pass when core status is opened', async () => {
+      await consensus.setCoreStatus(core.address, CoreStatusUtils.CoreStatus.opened);
+      await consensusUtil.joinDuringCreation(consensus, joinParams);
+    });
+
+    it('should pass when core status is precommited', async () => {
+      await consensus.setCoreStatus(core.address, CoreStatusUtils.CoreStatus.precommitted);
       await consensusUtil.joinDuringCreation(consensus, joinParams);
     });
 
