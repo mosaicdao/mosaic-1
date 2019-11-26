@@ -6,9 +6,9 @@ class Utils {
       {
         from: funder,
         to: beneficiary,
-        value: value,
+        value,
       },
-    )
+    );
   }
 }
 

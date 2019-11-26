@@ -20,11 +20,8 @@
 
 const shared = require('../shared');
 
+const FUNDING_AMOUNT_IN_ETHER = '2';
 describe('Deployment', async () => {
-  before(async () => {
-
-  });
-
   it('Contract deployment', async () => {
     const {
       Axiom,
@@ -52,6 +49,46 @@ describe('Deployment', async () => {
     shared.origin.contracts.Consensus.address = consensus.address;
     shared.origin.contracts.Committee.address = committee.address;
 
+    // todo add contract instance to shared once auto generated interact PR is merged.
+    // Example shared.origin.contracts.Committee.instance =
+    // Interacts.getCommittee(committeeAddress, web3);
+  });
+
+  it('Token deployment and fund validator', async () => {
+    const {
+      MockToken,
+    } = shared.artifacts;
+
+    const { funder } = shared.origin;
+
+    const mOST = await MockToken.new(18, { from: funder });
+    const wETH = await MockToken.new(18, { from: funder });
+
+    shared.origin.contracts.MOST.address = mOST.address;
+    shared.origin.contracts.WETH.address = wETH.address;
+
+    const erc20FundingPromises = [];
+    const fundingAmount = shared.origin.web3.utils.toWei(FUNDING_AMOUNT_IN_ETHER);
+
+    shared.origin.keys.validators.forEach((value) => {
+      erc20FundingPromises.push(
+        mOST.transfer(
+          value,
+          fundingAmount,
+          { from: funder },
+        ),
+      );
+
+      erc20FundingPromises.push(
+        wETH.transfer(
+          value,
+          fundingAmount,
+          { from: funder },
+        ),
+      );
+    });
+
+    await Promise.all(erc20FundingPromises);
     // todo add contract instance to shared once auto generated interact PR is merged.
     // Example shared.origin.contracts.Committee.instance =
     // Interacts.getCommittee(committeeAddress, web3);
