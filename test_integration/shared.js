@@ -19,6 +19,10 @@
 // ----------------------------------------------------------------------------
 const Web3 = require('web3');
 
+const web3 = new Web3('http://localhost:8545');
+// For testing use 1 block confirmation.
+web3.transactionConfirmationBlocks = 1;
+
 /**
  * An object that is shared across modules.
  *
@@ -29,7 +33,11 @@ const Web3 = require('web3');
 const shared = {
   artifacts: {},
   origin: {
-    web3: new Web3('http://localhost:8545'),
+    web3,
+    keys: {
+      techGov: '', // This values will pe populated in key_generation.
+      validators: [],
+    },
   },
 };
 
