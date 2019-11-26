@@ -68,4 +68,3 @@ contractNames.forEach((contract) => {
 
 fs.ensureDirSync('contract_build');
 fs.writeFileSync('contract_build/contracts.json', JSON.stringify(contracts));
-
