@@ -32,6 +32,8 @@ contract Reputation is ConsensusModule {
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     );
 
+    address public constant burner = address(0);
+
 
     /* Enums */
 
@@ -81,7 +83,7 @@ contract Reputation is ConsensusModule {
     uint256 public stakeWETHAmount;
 
     /** A per mille of earnings that validator can cash out immediately. */
-    uint256 cashableEarningsPerMille;
+    uint256 public cashableEarningsPerMille;
 
     /** An initial reputation for a newly joined validator. */
     uint256 public initialReputation;
@@ -113,17 +115,6 @@ contract Reputation is ConsensusModule {
         require(
             validators[_validator].status != ValidatorStatus.Undefined,
             "Validator has not joined."
-        );
-
-        _;
-    }
-
-    // note: dead-code, should be removed
-    modifier wasSlashed(address _validator)
-    {
-        require(
-            validators[_validator].status == ValidatorStatus.Slashed,
-            "Validator was not slashed."
         );
 
         _;
@@ -169,6 +160,16 @@ contract Reputation is ConsensusModule {
         _;
     }
 
+    modifier hasNotSlashed(address _validator)
+    {
+        require(
+            validators[_validator].status != ValidatorStatus.Slashed,
+            "Validator has slashed."
+        );
+
+        _;
+    }
+
 
     /* Special Member Functions */
 
@@ -179,6 +180,21 @@ contract Reputation is ConsensusModule {
      *          - a stake amount to join in mOST is positive
      *          - a stake amount to join in wETH is positive
      *          - a cashable earnings per mille is in [0, 1000] range
+     *
+     * @param _consensus Address of consensus contract.
+     * @param _mOST Address of EIP20 mOST token.
+     * @param _stakeMOSTAmount Amount of mOST token in wei required to be
+     *                         staked by each validator on join.
+     * @param _wETH Address of EIP20 wETH token.
+     * @param _stakeWETHAmount Amount of wETH token in wei required to be
+     *                         staked by each validator on join.
+     * @param _cashableEarningsPerMille Number ranging from [0-1000] which
+     *                                  defines cashable earning per mille.
+     * @param _initialReputation Initial reputation assigned when a validator
+     *                           joins.
+     * @param _withdrawalCooldownPeriodInBlocks Defines block delay between
+     *                                          logout and withdraw operation
+     *                                          for a validator.
      */
     function setup(
         address _consensus,
@@ -195,6 +211,11 @@ contract Reputation is ConsensusModule {
         require(
             address(mOST) == address(0) && address(wETH) == address(0),
             "Reputation is already setup."
+        );
+
+        require(
+            _consensus != address(0),
+            "consensus address is 0."
         );
 
         require(
@@ -222,6 +243,11 @@ contract Reputation is ConsensusModule {
             "Cashable earnings is not in valid range: [0, 1000]."
         );
 
+        require(
+            _withdrawalCooldownPeriodInBlocks > 0,
+            "Withdrawal cooldown period in blocks must be greater than zero."
+        );
+
         consensus = ConsensusI(_consensus);
         mOST = ERC20I(_mOST);
         wETH = ERC20I(_wETH);
@@ -242,7 +268,7 @@ contract Reputation is ConsensusModule {
      *          - only consensus can call
      *          - the specified validator is active
      *
-     * @param _validator A validator for which to increase a reputation.
+     * @param _validator A validator for which to increase reputation.
      * @param _delta A change (delta) to increase a validator's reputation.
      *
      * @return Returns an updated reputation.
@@ -315,8 +341,7 @@ contract Reputation is ConsensusModule {
     {
         ValidatorInfo storage v = validators[_validator];
 
-        // TODO: use safemath
-        uint256 cashableEarnings = (_amount * cashableEarningsPerMille) / 1000;
+        uint256 cashableEarnings = _amount.mul(cashableEarningsPerMille).div(1000);
 
         v.cashableEarnings = v.cashableEarnings.add(cashableEarnings);
 
@@ -326,20 +351,20 @@ contract Reputation is ConsensusModule {
 
         require(
             mOST.transferFrom(msg.sender, address(this), _amount),
-            "Failed to transfer earnings to the contract address"
+            "Failed to transfer earnings to the contract address."
         );
     }
 
     /**
-     * @notice Cashs out the specified amount from cashable earnings
+     * @notice Cash out the specified amount from cashable earnings
      *         of a validator.
      *
-     * @dev Function requiers:
+     * @dev Function requires:
      *          - only validator can call
      *          - validator has joined
      *          - validator was not slashed
      *          - validator has not withdrawn
-     *          - the speciefied amount is not bigger than cashable earnings
+     *          - the specified amount is not bigger than cashable earnings
      *            of a validator
      *
      * @param _amount An amount to withdraw.
@@ -433,7 +458,7 @@ contract Reputation is ConsensusModule {
 
         require(
             wETH.transferFrom(_validator, address(this), stakeWETHAmount),
-            "Failed to transfer mOST stake amount from a validator."
+            "Failed to transfer wETH stake amount from a validator."
         );
     }
 
@@ -445,20 +470,27 @@ contract Reputation is ConsensusModule {
      *          - a validator has joined
      *          - a validator has not withdrawn
      *
-     * TODO: The earnings and stakes of a validator must be burned.
+     * @param _validator A validator address to slash.
      */
     function slash(address _validator)
         external
         onlyConsensus
         hasJoined(_validator)
         hasNotWithdrawn(_validator)
+        hasNotSlashed(_validator)
     {
         ValidatorInfo storage v = validators[_validator];
 
         v.status = ValidatorStatus.Slashed;
+        uint256 totalmOSTAmountToBurn = v.lockedEarnings
+            .add(v.cashableEarnings)
+            .add(stakeMOSTAmount);
 
         v.lockedEarnings = 0;
         v.cashableEarnings = 0;
+
+        assert(mOST.transfer(burner, totalmOSTAmountToBurn));
+        assert(wETH.transfer(burner, stakeWETHAmount));
     }
 
     /**
@@ -532,7 +564,11 @@ contract Reputation is ConsensusModule {
         );
     }
 
-    /**  */
+    /**
+     * @notice Returns reputation of a validator.
+     *
+     * @param _validator An address of a validator.
+     */
     function getReputation(address _validator)
         external
         view
