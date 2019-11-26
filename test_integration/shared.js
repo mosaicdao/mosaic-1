@@ -33,10 +33,41 @@ web3.transactionConfirmationBlocks = 1;
 const shared = {
   artifacts: {},
   origin: {
+    funder: '', // Address that holds mOST and wETH funds.
     web3,
     keys: {
       techGov: '', // This values will pe populated in key_generation.
       validators: [],
+    },
+    contracts: {
+      Axiom: {
+        address: '',
+        instance: {},
+      },
+      Committee: {
+        address: '',
+        instance: {},
+      },
+      Consensus: {
+        address: '',
+        instance: {},
+      },
+      Core: {
+        address: '',
+        instance: {},
+      },
+      Reputation: {
+        address: '',
+        instance: {},
+      },
+      MOST: {
+        address: '',
+        instance: {},
+      },
+      WETH: {
+        address: '',
+        instance: {},
+      },
     },
   },
 };

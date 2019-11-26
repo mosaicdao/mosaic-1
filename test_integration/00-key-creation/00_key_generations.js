@@ -29,7 +29,7 @@ describe('Key generations', async () => {
 
     const accounts = await web3.eth.getAccounts();
     const funder = accounts[0];
-
+    shared.origin.funder = funder;
     const techGov = web3.eth.accounts.create('tech-gov');
     const validator1 = web3.eth.accounts.create('validator-1');
     const validator2 = web3.eth.accounts.create('validator-2');
