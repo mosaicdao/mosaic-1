@@ -16,7 +16,7 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
-import "../EIP20I.sol";
+import "../ERC20I.sol";
 import "../consensus/ConsensusModule.sol";
 
 contract Reputation is ConsensusModule {
@@ -68,11 +68,11 @@ contract Reputation is ConsensusModule {
 
     /* Storage */
 
-    /** EIP20 mOST for stakes and earnings for validators. */
-    EIP20I public mOST;
+    /** ERC20 mOST for stakes and earnings for validators. */
+    ERC20I public mOST;
 
-    /** EIP20 wETH for stakes for validators. */
-    EIP20I public wETH;
+    /** ERC20 wETH for stakes for validators. */
+    ERC20I public wETH;
 
     /** Required stake amount in mOST to join as a validator. */
     uint256 public stakeMOSTAmount;
@@ -182,9 +182,9 @@ contract Reputation is ConsensusModule {
      */
     constructor(
         address _consensus,
-        EIP20I _mOST,
+        ERC20I _mOST,
         uint256 _stakeMOSTAmount,
-        EIP20I _wETH,
+        ERC20I _wETH,
         uint256 _stakeWETHAmount,
         uint256 _cashableEarningsPerMille,
         uint256 _initialReputation,
@@ -194,12 +194,12 @@ contract Reputation is ConsensusModule {
         public
     {
         require(
-            _mOST != EIP20I(0),
+            _mOST != ERC20I(0),
             "mOST token address is 0."
         );
 
         require(
-            _wETH != EIP20I(0),
+            _wETH != ERC20I(0),
             "wETH token address is 0."
         );
 
