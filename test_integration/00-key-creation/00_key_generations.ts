@@ -18,8 +18,8 @@
 //
 // ----------------------------------------------------------------------------
 
-const shared = require('../shared');
-const Utils = require('../Utils');
+import shared from '../shared';
+import Utils from '../Utils';
 
 const FUNDING_AMOUNT_IN_ETH = '2';
 

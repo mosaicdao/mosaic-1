@@ -23,14 +23,21 @@
  * tests. Thus, we load them here and add them to the `shared` object.
  */
 const Mocha = require('mocha');
-const shared = require('./shared');
+import shared from './shared';
 
+// @ts-ignore
 const Anchor = artifacts.require('Anchor');
+// @ts-ignore
 const Axiom = artifacts.require('Axiom');
+// @ts-ignore
 const Committee = artifacts.require('Committee');
+// @ts-ignore
 const Consensus = artifacts.require('Consensus');
+// @ts-ignore
 const Core = artifacts.require('Core');
+// @ts-ignore
 const Reputation = artifacts.require('Reputation');
+// @ts-ignore
 const MockToken = artifacts.require('MockToken');
 
 const setupArtifacts = () => {

@@ -1,7 +1,7 @@
 
 
-class Utils {
-  static fundAddressForGas(beneficiary, funder, web3, value) {
+export default class Utils {
+  static fundAddressForGas(beneficiary: string, funder:string, web3, value: string) {
     return web3.eth.sendTransaction(
       {
         from: funder,
@@ -12,5 +12,3 @@ class Utils {
   }
 }
 
-
-module.exports = Utils;
