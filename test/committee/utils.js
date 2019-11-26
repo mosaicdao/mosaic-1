@@ -17,28 +17,28 @@ const BN = require('bn.js');
 const Utils = require('../test_lib/utils.js');
 const web3 = require('../test_lib/web3.js');
 
-const Committee = artifacts.require('Committee');
+const Committee = artifacts.require('MockCommittee');
 
-function getMemberDistance(accountProvider, dislocation, proposal, committeeSize, compareFn) {
+function getCommitteeMembers(accountProvider, dislocation, proposal, committeeSize, sortPredicate) {
+  const oThis = this;
   const dist = [];
   for (let i = 0; i < committeeSize + 2; i += 1) {
     const account = accountProvider.get();
     dist.push({
       address: account,
-      distance: this.distanceToProposal(
+      distance: oThis.distanceToProposal(
         dislocation,
         account,
         proposal,
       ),
     });
   }
-
-  dist.sort(compareFn);
+  dist.sort(sortPredicate);
   return dist;
 }
 
-function compare(a, b) {
-  return a.distance.cmp(b.distance);
+function compareMemberDistance(firstMember, secondMember) {
+  return firstMember.distance.cmp(secondMember.distance);
 }
 
 function remove0x(str) {
@@ -181,6 +181,10 @@ function isInvalid(status) {
   return CommitteeStatus.Invalid.cmp(status) === 0;
 }
 
+function isClosed(status) {
+  return CommitteeStatus.Closed.cmp(status) === 0;
+}
+
 function isInCommitPhase(status) {
   return CommitteeStatus.CommitPhase.cmp(status) === 0;
 }
@@ -241,10 +245,11 @@ module.exports = {
   isInvalid,
   isInCommitPhase,
   isInRevealPhase,
+  isClosed,
   passActivationBlockHeight,
   passCommitTimeoutBlockHeight,
   assertCommitteeMembers,
   sealCommit,
-  getMemberDistance,
-  compare,
+  getCommitteeMembers,
+  compareMemberDistance,
 };

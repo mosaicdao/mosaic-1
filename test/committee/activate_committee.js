@@ -47,12 +47,12 @@ contract('Committee::activateCommittee', async (accounts) => {
       },
     );
 
-    const dist = CommitteeUtils.getMemberDistance(
+    const dist = CommitteeUtils.getCommitteeMembers(
       accountProvider,
       config.committee.dislocation,
       config.committee.proposal,
       config.committee.size,
-      CommitteeUtils.compare,
+      CommitteeUtils.compareMemberDistance,
     );
 
     config.committee.closestMember = dist[0].address;
@@ -208,6 +208,24 @@ contract('Committee::activateCommittee', async (accounts) => {
       assert.isOk(
         CommitteeUtils.isInRevealPhase(status),
         'Committee status is not in reveal phase.',
+      );
+
+      await Utils.expectRevert(
+        config.committee.contract.activateCommittee(
+          {
+            from: config.committee.member,
+          },
+        ),
+        'Committee formation must be cooling down.',
+      );
+    });
+
+    it('should fail if committee is in closed state', async () => {
+      await config.committee.contract.setCommitteeStatusToClosed();
+      const status = await config.committee.contract.committeeStatus.call();
+      assert.isOk(
+        CommitteeUtils.isClosed(status),
+        'Committee status is not in invalid phase.',
       );
 
       await Utils.expectRevert(

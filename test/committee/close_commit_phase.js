@@ -49,12 +49,12 @@ contract('Committee::closeCommitPhase', async (accounts) => {
 
     config.committee.sentinelMembers = await config.committee.contract.SENTINEL_MEMBERS.call();
 
-    const dist = CommitteeUtils.getMemberDistance(
+    const dist = CommitteeUtils.getCommitteeMembers(
       accountProvider,
       config.committee.dislocation,
       config.committee.proposal,
       config.committee.size,
-      CommitteeUtils.compare,
+      CommitteeUtils.compareMemberDistance,
     );
 
     config.committee.closestMember = dist[0].address;
@@ -163,6 +163,24 @@ contract('Committee::closeCommitPhase', async (accounts) => {
       assert.isOk(
         CommitteeUtils.isInvalid(status),
         'Committee status is not in commit phase.',
+      );
+
+      await Utils.expectRevert(
+        config.committee.contract.closeCommitPhase(
+          {
+            from: accountProvider.get(),
+          },
+        ),
+        'Committee must be in the commit phase.',
+      );
+    });
+
+    it('should fail if committee is in closed state', async () => {
+      await config.committee.contract.setCommitteeStatusToClosed();
+      const status = await config.committee.contract.committeeStatus.call();
+      assert.isOk(
+        CommitteeUtils.isClosed(status),
+        'Committee status is not in invalid phase.',
       );
 
       await Utils.expectRevert(

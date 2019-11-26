@@ -45,19 +45,18 @@ contract('Committee:cooldownCommittee', async (accounts) => {
       },
     );
 
-    config.committee.sentinelMembers = await config.committee.contract.SENTINEL_MEMBERS.call();
     config.committee.formationCooldown = (
       await config.committee.contract.COMMITTEE_FORMATION_COOLDOWN.call()
     ).toNumber();
 
     config.committee.member = accountProvider.get();
 
-    const dist = CommitteeUtils.getMemberDistance(
+    const dist = CommitteeUtils.getCommitteeMembers(
       accountProvider,
       config.committee.dislocation,
       config.committee.proposal,
       config.committee.size,
-      CommitteeUtils.compare,
+      CommitteeUtils.compareMemberDistance,
     );
 
     config.committee.closestMember = dist[0].address;
@@ -233,6 +232,24 @@ contract('Committee:cooldownCommittee', async (accounts) => {
       const status = await config.committee.contract.committeeStatus.call();
       assert.isOk(
         CommitteeUtils.isInvalid(status),
+        'Committee status is not in invalid phase.',
+      );
+
+      await Utils.expectRevert(
+        config.committee.contract.cooldownCommittee(
+          {
+            from: config.committee.member,
+          },
+        ),
+        'Committee formation must be open.',
+      );
+    });
+
+    it('should fail if committee is in closed state', async () => {
+      await config.committee.contract.setCommitteeStatusToClosed();
+      const status = await config.committee.contract.committeeStatus.call();
+      assert.isOk(
+        CommitteeUtils.isClosed(status),
         'Committee status is not in invalid phase.',
       );
 

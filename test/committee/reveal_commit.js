@@ -361,12 +361,12 @@ contract('Committee::revealCommit', async (accounts) => {
         },
       );
 
-      const dist = CommitteeUtils.getMemberDistance(
+      const dist = CommitteeUtils.getCommitteeMembers(
         accountProvider,
         config.committee.dislocation,
         config.committee.proposal,
         config.committee.size,
-        CommitteeUtils.compare,
+        CommitteeUtils.compareMemberDistance,
       );
 
       const closestMember = dist[0].address;

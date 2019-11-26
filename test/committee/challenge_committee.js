@@ -47,12 +47,12 @@ contract('Committee:challengeCommittee', async (accounts) => {
 
     config.committee.sentinelMembers = await config.committee.contract.SENTINEL_MEMBERS.call();
 
-    const dist = CommitteeUtils.getMemberDistance(
+    const dist = CommitteeUtils.getCommitteeMembers(
       accountProvider,
       config.committee.dislocation,
       config.committee.proposal,
       config.committee.size,
-      CommitteeUtils.compare,
+      CommitteeUtils.compareMemberDistance,
     );
 
     config.committee.furthestMember = dist[config.committee.size + 1].address;
@@ -145,6 +145,52 @@ contract('Committee:challengeCommittee', async (accounts) => {
       assert.isOk(
         CommitteeUtils.isInRevealPhase(status),
         'Committee status is not in reveal phase.',
+      );
+
+      await Utils.expectRevert(
+        config.committee.contract.challengeCommittee(
+          accountProvider.get(),
+          {
+            from: config.committee.consensus,
+          },
+        ),
+        'Committee formation must be cooling down.',
+      );
+    });
+
+    it('should fail if committee is in invalid phase status', async () => {
+      await CommitteeUtils.passActivationBlockHeight(config.committee.contract);
+
+      await config.committee.contract.challengeCommittee(
+        accountProvider.get(),
+        {
+          from: config.committee.consensus,
+        },
+      );
+
+      const status = await config.committee.contract.committeeStatus.call();
+      assert.isOk(
+        CommitteeUtils.isInvalid(status),
+        'Committee status is not in commit phase.',
+      );
+
+      await Utils.expectRevert(
+        config.committee.contract.challengeCommittee(
+          accountProvider.get(),
+          {
+            from: config.committee.consensus,
+          },
+        ),
+        'Committee formation must be cooling down.',
+      );
+    });
+
+    it('should fail if committee is in closed state', async () => {
+      await config.committee.contract.setCommitteeStatusToClosed();
+      const status = await config.committee.contract.committeeStatus.call();
+      assert.isOk(
+        CommitteeUtils.isClosed(status),
+        'Committee status is not in invalid phase.',
       );
 
       await Utils.expectRevert(
