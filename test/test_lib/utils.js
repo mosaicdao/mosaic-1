@@ -19,9 +19,22 @@ const BN = require('bn.js');
 const web3 = require('./web3.js');
 
 async function advanceBlock() {
-  return web3.currentProvider.send(
-    'evm_mine',
-  );
+  return new Promise((resolve, reject) => {
+    web3.currentProvider.send({
+      method: 'evm_mine',
+      jsonrpc: '2.0',
+      id: 1337,
+    },
+    (err) => {
+      if (err) {
+        return reject(err);
+      }
+
+      const newBlockHash = web3.eth.getBlock('latest').hash;
+
+      return resolve(newBlockHash);
+    });
+  });
 }
 
 const ResultType = {
@@ -70,7 +83,7 @@ Utils.prototype = {
     console.log('      -----------------------------------------------------');
     console.log('      Report gas usage\n');
 
-    for (let i = 0; i < receipts.length; i++) {
+    for (let i = 0; i < receipts.length; i += 1) {
       const entry = receipts[i];
 
       totalGasUsed += entry.receipt.gasUsed;
@@ -247,8 +260,8 @@ Utils.prototype = {
         'Expected event not found',
       );
 
-      for (const index in eventData) {
-        const key = eventData[index];
+      eventData.forEach((element) => {
+        const key = element;
         if (eventExpectedData[key]) {
           if (web3.utils.isBN(eventExpectedData[key])) {
             assert(
@@ -263,11 +276,9 @@ Utils.prototype = {
             );
           }
         }
-      }
+      });
     });
   },
-
-  advanceBlock,
 
   advanceBlocks: async (amount) => {
     for (let i = 0; i < amount; i += 1) {
