@@ -187,7 +187,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         external
     {
         // TODO: create domain separator
-        
+
         // This function must be called only once.
         require(
             address(axiom) == address(0),
@@ -255,7 +255,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             _proposal != bytes32(0),
             "Proposal must not be null."
         );
-        // TODO: we can additional 
+        // TODO: we can additional
         Precommit storage precommit = precommits[msg.sender];
         require(
             precommit.proposal == bytes32(0),
@@ -284,7 +284,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         external
     {
         Precommit storage precommit = precommits[_core];
-        // note it should suffice to check only one property for existence, in PoC asserting both
         require(
             precommit.proposal != bytes32(0),
             "There does not exist a precommitment of the core to a proposal."
