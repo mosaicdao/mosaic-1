@@ -22,9 +22,9 @@ contract MockConsensus is ConsensusI, ReputationI {
 
     /* Storage */
 
-    uint256 public constant MIN_VALIDATOR = uint256(10);
+    uint256 minValidatorCount;
 
-    uint256 public constant JOIN_LIMIT = uint256(15);
+    uint256 validatorJoinLimit;
 
     MockCore public mockCore;
 
@@ -38,6 +38,8 @@ contract MockConsensus is ConsensusI, ReputationI {
     constructor(
         bytes20 _chainId,
         uint256 _epochLength,
+        uint256 _minValidatorCount,
+        uint256 _validatorJoinLimit,
         uint256 _height,
         bytes32 _parent,
         uint256 _gasTarget,
@@ -48,11 +50,14 @@ contract MockConsensus is ConsensusI, ReputationI {
     )
         public
     {
+        minValidatorCount = _minValidatorCount;
+        validatorJoinLimit = _validatorJoinLimit;
+
         mockCore = new MockCore(
             _chainId,
             _epochLength,
-            MIN_VALIDATOR,
-            JOIN_LIMIT,
+            minValidatorCount,
+            validatorJoinLimit,
             ReputationI(this),
             _height,
             _parent,
@@ -129,8 +134,8 @@ contract MockConsensus is ConsensusI, ReputationI {
         view
         returns (uint256 minimumValidatorCount_, uint256 joinLimit_)
     {
-        minimumValidatorCount_ = MIN_VALIDATOR;
-        joinLimit_ = JOIN_LIMIT;
+        minimumValidatorCount_ = minValidatorCount;
+        joinLimit_ = validatorJoinLimit;
     }
 
     function registerPrecommit(bytes32 _precommitment)

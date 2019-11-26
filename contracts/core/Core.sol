@@ -1026,18 +1026,12 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
             _validator != address(0),
             "Validator must not be null address."
         );
-        require(
-            _beginHeight >= openKernelHeight,
-            "Begin height cannot be less than kernel height."
-        );
+        assert(_beginHeight >= openKernelHeight);
         require(
             validatorEndHeight[_validator] == 0,
             "Validator must not already be part of this core."
         );
-        require(
-            validatorBeginHeight[_validator] == 0,
-            "Validator must not have a non-zero begin height."
-        );
+        assert(validatorBeginHeight[_validator] == 0);
         validatorBeginHeight[_validator] = _beginHeight;
         validatorEndHeight[_validator] = MAX_FUTURE_END_HEIGHT;
         // update validator count upon new metablock opening

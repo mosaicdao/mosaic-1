@@ -55,6 +55,17 @@ contract MockCore is Core {
 
     /* External Functions */
 
+    function updateJoinLimit(uint256 _joinLimit)
+        external
+    {
+        require(
+            _joinLimit != uint256(0),
+            "Validator's join limit is 0."
+        );
+
+        joinLimit = _joinLimit;
+    }
+
     function externalHashKernel(
         uint256 _height,
         bytes32 _parent,

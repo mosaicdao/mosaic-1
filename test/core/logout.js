@@ -49,6 +49,8 @@ contract('Core::logout', async (accounts) => {
     config.consensusCoreArgs = {
       chainId: accountProvider.get(),
       epochLength: new BN(100),
+      minValidatorCount: new BN(5),
+      validatorJoinLimit: new BN(20),
       height: new BN(1),
       parent: CoreUtils.randomSha3(),
       gasTarget: new BN(1),
@@ -61,6 +63,8 @@ contract('Core::logout', async (accounts) => {
     config.consensus = await CoreUtils.createConsensusCore(
       config.consensusCoreArgs.chainId,
       config.consensusCoreArgs.epochLength,
+      config.consensusCoreArgs.minValidatorCount,
+      config.consensusCoreArgs.validatorJoinLimit,
       config.consensusCoreArgs.height,
       config.consensusCoreArgs.parent,
       config.consensusCoreArgs.gasTarget,

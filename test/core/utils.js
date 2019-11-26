@@ -62,6 +62,8 @@ async function createValidator() {
 async function createConsensusCore(
   chainId,
   epochLength,
+  minValidatorCount,
+  validatorJoinLimit,
   height,
   parent,
   gasTarget,
@@ -74,6 +76,8 @@ async function createConsensusCore(
   const mockConsensus = await MockConsensus.new(
     chainId,
     epochLength,
+    minValidatorCount,
+    validatorJoinLimit,
     height,
     parent,
     gasTarget,

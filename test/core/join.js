@@ -49,6 +49,8 @@ contract('Core::join', async (accounts) => {
     config.consensusCoreArgs = {
       chainId: accountProvider.get(),
       epochLength: new BN(100),
+      minValidatorCount: new BN(5),
+      validatorJoinLimit: new BN(20),
       height: new BN(1),
       parent: CoreUtils.randomSha3(),
       gasTarget: new BN(1),
@@ -61,6 +63,8 @@ contract('Core::join', async (accounts) => {
     config.consensus = await CoreUtils.createConsensusCore(
       config.consensusCoreArgs.chainId,
       config.consensusCoreArgs.epochLength,
+      config.consensusCoreArgs.minValidatorCount,
+      config.consensusCoreArgs.validatorJoinLimit,
       config.consensusCoreArgs.height,
       config.consensusCoreArgs.parent,
       config.consensusCoreArgs.gasTarget,
@@ -102,6 +106,9 @@ contract('Core::join', async (accounts) => {
     });
 
     it('should fail if validators\' join limit for the core was reached', async () => {
+      const maxDeltaValidators = await config.core.MAX_DELTA_VALIDATORS();
+      await config.core.updateJoinLimit(maxDeltaValidators.subn(1));
+
       const { validators } = await CoreUtils.openCore(
         config.consensus, config.core,
       );
@@ -111,8 +118,6 @@ contract('Core::join', async (accounts) => {
 
       const joinLimit = await config.core.joinLimit();
       assert(joinLimit > 0);
-
-      assert(countValidators < joinLimit);
 
       const joinValidatorsCount = new BN(3);
       for (let i = 0; i < joinValidatorsCount.toNumber(); i += 1) {
@@ -143,6 +148,26 @@ contract('Core::join', async (accounts) => {
           accountProvider.get(),
         ),
         'Join limit is reached for this core.',
+      );
+    });
+
+    it('should fail if max number of validators for a single metablock is reached', async () => {
+      await CoreUtils.openCore(
+        config.consensus, config.core,
+      );
+
+      const maxDeltaValidators = await config.core.MAX_DELTA_VALIDATORS();
+
+      for (let i = 0; i < maxDeltaValidators.toNumber(); i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await config.consensus.join(accountProvider.get());
+      }
+
+      await Utils.expectRevert(
+        config.consensus.join(
+          accountProvider.get(),
+        ),
+        'Maximum number of validators that can join in one metablock is reached.',
       );
     });
 
