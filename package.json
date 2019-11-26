@@ -15,7 +15,7 @@
     "test:dev": "truffle test test/consensus/commit.js",
     "ganache-cli": "./tools/run_ganache_cli.sh",
     "make:all": "lint:sol:solium && lint:js && compile:all && test:contracts",
-    "clean": "rm -r contract_build/contracts.json dist/* interacts/* build/* 2> /dev/null || true",
+    "clean": "rm -r contract_build/contracts.json interacts/* build/* 2> /dev/null || true",
     "build:package": "node tools/build_package.js",
     "generate:interacts": "ts-generator ts-generator.json && node tools/contract_interact_generator.js",
     "postinstall": "npm run clean && npm run compile && npm run build:package && npm run generate:interacts"
