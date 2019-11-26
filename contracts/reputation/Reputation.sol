@@ -214,11 +214,6 @@ contract Reputation is ConsensusModule {
         );
 
         require(
-            _consensus != address(0),
-            "consensus address is 0."
-        );
-
-        require(
             _mOST != ERC20I(0),
             "mOST token address is 0."
         );
@@ -248,7 +243,7 @@ contract Reputation is ConsensusModule {
             "Withdrawal cooldown period in blocks must be greater than zero."
         );
 
-        consensus = ConsensusI(_consensus);
+        setup(_consensus);
         mOST = ERC20I(_mOST);
         wETH = ERC20I(_wETH);
         stakeMOSTAmount = _stakeMOSTAmount;
