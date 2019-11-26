@@ -14,7 +14,11 @@
     "test:contracts": "truffle test",
     "test:dev": "truffle test test/consensus/commit.js",
     "ganache-cli": "./tools/run_ganache_cli.sh",
-    "make:all": "lint:sol:solium && lint:js && compile:all && test:contracts"
+    "make:all": "lint:sol:solium && lint:js && compile:all && test:contracts",
+    "clean": "rm -r contract_build/contracts.json dist/* interacts/* build/* 2> /dev/null || true",
+    "build:package": "node tools/build_package.js",
+    "generate:interacts": "ts-generator ts-generator.json && node tools/contract_interact_generator.js",
+    "postinstall": "npm run clean && npm run compile && npm run build:package && npm run generate:interacts"
   },
   "repository": {
     "type": "git",
@@ -39,6 +43,8 @@
     "openzeppelin-solidity": "2.1.1",
     "solium": "1.2.4",
     "truffle": "5.1.0",
-    "web3": "1.2.4"
+    "web3": "1.2.4",
+    "ts-generator": "0.0.8",
+    "typechain": "0.3.14"
   }
 }
