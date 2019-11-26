@@ -27,3 +27,9 @@ build/
 *.synctex.gz
 *.synctex.gz(busy)
 *.pdfsync
+
+# Do not track generated wrapper, it should be part of build script
+interacts/*
+
+# NPM package generated files:
+contract_build
