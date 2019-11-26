@@ -39,7 +39,7 @@ contract('ConsensusModule::setupConsensus', (accounts) => {
     it('should fail to set when consensus address is already set', async () => {
       await consensusModule.setupConsensus(consensusAddress);
       await Utils.expectRevert(
-        consensusModule.setup(consensusAddress),
+        consensusModule.setupConsensus(consensusAddress),
         'Consensus address is already present.',
       );
     });
