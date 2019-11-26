@@ -97,7 +97,7 @@ contract('Core::join', async (accounts) => {
         config.consensus.join(
           config.newValidator0,
         ),
-        'The core must be running..',
+        'The core must be running.',
       );
     });
 

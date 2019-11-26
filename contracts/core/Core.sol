@@ -932,7 +932,7 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     {
         require(
             proposals[openKernelHeight][SENTINEL_PROPOSALS] == bytes32(0),
-            "Proposal set has already been initialised at this height."
+            "Proposal set has already been initialized at this height."
         );
         proposals[openKernelHeight][SENTINEL_PROPOSALS] = SENTINEL_PROPOSALS;
     }
@@ -1036,7 +1036,7 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         );
         require(
             validatorBeginHeight[_validator] == 0,
-            "Validator must not have a non-zero begin height"
+            "Validator must not have a non-zero begin height."
         );
         validatorBeginHeight[_validator] = _beginHeight;
         validatorEndHeight[_validator] = MAX_FUTURE_END_HEIGHT;

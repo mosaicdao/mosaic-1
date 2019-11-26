@@ -216,13 +216,16 @@ contract('Core::joinDuringCreation', async (accounts) => {
         const validator = accountProvider.get();
         expectedUpdatedValidators.push(validator);
         expectedUpdatedReputations.push(new BN(1));
+        // eslint-disable-next-line no-await-in-loop
         await config.mockConsensus.joinDuringCreation(validator);
 
+        // eslint-disable-next-line no-await-in-loop
         const valCount = await config.mockCore.countValidators.call();
         assert.isOk(
           valCount.eqn(i + 1),
         );
 
+        // eslint-disable-next-line no-await-in-loop
         const coreStatus = await config.mockCore.coreStatus.call();
         assert.isOk(
           CoreUtils.isCoreCreated(coreStatus),
