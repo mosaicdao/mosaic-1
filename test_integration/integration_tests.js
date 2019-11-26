@@ -31,7 +31,7 @@ const Committee = artifacts.require('Committee');
 const Consensus = artifacts.require('Consensus');
 const Core = artifacts.require('Core');
 const Reputation = artifacts.require('Reputation');
-//todo add mock token once feature/reputation is merged.
+const MockToken = artifacts.require('MockToken');
 
 const setupArtifacts = () => {
   shared.artifacts = {
@@ -41,6 +41,7 @@ const setupArtifacts = () => {
     Consensus,
     Core,
     Reputation,
+    MockToken,
   };
 };
 
