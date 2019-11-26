@@ -294,7 +294,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             )
         );
 
-        setup(_consensus);
+        setupConsensus(_consensus);
 
         coreStatus = CoreStatus.creation;
 

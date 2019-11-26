@@ -25,7 +25,7 @@ contract ConsensusModule {
      * @notice It sets address for consensus contract.
      * @param _consensus Address of consensus contract.
      */
-    function setup(ConsensusI _consensus) public {
+    function setupConsensus(ConsensusI _consensus) public {
         require(
             address(consensus) == address(0),
             "Consensus address is already present."

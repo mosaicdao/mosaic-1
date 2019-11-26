@@ -22,7 +22,7 @@ const AxiomUtils = require('../axiom/utils');
 
 const Consensus = artifacts.require('Consensus');
 
-contract('Consensus::setup', (accounts) => {
+contract('Consensus::setupConsensus', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
   let setupParams = {};
   let consensus;
@@ -50,7 +50,7 @@ contract('Consensus::setup', (accounts) => {
         { committeeSize: new BN(0) },
       );
       await Utils.expectRevert(
-        ConsensusUtils.setup(consensus, params),
+        ConsensusUtils.setupConsensus(consensus, params),
         'Committee size is 0.',
       );
     });
@@ -62,7 +62,7 @@ contract('Consensus::setup', (accounts) => {
         { minValidators: new BN(4) },
       );
       await Utils.expectRevert(
-        ConsensusUtils.setup(consensus, params),
+        ConsensusUtils.setupConsensus(consensus, params),
         'Min validator size must be greater or equal to 5.',
       );
     });
@@ -74,7 +74,7 @@ contract('Consensus::setup', (accounts) => {
         { joinLimit: new BN(3) },
       );
       await Utils.expectRevert(
-        ConsensusUtils.setup(consensus, params),
+        ConsensusUtils.setupConsensus(consensus, params),
         'Max validator size is less than minimum validator size.',
       );
     });
@@ -86,7 +86,7 @@ contract('Consensus::setup', (accounts) => {
         { gasTargetDelta: new BN(0) },
       );
       await Utils.expectRevert(
-        ConsensusUtils.setup(consensus, params),
+        ConsensusUtils.setupConsensus(consensus, params),
         'Gas target delta is 0.',
       );
     });
@@ -98,7 +98,7 @@ contract('Consensus::setup', (accounts) => {
         { coinbaseSplitPerMille: new BN(1001) },
       );
       await Utils.expectRevert(
-        ConsensusUtils.setup(consensus, params),
+        ConsensusUtils.setupConsensus(consensus, params),
         'Coin base split per mille should be in range: 0..1000.',
       );
     });
@@ -110,15 +110,15 @@ contract('Consensus::setup', (accounts) => {
         { reputation: Utils.NULL_ADDRESS },
       );
       await Utils.expectRevert(
-        ConsensusUtils.setup(consensus, params),
+        ConsensusUtils.setupConsensus(consensus, params),
         'Reputation contract address is 0.',
       );
     });
 
     it('should fail when consensus contract is already setup', async () => {
-      await ConsensusUtils.setup(consensus, setupParams);
+      await ConsensusUtils.setupConsensus(consensus, setupParams);
       await Utils.expectRevert(
-        ConsensusUtils.setup(consensus, setupParams),
+        ConsensusUtils.setupConsensus(consensus, setupParams),
         'Consensus is already setup.',
       );
     });
@@ -126,7 +126,7 @@ contract('Consensus::setup', (accounts) => {
 
   contract('Positive Tests', () => {
     it('should set the variables', async () => {
-      await ConsensusUtils.setup(consensus, setupParams);
+      await ConsensusUtils.setupConsensus(consensus, setupParams);
 
       const committeeSize = await consensus.committeeSize.call();
       assert.strictEqual(

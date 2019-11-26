@@ -243,7 +243,7 @@ contract Reputation is ConsensusModule {
             "Withdrawal cooldown period in blocks must be greater than zero."
         );
 
-        setup(_consensus);
+        setupConsensus(_consensus);
         mOST = ERC20I(_mOST);
         wETH = ERC20I(_wETH);
         stakeMOSTAmount = _stakeMOSTAmount;
