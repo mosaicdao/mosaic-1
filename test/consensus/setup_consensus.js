@@ -30,9 +30,8 @@ contract('ConsensusModule::setupConsensus', (accounts) => {
 
   contract('Negative Tests', () => {
     it('should fail to set when consensus address is null', async () => {
-      await consensusModule.setupConsensus(Utils.NULL_ADDRESS);
       await Utils.expectRevert(
-        consensusModule.setupConsensus(consensusAddress),
+        consensusModule.setupConsensus(Utils.NULL_ADDRESS),
         'Address must not be null.',
       );
     });
