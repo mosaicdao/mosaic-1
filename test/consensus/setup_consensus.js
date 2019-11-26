@@ -19,7 +19,7 @@ const Utils = require('../test_lib/utils.js');
 
 const ConsensusModule = artifacts.require('ConsensusModule');
 
-contract('ConsensusModule::setup', (accounts) => {
+contract('ConsensusModule::setupConsensus', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
   let consensusModule;
   let consensusAddress;
