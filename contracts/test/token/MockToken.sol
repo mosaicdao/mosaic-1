@@ -24,10 +24,10 @@ pragma solidity ^0.5.0;
 
 import "./MockTokenConfig.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "../../EIP20I.sol";
+import "../../ERC20I.sol";
 
 
-contract MockToken is EIP20I, MockTokenConfig {
+contract MockToken is ERC20I, MockTokenConfig {
 
     using SafeMath for uint256;
 
