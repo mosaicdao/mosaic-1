@@ -38,6 +38,28 @@ const shared = {
       techGov: '', // This values will pe populated in key_generation.
       validators: [],
     },
+    contracts: {
+      Axiom: {
+        address: '',
+        instance: {},
+      },
+      Committee: {
+        address: '',
+        instance: {},
+      },
+      Consensus: {
+        address: '',
+        instance: {},
+      },
+      Core: {
+        address: '',
+        instance: {},
+      },
+      Reputation: {
+        address: '',
+        instance: {},
+      },
+    }
   },
 };
 

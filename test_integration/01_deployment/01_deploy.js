@@ -20,13 +20,40 @@
 
 const shared = require('../shared');
 
-describe('Deploy', async () => {
+describe('Deployment', async () => {
   before(async () => {
 
   });
 
-  it('Test setup works', async () => {
-    const account = await shared.origin.web3.eth.getAccounts();
-    console.log('accountss ',account);
+  it('Contract deployment', async () => {
+    const {
+      Axiom,
+      Committee,
+      Consensus,
+      Core,
+      Reputation,
+    } = shared.artifacts;
+
+    const committee = await Committee.new();
+    const consensus = await Consensus.new();
+    const reputation = await Reputation.new();
+    const core = await Core.new();
+    const axiom = await Axiom.new(
+      shared.origin.keys.techGov,
+      consensus.address,
+      core.address,
+      committee.address,
+      reputation.address,
+    );
+
+    shared.origin.contracts.Axiom.address = axiom.address;
+    shared.origin.contracts.Core.address = core.address;
+    shared.origin.contracts.Reputation.address = reputation.address;
+    shared.origin.contracts.Consensus.address = consensus.address;
+    shared.origin.contracts.Committee.address = committee.address;
+
+    // todo add contract instance to shared once auto generated interact PR is merged.
+    // Example shared.origin.contracts.Committee.instance =
+    // Interacts.getCommittee(committeeAddress, web3);
   });
 });
