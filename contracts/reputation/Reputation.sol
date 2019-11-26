@@ -223,8 +223,8 @@ contract Reputation is ConsensusModule {
         );
 
         consensus = ConsensusI(_consensus);
-        mOST = EIP20I(_mOST);
-        wETH = EIP20I(_wETH);
+        mOST = ERC20I(_mOST);
+        wETH = ERC20I(_wETH);
         stakeMOSTAmount = _stakeMOSTAmount;
         stakeWETHAmount = _stakeWETHAmount;
         initialReputation = _initialReputation;
