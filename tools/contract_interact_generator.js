@@ -81,3 +81,4 @@ fs.writeFileSync(
   'interacts/Interacts.ts',
   `${ imports }\n${interacts}`
 );
+
