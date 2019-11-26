@@ -48,7 +48,7 @@ contract MockConsensus is ConsensusI, ReputationI {
     {
         core = new Core();
         core.setup(
-            address(this),
+            ConsensusI(this),
             _chainId,
             _epochLength,
             MIN_VALIDATOR,

@@ -280,7 +280,7 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
             blockHeader.height,
             blockHeader.stateRoot,
             _maxStateRoots,
-            address(consensus)
+            consensus
         );
 
         consensus.newMetaChain(

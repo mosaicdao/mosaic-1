@@ -181,7 +181,7 @@ contract Reputation is ConsensusModule {
      *          - a cashable earnings per mille is in [0, 1000] range
      */
     function setup(
-        address _consensus,
+        ConsensusI _consensus,
         address _mOST,
         uint256 _stakeMOSTAmount,
         address _wETH,
@@ -222,7 +222,7 @@ contract Reputation is ConsensusModule {
             "Cashable earnings is not in valid range: [0, 1000]."
         );
 
-        consensus = ConsensusI(_consensus);
+        setup(_consensus);
         mOST = EIP20I(_mOST);
         wETH = EIP20I(_wETH);
         stakeMOSTAmount = _stakeMOSTAmount;

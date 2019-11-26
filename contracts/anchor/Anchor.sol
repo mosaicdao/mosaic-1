@@ -64,12 +64,12 @@ contract Anchor is AnchorI, ConsensusModule, CircularBufferUint {
         uint256 _blockHeight,
         bytes32 _stateRoot,
         uint256 _maxStateRoots,
-        address _consensus
+        ConsensusI _consensus
     )
         CircularBufferUint(_maxStateRoots)
         public
     {
-        consensus = ConsensusI(_consensus);
+        setup(_consensus);
         stateRoots[_blockHeight] = _stateRoot;
         CircularBufferUint.store(_blockHeight);
     }
