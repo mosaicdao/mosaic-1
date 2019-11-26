@@ -31,5 +31,6 @@ before_script:
 script:
   - npm run compile
   - npm run test
+  - npm run test:integration
 after_script:
   - kill $(ps aux | grep 'ganache-cli' | awk '{print $2}')
