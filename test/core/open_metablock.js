@@ -467,6 +467,26 @@ contract('Core::openMetablock', (accounts) => {
         newKernelHash,
         expectedKernelHash,
       );
+
+      const actualQuorum = await config.core.quorum();
+      const coreSuperMajorityNumerator = await config.core.CORE_SUPER_MAJORITY_NUMERATOR();
+      const coreSuperMajorityDenominator = await config.core.CORE_SUPER_MAJORITY_DENOMINATOR();
+      const actualValidatorsCount = await config.core.countValidators();
+
+      const expectedQuorum = actualValidatorsCount
+        .mul(coreSuperMajorityNumerator)
+        .divRound(coreSuperMajorityDenominator);
+
+      assert.isOk(
+        actualQuorum.eq(expectedQuorum),
+      );
+
+      const isProposalSetInitialized = await config.core.isProposalSetInitialized(
+        nextKernelHeight,
+      );
+      assert.isOk(
+        isProposalSetInitialized,
+      );
     });
   });
 });

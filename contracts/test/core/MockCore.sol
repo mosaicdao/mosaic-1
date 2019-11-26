@@ -133,4 +133,12 @@ contract MockCore is Core {
     {
         return kernels[_height].updatedReputation[_index];
     }
+
+    function isProposalSetInitialized(uint256 _kernelHeight)
+        external
+        view
+        returns (bool)
+    {
+        return proposals[_kernelHeight][SENTINEL_PROPOSALS] != bytes32(0);
+    }
 }

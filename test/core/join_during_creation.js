@@ -282,6 +282,13 @@ contract('Core::joinDuringCreation', async (accounts) => {
         openKernelHash,
         expectedOpenKernelHash,
       );
+
+      const isProposalSetInitialized = await config.mockCore.isProposalSetInitialized(
+        openKernelHeight,
+      );
+      assert.isOk(
+        isProposalSetInitialized,
+      );
     });
   });
 });
