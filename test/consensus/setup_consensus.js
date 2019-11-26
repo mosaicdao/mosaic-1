@@ -31,13 +31,13 @@ contract('ConsensusModule::setup', (accounts) => {
   contract('Negative Tests', () => {
     it('should fail to set when consensus address is null', async () => {
       await Utils.expectRevert(
-        consensusModule.setup(Utils.NULL_ADDRESS),
+        consensusModule.setupConsensus(Utils.NULL_ADDRESS),
         'Consensus address must not be null.',
       );
     });
 
     it('should fail to set when consensus address is already set', async () => {
-      await consensusModule.setup(consensusAddress);
+      await consensusModule.setupConsensus(consensusAddress);
       await Utils.expectRevert(
         consensusModule.setup(consensusAddress),
         'Consensus address is already present.',
@@ -47,7 +47,7 @@ contract('ConsensusModule::setup', (accounts) => {
 
   contract('Positive Tests', () => {
     it('should set consensus address successfully', async () => {
-      await consensusModule.setup(consensusAddress);
+      await consensusModule.setupConsensus(consensusAddress);
       const actualConsensusAddress = await consensusModule.consensus.call();
       assert.strictEqual(
         actualConsensusAddress,
