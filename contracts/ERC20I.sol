@@ -13,18 +13,18 @@ pragma solidity ^0.5.0;
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // ----------------------------------------------------------------------------
 // Based on the 'final' EIP20 token standard as specified at:
 // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20-token-standard.md
 // ----------------------------------------------------------------------------
 
 /**
- * @title EIP20Interface.
+ * @title ERC20Interface.
  *
- * @notice Provides EIP20 token interface.
+ * @notice Provides ERC20 token interface.
  */
-interface EIP20I {
+interface ERC20I {
 
 
     /* Events */

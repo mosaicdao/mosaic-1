@@ -84,8 +84,8 @@ async function setupCore(
 }
 
 async function calculcateQuorum(core, count) {
-  let numerator = await core.CORE_SUPER_MAJORITY_NUMERATOR.call();
-  let denumerator = await core.CORE_SUPER_MAJORITY_DENOMINATOR.call();
+  const numerator = await core.CORE_SUPER_MAJORITY_NUMERATOR.call();
+  const denumerator = await core.CORE_SUPER_MAJORITY_DENOMINATOR.call();
 
   return count
     .mul(numerator)
@@ -93,7 +93,7 @@ async function calculcateQuorum(core, count) {
 }
 
 function randomSha3() {
-  let randomString = Math.random().toString(36).substring(2, 15);
+  const randomString = Math.random().toString(36).substring(2, 15);
   return web3.utils.sha3(randomString);
 }
 
