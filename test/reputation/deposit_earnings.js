@@ -54,7 +54,8 @@ contract('Reputation::depositEarnings', (accounts) => {
       withdrawalCooldownPeriodInBlocks: 10,
     };
 
-    reputation = await Reputation.new(
+    reputation = await Reputation.new();
+    await reputation.setup(
       constructorArgs.consensus,
       constructorArgs.mOST,
       constructorArgs.stakeMOSTAmount,

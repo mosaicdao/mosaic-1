@@ -214,6 +214,11 @@ contract Reputation is ConsensusModule {
         );
 
         require(
+            _consensus != address(0),
+            "consensus address is 0."
+        );
+
+        require(
             _mOST != ERC20I(0),
             "mOST token address is 0."
         );

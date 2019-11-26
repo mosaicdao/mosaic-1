@@ -19,8 +19,9 @@ const Utils = require('../test_lib/utils.js');
 
 const Reputation = artifacts.require('Reputation');
 
-contract('Reputation::constructor', (accounts) => {
+contract('Reputation::setup', (accounts) => {
   let constructorArgs;
+  let reputation;
   const accountProvider = new AccountProvider(accounts);
 
   beforeEach(async () => {
@@ -34,10 +35,11 @@ contract('Reputation::constructor', (accounts) => {
       initialReputation: 10,
       withdrawalCooldownPeriodInBlocks: 10,
     };
+    reputation = await Reputation.new();
   });
 
   it('should successfully construct reputation contract', async () => {
-    const reputation = await Reputation.new(
+    reputation.setup(
       constructorArgs.consensus,
       constructorArgs.mOST,
       constructorArgs.stakeMOSTAmount,
@@ -112,7 +114,7 @@ contract('Reputation::constructor', (accounts) => {
     constructorArgs.consensus = NULL_ADDRESS;
 
     await Utils.expectRevert(
-      Reputation.new(
+      reputation.setup(
         constructorArgs.consensus,
         constructorArgs.mOST,
         constructorArgs.stakeMOSTAmount,
@@ -122,7 +124,7 @@ contract('Reputation::constructor', (accounts) => {
         constructorArgs.initialReputation,
         constructorArgs.withdrawalCooldownPeriodInBlocks,
       ),
-      'consensus token address is 0.',
+      'consensus address is 0.',
     );
   });
 
@@ -130,7 +132,7 @@ contract('Reputation::constructor', (accounts) => {
     constructorArgs.mOST = NULL_ADDRESS;
 
     await Utils.expectRevert(
-      Reputation.new(
+      reputation.setup(
         constructorArgs.consensus,
         constructorArgs.mOST,
         constructorArgs.stakeMOSTAmount,
@@ -148,7 +150,7 @@ contract('Reputation::constructor', (accounts) => {
     constructorArgs.stakeMOSTAmount = '0';
 
     await Utils.expectRevert(
-      Reputation.new(
+      reputation.setup(
         constructorArgs.consensus,
         constructorArgs.mOST,
         constructorArgs.stakeMOSTAmount,
@@ -166,7 +168,7 @@ contract('Reputation::constructor', (accounts) => {
     constructorArgs.wETH = NULL_ADDRESS;
 
     await Utils.expectRevert(
-      Reputation.new(
+      reputation.setup(
         constructorArgs.consensus,
         constructorArgs.mOST,
         constructorArgs.stakeMOSTAmount,
@@ -184,7 +186,7 @@ contract('Reputation::constructor', (accounts) => {
     constructorArgs.stakeWETHAmount = '0';
 
     await Utils.expectRevert(
-      Reputation.new(
+      reputation.setup(
         constructorArgs.consensus,
         constructorArgs.mOST,
         constructorArgs.stakeMOSTAmount,
@@ -202,7 +204,7 @@ contract('Reputation::constructor', (accounts) => {
     constructorArgs.cashableEarningsPerMille = '1001';
 
     await Utils.expectRevert(
-      Reputation.new(
+      reputation.setup(
         constructorArgs.consensus,
         constructorArgs.mOST,
         constructorArgs.stakeMOSTAmount,
@@ -220,7 +222,7 @@ contract('Reputation::constructor', (accounts) => {
     constructorArgs.withdrawalCooldownPeriodInBlocks = 0;
 
     await Utils.expectRevert(
-      Reputation.new(
+      reputation.setup(
         constructorArgs.consensus,
         constructorArgs.mOST,
         constructorArgs.stakeMOSTAmount,
