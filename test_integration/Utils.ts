@@ -36,6 +36,13 @@ export default class Utils {
     return rawTx.send(txOptions);
   }
 
+  /**
+   * Returns code at given address.
+   *
+   * @param web3 Web3 provider
+   * @param address Contract address
+   * @return {Promise<string>}
+   */
   static getCode(web3, address): Promise<string> {
     return web3.eth.getCode(address);
   }
