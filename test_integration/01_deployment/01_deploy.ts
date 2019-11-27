@@ -69,10 +69,10 @@ describe('Deployment', async () => {
     const erc20FundingPromises = [];
     const fundingAmount = web3.utils.toWei(FUNDING_AMOUNT_IN_ETHER);
 
-    shared.origin.keys.validators.forEach((value) => {
+    shared.origin.keys.validators.forEach((validator) => {
       erc20FundingPromises.push(
         mOST.transfer(
-          value,
+          validator.address,
           fundingAmount,
           { from: funder },
         ),
@@ -80,7 +80,7 @@ describe('Deployment', async () => {
 
       erc20FundingPromises.push(
         wETH.transfer(
-          value,
+          validator.address,
           fundingAmount,
           { from: funder },
         ),
