@@ -32,8 +32,7 @@ export default class Utils {
     }) {
     txOptions.gas = txOptions.gas
       ? txOptions.gas
-      : (await rawTx.estimateGas()).toString();
-
+      : (await rawTx.estimateGas(txOptions)).toString();
     return rawTx.send(txOptions);
   }
 }
