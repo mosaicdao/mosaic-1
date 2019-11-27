@@ -22,8 +22,8 @@ import {Committee} from "../interacts/Committee";
 import {Consensus} from "../interacts/Consensus";
 import {Core} from "../interacts/Core";
 import {Reputation} from "../interacts/Reputation";
-import {EIP20Token} from "../interacts/EIP20Token";
 import {Anchor} from "../interacts/Anchor";
+import {ERC20I} from "../interacts/ERC20I";
 
 const Web3 = require("web3");
 
@@ -61,9 +61,9 @@ class Contract {
 
   public Anchor: Anchor;
 
-  public MOST: EIP20Token;
+  public MOST: ERC20I;
 
-  public WETH: EIP20Token;
+  public WETH: ERC20I;
 
   constructor() {
   }
