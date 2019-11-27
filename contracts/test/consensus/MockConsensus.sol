@@ -55,7 +55,7 @@ contract MockConsensus is ConsensusI, ReputationI {
 
         mockCore = new MockCore();
         mockCore.setup(
-			address(this),
+			ConsensusI(address(this)),
             _chainId,
             _epochLength,
             minValidatorCount,

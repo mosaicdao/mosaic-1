@@ -272,7 +272,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
     /* Special Functions */
 
     function setup(
-        address _consensus,
+        ConsensusI _consensus,
         bytes20 _chainId,
         uint256 _epochLength,
         uint256 _minValidators,
@@ -344,7 +344,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             )
         );
 
-        consensus = ConsensusI(_consensus);
+        setupConsensus(_consensus);
 
         coreStatus = CoreStatus.creation;
 

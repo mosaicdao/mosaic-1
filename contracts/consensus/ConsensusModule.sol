@@ -21,6 +21,22 @@ contract ConsensusModule {
     /** Consensus contract for which this committee was formed. */
     ConsensusI public consensus;
 
+    /**
+     * @notice It sets address for consensus contract.
+     * @param _consensus Address of consensus contract.
+     */
+    function setupConsensus(ConsensusI _consensus) public {
+        require(
+            address(consensus) == address(0),
+            "Consensus address is already present."
+        );
+        require(
+            address(_consensus) != address(0),
+            "Consensus address must not be null."
+        );
+        consensus = _consensus;
+    }
+
     modifier onlyConsensus()
     {
         require(

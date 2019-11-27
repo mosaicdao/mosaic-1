@@ -124,7 +124,7 @@ contract('Reputation::setup', (accounts) => {
         constructorArgs.initialReputation,
         constructorArgs.withdrawalCooldownPeriodInBlocks,
       ),
-      'consensus address is 0.',
+      'Consensus address must not be null.',
     );
   });
 
