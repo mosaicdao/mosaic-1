@@ -18,8 +18,9 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "../ERC20I.sol";
 import "../consensus/ConsensusModule.sol";
+import "../proxies/MasterCopyNonUpgradable.sol";
 
-contract Reputation is ConsensusModule {
+contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
 
     /* Usings */
 
