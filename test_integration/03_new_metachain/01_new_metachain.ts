@@ -17,36 +17,19 @@ import Interacts from "../../interacts/Interacts";
 
 describe('Axiom::newMetaChain', async () => {
 
-  it('TechGov calls Axiom.newMetaChain', async () => {
-
-    // const axiomInstance = shared.origin.contracts.Axiom;
-    // const committeeSize = '3';
-    // const minValidators = '5';
-    // const joinLimit = '5';
-    // const gasTargetDelta = '';
-    // const coinbaseSplitPerMille = '';
-    // const mOSTAddress = '';
-    // const stakeMOSTAmount = '';
-    // const wETHAddress = '';
-    // const stakeWETHAmount = '';
-    // const cashableEarningsPerMille = '';
-    // const initialReputation = '1';
-    // const withdrawalCooldownPeriodInBlocks = '';
-    // await axiomInstance.methods.setupConsensus(
-    //   committeeSize,
-    //   minValidators,
-    //   joinLimit,
-    //   gasTargetDelta,
-    //   coinbaseSplitPerMille,
-    //   mOSTAddress,
-    //   stakeMOSTAmount,
-    //   wETHAddress,
-    //   stakeWETHAmount,
-    //   cashableEarningsPerMille,
-    //   initialReputation,
-    //   withdrawalCooldownPeriodInBlocks,
-    // );
-
-  });
+  // it('TechGov calls Axiom.newMetaChain', async () => {
+  //   const axiomInstance = shared.origin.contracts.Axiom;
+  //   const maxStateRoots = '';
+  //   const rootRlpBlockHeader = '';
+  //   const txOptions = {
+  //     from: shared.origin.keys.techGov,
+  //   };
+  //   await axiomInstance.methods.newMetaChain(
+  //     maxStateRoots,
+  //     rootRlpBlockHeader,
+  //   );
+  //   // TODO send transaction
+  //
+  // });
 
 });
