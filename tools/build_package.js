@@ -35,7 +35,7 @@ const contractNames = [
   'Committee',
   'Consensus',
   'Core',
-  'EIP20Token',
+  'ERC20I',
   'Reputation',
 ];
 
