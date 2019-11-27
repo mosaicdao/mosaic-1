@@ -64,8 +64,8 @@ describe('Deployment', async () => {
     shared.origin.contracts.WETH = wETH.address;
 
     const web3 = shared.origin.web3;
-    shared.origin.contracts.MOST = Interacts.getEIP20Token(web3, mOST.address);
-    shared.origin.contracts.WETH = Interacts.getEIP20Token(web3, wETH.address);
+    shared.origin.contracts.MOST = Interacts.getERC20I(web3, mOST.address);
+    shared.origin.contracts.WETH = Interacts.getERC20I(web3, wETH.address);
     const erc20FundingPromises = [];
     const fundingAmount = web3.utils.toWei(FUNDING_AMOUNT_IN_ETHER);
 
