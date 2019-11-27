@@ -18,22 +18,24 @@ import "../reputation/ReputationI.sol";
 
 interface ConsensusI {
     /**
-     * @notice Get the reputation contract address.
-     * returns Reputation contract address.
+     * @notice Gets the reputation contract address.
+     *
+     * @return Reputation contract address.
      */
     function reputation()
         external
         view
         returns (ReputationI reputation_);
 
-    /** Get minimum validator and join limit count. */
+    /** @notice Gets cores' validators minimum count and join limit. */
     function coreValidatorThresholds()
         external
         view
         returns (uint256 minimumValidatorCount_, uint256 joinLimit_);
 
     /**
-     * @notice Register a proposal for commit.
+     * @notice Registers a precommit for commit.
+     *
      * @param _proposal Precommit proposal.
      */
     function registerPrecommit(
@@ -42,11 +44,12 @@ interface ConsensusI {
         external;
 
     /**
-     * @notice Create a new meta chain.
-     * @param _anchor anchor of the new meta-chain.
-     * @param _epochLength Epoch length for new meta-chain.
-     * @param _rootBlockHash root block hash.
-     * @param _rootBlockHeight root block height.
+     * @notice Creates a new meta chain.
+     *
+     * @param _anchor Anchor address of the new meta-chain.
+     * @param _epochLength Epoch length for the new meta-chain.
+     * @param _rootBlockHash Root block hash.
+     * @param _rootBlockHeight Root block height.
      */
     function newMetaChain(
         address _anchor,
