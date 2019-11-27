@@ -14,42 +14,13 @@
 
 'use strict';
 
-const BN = require('bn.js');
 const EthUtils = require('ethereumjs-util');
 
+const CoreStatusUtils = require('../test_lib/core_status_utils.js');
 const web3 = require('../test_lib/web3.js');
 
 const Core = artifacts.require('Core');
 const MockConsensus = artifacts.require('MockConsensus');
-
-const CoreStatus = {
-  creation: new BN(0),
-  opened: new BN(1),
-  precommitted: new BN(2),
-  halted: new BN(3),
-  corrupted: new BN(4),
-};
-
-
-function isCoreCreated(status) {
-  return CoreStatus.creation.cmp(status) === 0;
-}
-
-function isCoreOpened(status) {
-  return CoreStatus.opened.cmp(status) === 0;
-}
-
-function isCorePrecommitted(status) {
-  return CoreStatus.precommitted.cmp(status) === 0;
-}
-
-function isCoreHalted(status) {
-  return CoreStatus.halted.cmp(status) === 0;
-}
-
-function isCoreCorrupted(status) {
-  return CoreStatus.corrupted.cmp(status) === 0;
-}
 
 async function createValidator() {
   const account = await web3.eth.accounts.create();
@@ -92,6 +63,7 @@ async function createConsensusCore(
 }
 
 async function createCore(
+  consensus,
   chainId,
   epochLength,
   minValidators,
@@ -106,7 +78,9 @@ async function createCore(
   sourceBlockHeight,
   txOptions = {},
 ) {
-  return Core.new(
+  const core = await Core.new();
+  await core.setup(
+    consensus,
     chainId,
     epochLength,
     minValidators,
@@ -121,6 +95,8 @@ async function createCore(
     sourceBlockHeight,
     txOptions,
   );
+
+  return core;
 }
 
 async function openCore(
@@ -140,7 +116,7 @@ async function openCore(
 
   const coreStatus = await core.coreStatus.call();
   assert.isOk(
-    isCoreOpened(coreStatus),
+    CoreStatusUtils.isCoreOpened(coreStatus),
   );
 
   return {
@@ -191,7 +167,7 @@ async function precommitCore(
 
   const coreStatus = await core.coreStatus();
   assert.isOk(
-    isCorePrecommitted(coreStatus),
+    CoreStatusUtils.isCorePrecommitted(coreStatus),
   );
 }
 
@@ -216,11 +192,6 @@ module.exports = {
   signProposal,
   openCore,
   precommitCore,
-  isCoreCreated,
-  isCoreOpened,
-  isCorePrecommitted,
-  isCoreHalted,
-  isCoreCorrupted,
   calculateQuorum,
   randomSha3,
 };

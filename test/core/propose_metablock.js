@@ -17,9 +17,8 @@
 const BN = require('bn.js');
 
 const { AccountProvider } = require('../test_lib/utils.js');
-const Utils = require('../test_lib/utils.js');
-
 const CoreUtils = require('./utils.js');
+const Utils = require('../test_lib/utils.js');
 
 const Core = artifacts.require('Core');
 

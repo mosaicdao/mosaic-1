@@ -17,8 +17,9 @@
 const BN = require('bn.js');
 
 const { AccountProvider } = require('../test_lib/utils.js');
-const Utils = require('../test_lib/utils.js');
+const CoreStatusUtils = require('../test_lib/core_status_utils');
 const CoreUtils = require('./utils.js');
+const Utils = require('../test_lib/utils.js');
 
 const MockCore = artifacts.require('MockCore');
 
@@ -45,7 +46,7 @@ async function assertValidatorHeight(
 async function assertConfigInCreation(core) {
   const coreStatus0 = await core.coreStatus.call();
   assert.isOk(
-    CoreUtils.isCoreCreated(coreStatus0),
+    CoreStatusUtils.isCoreCreated(coreStatus0),
   );
 }
 
@@ -232,7 +233,7 @@ contract('Core::joinDuringCreation', async (accounts) => {
         // eslint-disable-next-line no-await-in-loop
         const coreStatus = await config.mockCore.coreStatus.call();
         assert.isOk(
-          CoreUtils.isCoreCreated(coreStatus),
+          CoreStatusUtils.isCoreCreated(coreStatus),
         );
       }
 
@@ -246,7 +247,7 @@ contract('Core::joinDuringCreation', async (accounts) => {
       );
       const coreStatus = await config.mockCore.coreStatus.call();
       assert.isOk(
-        CoreUtils.isCoreOpened(coreStatus),
+        CoreStatusUtils.isCoreOpened(coreStatus),
       );
 
       const quorum = await config.mockCore.quorum.call();

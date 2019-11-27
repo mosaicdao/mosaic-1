@@ -59,11 +59,12 @@ contract('Committee:cooldownCommittee', async (accounts) => {
     };
 
     config.committee.contract = await CommitteeUtils.createCommittee(
+      config.committee.consensus,
       config.committee.size,
       config.committee.dislocation,
       config.committee.proposal,
       {
-        from: config.committee.consensus,
+        from: accountProvider.get(),
       },
     );
 
@@ -92,11 +93,12 @@ contract('Committee:cooldownCommittee', async (accounts) => {
     it('should fail if committee is not filled', async () => {
       const consensus = accountProvider.get();
       const committee = await CommitteeUtils.createCommittee(
+        consensus,
         3,
         web3.utils.sha3('dislocation'),
         web3.utils.sha3('proposal'),
         {
-          from: consensus,
+          from: accountProvider.get(),
         },
       );
 

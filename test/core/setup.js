@@ -17,8 +17,8 @@
 const BN = require('bn.js');
 
 const { AccountProvider } = require('../test_lib/utils.js');
+const CoreStatusUtils = require('../test_lib/core_status_utils.js');
 const Utils = require('../test_lib/utils.js');
-const web3 = require('../test_lib/web3.js');
 
 const CoreUtils = require('./utils.js');
 
@@ -27,6 +27,7 @@ let config = {};
 
 async function createCore(args, consensus) {
   return CoreUtils.createCore(
+    consensus,
     args.chainId,
     args.epochLength,
     args.minValidators,
@@ -167,7 +168,7 @@ contract('Core::constructor', (accounts) => {
 
       const coreStatus = await core.coreStatus();
       assert.isOk(
-        CoreUtils.isCoreCreated(coreStatus),
+        CoreStatusUtils.isCoreCreated(coreStatus),
         'Core status should be set to created on construction.',
       );
 

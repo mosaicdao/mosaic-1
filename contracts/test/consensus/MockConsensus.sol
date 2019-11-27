@@ -53,7 +53,9 @@ contract MockConsensus is ConsensusI, ReputationI {
         minValidatorCount = _minValidatorCount;
         validatorJoinLimit = _validatorJoinLimit;
 
-        mockCore = new MockCore(
+        mockCore = new MockCore();
+        mockCore.setup(
+			address(this),
             _chainId,
             _epochLength,
             minValidatorCount,
@@ -142,6 +144,26 @@ contract MockConsensus is ConsensusI, ReputationI {
         external
     {
         precommitts[msg.sender] = _precommitment;
+    }
+
+    function newMetaChain(
+        address _anchor,
+        uint256 _epochLength,
+        bytes32 _source,
+        uint256 _sourceBlockHeight
+    )
+        external
+    {
+        // do nothing for now
+    }
+
+    function join(
+        address _validator,
+        address _withdrawalAddress
+    )
+        external
+    {
+        // do nothing for now
     }
 
     function openMetablock(

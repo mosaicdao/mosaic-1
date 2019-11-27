@@ -17,12 +17,45 @@ pragma solidity ^0.5.0;
 import "../reputation/ReputationI.sol";
 
 interface ConsensusI {
-    function reputation() external view returns (ReputationI reputation_);
+    /**
+     * @notice Gets the reputation contract address.
+     *
+     * @return Reputation contract address.
+     */
+    function reputation()
+        external
+        view
+        returns (ReputationI reputation_);
 
+    /** @notice Gets cores' validators minimum count and join limit. */
     function coreValidatorThresholds()
         external
         view
         returns (uint256 minimumValidatorCount_, uint256 joinLimit_);
 
-    function registerPrecommit(bytes32 _precommitment) external;
+    /**
+     * @notice Registers a precommit for commit.
+     *
+     * @param _proposal Precommit proposal.
+     */
+    function registerPrecommit(
+        bytes32 _proposal
+    )
+        external;
+
+    /**
+     * @notice Creates a new meta chain.
+     *
+     * @param _anchor Anchor address of the new meta-chain.
+     * @param _epochLength Epoch length for the new meta-chain.
+     * @param _rootBlockHash Root block hash.
+     * @param _rootBlockHeight Root block height.
+     */
+    function newMetaChain(
+        address _anchor,
+        uint256 _epochLength,
+        bytes32 _rootBlockHash,
+        uint256 _rootBlockHeight
+    )
+        external;
 }

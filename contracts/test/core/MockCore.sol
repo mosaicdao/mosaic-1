@@ -18,41 +18,6 @@ import "../../Core/Core.sol";
 
 contract MockCore is Core {
 
-    /* Special Functions */
-
-    constructor(
-        bytes20 _chainId,
-        uint256 _epochLength,
-        uint256 _minValidators,
-        uint256 _joinLimit,
-        ReputationI _reputation,
-        uint256 _height,
-        bytes32 _parent,
-        uint256 _gasTarget,
-        uint256 _dynasty,
-        uint256 _accumulatedGas,
-        bytes32 _source,
-        uint256 _sourceBlockHeight
-    )
-        public
-        Core(
-            _chainId,
-            _epochLength,
-            _minValidators,
-            _joinLimit,
-            _reputation,
-            _height,
-            _parent,
-            _gasTarget,
-            _dynasty,
-            _accumulatedGas,
-            _source,
-            _sourceBlockHeight
-        )
-    {
-    }
-
-
     /* External Functions */
 
     function updateJoinLimit(uint256 _joinLimit)

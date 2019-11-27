@@ -17,8 +17,10 @@
 const BN = require('bn.js');
 
 const { AccountProvider } = require('../test_lib/utils.js');
-const CoreUtils = require('./utils.js');
+const CoreStatusUtils = require('../test_lib/core_status_utils.js');
 const Utils = require('../test_lib/utils.js');
+
+const CoreUtils = require('./utils.js');
 
 const MockCore = artifacts.require('MockCore');
 
@@ -515,7 +517,7 @@ contract('Core::registerVote', (accounts) => {
           // eslint-disable-next-line no-await-in-loop
           const coreStatus = await config.core.coreStatus();
           assert.isNotOk(
-            CoreUtils.isCorePrecommitted(coreStatus),
+            CoreStatusUtils.isCorePrecommitted(coreStatus),
           );
         }
       }
@@ -528,7 +530,7 @@ contract('Core::registerVote', (accounts) => {
 
       const coreStatus = await config.core.coreStatus();
       assert.isOk(
-        CoreUtils.isCorePrecommitted(coreStatus),
+        CoreStatusUtils.isCorePrecommitted(coreStatus),
       );
 
       const quorumBlockNumber = txResponse.receipt.blockNumber;
