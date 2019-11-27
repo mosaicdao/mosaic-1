@@ -35,5 +35,9 @@ export default class Utils {
       : (await rawTx.estimateGas(txOptions)).toString();
     return rawTx.send(txOptions);
   }
+
+  static getCode(web3, address): Promise<string> {
+    return web3.eth.getCode(address);
+  }
 }
 

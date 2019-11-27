@@ -58,11 +58,11 @@ describe('Axiom::setupConsensus', async () => {
 
     // Set reputation instance
     const reputationContractAddress = await axiomInstance.methods.reputation().call();
-    console.log('reputationContractAddress:', reputationContractAddress);
     shared.origin.contracts.Reputation.instance = Interacts.getReputation(
       shared.origin.web3,
       reputationContractAddress,
     );
+    shared.origin.contracts.Reputation.address = reputationContractAddress;
 
     // Set consensus instance
     const consensusContractAddress = await axiomInstance.methods.consensus().call();
@@ -70,6 +70,7 @@ describe('Axiom::setupConsensus', async () => {
       shared.origin.web3,
       consensusContractAddress,
     );
+    shared.origin.contracts.Consensus.address = consensusContractAddress;
     const consensusInstance = shared.origin.contracts.Consensus.instance;
 
     // Assert consensus state variables
@@ -122,57 +123,54 @@ describe('Axiom::setupConsensus', async () => {
     );
 
     // Assert reputation state variables
-    // const reputationInstance = shared.origin.contracts.Reputation.instance;
-    // console.log("2");
-    // console.log('reputationInstance.methods.mOST().call()', await reputationInstance.methods.mOST().call());
-    // assert.strictEqual(
-    //   await reputationInstance.methods.consensus().call(),
-    //   shared.origin.contracts.Consensus.address,
-    //   'Consensus contract address is not set in the contract.',
-    // );
-    //
-    // assert.strictEqual(
-    //   await reputationInstance.methods.mOST().call(),
-    //   mOSTAddress,
-    //   'mOST contract address is not set in the contract.',
-    // );
-    //
-    // assert.strictEqual(
-    //   await reputationInstance.methods.stakeMOSTAmount().call(),
-    //   stakeMOSTAmount,
-    //   'Stake mOST amount is not set in the contract.',
-    // );
-    //
-    // assert.strictEqual(
-    //   await reputationInstance.methods.wETH().call(),
-    //   wETHAddress,
-    //   'wETH contract address is not set in the contract.',
-    // );
-    //
-    // assert.strictEqual(
-    //   await reputationInstance.methods.stakeWETHAmount().call(),
-    //   stakeWETHAmount,
-    //   'Stake wETH amount is not set in the contract.',
-    // );
-    //
-    //
-    // assert.strictEqual(
-    //   await reputationInstance.methods.cashableEarningsPerMille().call(),
-    //   cashableEarningsPerMille,
-    //   'Cashable earnings per mille value is not set in the contract.',
-    // );
-    //
-    // assert.strictEqual(
-    //   await reputationInstance.methods.initialReputation().call(),
-    //   initialReputation,
-    //   'Initial reputation value is not set in the contract.',
-    // );
-    //
-    // assert.strictEqual(
-    //   await reputationInstance.methods.withdrawalCooldownPeriodInBlocks().call(),
-    //   withdrawalCooldownPeriodInBlocks,
-    //   'Withdrawal cooldown period in blocks value is not set in the contract.',
-    // );
+    const reputationInstance = shared.origin.contracts.Reputation.instance;
+    assert.strictEqual(
+      await reputationInstance.methods.consensus().call(),
+      shared.origin.contracts.Consensus.address,
+      'Consensus contract address is not set in the contract.',
+    );
+
+    assert.strictEqual(
+      await reputationInstance.methods.mOST().call(),
+      mOSTAddress,
+      'mOST contract address is not set in the contract.',
+    );
+
+    assert.strictEqual(
+      await reputationInstance.methods.stakeMOSTAmount().call(),
+      stakeMOSTAmount,
+      'Stake mOST amount is not set in the contract.',
+    );
+
+    assert.strictEqual(
+      await reputationInstance.methods.wETH().call(),
+      wETHAddress,
+      'wETH contract address is not set in the contract.',
+    );
+
+    assert.strictEqual(
+      await reputationInstance.methods.stakeWETHAmount().call(),
+      stakeWETHAmount,
+      'Stake wETH amount is not set in the contract.',
+    );
+
+    assert.strictEqual(
+      await reputationInstance.methods.cashableEarningsPerMille().call(),
+      cashableEarningsPerMille,
+      'Cashable earnings per mille value is not set in the contract.',
+    );
+
+    assert.strictEqual(
+      await reputationInstance.methods.initialReputation().call(),
+      initialReputation,
+      'Initial reputation value is not set in the contract.',
+    );
+
+    assert.strictEqual(
+      await reputationInstance.methods.withdrawalCooldownPeriodInBlocks().call(),
+      withdrawalCooldownPeriodInBlocks,
+      'Withdrawal cooldown period in blocks value is not set in the contract.',
+    );
   });
 
 });

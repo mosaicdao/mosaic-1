@@ -1,7 +1,7 @@
 [
   {
     "generator": "typechain",
-    "files": "./build/**/*/!(AnchorI.json|AxiomI.json|CommitteeI.json|ConsensusI.json|CoreI.json|ReputationI.json|EIP20Token.json|Block.json|CircularBufferUint.json|SafeMath.json|ConsensusModule.json|CoreStatusEnum.json|MasterCopyNonUpgradable.json|MerklePatriciaProof.json|Organization.json|Organized.json|UtilityToken.json|MosaicVersion.json|Proxy*.json|RLP.json|Migrations.json|*Mock.json|Mock*|Test*|*Test.json|*Interface.json|Spy*)",
+    "files": "./build/**/*/!(AnchorI.json|AxiomI.json|CommitteeI.json|ConsensusI.json|CoreI.json|ReputationI.json|EIP20Token.json|Block.json|CircularBufferUint.json|SafeMath.json|ConsensusModule.json|CoreStatusEnum.json|MasterCopyNonUpgradable.json|MerklePatriciaProof.json|Organization.json|Organized.json|UtilityToken.json|MosaicVersion.json|RLP.json|Migrations.json|*Mock.json|Mock*|Test*|*Test.json|*Interface.json|Spy*)",
     "target": "web3-1.0.0",
     "outDir" : "interacts"
   }

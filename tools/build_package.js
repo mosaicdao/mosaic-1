@@ -37,6 +37,7 @@ const contractNames = [
   'Core',
   'ERC20I',
   'Reputation',
+  'Proxy',
 ];
 
 const contracts = {};

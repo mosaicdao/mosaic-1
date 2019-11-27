@@ -40,6 +40,9 @@ const Reputation = artifacts.require('Reputation');
 // @ts-ignore
 const MockToken = artifacts.require('MockToken');
 
+// @ts-ignore
+const Proxy = artifacts.require('Proxy');
+
 const setupArtifacts = () => {
   shared.artifacts = {
     Anchor,
@@ -49,6 +52,7 @@ const setupArtifacts = () => {
     Core,
     Reputation,
     MockToken,
+    Proxy
   };
 };
 
