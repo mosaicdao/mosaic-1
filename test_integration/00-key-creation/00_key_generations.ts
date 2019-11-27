@@ -18,8 +18,8 @@
 //
 // ----------------------------------------------------------------------------
 
-const shared = require('../shared');
-const Utils = require('../Utils');
+import shared, {Validator} from '../shared';
+import Utils from '../Utils';
 
 const FUNDING_AMOUNT_IN_ETH = '2';
 
@@ -37,12 +37,23 @@ describe('Key generations', async () => {
     const validator4 = web3.eth.accounts.create('validator-4');
     const validator5 = web3.eth.accounts.create('validator-5');
 
+    const withdrawalAddress1 = web3.eth.accounts.create('withdrawal-1');
+    const withdrawalAddress2 = web3.eth.accounts.create('withdrawal-2');
+    const withdrawalAddress3 = web3.eth.accounts.create('withdrawal-3');
+    const withdrawalAddress4 = web3.eth.accounts.create('withdrawal-4');
+    const withdrawalAddress5 = web3.eth.accounts.create('withdrawal-5');
     web3.eth.accounts.wallet.add(techGov);
     web3.eth.accounts.wallet.add(validator1);
     web3.eth.accounts.wallet.add(validator2);
     web3.eth.accounts.wallet.add(validator3);
     web3.eth.accounts.wallet.add(validator4);
     web3.eth.accounts.wallet.add(validator5);
+
+    web3.eth.accounts.wallet.add(withdrawalAddress1);
+    web3.eth.accounts.wallet.add(withdrawalAddress2);
+    web3.eth.accounts.wallet.add(withdrawalAddress3);
+    web3.eth.accounts.wallet.add(withdrawalAddress4);
+    web3.eth.accounts.wallet.add(withdrawalAddress5);
 
     const fundingRequest = [];
     const fundingAmount = web3.utils.toWei(FUNDING_AMOUNT_IN_ETH);
@@ -54,13 +65,18 @@ describe('Key generations', async () => {
     fundingRequest.push(Utils.fundAddressForGas(validator4.address, funder, web3, fundingAmount));
     fundingRequest.push(Utils.fundAddressForGas(validator5.address, funder, web3, fundingAmount));
 
+    fundingRequest.push(Utils.fundAddressForGas(withdrawalAddress1.address, funder, web3, fundingAmount));
+    fundingRequest.push(Utils.fundAddressForGas(withdrawalAddress2.address, funder, web3, fundingAmount));
+    fundingRequest.push(Utils.fundAddressForGas(withdrawalAddress3.address, funder, web3, fundingAmount));
+    fundingRequest.push(Utils.fundAddressForGas(withdrawalAddress4.address, funder, web3, fundingAmount));
+    fundingRequest.push(Utils.fundAddressForGas(withdrawalAddress5.address, funder, web3, fundingAmount));
     await Promise.all(fundingRequest);
 
     shared.origin.keys.techGov = techGov.address;
-    shared.origin.keys.validators.push(validator1.address);
-    shared.origin.keys.validators.push(validator2.address);
-    shared.origin.keys.validators.push(validator3.address);
-    shared.origin.keys.validators.push(validator4.address);
-    shared.origin.keys.validators.push(validator5.address);
+    shared.origin.keys.validators.push(new Validator(validator1.address, withdrawalAddress1.address));
+    shared.origin.keys.validators.push(new Validator(validator2.address, withdrawalAddress2.address));
+    shared.origin.keys.validators.push(new Validator(validator3.address, withdrawalAddress3.address));
+    shared.origin.keys.validators.push(new Validator(validator4.address, withdrawalAddress4.address));
+    shared.origin.keys.validators.push(new Validator(validator5.address, withdrawalAddress5.address));
   });
 });
