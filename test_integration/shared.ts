@@ -31,7 +31,7 @@ const web3 = new Web3('http://localhost:8545');
 // For testing use 1 block confirmation.
 web3.transactionConfirmationBlocks = 1;
 
-class ContractEntity<Type> {
+export class ContractEntity<Type> {
   address: string;
   instance: Type;
 
@@ -39,7 +39,7 @@ class ContractEntity<Type> {
   }
 }
 
-class Contract {
+export class Contract {
   public Axiom: ContractEntity<Axiom>;
 
   public Committee: ContractEntity<Committee>;
@@ -69,7 +69,7 @@ class Contract {
 
 }
 
-class Origin {
+export class Origin {
   public funder: string;
   public web3: any;
   public keys: {
@@ -101,6 +101,6 @@ class Shared {
     this.artifacts = {};
     this.origin =  new Origin();
   }
-}
+};
 
 export default new Shared();

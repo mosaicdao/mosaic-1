@@ -29,6 +29,7 @@ describe('Axiom::newMetaChain', async () => {
   //     rootRlpBlockHeader,
   //   );
   //   // TODO send transaction
+  //   // TODO set chainID in shared
   //
   // });
 
