@@ -31,41 +31,40 @@ const web3 = new Web3('http://localhost:8545');
 // For testing use 1 block confirmation.
 web3.transactionConfirmationBlocks = 1;
 
-/**
- * An object that is shared across modules.
- *
- * @property {Object} artifacts The truffle artifacts of the contracts. Indexed
- *     by the contract name, as written in the solidity source
- *     file.
- */
-
-
-class ContractEntity {
+class ContractEntity<Type> {
   address: string;
-  instance: any;
+  instance: Type;
 
   constructor() {
   }
 }
 
 class Contract {
-  public Axiom: Axiom;
+  public Axiom: ContractEntity<Axiom>;
 
-  public Committee: Committee;
+  public Committee: ContractEntity<Committee>;
 
-  public Consensus: Consensus;
+  public Consensus: ContractEntity<Consensus>;
 
-  public Core: Core;
+  public Core: ContractEntity<Core>;
 
-  public Reputation: Reputation;
+  public Reputation: ContractEntity<Reputation>;
 
-  public Anchor: Anchor;
+  public Anchor: ContractEntity<Anchor>;
 
-  public MOST: ERC20I;
+  public MOST: ContractEntity<ERC20I>;
 
-  public WETH: ERC20I;
+  public WETH: ContractEntity<ERC20I>;
 
   constructor() {
+    this.Axiom = new ContractEntity<Axiom>();
+    this.Committee = new ContractEntity<Committee>();
+    this.Consensus = new ContractEntity<Consensus>();
+    this.Core = new ContractEntity<Core>();
+    this.Reputation = new ContractEntity<Reputation>();
+    this.Anchor = new ContractEntity<Anchor>();
+    this.MOST = new ContractEntity<ERC20I>();
+    this.WETH = new ContractEntity<ERC20I>();
   }
 
 }
@@ -91,7 +90,9 @@ class Origin {
   }
 
 }
-
+/**
+ * An object that is shared across modules.
+ */
 class Shared {
   public artifacts: any;
   public origin: Origin;

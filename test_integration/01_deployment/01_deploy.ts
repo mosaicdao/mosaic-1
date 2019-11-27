@@ -40,7 +40,8 @@ describe('Deployment', async () => {
     );
 
     const web3 = shared.origin.web3;
-    shared.origin.contracts.Axiom = Interacts.getAxiom(web3, axiom.address);
+    shared.origin.contracts.Axiom.instance = Interacts.getAxiom(web3, axiom.address);
+    shared.origin.contracts.Axiom.address = axiom.address;
 
   });
 
@@ -54,12 +55,11 @@ describe('Deployment', async () => {
     const mOST = await MockToken.new(18, { from: funder });
     const wETH = await MockToken.new(18, { from: funder });
 
-    shared.origin.contracts.MOST = mOST.address;
-    shared.origin.contracts.WETH = wETH.address;
-
     const web3 = shared.origin.web3;
-    shared.origin.contracts.MOST = Interacts.getERC20I(web3, mOST.address);
-    shared.origin.contracts.WETH = Interacts.getERC20I(web3, wETH.address);
+    shared.origin.contracts.MOST.instance = Interacts.getERC20I(web3, mOST.address);
+    shared.origin.contracts.MOST.address = mOST.address;
+    shared.origin.contracts.WETH.instance = Interacts.getERC20I(web3, wETH.address);
+    shared.origin.contracts.WETH.address = wETH.address;
     const erc20FundingPromises = [];
     const fundingAmount = web3.utils.toWei(FUNDING_AMOUNT_IN_ETHER);
 
