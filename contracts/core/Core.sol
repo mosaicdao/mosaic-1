@@ -925,10 +925,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
     function newProposalSet()
         internal
     {
-        require(
-            proposals[openKernelHeight][SENTINEL_PROPOSALS] == bytes32(0),
-            "Proposal set has already been initialized at this height."
-        );
+        assert(proposals[openKernelHeight][SENTINEL_PROPOSALS] == bytes32(0));
         proposals[openKernelHeight][SENTINEL_PROPOSALS] = SENTINEL_PROPOSALS;
     }
 
