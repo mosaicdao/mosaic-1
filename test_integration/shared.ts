@@ -66,15 +66,26 @@ export class Contract {
     this.MOST = new ContractEntity<ERC20I>();
     this.WETH = new ContractEntity<ERC20I>();
   }
+}
 
+export class Validator {
+  address: string;
+  withdrawalAddress: string;
+
+
+  constructor(address: string, withdrawalAddress: string) {
+    this.address = address;
+    this.withdrawalAddress = withdrawalAddress;
+  }
 }
 
 export class Origin {
   public funder: string;
   public web3: any;
+  public chainId: string;
   public keys: {
     techGov: string;
-    validators: string[];
+    validators: Validator[];
   };
 
   public contracts: Contract;
@@ -101,6 +112,6 @@ class Shared {
     this.artifacts = {};
     this.origin =  new Origin();
   }
-};
+}
 
 export default new Shared();
