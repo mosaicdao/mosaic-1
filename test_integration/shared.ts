@@ -19,8 +19,8 @@ import {Committee} from "../interacts/Committee";
 import {Consensus} from "../interacts/Consensus";
 import {Core} from "../interacts/Core";
 import {Reputation} from "../interacts/Reputation";
-import {Anchor} from "../interacts/Anchor";
 import {ERC20I} from "../interacts/ERC20I";
+import {Anchor} from "../interacts/Anchor";
 
 const Web3 = require("web3");
 
@@ -28,7 +28,7 @@ const web3 = new Web3('http://localhost:8545');
 // For testing use 1 block confirmation.
 web3.transactionConfirmationBlocks = 1;
 
-class ContractEntity<Type> {
+export class ContractEntity<Type> {
   address: string;
   instance: Type;
 
@@ -36,7 +36,7 @@ class ContractEntity<Type> {
   }
 }
 
-class Contract {
+export class Contract {
   public Axiom: ContractEntity<Axiom>;
 
   public Committee: ContractEntity<Committee>;
@@ -75,7 +75,8 @@ export class Validator {
     this.withdrawalAddress = withdrawalAddress;
   }
 }
-class Origin {
+
+export class Origin {
   public funder: string;
   public web3: any;
   public chainId: string;
