@@ -27,16 +27,11 @@ describe('Axiom::newMetaChain', async () => {
       stateRoots,
       rlpBlockHeader as any,
     );
-    console.log('consensus address  in axiom :- ',await axiom.instance.methods.consensus().call());
-    await Utils.sendTransaction(rawTx, {
+
+    const txOptions = {
       from: shared.origin.keys.techGov,
-      gas: '9000000',
-    }).then(value => {
-      console.log('value :- ',value);
-    }).catch(error => {
-      console.log('error in metachain :- ',error);
-    });
-    // const consensusContractInstance = Interacts.getConsensus(await axiom.instance.methods.consensus().call());
+    };
+    await Utils.sendTransaction(rawTx, txOptions);
 
   });
 
