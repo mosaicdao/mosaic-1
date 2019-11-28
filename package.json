@@ -12,7 +12,7 @@
     "lint:sol:solium:fix": "npm run lint:sol:solium -- --fix",
     "test": "npm run test:contracts",
     "test:contracts": "truffle test",
-    "test:integration": "cd test_integration && ./main.sh",
+    "test:integration": "cd test_integration && tsc && ./main.sh",
     "test:dev": "truffle test test/consensus/commit.js",
     "ganache-cli": "./tools/run_ganache_cli.sh",
     "make:all": "lint:sol:solium && lint:js && compile:all && test:contracts",
@@ -32,6 +32,8 @@
   },
   "homepage": "https://github.com/mosaicdao/mosaic-1#readme",
   "devDependencies": {
+    "@types/mocha": "5.2.7",
+    "@types/web3": "1.2.2",
     "assert": "2.0.0",
     "bn.js": "5.0.0",
     "chai": "4.2.0",
@@ -44,9 +46,10 @@
     "openzeppelin-solidity": "2.1.1",
     "solium": "1.2.4",
     "truffle": "5.1.0",
-    "web3": "1.2.4",
     "ts-generator": "0.0.8",
     "typechain": "0.3.14",
+    "typescript": "3.7.2",
+    "web3": "1.2.4",
     "abi-decoder": "1.2.0"
   }
 }

@@ -16,26 +16,30 @@ pragma solidity ^0.5.0;
 
 import "../../consensus/ConsensusI.sol";
 import "../../reputation/ReputationI.sol";
-import "../../core/CoreI.sol";
-import "../../core/Core.sol";
+import "../core/MockCore.sol";
 
 contract MockConsensus is ConsensusI, ReputationI {
 
-    /** Storage */
+    /* Storage */
 
-    uint256 public constant MIN_VALIDATOR = uint256(10);
+    uint256 minValidatorCount;
 
-    uint256 public constant JOIN_LIMIT = uint256(15);
+    uint256 validatorJoinLimit;
 
-    Core public core;
+    MockCore public mockCore;
 
     mapping(address => uint256) public rep;
 
-    /** Constructor of Mock consensus */
+    mapping(address => bytes32) public precommitts;
+
+
+    /* Special Functions */
 
     constructor(
         bytes20 _chainId,
         uint256 _epochLength,
+        uint256 _minValidatorCount,
+        uint256 _validatorJoinLimit,
         uint256 _height,
         bytes32 _parent,
         uint256 _gasTarget,
@@ -46,13 +50,16 @@ contract MockConsensus is ConsensusI, ReputationI {
     )
         public
     {
-        core = new Core();
-        core.setup(
-            ConsensusI(this),
+        minValidatorCount = _minValidatorCount;
+        validatorJoinLimit = _validatorJoinLimit;
+
+        mockCore = new MockCore();
+        mockCore.setup(
+			ConsensusI(address(this)),
             _chainId,
             _epochLength,
-            MIN_VALIDATOR,
-            JOIN_LIMIT,
+            minValidatorCount,
+            validatorJoinLimit,
             ReputationI(this),
             _height,
             _parent,
@@ -64,27 +71,34 @@ contract MockConsensus is ConsensusI, ReputationI {
         );
     }
 
-    /** External functions */
+
+    /* External Functions */
 
     function joinDuringCreation(address _validator)
         external
     {
         rep[_validator] = uint256(1);
-        core.joinDuringCreation(_validator);
+        mockCore.joinDuringCreation(_validator);
     }
 
     function join(address _validator)
         external
     {
         rep[_validator] = uint256(1);
-        core.join(_validator);
+        mockCore.join(_validator);
     }
 
     function logout(address _validator)
         external
     {
         rep[_validator] = uint256(0);
-        core.logout(_validator);
+        mockCore.logout(_validator);
+    }
+
+    function removeVote(address _validator)
+        external
+    {
+        mockCore.removeVote(_validator);
     }
 
     function isActive(address _validator)
@@ -103,10 +117,16 @@ contract MockConsensus is ConsensusI, ReputationI {
         return rep[_validator];
     }
 
+    function setReputation(address _validator, uint256 _newReputation)
+        external
+    {
+        rep[_validator] = _newReputation;
+    }
+
     function reputation()
         external
         view
-        returns (ReputationI reputation_)
+        returns (ReputationI)
     {
         return this;
     }
@@ -116,14 +136,14 @@ contract MockConsensus is ConsensusI, ReputationI {
         view
         returns (uint256 minimumValidatorCount_, uint256 joinLimit_)
     {
-        minimumValidatorCount_ = MIN_VALIDATOR;
-        joinLimit_ = JOIN_LIMIT;
+        minimumValidatorCount_ = minValidatorCount;
+        joinLimit_ = validatorJoinLimit;
     }
 
     function registerPrecommit(bytes32 _precommitment)
         external
     {
-        // do nothing for now
+        precommitts[msg.sender] = _precommitment;
     }
 
     function newMetaChain(
@@ -144,5 +164,39 @@ contract MockConsensus is ConsensusI, ReputationI {
         external
     {
         // do nothing for now
+    }
+
+    function openMetablock(
+        bytes32 _committedOriginObservation,
+        uint256 _committedDynasty,
+        uint256 _committedAccumulatedGas,
+        bytes32 _committedCommitteeLock,
+        bytes32 _committedSource,
+        bytes32 _committedTarget,
+        uint256 _committedSourceBlockHeight,
+        uint256 _committedTargetBlockHeight,
+        uint256 _deltaGasTarget
+    )
+        external
+    {
+        mockCore.openMetablock(
+            _committedOriginObservation,
+            _committedDynasty,
+            _committedAccumulatedGas,
+            _committedCommitteeLock,
+            _committedSource,
+            _committedTarget,
+            _committedSourceBlockHeight,
+            _committedTargetBlockHeight,
+            _deltaGasTarget
+        );
+    }
+
+    function isPrecommitted(address _core)
+        external
+        view
+        returns (bool)
+    {
+        return precommitts[_core] != bytes32(0);
     }
 }
