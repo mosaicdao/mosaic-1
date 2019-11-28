@@ -31,7 +31,7 @@ const web3 = new Web3('http://localhost:8545');
 // For testing use 1 block confirmation.
 web3.transactionConfirmationBlocks = 1;
 
-class ContractEntity<Type> {
+export class ContractEntity<Type> {
   address: string;
   instance: Type;
 

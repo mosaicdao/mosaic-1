@@ -38,3 +38,12 @@ export default class Utils {
   }
 }
 
+export enum ValidatorStatus {
+  Undefined = 0,
+  Slashed = 1,
+  Staked = 2,
+  LoggedOut = 3,
+  Withdrawn = 4,
+}
+
+
