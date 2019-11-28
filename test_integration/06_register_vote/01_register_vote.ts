@@ -14,8 +14,7 @@
 
 import shared from '../shared';
 import chai = require('chai');
-import Utils from "../Utils";
-import BN = require("bn.js");
+import Utils, {CoreStatus} from "../Utils";
 const { assert } = chai;
 
 describe('Core::registerVote', async () => {
@@ -24,6 +23,50 @@ describe('Core::registerVote', async () => {
     const txOptions = {
       from: shared.origin.keys.techGov,
     };
+    const proposalHash = '';
+    const validators = shared.origin.keys.validators;
+    const registerVotePromises = [];
+    validators.forEach((validator) => {
+      const signature = Utils.signProposal(
+        shared.origin.web3,
+        proposalHash,
+        validator.privateKey,
+      );
+      const txObject = coreInstance.methods.registerVote(
+        proposalHash,
+        signature.r,
+        signature.s,
+        signature.v,
+      );
+      registerVotePromises.push(
+        Utils.sendTransaction(
+          txObject,
+          txOptions,
+        )
+      );
+    });
+    Promise.all(registerVotePromises);
+
+    assert.strictEqual(
+      await coreInstance.methods.precommit().call(),
+      proposalHash,
+      'Core precommit value is incorrect.'
+    );
+
+    assert.strictEqual(
+      await coreInstance.methods.coreStatus().call(),
+      CoreStatus.precommitted,
+      'Core status is not preCommitted.'
+    );
+
+    const consensusInstance = shared.origin.contracts.Consensus.instance;
+    const coreAddress = shared.origin.contracts.Core.address;
+    assert.strictEqual(
+      await consensusInstance.methods.precommits(coreAddress).call(),
+      proposalHash,
+      'Proposal for core is incorrect in Consensus contract.',
+    );
+
   });
 
 });

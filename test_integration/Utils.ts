@@ -15,6 +15,7 @@
 'use strict';
 
 import shared from "./shared";
+const EthUtils = require('ethereumjs-util');
 
 export default class Utils {
   /**
@@ -62,9 +63,34 @@ export default class Utils {
     return web3.eth.getCode(address);
   }
 
-  static randomSha3(): string {
+  /**
+   * Returns random sha3 value
+   * @param web3 Web3 provider
+   * @return Sha3 value
+   */
+  static randomSha3(web3): string {
     const randomString = Math.random().toString(36).substring(2, 15);
-    return shared.origin.web3.utils.sha3(randomString);
+    return web3.utils.sha3(randomString);
+  }
+
+  /**
+   * Returns signatures
+   * @param web3 Web3 provider
+   * @param proposalHash proposal value
+   * @param privateKey Private key
+   * @return r, s, v signature values
+   */
+  static signProposal(web3, proposalHash, privateKey): {r: string, s: string, v: string} {
+    const proposalSignature = EthUtils.ecsign(
+      EthUtils.toBuffer(proposalHash),
+      EthUtils.toBuffer(privateKey),
+    );
+
+    return {
+      r: EthUtils.bufferToHex(proposalSignature.r),
+      s: EthUtils.bufferToHex(proposalSignature.s),
+      v: web3.utils.toDecimal(proposalSignature.v),
+    };
   }
 }
 
@@ -75,5 +101,14 @@ export enum ValidatorStatus {
   LoggedOut = 3,
   Withdrawn = 4,
 }
+
+export enum CoreStatus {
+  undefined = 0,
+  halted = 1,
+  corrupted = 2,
+  creation = 3,
+  opened = 4,
+  precommitted = 5,
+};
 
 

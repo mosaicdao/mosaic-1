@@ -67,11 +67,13 @@ export class Contract {
 
 export class Validator {
   address: string;
+  privateKey: string;
   withdrawalAddress: string;
 
 
-  constructor(address: string, withdrawalAddress: string) {
+  constructor(address: string, privateKey: string, withdrawalAddress: string) {
     this.address = address;
+    this.privateKey = privateKey;
     this.withdrawalAddress = withdrawalAddress;
   }
 }

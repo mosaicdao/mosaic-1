@@ -37,7 +37,7 @@ describe('Axiom::setupConsensus', async () => {
     const txOptions = {
       from: shared.origin.keys.techGov,
     };
-    const txObject = await axiomInstance.methods.setupConsensus(
+    const txObject = axiomInstance.methods.setupConsensus(
       committeeSize,
       minValidators,
       joinLimit,

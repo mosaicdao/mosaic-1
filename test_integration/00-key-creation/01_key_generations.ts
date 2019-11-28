@@ -69,10 +69,20 @@ describe('Key generations', async () => {
     await Promise.all(fundingRequest);
 
     shared.origin.keys.techGov = techGov.address;
-    shared.origin.keys.validators.push(new Validator(validator1.address, withdrawalAddress1.address));
-    shared.origin.keys.validators.push(new Validator(validator2.address, withdrawalAddress2.address));
-    shared.origin.keys.validators.push(new Validator(validator3.address, withdrawalAddress3.address));
-    shared.origin.keys.validators.push(new Validator(validator4.address, withdrawalAddress4.address));
-    shared.origin.keys.validators.push(new Validator(validator5.address, withdrawalAddress5.address));
+    shared.origin.keys.validators.push(
+      new Validator(validator1.address, validator1.privateKey, withdrawalAddress1.address)
+    );
+    shared.origin.keys.validators.push(
+      new Validator(validator2.address, validator2.privateKey, withdrawalAddress2.address)
+    );
+    shared.origin.keys.validators.push(
+      new Validator(validator3.address, validator3.privateKey, withdrawalAddress3.address)
+    );
+    shared.origin.keys.validators.push(
+      new Validator(validator4.address, validator4.privateKey, withdrawalAddress4.address)
+    );
+    shared.origin.keys.validators.push(
+      new Validator(validator5.address, validator5.privateKey, withdrawalAddress5.address)
+    );
   });
 });

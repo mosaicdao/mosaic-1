@@ -27,8 +27,8 @@ describe('Core::proposeMetablock', async () => {
     const accumulatedGas = '1500000';
     const secret = 'secret';
     const committeeLock = shared.origin.web3.utils.sha3(secret);
-    const source = shared.origin.web3.utils.sha3('100block');
-    const target = shared.origin.web3.utils.sha3('200block');
+    const source = shared.origin.web3.utils.sha3('source');
+    const target = shared.origin.web3.utils.sha3('target');
     const epochLength = await coreInstance.methods.epochLength().call();
     const sourceBlockHeight = new BN(epochLength).add(new BN('100'));
     const targetBlockHeight = sourceBlockHeight.add(new BN(epochLength));
@@ -46,7 +46,7 @@ describe('Core::proposeMetablock', async () => {
       sourceBlockHeight.toString(),
       targetBlockHeight.toString(),
     ).call();
-    const txObject = await coreInstance.methods.proposeMetablock(
+    const txObject = coreInstance.methods.proposeMetablock(
       kernelHash.toString(),
       originObservation,
       dynasty,
