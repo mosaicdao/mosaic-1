@@ -184,7 +184,7 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
         // which is deployed in next step.
         Proxy consensusProxy = createProxy(consensusMasterCopy, "");
 
-        consensus = ConsensusI(address(consensusProxy));
+        setupConsensus(ConsensusI(address(consensusProxy)));
 
         bytes memory reputationSetupData = abi.encodeWithSelector(
             REPUTATION_SETUP_CALLPREFIX,
@@ -280,7 +280,7 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
             blockHeader.height,
             blockHeader.stateRoot,
             _maxStateRoots,
-            address(consensus)
+            consensus
         );
 
         consensus.newMetaChain(
