@@ -14,14 +14,27 @@
 
 'use strict';
 
+const EthUtils = require('ethereumjs-util');
+
+const CoreStatusUtils = require('../test_lib/core_status_utils.js');
 const web3 = require('../test_lib/web3.js');
 
 const Core = artifacts.require('Core');
 const MockConsensus = artifacts.require('MockConsensus');
 
+async function createValidator() {
+  const account = await web3.eth.accounts.create();
+  return {
+    address: account.address,
+    privateKey: account.privateKey,
+  };
+}
+
 async function createConsensusCore(
   chainId,
   epochLength,
+  minValidatorCount,
+  validatorJoinLimit,
   height,
   parent,
   gasTarget,
@@ -34,6 +47,8 @@ async function createConsensusCore(
   const mockConsensus = await MockConsensus.new(
     chainId,
     epochLength,
+    minValidatorCount,
+    validatorJoinLimit,
     height,
     parent,
     gasTarget,
@@ -47,7 +62,7 @@ async function createConsensusCore(
   return mockConsensus;
 }
 
-async function setupCore(
+async function createCore(
   consensus,
   chainId,
   epochLength,
@@ -80,10 +95,83 @@ async function setupCore(
     sourceBlockHeight,
     txOptions,
   );
+
   return core;
 }
 
-async function calculcateQuorum(core, count) {
+async function openCore(
+  consensus,
+  core,
+) {
+  const minVal = await core.minimumValidatorCount.call();
+
+  const validators = [];
+  for (let i = 0; i < minVal.toNumber(10); i += 1) {
+    // eslint-disable-next-line no-await-in-loop
+    const validator = await createValidator();
+    // eslint-disable-next-line no-await-in-loop
+    await consensus.joinDuringCreation(validator.address);
+    validators.push(validator);
+  }
+
+  const coreStatus = await core.coreStatus.call();
+  assert.isOk(
+    CoreStatusUtils.isCoreOpened(coreStatus),
+  );
+
+  return {
+    validators,
+  };
+}
+
+async function signProposal(proposalHash, privateKey) {
+  const proposalSignature = EthUtils.ecsign(
+    EthUtils.toBuffer(proposalHash),
+    EthUtils.toBuffer(privateKey),
+  );
+
+  return {
+    r: EthUtils.bufferToHex(proposalSignature.r),
+    s: EthUtils.bufferToHex(proposalSignature.s),
+    v: web3.utils.toDecimal(proposalSignature.v),
+  };
+}
+
+async function precommitCore(
+  core,
+  proposalHash,
+  validators,
+) {
+  const quorum = await core.quorum();
+
+  assert(quorum > 0);
+  assert(quorum <= validators.length);
+
+  for (let i = 0; i < quorum; i += 1) {
+    // eslint-disable-next-line no-await-in-loop
+    const signature = await signProposal(
+      proposalHash, validators[i].privateKey,
+    );
+
+    // eslint-disable-next-line no-await-in-loop
+    await core.registerVote(
+      proposalHash, signature.r, signature.s, signature.v,
+    );
+  }
+
+  const precommit = await core.precommit();
+  assert.strictEqual(
+    precommit,
+    proposalHash,
+  );
+
+  const coreStatus = await core.coreStatus();
+  assert.isOk(
+    CoreStatusUtils.isCorePrecommitted(coreStatus),
+  );
+}
+
+async function calculateQuorum(core, count) {
   const numerator = await core.CORE_SUPER_MAJORITY_NUMERATOR.call();
   const denumerator = await core.CORE_SUPER_MAJORITY_DENOMINATOR.call();
 
@@ -99,7 +187,11 @@ function randomSha3() {
 
 module.exports = {
   createConsensusCore,
-  setupCore,
-  calculcateQuorum,
+  createCore,
+  createValidator,
+  signProposal,
+  openCore,
+  precommitCore,
+  calculateQuorum,
   randomSha3,
 };
