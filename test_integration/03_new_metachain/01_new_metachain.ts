@@ -13,8 +13,11 @@
 // limitations under the License.
 
 import shared from '../shared';
-import Interacts from "../../interacts/Interacts";
-import Utils from "../Utils";
+import Interacts from '../../interacts/Interacts';
+import Utils from '../Utils';
+import * as ContractsJson from '../../contract_build/contracts.json';
+import chai = require('chai');
+const { assert } = chai;
 
 describe('Axiom::newMetaChain', async () => {
 
@@ -31,7 +34,36 @@ describe('Axiom::newMetaChain', async () => {
     const txOptions = {
       from: shared.origin.keys.techGov,
     };
-    await Utils.sendTransaction(rawTx, txOptions);
+
+    const tx = await Utils.sendTransaction(rawTx, txOptions);
+    const txReceipt = await shared.origin.web3.eth.getTransactionReceipt(tx.transactionHash);
+    let consensusAddress = await axiom.instance.methods.consensus().call();
+
+    const event: any = Utils.perform(
+      txReceipt,
+      consensusAddress,
+      ContractsJson.Consensus.abi,
+    );
+
+    let chainId = event.metachainCreated._chainId;
+
+    assert.isDefined(
+      chainId,
+      'Chain id must be assigned',
+    );
+
+    const consensusInstance = Interacts.getConsensus(shared.origin.web3, consensusAddress);
+
+    const coreAddress = await consensusInstance.methods.assignments(chainId).call();
+
+    assert.isDefined(
+      coreAddress,
+      'Core address must be defined in assignments',
+    );
+
+    shared.origin.contracts.Core.instance = Interacts.getCore(shared.origin.web3, coreAddress);
+    shared.origin.contracts.Core.address = coreAddress;
+    shared.origin.chainId = chainId;
 
   });
 
