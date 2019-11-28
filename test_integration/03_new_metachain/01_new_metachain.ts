@@ -18,7 +18,7 @@ import Utils from "../Utils";
 
 describe('Axiom::newMetaChain', async () => {
 
-  it('Proposes metablock', async () => {
+  it('New metachain creation', async () => {
 
     const axiom = shared.origin.contracts.Axiom;
     const stateRoots = 100;
@@ -30,8 +30,13 @@ describe('Axiom::newMetaChain', async () => {
     console.log('consensus address  in axiom :- ',await axiom.instance.methods.consensus().call());
     await Utils.sendTransaction(rawTx, {
       from: shared.origin.keys.techGov,
+      gas: '9000000',
+    }).then(value => {
+      console.log('value :- ',value);
+    }).catch(error => {
+      console.log('error in metachain :- ',error);
     });
-    const consensusContractInstance = Interacts.getConsensus(await axiom.instance.methods.consensus().call());
+    // const consensusContractInstance = Interacts.getConsensus(await axiom.instance.methods.consensus().call());
 
   });
 
