@@ -14,9 +14,11 @@
 
 'use strict';
 
+const web3Utils = require('web3-utils');
 const Utils = require('../test_lib/utils.js');
 const consensusUtil = require('./utils.js');
 const axiomUtil = require('../axiom/utils');
+const EventDecoder = require('../test_lib/event_decoder');
 
 const SpyAxiom = artifacts.require('SpyAxiom');
 const Consensus = artifacts.require('Consensus');
@@ -72,6 +74,23 @@ contract('Consensus::newMetaChain', (accounts) => {
   contract('Positive Tests', () => {
     it('should pass when called with correct params', async () => {
       await consensusUtil.callNewMetaChainOnConsensus(contracts.SpyAxiom, inputParams);
+    });
+
+    it('should emit metachainCreated event', async () => {
+      const tx = await consensusUtil.callNewMetaChainOnConsensus(contracts.SpyAxiom, inputParams);
+      const event = EventDecoder.perform(tx.receipt, inputParams.consensus, contracts.Consensus.abi);
+
+      assert.isDefined(
+        event.metachainCreated,
+        'Event `metachainCreated` must be emitted.',
+      );
+
+      const eventData = event.metachainCreated;
+
+      assert.strictEqual(
+        web3Utils.toChecksumAddress(eventData._chainId),
+        inputParams.chainId,
+      );
     });
 
     it('should set core address in assignments mapping', async () => {
