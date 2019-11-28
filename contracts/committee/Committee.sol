@@ -232,7 +232,7 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
     /* External functions */
 
     function setup(
-        address _consensus,
+        ConsensusI _consensus,
         uint256 _committeeSize,
         bytes32 _dislocation,
         bytes32 _proposal
@@ -259,7 +259,7 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
             "Proposal must not be zero."
         );
 
-        consensus = ConsensusI(_consensus);
+        setupConsensus(_consensus);
 
         committeeStatus = CommitteeStatus.Open;
 
