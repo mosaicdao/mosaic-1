@@ -20,13 +20,12 @@ const web3 = require('../test_lib/web3.js');
 const Committee = artifacts.require('MockCommittee');
 
 function getCommitteeMembers(accountProvider, dislocation, proposal, committeeSize, sortPredicate) {
-  const oThis = this;
   const dist = [];
   for (let i = 0; i < committeeSize + 2; i += 1) {
     const account = accountProvider.get();
     dist.push({
       address: account,
-      distance: oThis.distanceToProposal(
+      distance: distanceToProposal(
         dislocation,
         account,
         proposal,
