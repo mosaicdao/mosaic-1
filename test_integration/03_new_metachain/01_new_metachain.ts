@@ -30,6 +30,8 @@ describe('Axiom::newMetaChain', async () => {
   //   );
   //   // TODO send transaction
   //   // TODO set chainID in shared
+  //   // TODO set core instance
+  //   // TODO set core address
   //
   // });
 

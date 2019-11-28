@@ -14,7 +14,7 @@
 
 'use strict';
 
-import {TransactionObject} from "../interacts/types";
+import shared from "./shared";
 
 export default class Utils {
   /**
@@ -60,6 +60,11 @@ export default class Utils {
    */
   static getCode(web3, address): Promise<string> {
     return web3.eth.getCode(address);
+  }
+
+  static randomSha3(): string {
+    const randomString = Math.random().toString(36).substring(2, 15);
+    return shared.origin.web3.utils.sha3(randomString);
   }
 }
 

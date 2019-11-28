@@ -11,12 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
-// ----------------------------------------------------------------------------
-//
-// http://www.simpletoken.org/
-//
-// ----------------------------------------------------------------------------
 
 import shared, {ContractEntity, Validator} from '../shared';
 import Utils, {ValidatorStatus} from "../Utils";
@@ -81,7 +75,6 @@ async function assertValidatorInCore(
 
   const validatorBeginHeight = await core.instance.methods.validatorBeginHeight(validator.address);
   const validatorEndHeight = await core.instance.methods.validatorEndHeight(validator.address);
-
 
 }
 
