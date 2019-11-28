@@ -75,36 +75,6 @@ describe('Axiom::setupConsensus', async () => {
 
     // Assert consensus state variables
     assert.strictEqual(
-      await consensusInstance.methods.committeeSize().call(),
-      committeeSize,
-      'Committee size value is not set in the contract.',
-    );
-
-    assert.strictEqual(
-      await consensusInstance.methods.minValidators().call(),
-      minValidators,
-      'Min validators value is not set in the contract.',
-    );
-
-    assert.strictEqual(
-      await consensusInstance.methods.joinLimit().call(),
-      joinLimit,
-      'Join limit value is not set in the contract.',
-    );
-
-    assert.strictEqual(
-      await consensusInstance.methods.gasTargetDelta().call(),
-      gasTargetDelta,
-      'Gas target delta value is not set in the contract.',
-    );
-
-    assert.strictEqual(
-      await consensusInstance.methods.coinbaseSplitPerMille().call(),
-      coinbaseSplitPerMille,
-      'Coin base split percentage value is not set in the contract.',
-    );
-
-    assert.strictEqual(
       await consensusInstance.methods.reputation().call(),
       reputationContractAddress,
       'Reputation value is not set in the contract.',
@@ -116,60 +86,12 @@ describe('Axiom::setupConsensus', async () => {
       'Axiom contract address is not set in the contract.',
     );
 
-    assert.strictEqual(
-      await consensusInstance.methods.committees('0x0000000000000000000000000000000000000001').call(),
-      await consensusInstance.methods.SENTINEL_COMMITTEES().call(),
-      'Committee sentinel value is not correctly set in the contract.',
-    );
-
     // Assert reputation state variables
     const reputationInstance = shared.origin.contracts.Reputation.instance;
     assert.strictEqual(
       await reputationInstance.methods.consensus().call(),
       shared.origin.contracts.Consensus.address,
       'Consensus contract address is not set in the contract.',
-    );
-
-    assert.strictEqual(
-      await reputationInstance.methods.mOST().call(),
-      mOSTAddress,
-      'mOST contract address is not set in the contract.',
-    );
-
-    assert.strictEqual(
-      await reputationInstance.methods.stakeMOSTAmount().call(),
-      stakeMOSTAmount,
-      'Stake mOST amount is not set in the contract.',
-    );
-
-    assert.strictEqual(
-      await reputationInstance.methods.wETH().call(),
-      wETHAddress,
-      'wETH contract address is not set in the contract.',
-    );
-
-    assert.strictEqual(
-      await reputationInstance.methods.stakeWETHAmount().call(),
-      stakeWETHAmount,
-      'Stake wETH amount is not set in the contract.',
-    );
-
-    assert.strictEqual(
-      await reputationInstance.methods.cashableEarningsPerMille().call(),
-      cashableEarningsPerMille,
-      'Cashable earnings per mille value is not set in the contract.',
-    );
-
-    assert.strictEqual(
-      await reputationInstance.methods.initialReputation().call(),
-      initialReputation,
-      'Initial reputation value is not set in the contract.',
-    );
-
-    assert.strictEqual(
-      await reputationInstance.methods.withdrawalCooldownPeriodInBlocks().call(),
-      withdrawalCooldownPeriodInBlocks,
-      'Withdrawal cooldown period in blocks value is not set in the contract.',
     );
   });
 
