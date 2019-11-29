@@ -81,11 +81,11 @@ contract('Consensus::newMetaChain', (accounts) => {
       const event = EventDecoder.perform(tx.receipt, inputParams.consensus, contracts.Consensus.abi);
 
       assert.isDefined(
-        event.metachainCreated,
+        event.MetachainCreated,
         'Event `metachainCreated` must be emitted.',
       );
 
-      const eventData = event.metachainCreated;
+      const eventData = event.MetachainCreated;
 
       assert.strictEqual(
         web3Utils.toChecksumAddress(eventData._chainId),

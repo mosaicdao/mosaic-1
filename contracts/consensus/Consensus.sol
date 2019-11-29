@@ -35,7 +35,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
     /* Events */
 
-    event metachainCreated(bytes20 _chainId);
+    event MetachainCreated(bytes20 _chainId);
 
 
     /* Constants */
@@ -643,7 +643,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         assignments[chainId] = core;
         anchors[chainId] = _anchor;
 
-        emit metachainCreated(chainId);
+        emit MetachainCreated(chainId);
     }
 
     /** Get minimum validator and join limit count. */
