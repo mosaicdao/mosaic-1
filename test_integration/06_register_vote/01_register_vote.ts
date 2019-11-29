@@ -23,10 +23,12 @@ describe('Core::registerVote', async () => {
     const txOptions = {
       from: shared.origin.keys.techGov,
     };
-    const proposalHash = '';
+    const proposalHash = shared.data.proposal;
     const validators = shared.origin.keys.validators;
-    const registerVotePromises = [];
-    validators.forEach((validator) => {
+    const quorum = await coreInstance.methods.quorum().call();
+    for(let i = 0; i <= parseInt(quorum); i++) {
+      const validator = validators[i];
+      console.log(`signing validator: ${validator.address}`);
       const signature = Utils.signProposal(
         shared.origin.web3,
         proposalHash,
@@ -38,14 +40,8 @@ describe('Core::registerVote', async () => {
         signature.s,
         signature.v,
       );
-      registerVotePromises.push(
-        Utils.sendTransaction(
-          txObject,
-          txOptions,
-        )
-      );
-    });
-    Promise.all(registerVotePromises);
+      await Utils.sendTransaction(txObject, txOptions);
+    }
 
     assert.strictEqual(
       await coreInstance.methods.precommit().call(),

@@ -100,16 +100,26 @@ export class Origin {
   }
 
 }
+
+export class Data {
+  public proposal: string;
+
+  constructor() {
+    this.proposal = null;
+  }
+}
 /**
  * An object that is shared across modules.
  */
 class Shared {
   public artifacts: any;
   public origin: Origin;
+  public data: Data;
 
   constructor() {
     this.artifacts = {};
     this.origin =  new Origin();
+    this.data = new Data();
   }
 }
 

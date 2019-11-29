@@ -17,7 +17,7 @@
 import shared from '../shared';
 import Interacts from "../../interacts/Interacts";
 
-const FUNDING_AMOUNT_IN_ETHER = '2';
+const FUNDING_AMOUNT_IN_ETHER = '10';
 describe('Deployment', async () => {
   it('Contract deployment', async () => {
 
