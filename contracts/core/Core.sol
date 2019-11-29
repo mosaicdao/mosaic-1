@@ -325,11 +325,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         );
 
         require(
-            _accumulatedGas != uint256(0),
-            "Metablock's accumulated gas is 0."
-        );
-
-        require(
             _source != bytes32(0),
             "Metablock's source is 0."
         );

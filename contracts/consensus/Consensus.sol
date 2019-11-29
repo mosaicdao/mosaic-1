@@ -33,6 +33,11 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     using SafeMath for uint256;
 
 
+    /* Events */
+
+    event metachainCreated(bytes20 _chainId);
+
+
     /* Constants */
 
     /** Committee formation block delay */
@@ -637,6 +642,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
         assignments[chainId] = core;
         anchors[chainId] = _anchor;
+
+        emit metachainCreated(chainId);
     }
 
     /** Get minimum validator and join limit count. */
