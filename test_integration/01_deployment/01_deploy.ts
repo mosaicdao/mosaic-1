@@ -16,7 +16,6 @@
 
 import shared from '../shared';
 import Interacts from "../../interacts/Interacts";
-import Utils from "../Utils";
 
 const FUNDING_AMOUNT_IN_ETHER = '2';
 describe('Deployment', async () => {

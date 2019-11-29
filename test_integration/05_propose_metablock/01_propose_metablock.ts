@@ -16,19 +16,21 @@ import shared from '../shared';
 import chai = require('chai');
 import Utils from "../Utils";
 import BN = require("bn.js");
+import * as Web3Utils from 'web3-utils';
 const { assert } = chai;
+
 
 describe('Core::proposeMetablock', async () => {
   it('Core.proposeMetablock is called', async () => {
     const coreInstance = shared.origin.contracts.Core.instance;
     const kernelHash = coreInstance.methods.openKernelHash().call();
-    const originObservation = Utils.randomSha3();
+    const originObservation = Utils.randomSha3(shared.origin.web3); // Finalized state root
     const dynasty = '1'; // default is '0'
     const accumulatedGas = '1500000';
-    const secret = 'secret';
+    const secret = Web3Utils.randomHex(32); // state root
     const committeeLock = shared.origin.web3.utils.sha3(secret);
-    const source = shared.origin.web3.utils.sha3('source');
-    const target = shared.origin.web3.utils.sha3('target');
+    const source = shared.origin.web3.utils.sha3('sourceBlockHash');
+    const target = shared.origin.web3.utils.sha3('targetBlockHash');
     const epochLength = await coreInstance.methods.epochLength().call();
     const sourceBlockHeight = new BN(epochLength).add(new BN('100'));
     const targetBlockHeight = sourceBlockHeight.add(new BN(epochLength));
