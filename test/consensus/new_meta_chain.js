@@ -82,7 +82,7 @@ contract('Consensus::newMetaChain', (accounts) => {
 
       assert.isDefined(
         event.MetachainCreated,
-        'Event `metachainCreated` must be emitted.',
+        'Event `MetachainCreated` must be emitted.',
       );
 
       const eventData = event.MetachainCreated;
