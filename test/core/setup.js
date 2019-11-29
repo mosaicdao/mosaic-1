@@ -134,16 +134,6 @@ contract('Core::constructor', (accounts) => {
       );
     });
 
-    it('should revert as accumulated gas is 0', async () => {
-      const args = correctArgs;
-      args.accumulatedGas = 0;
-
-      await Utils.expectRevert(
-        createCore(args, config.consensus),
-        'Metablock\'s accumulated gas is 0.',
-      );
-    });
-
     it('should revert as metablock\'s source is 0', async () => {
       const args = correctArgs;
       args.source = Utils.ZERO_BYTES32;
