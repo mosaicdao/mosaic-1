@@ -51,22 +51,14 @@ describe('Key generations', async () => {
     web3.eth.accounts.wallet.add(withdrawalAddress4);
     web3.eth.accounts.wallet.add(withdrawalAddress5);
 
-    const fundingRequest = [];
     const fundingAmount = web3.utils.toWei(FUNDING_AMOUNT_IN_ETH);
 
-    fundingRequest.push(Utils.fundAddressForGas(techGov.address, funder, web3, fundingAmount));
-    fundingRequest.push(Utils.fundAddressForGas(validator1.address, funder, web3, fundingAmount));
-    fundingRequest.push(Utils.fundAddressForGas(validator2.address, funder, web3, fundingAmount));
-    fundingRequest.push(Utils.fundAddressForGas(validator3.address, funder, web3, fundingAmount));
-    fundingRequest.push(Utils.fundAddressForGas(validator4.address, funder, web3, fundingAmount));
-    fundingRequest.push(Utils.fundAddressForGas(validator5.address, funder, web3, fundingAmount));
-
-    fundingRequest.push(Utils.fundAddressForGas(withdrawalAddress1.address, funder, web3, fundingAmount));
-    fundingRequest.push(Utils.fundAddressForGas(withdrawalAddress2.address, funder, web3, fundingAmount));
-    fundingRequest.push(Utils.fundAddressForGas(withdrawalAddress3.address, funder, web3, fundingAmount));
-    fundingRequest.push(Utils.fundAddressForGas(withdrawalAddress4.address, funder, web3, fundingAmount));
-    fundingRequest.push(Utils.fundAddressForGas(withdrawalAddress5.address, funder, web3, fundingAmount));
-    await Promise.all(fundingRequest);
+    await Utils.fundAddressForGas(techGov.address, funder, web3, fundingAmount);
+    await Utils.fundAddressForGas(validator1.address, funder, web3, fundingAmount);
+    await Utils.fundAddressForGas(validator2.address, funder, web3, fundingAmount);
+    await Utils.fundAddressForGas(validator3.address, funder, web3, fundingAmount);
+    await Utils.fundAddressForGas(validator4.address, funder, web3, fundingAmount);
+    await Utils.fundAddressForGas(validator5.address, funder, web3, fundingAmount);
 
     shared.origin.keys.techGov = techGov.address;
     shared.origin.keys.validators.push(new Validator(validator1.address, withdrawalAddress1.address));

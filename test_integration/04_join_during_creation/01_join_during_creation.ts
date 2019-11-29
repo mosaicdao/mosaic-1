@@ -35,7 +35,7 @@ async function assertValidatorInCore(
   core: ContractEntity<Core>,
   validator: Validator,
 ) {
-  const isValidator = await core.instance.methods.isValidator(validator.address).call;
+  const isValidator = await core.instance.methods.isValidator(validator.address).call();
 
   assert.isOk(
     isValidator,
@@ -56,30 +56,21 @@ describe('Consensus: Join during creation', async () => {
     const mOSTSTakeAmount = await reputation.instance.methods.stakeMOSTAmount().call();
     const wETHSTakeAmount = await reputation.instance.methods.stakeWETHAmount().call();
 
-    const approvalPromises = [];
-    const joinDuringCreationPromises = [];
-
-    validators.forEach((validator) => {
+    for (let i = 0; i < validators.length; i++) {
+      const validator = validators[i];
 
       // Approve most amount.
-      approvalPromises.push(
-        Utils.sendTransaction(
+      let receipt = await Utils.sendTransaction(
           mOST.instance.methods.approve(reputation.address, mOSTSTakeAmount),
           {from: validator.address},
-        ),
       );
-
       // Approve WETH amount.
-      approvalPromises.push(
-        Utils.sendTransaction(
+      receipt = await Utils.sendTransaction(
           wETH.instance.methods.approve(reputation.address, wETHSTakeAmount),
           {from: validator.address},
-        ),
       );
-
-      // Join during creation transaction.
-      joinDuringCreationPromises.push(
-        Utils.sendTransaction(
+      //Join during creation transaction.
+      receipt = await Utils.sendTransaction(
           consensus.instance.methods.joinDuringCreation(
             shared.origin.chainId,
             core.address,
@@ -88,16 +79,10 @@ describe('Consensus: Join during creation', async () => {
           {
             from: validator.address
           },
-        ),
       );
-    });
 
-    await Promise.all(approvalPromises);
-    await Promise.all(joinDuringCreationPromises);
-
-    validators.forEach(async (validator) => {
       await assertValidatorInReputation(reputation, validator);
       await assertValidatorInCore(core, validator);
-    });
+    }
   });
 });
