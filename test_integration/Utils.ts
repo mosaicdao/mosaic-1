@@ -14,7 +14,8 @@
 
 'use strict';
 
-import shared from "./shared";
+import Web3 from "web3";
+
 const EthUtils = require('ethereumjs-util');
 
 export default class Utils {
@@ -59,7 +60,7 @@ export default class Utils {
    * @param address Contract address
    * @return {Promise<string>}
    */
-  static getCode(web3, address): Promise<string> {
+  static getCode(web3: Web3, address: string): Promise<string> {
     return web3.eth.getCode(address);
   }
 
@@ -68,7 +69,7 @@ export default class Utils {
    * @param web3 Web3 provider
    * @return Sha3 value
    */
-  static randomSha3(web3): string {
+  static randomSha3(web3: Web3): string {
     const randomString = Math.random().toString(36).substring(2, 15);
     return web3.utils.sha3(randomString);
   }
@@ -80,7 +81,8 @@ export default class Utils {
    * @param privateKey Private key
    * @return r, s, v signature values
    */
-  static signProposal(web3, proposalHash, privateKey): {r: string, s: string, v: string} {
+  static signProposal(web3: Web3, proposalHash: string, privateKey: string):
+    {r: string, s: string, v: number} {
     const proposalSignature = EthUtils.ecsign(
       EthUtils.toBuffer(proposalHash),
       EthUtils.toBuffer(privateKey),
@@ -91,6 +93,15 @@ export default class Utils {
       s: EthUtils.bufferToHex(proposalSignature.s),
       v: web3.utils.toDecimal(proposalSignature.v),
     };
+  }
+
+  /**
+   * Returns true if address is valid.
+   * @param address Ethereum address
+   * @return True if address is valid.
+   */
+  static isAddress(web3: Web3, address: string): boolean {
+    return web3.utils.isAddress(address)
   }
 }
 
@@ -109,6 +120,8 @@ export enum CoreStatus {
   creation = 3,
   opened = 4,
   precommitted = 5,
-};
+}
+
+export const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 
