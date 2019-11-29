@@ -23,44 +23,13 @@ async function assertValidatorInReputation(
   reputation: ContractEntity<Reputation>,
   validator: Validator,
 ) {
-  const initialReputation = new BN((await reputation.instance.methods.initialReputation().call()));
   const validatorObject = await reputation.instance.methods.validators(validator.address).call();
 
   assert.isOk(
     new BN(validatorObject.status).eqn(ValidatorStatus.Staked),
     'Validator status must be staked',
   );
-
-  assert.isOk(
-    new BN(validatorObject.reputation).eq(initialReputation),
-    `Initial reputation should be ${initialReputation.toString(10)}`
-    + ` but found ${validatorObject.reputation}`,
-  );
-
-  assert.strictEqual(
-    validatorObject.withdrawalAddress,
-    validator.withdrawalAddress,
-    'Withdrawal address must match',
-  );
-
-  assert.isOk(
-    new BN(validatorObject.withdrawalBlockHeight).eq(new BN('ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff', 16)),
-    'Withdrawal block height must be max value uint256',
-  );
-
-  assert.isOk(
-    new BN(validatorObject.lockedEarnings).eqn(0),
-    true,
-    `Locked earnings must be zero but found ${validatorObject.lockedEarnings}`,
-  );
-
-  assert.isOk(
-    new BN(validatorObject.cashableEarnings).eqn(0),
-    true,
-    `Cashable earnings must be zero but found ${validatorObject.cashableEarnings}`,
-  );
 }
-
 
 async function assertValidatorInCore(
   core: ContractEntity<Core>,
@@ -72,10 +41,6 @@ async function assertValidatorInCore(
     isValidator,
     `Validator ${validator.address} must be registered to core`,
   );
-
-  const validatorBeginHeight = await core.instance.methods.validatorBeginHeight(validator.address);
-  const validatorEndHeight = await core.instance.methods.validatorEndHeight(validator.address);
-
 }
 
 describe('Consensus: Join during creation', async () => {
