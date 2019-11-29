@@ -68,7 +68,7 @@ async function joinDuringCreation(consensus, joinParams) {
 }
 
 async function callNewMetaChainOnConsensus(spyAxiom, params) {
-  await spyAxiom.callNewMetaChainOnConsensus(
+  return spyAxiom.callNewMetaChainOnConsensus(
     params.consensus,
     params.chainId,
     params.epochLength,
