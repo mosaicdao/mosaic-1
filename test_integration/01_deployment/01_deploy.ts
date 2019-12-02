@@ -16,9 +16,8 @@
 
 import shared from '../shared';
 import Interacts from "../../interacts/Interacts";
-import Utils from "../Utils";
 
-const FUNDING_AMOUNT_IN_ETHER = '2';
+const FUNDING_AMOUNT_IN_ETHER = '10';
 describe('Deployment', async () => {
   it('Contract deployment', async () => {
 
@@ -66,23 +65,19 @@ describe('Deployment', async () => {
     const erc20FundingPromises = [];
     const fundingAmount = web3.utils.toWei(FUNDING_AMOUNT_IN_ETHER);
 
-    shared.origin.keys.validators.forEach((validator) => {
-      erc20FundingPromises.push(
-        mOST.transfer(
-          validator.address,
+    let validators = shared.origin.keys.validators;
+    for (let i = 0; i < validators.length; i++) {
+      await mOST.transfer(
+        validators[i].address,
           fundingAmount,
           { from: funder },
-        ),
       );
-
-      erc20FundingPromises.push(
-        wETH.transfer(
-          validator.address,
+      await wETH.transfer(
+        validators[i].address,
           fundingAmount,
           { from: funder },
-        ),
       );
-    });
+    }
 
     await Promise.all(erc20FundingPromises);
   });

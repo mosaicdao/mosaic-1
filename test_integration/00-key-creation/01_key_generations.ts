@@ -51,28 +51,30 @@ describe('Key generations', async () => {
     web3.eth.accounts.wallet.add(withdrawalAddress4);
     web3.eth.accounts.wallet.add(withdrawalAddress5);
 
-    const fundingRequest = [];
     const fundingAmount = web3.utils.toWei(FUNDING_AMOUNT_IN_ETH);
 
-    fundingRequest.push(Utils.fundAddressForGas(techGov.address, funder, web3, fundingAmount));
-    fundingRequest.push(Utils.fundAddressForGas(validator1.address, funder, web3, fundingAmount));
-    fundingRequest.push(Utils.fundAddressForGas(validator2.address, funder, web3, fundingAmount));
-    fundingRequest.push(Utils.fundAddressForGas(validator3.address, funder, web3, fundingAmount));
-    fundingRequest.push(Utils.fundAddressForGas(validator4.address, funder, web3, fundingAmount));
-    fundingRequest.push(Utils.fundAddressForGas(validator5.address, funder, web3, fundingAmount));
-
-    fundingRequest.push(Utils.fundAddressForGas(withdrawalAddress1.address, funder, web3, fundingAmount));
-    fundingRequest.push(Utils.fundAddressForGas(withdrawalAddress2.address, funder, web3, fundingAmount));
-    fundingRequest.push(Utils.fundAddressForGas(withdrawalAddress3.address, funder, web3, fundingAmount));
-    fundingRequest.push(Utils.fundAddressForGas(withdrawalAddress4.address, funder, web3, fundingAmount));
-    fundingRequest.push(Utils.fundAddressForGas(withdrawalAddress5.address, funder, web3, fundingAmount));
-    await Promise.all(fundingRequest);
+    await Utils.fundAddressForGas(techGov.address, funder, web3, fundingAmount);
+    await Utils.fundAddressForGas(validator1.address, funder, web3, fundingAmount);
+    await Utils.fundAddressForGas(validator2.address, funder, web3, fundingAmount);
+    await Utils.fundAddressForGas(validator3.address, funder, web3, fundingAmount);
+    await Utils.fundAddressForGas(validator4.address, funder, web3, fundingAmount);
+    await Utils.fundAddressForGas(validator5.address, funder, web3, fundingAmount);
 
     shared.origin.keys.techGov = techGov.address;
-    shared.origin.keys.validators.push(new Validator(validator1.address, withdrawalAddress1.address));
-    shared.origin.keys.validators.push(new Validator(validator2.address, withdrawalAddress2.address));
-    shared.origin.keys.validators.push(new Validator(validator3.address, withdrawalAddress3.address));
-    shared.origin.keys.validators.push(new Validator(validator4.address, withdrawalAddress4.address));
-    shared.origin.keys.validators.push(new Validator(validator5.address, withdrawalAddress5.address));
+    shared.origin.keys.validators.push(
+      new Validator(validator1.address, validator1.privateKey, withdrawalAddress1.address)
+    );
+    shared.origin.keys.validators.push(
+      new Validator(validator2.address, validator2.privateKey, withdrawalAddress2.address)
+    );
+    shared.origin.keys.validators.push(
+      new Validator(validator3.address, validator3.privateKey, withdrawalAddress3.address)
+    );
+    shared.origin.keys.validators.push(
+      new Validator(validator4.address, validator4.privateKey, withdrawalAddress4.address)
+    );
+    shared.origin.keys.validators.push(
+      new Validator(validator5.address, validator5.privateKey, withdrawalAddress5.address)
+    );
   });
 });
