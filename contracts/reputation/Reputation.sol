@@ -103,7 +103,7 @@ contract Reputation is ConsensusModule {
     modifier isActive(address _validator)
     {
         require(
-            validators[_validator].status == ValidatorStatus.Staked,
+            isActiveValidator(_validator),
             "Validator is not active."
         );
 
@@ -570,5 +570,19 @@ contract Reputation is ConsensusModule {
         returns (uint256)
     {
         return validators[_validator].reputation;
+    }
+
+    /**
+     * @notice Check if the validator address is active or not.
+     *
+     * @param _validator An address of a validator.
+     * Returns true if the specified address is an active validator.
+     */
+    function isActiveValidator(address _validator)
+        public
+        view
+        returns(bool)
+    {
+        return validators[_validator].status == ValidatorStatus.Staked;
     }
 }

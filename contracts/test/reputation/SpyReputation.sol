@@ -45,10 +45,10 @@ contract SpyReputation is MasterCopyNonUpgradable, ReputationI {
         activeValidators[_validator] = _active;
     }
 
-    function isActive(
+    function isActiveValidator(
         address _validator
     )
-        external
+        public
         view
         returns (bool)
     {
