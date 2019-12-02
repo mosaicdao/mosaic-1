@@ -22,13 +22,13 @@ describe('Core::registerVote', async () => {
     const coreInstance = shared.origin.contracts.Core.instance;
     const txOptions = {
       from: shared.origin.keys.techGov,
+      gas: '2000000', // TODO Remove, check estimateGas
     };
     const proposalHash = shared.data.proposal;
     const validators = shared.origin.keys.validators;
     const quorum = await coreInstance.methods.quorum().call();
-    for(let i = 0; i <= parseInt(quorum); i++) {
+    for(let i = 0; i < parseInt(quorum); i++) {
       const validator = validators[i];
-      console.log(`signing validator: ${validator.address}`);
       const signature = Utils.signProposal(
         shared.origin.web3,
         proposalHash,
@@ -43,6 +43,7 @@ describe('Core::registerVote', async () => {
       await Utils.sendTransaction(txObject, txOptions);
     }
 
+    // Assert core contract storage
     assert.strictEqual(
       await coreInstance.methods.precommit().call(),
       proposalHash,
@@ -50,15 +51,17 @@ describe('Core::registerVote', async () => {
     );
 
     assert.strictEqual(
-      await coreInstance.methods.coreStatus().call(),
+      parseInt(await coreInstance.methods.coreStatus().call()),
       CoreStatus.precommitted,
       'Core status is not preCommitted.'
     );
 
+    // Assert Consensus contract storage
     const consensusInstance = shared.origin.contracts.Consensus.instance;
     const coreAddress = shared.origin.contracts.Core.address;
+    const precommits = await consensusInstance.methods.precommits(coreAddress).call();
     assert.strictEqual(
-      await consensusInstance.methods.precommits(coreAddress).call(),
+      precommits.proposal,
       proposalHash,
       'Proposal for core is incorrect in Consensus contract.',
     );
