@@ -28,16 +28,16 @@ describe('Axiom::setupConsensus', async () => {
     const gasTargetDelta = '15000000'; // 15 million
     const coinbaseSplitPerMille = '499';
     const mOSTAddress = shared.origin.contracts.MOST.address;
-    const stakeMOSTAmount = '1000';
+    const stakeMOSTAmount = shared.origin.web3.utils.toWei('1', 'ether');
     const wETHAddress = shared.origin.contracts.WETH.address;
-    const stakeWETHAmount = '500';
+    const stakeWETHAmount = shared.origin.web3.utils.toWei('2', 'ether');
     const cashableEarningsPerMille = '100';
     const initialReputation = '1';
     const withdrawalCooldownPeriodInBlocks = '20';
     const txOptions = {
       from: shared.origin.keys.techGov,
     };
-    const txObject = await axiomInstance.methods.setupConsensus(
+    const txObject = axiomInstance.methods.setupConsensus(
       committeeSize,
       minValidators,
       joinLimit,

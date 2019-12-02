@@ -16,19 +16,24 @@ import shared from '../shared';
 import chai = require('chai');
 import Utils from "../Utils";
 import BN = require("bn.js");
+import * as Web3Utils from 'web3-utils';
 const { assert } = chai;
+
 
 describe('Core::proposeMetablock', async () => {
   it('Core.proposeMetablock is called', async () => {
     const coreInstance = shared.origin.contracts.Core.instance;
-    const kernelHash = coreInstance.methods.openKernelHash().call();
-    const originObservation = Utils.randomSha3();
+    const kernelHash = await coreInstance.methods.openKernelHash().call();
+    // TODO ganache block hash 10
+    const originObservation = Utils.randomSha3(shared.origin.web3); // Finalized block hash
     const dynasty = '1'; // default is '0'
-    const accumulatedGas = '1500000';
-    const secret = 'secret';
+    const accumulatedGas = '10000000'; // 10 million
+    const secret = Web3Utils.randomHex(32); // transaction root
     const committeeLock = shared.origin.web3.utils.sha3(secret);
-    const source = shared.origin.web3.utils.sha3('100block');
-    const target = shared.origin.web3.utils.sha3('200block');
+    // TODO Advance block by 150
+    // Get actual ganache block hash of finalized blocks
+    const source = shared.origin.web3.utils.sha3('sourceBlockHash');
+    const target = shared.origin.web3.utils.sha3('targetBlockHash');
     const epochLength = await coreInstance.methods.epochLength().call();
     const sourceBlockHeight = new BN(epochLength).add(new BN('100'));
     const targetBlockHeight = sourceBlockHeight.add(new BN(epochLength));
@@ -36,32 +41,34 @@ describe('Core::proposeMetablock', async () => {
       from: shared.origin.keys.techGov,
     };
     const proposalHash = await coreInstance.methods.proposeMetablock(
-      kernelHash.toString(),
+      kernelHash,
       originObservation,
       dynasty,
       accumulatedGas,
       committeeLock,
       source,
       target,
-      sourceBlockHeight.toString(),
-      targetBlockHeight.toString(),
+      sourceBlockHeight.toString(10),
+      targetBlockHeight.toString(10),
     ).call();
-    const txObject = await coreInstance.methods.proposeMetablock(
-      kernelHash.toString(),
+    const txObject = coreInstance.methods.proposeMetablock(
+      kernelHash,
       originObservation,
       dynasty,
       accumulatedGas,
       committeeLock,
       source,
       target,
-      sourceBlockHeight.toString(),
-      targetBlockHeight.toString(),
+      sourceBlockHeight.toString(10),
+      targetBlockHeight.toString(10),
     );
     await Utils.sendTransaction(
       txObject,
       txOptions,
     );
 
+    // Set proposal in data variable
+    shared.data.proposal = proposalHash;
     const voteCount = await coreInstance.methods.voteCounts(proposalHash).call();
     assert.strictEqual(
       voteCount.dynasty,
