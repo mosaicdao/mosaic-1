@@ -24,7 +24,7 @@ describe('Core::proposeMetablock', async () => {
   it('Core.proposeMetablock is called', async () => {
     const coreInstance = shared.origin.contracts.Core.instance;
     const kernelHash = await coreInstance.methods.openKernelHash().call();
-    // TODO ganache block hash 10
+    // TODO get ganache block hash 10
     const originObservation = Utils.randomSha3(shared.origin.web3); // Finalized block hash
     const dynasty = '1'; // default is '0'
     const accumulatedGas = '10000000'; // 10 million
@@ -38,7 +38,7 @@ describe('Core::proposeMetablock', async () => {
     const sourceBlockHeight = new BN(epochLength).add(new BN('100'));
     const targetBlockHeight = sourceBlockHeight.add(new BN(epochLength));
     const txOptions = {
-      from: shared.origin.keys.techGov,
+      from: shared.origin.funder,
     };
     const proposalHash = await coreInstance.methods.proposeMetablock(
       kernelHash,

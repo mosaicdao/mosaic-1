@@ -21,7 +21,7 @@ describe('Core::registerVote', async () => {
   it('Core.registerVote is called', async () => {
     const coreInstance = shared.origin.contracts.Core.instance;
     const txOptions = {
-      from: shared.origin.keys.techGov,
+      from: shared.origin.funder,
       gas: '2000000', // TODO Remove, check estimateGas
     };
     const proposalHash = shared.data.proposal;

@@ -20,12 +20,22 @@ import Utils, {NULL_ADDRESS} from "../Utils";
 describe('Consensus::formCommittee', async () => {
 
   it('Consensus.formCommittee is called', async () => {
+    const txOptions = {
+      from: shared.origin.funder,
+    };
     const consensusInstance = shared.origin.contracts.Consensus.instance;
-    await consensusInstance.methods.formCommittee(
+    const committeeFormationDelay = await consensusInstance.methods.COMMITTEE_FORMATION_DELAY().call();
+    // Advance by committeeFormationDelay
+    await Utils.advanceBlocks(shared.origin.web3, committeeFormationDelay);
+    // Advance by 256 blocks
+    const segmentLength = 256;
+    await Utils.advanceBlocks(shared.origin.web3, segmentLength);
+    const txObject = await consensusInstance.methods.formCommittee(
       shared.origin.contracts.Core.address,
     );
-    const proposal = '';
-    const committeeAddress = await consensusInstance.methods.proposals(proposal).call();
+    await Utils.sendTransaction(txObject, txOptions);
+
+    const committeeAddress = await consensusInstance.methods.proposals(shared.data.proposal).call();
     assert.strictEqual(
       Utils.isAddress(shared.origin.web3, committeeAddress) && committeeAddress !== NULL_ADDRESS,
       true,

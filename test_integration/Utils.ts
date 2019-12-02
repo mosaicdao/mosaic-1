@@ -216,6 +216,41 @@ export default class Utils {
     return Utils.getFormattedEvents(decodedEvents);
   }
 
+  /**
+   * Advance block using evm_mine method
+   * @param web3 Web3 provider
+   */
+  private static async advanceBlock(web3: any) {
+    return new Promise((resolve, reject) => {
+      web3.currentProvider.send({
+          method: 'evm_mine',
+          jsonrpc: '2.0',
+          id: 1337,
+        },
+        (err) => {
+          if (err) {
+            return reject(err);
+          }
+
+          const newBlockHash = web3.eth.getBlock('latest').hash;
+
+          return resolve(newBlockHash);
+        });
+    });
+  }
+
+  /**
+   * Advance block by input block length
+   * @param web3 Web3 provider
+   * @param blockLength Block length to advance
+   */
+  static async advanceBlocks(web3: Web3, blockLength): Promise<void> {
+    for (let i = 0; i < blockLength; i += 1) {
+      // eslint-disable-next-line no-await-in-loop
+      await Utils.advanceBlock(web3);
+    }
+  }
+
 }
 
 export enum ValidatorStatus {
