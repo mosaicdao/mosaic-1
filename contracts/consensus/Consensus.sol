@@ -25,8 +25,9 @@ import "../core/CoreI.sol";
 import "../core/CoreStatusEnum.sol";
 import "../reputation/ReputationI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
+import "./CoreLifetime.sol";
 
-contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
+contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
 
     /* Usings */
 
@@ -95,7 +96,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     mapping(bytes20 /* chainId */ => bytes32 /* MetablockHash */) public metablockHeaderTips;
 
     /** Core statuses */
-    mapping(address /* core */ => CoreStatus /* coreStatus */) public coreStatuses;
+    mapping(address /* core */ => CoreLifetime /* coreLifetime */) public coreLifetime;
 
     /** Assigned core for a given chainId */
     mapping(bytes20 /* chainId */ => address /* core */) public assignments;
@@ -135,7 +136,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     modifier onlyCore()
     {
         require(
-            isCore(msg.sender),
+            isCoreInAction(msg.sender),
             "Caller must be an active core."
         );
 
@@ -261,6 +262,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             precommit.proposal == bytes32(0),
             "There already exists a precommit of the core."
         );
+
+        // On first precommit by a core, CoreLifetime state will change to activated.
+        if(coreLifetime[msg.sender] == CoreLifetime.genesis) {
+            coreLifetime[msg.sender] = CoreLifetime.activated;
+        }
+
         precommit.proposal = _proposal;
         precommit.committeeFormationBlockHeight = block.number.add(uint256(COMMITTEE_FORMATION_DELAY));
     }
@@ -299,6 +306,11 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
                 .sub(uint256(COMMITTEE_FORMATION_LENGTH))
                 .sub(uint256(256)) < precommit.committeeFormationBlockHeight,
             "Committee formation blocksegment length must be in 256 most recent blocks."
+        );
+
+        require(
+            coreLifetime[_core] == CoreLifetime.activated,
+            "Core lifetime status must be activated"
         );
 
         uint256 segmentHeight = precommit.committeeFormationBlockHeight;
@@ -430,8 +442,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         // Make sure that core is valid for given chain id.
         address core = assignments[_chainId];
         require(
-            isCore(core),
-            "There is no core for the specified chain id."
+            coreLifetime[core] == CoreLifetime.activated,
+            "Core lifetime status must be activated"
         );
 
         /*
@@ -483,8 +495,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     }
 
     /**
-     * @notice Validator joins the core, when core status is opened or
-     *         precommitted. This is called by validator address.
+     * @notice Validator joins the core, when core lifetime status is
+     *         is activated. This is called by validator address.
      *
      * @dev Function requires:
      *          - core status should be opened or precommitted.
@@ -503,11 +515,9 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         // Validate the join params.
         validateJoinParams(_chainId, _core, _withdrawalAddress);
 
-        // Specified core must have open or precommitted status.
-        CoreStatus status = coreStatuses[_core];
         require(
-            status == CoreStatus.opened || status == CoreStatus.precommitted,
-            "Core status is not opened or precommitted."
+            isCoreInAction(_core),
+            "Core lifetime status must be genesis or activated."
         );
 
         // Join in reputation contract.
@@ -539,10 +549,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         // Validate the join params.
         validateJoinParams(_chainId, _core, _withdrawalAddress);
 
-        // Specified core must have creation status.
+        // Specified core must have genesis lifetime status.
         require(
-            isCore(_core),
-            "Core must be in an active state."
+            coreLifetime[_core] == CoreLifetime.genesis,
+            "Core lifetime status must be genesis"
         );
 
         // Join in reputation contract.
@@ -586,8 +596,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
 
         require(
-            isCore(_core),
-            "There is no core for the specified chain id."
+            isCoreInAction(_core),
+            "Core lifetime status must be genesis or activated."
         );
 
         CoreI(_core).logout(msg.sender);
@@ -637,6 +647,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
         assignments[chainId] = core;
         anchors[chainId] = _anchor;
+        coreLifetime[core] = CoreLifetime.genesis;
     }
 
     /** Get minimum validator and join limit count. */
@@ -654,17 +665,18 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /* Internal functions */
 
     /**
-     * @notice Check if the core address is active.
+     * @notice Check if the core lifetime state is genesis or activated.
      * @param _core Core contract address.
      * Returns true if the specified address is a core.
      */
-    function isCore(address _core)
+    function isCoreInAction(address _core)
         internal
         view
         returns (bool)
     {
-        CoreStatus status = coreStatuses[_core];
-        return status >= CoreStatus.creation;
+        CoreLifetime lifeTimeStatus = coreLifetime[_core];
+        return lifeTimeStatus == CoreLifetime.genesis ||
+            lifeTimeStatus == CoreLifetime.activated;
     }
 
     /**
