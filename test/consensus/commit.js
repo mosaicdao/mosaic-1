@@ -19,7 +19,6 @@ const web3 = require('../test_lib/web3.js');
 
 const Utils = require('../test_lib/utils.js');
 const consensusUtil = require('./utils.js');
-const CoreStatusUtils = require('../test_lib/core_status_utils');
 
 const Consensus = artifacts.require('ConsensusTest');
 const SpyCore = artifacts.require('SpyCore');
@@ -124,63 +123,52 @@ contract('Consensus::commit', (accounts) => {
     it('should fail when there is not core for the specified chain id', async () => {
       await Utils.expectRevert(
         consensusUtil.commit(contracts.Consensus, commitParams),
-        'There is no core for the specified chain id.',
+        'Core lifetime status must be activated',
       );
     });
 
     it('should fail when core status is undefined', async () => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
-      await contracts.Consensus.setCoreStatus(
+      await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.undefined,
+        consensusUtil.CoreLifetime.undefined,
       );
       await Utils.expectRevert(
         consensusUtil.commit(contracts.Consensus, commitParams),
-        'There is no core for the specified chain id.',
+        'Core lifetime status must be activated',
       );
     });
 
     it('should fail when core status is halted', async () => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
-      await contracts.Consensus.setCoreStatus(
+      await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.halted,
+        consensusUtil.CoreLifetime.halted,
       );
       await Utils.expectRevert(
         consensusUtil.commit(contracts.Consensus, commitParams),
-        'There is no core for the specified chain id.',
+        'Core lifetime status must be activated',
       );
     });
 
     it('should fail when core status is corrupted', async () => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
-      await contracts.Consensus.setCoreStatus(
+      await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.corrupted,
+        consensusUtil.CoreLifetime.corrupted,
       );
       await Utils.expectRevert(
         consensusUtil.commit(contracts.Consensus, commitParams),
-        'There is no core for the specified chain id.',
+        'Core lifetime status must be activated',
       );
     });
 
-    it('should fail when precommit proposal is 0', async () => {
-      await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
-      await contracts.Consensus.setCoreStatus(
-        contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.precommitted,
-      );
-      await Utils.expectRevert(
-        consensusUtil.commit(contracts.Consensus, commitParams),
-        'There is no precommit for the specified core.',
-      );
-    });
 
     it('should fail when specified kernel hash is not equal to open kernel hash', async () => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
-      await contracts.Consensus.setCoreStatus(
+      await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.precommitted,
+        consensusUtil.CoreLifetime.activated,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -197,9 +185,9 @@ contract('Consensus::commit', (accounts) => {
 
     it('should fail when commit proposal is not equal to precommited proposal', async () => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
-      await contracts.Consensus.setCoreStatus(
+      await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.precommitted,
+        consensusUtil.CoreLifetime.activated,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -217,9 +205,9 @@ contract('Consensus::commit', (accounts) => {
 
     it('should fail when committee address is 0', async () => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
-      await contracts.Consensus.setCoreStatus(
+      await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.precommitted,
+        consensusUtil.CoreLifetime.activated,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -238,9 +226,9 @@ contract('Consensus::commit', (accounts) => {
 
     it('should fail when committee decision is 0', async () => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
-      await contracts.Consensus.setCoreStatus(
+      await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.precommitted,
+        consensusUtil.CoreLifetime.activated,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -260,9 +248,9 @@ contract('Consensus::commit', (accounts) => {
 
     it('should fail when committee decision does not match the provided committee lock', async () => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
-      await contracts.Consensus.setCoreStatus(
+      await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.precommitted,
+        consensusUtil.CoreLifetime.activated,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -283,9 +271,9 @@ contract('Consensus::commit', (accounts) => {
 
     it('should fail when anchor address for specified chain id is 0', async () => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
-      await contracts.Consensus.setCoreStatus(
+      await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.precommitted,
+        consensusUtil.CoreLifetime.activated,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -306,9 +294,9 @@ contract('Consensus::commit', (accounts) => {
 
     it('should fail when called 2nd time with same parameteres', async () => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
-      await contracts.Consensus.setCoreStatus(
+      await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.precommitted,
+        consensusUtil.CoreLifetime.activated,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -336,9 +324,9 @@ contract('Consensus::commit', (accounts) => {
     let proposal;
     beforeEach(async () => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
-      await contracts.Consensus.setCoreStatus(
+      await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.precommitted,
+        consensusUtil.CoreLifetime.activated,
       );
       proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -355,17 +343,17 @@ contract('Consensus::commit', (accounts) => {
     });
 
     it('should pass when core status is creation', async () => {
-      await contracts.Consensus.setCoreStatus(
+      await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.creation,
+        consensusUtil.CoreLifetime.activated,
       );
       await consensusUtil.commit(contracts.Consensus, commitParams);
     });
 
     it('should pass when core status is opened', async () => {
-      await contracts.Consensus.setCoreStatus(
+      await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.opened,
+        consensusUtil.CoreLifetime.activated,
       );
       await consensusUtil.commit(contracts.Consensus, commitParams);
     });

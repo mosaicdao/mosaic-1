@@ -552,7 +552,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
         // Specified core must have genesis lifetime status.
         require(
             coreLifetime[_core] == CoreLifetime.genesis,
-            "Core lifetime status must be genesis"
+            "Core lifetime status must be genesis."
         );
 
         // Join in reputation contract.

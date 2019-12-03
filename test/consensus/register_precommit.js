@@ -17,7 +17,6 @@
 const BN = require('bn.js');
 const Utils = require('../test_lib/utils.js');
 const consensusUtil = require('./utils.js');
-const CoreStatusUtils = require('../test_lib/core_status_utils');
 
 const Consensus = artifacts.require('ConsensusTest');
 
@@ -50,9 +49,9 @@ contract('Consensus::registerPrecommit', (accounts) => {
     });
 
     it('should fail when a precommit already exists for a core address', async () => {
-      await consensus.setCoreStatus(
+      await consensus.setCoreLifetime(
         inputParams.coreAddress1,
-        CoreStatusUtils.CoreStatus.creation,
+        consensusUtil.CoreLifetime.genesis,
       );
       await consensus.registerPrecommit(
         inputParams.proposal1,
@@ -74,9 +73,9 @@ contract('Consensus::registerPrecommit', (accounts) => {
 
   contract('Positive Tests', async () => {
     it('should pass when called with correct params', async () => {
-      await consensus.setCoreStatus(
+      await consensus.setCoreLifetime(
         inputParams.coreAddress1,
-        CoreStatusUtils.CoreStatus.creation,
+        consensusUtil.CoreLifetime.genesis,
       );
 
       const tx = await consensus.registerPrecommit(
@@ -91,12 +90,21 @@ contract('Consensus::registerPrecommit', (accounts) => {
         true,
         'Transaction receipt status must be true.',
       );
+
+      const coreLifetime = new BN(
+        await consensus.coreLifetime.call(inputParams.coreAddress1),
+      );
+
+      assert.isOk(
+        coreLifetime.eqn(consensusUtil.CoreLifetime.activated),
+        'CoreLifetime status should changes to activated',
+      );
     });
 
     it('should add the proposal in pre-commits mapping', async () => {
-      await consensus.setCoreStatus(
+      await consensus.setCoreLifetime(
         inputParams.coreAddress1,
-        CoreStatusUtils.CoreStatus.creation,
+        consensusUtil.CoreLifetime.activated,
       );
 
       // The proposal must not exist by default.
@@ -141,6 +149,15 @@ contract('Consensus::registerPrecommit', (accounts) => {
         'Committee formation block height '
         + `${proposalResult.committeeFormationBlockHeight} is not equal to `
         + `expected value ${expectedCommitteeFormationBlockHeight}`,
+      );
+
+      const coreLifetime = new BN(
+        await consensus.coreLifetime.call(inputParams.coreAddress1),
+      );
+
+      assert.isOk(
+        coreLifetime.eqn(consensusUtil.CoreLifetime.activated),
+        'CoreLifetime status should noy change',
       );
     });
   });

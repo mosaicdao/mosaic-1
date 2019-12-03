@@ -17,7 +17,6 @@
 const BN = require('bn.js');
 const Utils = require('../test_lib/utils.js');
 const consensusUtil = require('./utils.js');
-const CoreStatusUtils = require('../test_lib/core_status_utils');
 const axiomUtil = require('../axiom/utils.js');
 
 const Consensus = artifacts.require('ConsensusTest');
@@ -40,9 +39,9 @@ contract('Consensus::formCommittee', (accounts) => {
     testInputs.coreAddress = accountProvider.get();
     testInputs.proposal = Utils.getRandomHash();
 
-    await consensus.setCoreStatus(
+    await consensus.setCoreLifetime(
       testInputs.coreAddress,
-      CoreStatusUtils.CoreStatus.creation,
+      consensusUtil.CoreLifetime.activated,
     );
 
     await consensus.registerPrecommit(

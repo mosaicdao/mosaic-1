@@ -106,4 +106,11 @@ module.exports = {
   joinDuringCreation,
   callNewMetaChainOnConsensus,
   commit,
+  CoreLifetime: {
+    undefined: 0,
+    halted: 1,
+    corrupted: 2,
+    genesis: 3,
+    activated: 4,
+  },
 };

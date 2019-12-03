@@ -25,7 +25,7 @@ contract ConsensusTest is Consensus {
 
     }
 
-    function setCoreStatus(
+    function setCoreLifetime(
         address _core,
         CoreLifetime _status
     )
