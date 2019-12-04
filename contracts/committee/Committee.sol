@@ -760,16 +760,15 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
     /** Uses the salt to seal the position. */
     function sealPosition(bytes32 _position, bytes32 _salt)
         private
-        pure
+        view
         returns (bytes32)
     {
         // Returns the sealed position.
         return keccak256(
-            // TODO: note abi.encodePacked seems unneccesary,
-            // is there an overhead?
             abi.encodePacked(
                 _position,
-                _salt
+                _salt,
+                msg.sender
             )
         );
     }
