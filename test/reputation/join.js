@@ -186,7 +186,7 @@ contract('Reputation::join', (accounts) => {
     ));
   });
 
-  it('should fail to join validator pool if eETH token is not approved', async () => {
+  it('should fail to join validator pool if wETH token is not approved', async () => {
     await wETH.approve(
       reputation.address,
       '0',
