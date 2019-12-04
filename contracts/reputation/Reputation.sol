@@ -407,7 +407,7 @@ contract Reputation is ConsensusModule {
      * @param _validator A validator address to join.
      * @param _withdrawalAddress A withdrawal address of newly joined validator.
      */
-    function stake(
+    function join(
         address _validator,
         address _withdrawalAddress
     )
