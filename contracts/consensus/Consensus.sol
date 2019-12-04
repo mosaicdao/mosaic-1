@@ -25,8 +25,9 @@ import "../core/CoreI.sol";
 import "../core/CoreStatusEnum.sol";
 import "../reputation/ReputationI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
+import "../version/MosaicVersion.sol";
 
-contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
+contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, MosaicVersion {
 
     /* Usings */
 
@@ -55,6 +56,18 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         keccak256(
             "setup(address,bytes20,uint256,uint256,uint256,address,uint256,bytes32,uint256,uint256,uint256,bytes32,uint256)"
         )
+    );
+
+    string public constant MOSAIC_DOMAIN_SEPARATOR_NAME = "Mosaic";
+
+    /** It is domain separator typehash used to calculate metachain id. */
+    bytes32 public constant MOSAIC_DOMAIN_SEPARATOR_TYPEHASH = keccak256(
+        "MosaicDomain(string name,string version,uint256 originChainId,address consensus)"
+    );
+
+    /** It is metachain id typehash used to calculate metachain id. */
+    bytes32 public constant METACHAIN_ID_TYPEHASH = keccak256(
+        "Metachain(address anchor)"
     );
 
     /** The callprefix of the Committee::setup function. */
@@ -649,6 +662,59 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         joinLimit_ = joinLimit;
     }
     // Task: Pending functions related to halting and corrupting of core.
+
+
+    /* Public functions */
+
+    /**
+     * @notice Gets metachain id.
+     *         Metachain id format :
+     *         `0x19 0x4d <mosaic-domain-separator> <metachainid-typehash>` where
+     *         0x19 refers to ethereum initial byte(Refer Eip-191).
+     *         0x4d refers to 'M'.
+     *         <mosaic-domain-separator> format is `MosaicMetachain(string name,
+     *                            string version,uint256 originChainId,
+     *                            address consensus)`.
+     *         <metachainid-typehash> format is MetachainId(address anchor).
+     *
+     *         <mosaic-domain-separator> and <metachainid-typehash> is EIP-712 complaint.
+     *
+     * @param _anchor Anchor address of the new meta-chain.
+     * @param _originChainId Chain id of origin chain.
+     *
+     * @return metachainId_ Metachain id.
+     */
+    function getMetaChainId(address _anchor, uint256 _originChainId)
+        public
+        view
+        returns(bytes32 metachainId_)
+    {
+        bytes32 mosaicDomainSeparatorHash = keccak256(
+            abi.encode(
+                MOSAIC_DOMAIN_SEPARATOR_TYPEHASH,
+                MOSAIC_DOMAIN_SEPARATOR_NAME,
+                DOMAIN_SEPARATOR_VERSION,
+                _originChainId,
+                address(this)
+            )
+        );
+
+        bytes32 metachainIdHash = keccak256(
+            abi.encode(
+                METACHAIN_ID_TYPEHASH,
+                _anchor
+            )
+        );
+
+        metachainId_ = keccak256(
+            abi.encode(
+                byte(0x19), // Standard ethereum prefix as per EIP-191.
+                byte(0x4d), // 'M' for Mosaic.
+                mosaicDomainSeparatorHash,
+                metachainIdHash
+            )
+        );
+    }
 
 
     /* Internal functions */
