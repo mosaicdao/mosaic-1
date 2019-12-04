@@ -125,8 +125,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     modifier onlyValidator()
     {
         require(
-            reputation.isActiveValidator(msg.sender),
-            "Validator must be active in the reputation contract."
+            !reputation.isSlashed(msg.sender),
+            "Validator is slashed."
         );
 
         _;
@@ -319,9 +319,9 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      * @notice Enter a validator into the committee.
      *
      * @dev Function requires:
-     *          - committee address should be present.
-     *          - validator should be active.
-     *          - validator successfully enter a committee.
+     *          - committee address should be present
+     *          - validator should not be slashed in reputation contract
+     *          - validator successfully enter a committee
      *
      * @param _committeeAddress Committee address that validator wants to enter.
      * @param _validator Validator address to enter.
@@ -340,8 +340,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
 
         require(
-            reputation.isActiveValidator(_validator),
-            "Validator is not active."
+            !reputation.isSlashed(_validator),
+            "Validator is slashed."
         );
 
         CommitteeI committee = CommitteeI(_committeeAddress);

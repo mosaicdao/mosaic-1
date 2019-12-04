@@ -113,7 +113,7 @@ contract('Reputation::logout', (accounts) => {
       unknownValidator,
       { from: constructorArgs.consensus },
     ),
-    'Validator is not active.');
+    'Validator is slashed.');
   });
 
   it('should fail if transaction is done by account other than consensus', async () => {

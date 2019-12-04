@@ -101,12 +101,12 @@ contract MockConsensus is ConsensusI, ReputationI {
         mockCore.removeVote(_validator);
     }
 
-    function isActiveValidator(address _validator)
+    function isSlashed(address _validator)
         public
         view
         returns (bool)
     {
-        return (rep[_validator] > 0);
+        return (rep[_validator] == 0);
     }
 
     function getReputation(address _validator)

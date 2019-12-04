@@ -16,7 +16,7 @@ pragma solidity ^0.5.0;
 
 interface ReputationI {
 
-    function isActiveValidator(address _validator) external view returns (bool);
+    function isSlashed(address _validator) external view returns (bool);
 
     function join(
         address _validator,
