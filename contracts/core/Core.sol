@@ -537,7 +537,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             "Validator must be active in this core."
         );
         require(
-            reputation.isActive(validator),
+            reputation.isActiveValidator(validator),
             "Validator must be active."
         );
 

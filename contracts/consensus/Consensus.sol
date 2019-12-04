@@ -125,7 +125,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     modifier onlyValidator()
     {
         require(
-            reputation.isActive(msg.sender),
+            reputation.isActiveValidator(msg.sender),
             "Validator must be active in the reputation contract."
         );
 
@@ -340,7 +340,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
 
         require(
-            reputation.isActive(_validator),
+            reputation.isActiveValidator(_validator),
             "Validator is not active."
         );
 
