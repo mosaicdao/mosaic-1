@@ -122,16 +122,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
     /* Modifiers */
 
-    modifier onlyValidator()
-    {
-        require(
-            !reputation.isSlashed(msg.sender),
-            "Validator is slashed."
-        );
-
-        _;
-    }
-
     modifier onlyCore()
     {
         require(
