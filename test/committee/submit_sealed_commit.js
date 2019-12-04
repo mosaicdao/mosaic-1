@@ -32,7 +32,7 @@ function createCommitteeMember(account, proposal) {
   };
 
   member.sealedCommit = CommitteeUtils.sealCommit(
-    proposal, member.salt,
+    proposal, member.salt, account,
   );
 
   return member;
