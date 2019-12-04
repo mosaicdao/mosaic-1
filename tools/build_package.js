@@ -26,7 +26,7 @@
  * names.
  */
 
-const fs = require("fs-extra");
+const fs = require('fs-extra');
 const path = require('path');
 
 const contractNames = [
@@ -35,7 +35,7 @@ const contractNames = [
   'Committee',
   'Consensus',
   'Core',
-  'EIP20Token',
+  'ERC20I',
   'Reputation',
 ];
 

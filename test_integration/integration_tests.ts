@@ -11,26 +11,29 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
-// ----------------------------------------------------------------------------
-//
-// http://www.simpletoken.org/
-//
-// ----------------------------------------------------------------------------
+
+'use strict';
 
 /**
  * @file Truffle's `artifacts.require()` won't be available inside the Mocha
  * tests. Thus, we load them here and add them to the `shared` object.
  */
 const Mocha = require('mocha');
-const shared = require('./shared');
+import shared from './shared';
 
+// @ts-ignore
 const Anchor = artifacts.require('Anchor');
+// @ts-ignore
 const Axiom = artifacts.require('Axiom');
+// @ts-ignore
 const Committee = artifacts.require('Committee');
+// @ts-ignore
 const Consensus = artifacts.require('Consensus');
+// @ts-ignore
 const Core = artifacts.require('Core');
+// @ts-ignore
 const Reputation = artifacts.require('Reputation');
+// @ts-ignore
 const MockToken = artifacts.require('MockToken');
 
 const setupArtifacts = () => {

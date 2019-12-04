@@ -119,10 +119,11 @@ function shuffleAccount(dislocation, account) {
   );
 }
 
-function sealCommit(position, seal) {
+function sealCommit(position, seal, address) {
   return web3.utils.soliditySha3(
     { t: 'bytes32', v: position },
     { t: 'bytes32', v: seal },
+    { t: 'address', v: address },
   );
 }
 

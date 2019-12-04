@@ -18,8 +18,9 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "../ERC20I.sol";
 import "../consensus/ConsensusModule.sol";
+import "../proxies/MasterCopyNonUpgradable.sol";
 
-contract Reputation is ConsensusModule {
+contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
 
     /* Usings */
 
@@ -197,7 +198,7 @@ contract Reputation is ConsensusModule {
      *                                          for a validator.
      */
     function setup(
-        address _consensus,
+        ConsensusI _consensus,
         ERC20I _mOST,
         uint256 _stakeMOSTAmount,
         ERC20I _wETH,
@@ -211,11 +212,6 @@ contract Reputation is ConsensusModule {
         require(
             address(mOST) == address(0) && address(wETH) == address(0),
             "Reputation is already setup."
-        );
-
-        require(
-            _consensus != address(0),
-            "consensus address is 0."
         );
 
         require(
@@ -248,7 +244,7 @@ contract Reputation is ConsensusModule {
             "Withdrawal cooldown period in blocks must be greater than zero."
         );
 
-        consensus = ConsensusI(_consensus);
+        setupConsensus(_consensus);
         mOST = ERC20I(_mOST);
         wETH = ERC20I(_wETH);
         stakeMOSTAmount = _stakeMOSTAmount;
