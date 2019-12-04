@@ -98,13 +98,13 @@ contract MockConsensus is ConsensusI, ReputationI {
     function stake(address _validator, address _withdrawalAddress)
         external
     {
-
+        // do nothing for now
     }
 
     function deregister(address _validator)
         external
     {
-
+        // do nothing for now
     }
 
     function removeVote(address _validator)
