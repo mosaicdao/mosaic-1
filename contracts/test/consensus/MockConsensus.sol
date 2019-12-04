@@ -88,7 +88,7 @@ contract MockConsensus is ConsensusI, ReputationI {
         mockCore.join(_validator);
     }
 
-    function logout(address _validator)
+    function deregister(address _validator)
         external
     {
         rep[_validator] = uint256(0);
