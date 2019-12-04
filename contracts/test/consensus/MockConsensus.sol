@@ -95,10 +95,16 @@ contract MockConsensus is ConsensusI, ReputationI {
         mockCore.logout(_validator);
     }
 
+    function stake(address _validator, address _withdrawalAddress)
+        external
+    {
+
+    }
+
     function deregister(address _validator)
         external
     {
-        rep[_validator] = uint256(0);
+
     }
 
     function removeVote(address _validator)

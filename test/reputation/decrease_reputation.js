@@ -72,7 +72,7 @@ contract('Reputation::decreaseReputation', (accounts) => {
       { from: validator.address },
     );
 
-    await reputation.join(
+    await reputation.stake(
       validator.address,
       validator.withdrawalAddress,
       { from: constructorArgs.consensus },

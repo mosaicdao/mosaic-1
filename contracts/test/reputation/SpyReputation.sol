@@ -81,7 +81,7 @@ contract SpyReputation is MasterCopyNonUpgradable, ReputationI {
         return reservedStorageSlotForProxy;
     }
 
-    function join(
+    function stake(
         address _validator,
         address _withdrawalAddress
     )

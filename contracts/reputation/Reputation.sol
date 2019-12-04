@@ -76,16 +76,16 @@ contract Reputation is ConsensusModule {
     /** ERC20 wETH for stakes for validators. */
     ERC20I public wETH;
 
-    /** Required stake amount in mOST to join as a validator. */
+    /** Required stake amount in mOST to stake as a validator. */
     uint256 public stakeMOSTAmount;
 
-    /** Required stake amount in wETH to join as a validator. */
+    /** Required stake amount in wETH to stake as a validator. */
     uint256 public stakeWETHAmount;
 
     /** A per mille of earnings that validator can cash out immediately. */
     uint256 public cashableEarningsPerMille;
 
-    /** An initial reputation for a newly joined validator. */
+    /** An initial reputation for a newly staked validator. */
     uint256 public initialReputation;
 
     /**
@@ -110,11 +110,11 @@ contract Reputation is ConsensusModule {
         _;
     }
 
-    modifier hasJoined(address _validator)
+    modifier hasStaked(address _validator)
     {
         require(
             validators[_validator].status != ValidatorStatus.Undefined,
-            "Validator has not joined."
+            "Validator has not staked."
         );
 
         _;
@@ -177,21 +177,21 @@ contract Reputation is ConsensusModule {
      * @dev Function requires:
      *          - mOST token address is not 0
      *          - wETH token address is not 0
-     *          - a stake amount to join in mOST is positive
-     *          - a stake amount to join in wETH is positive
+     *          - a stake amount to stake in mOST is positive
+     *          - a stake amount to stake in wETH is positive
      *          - a cashable earnings per mille is in [0, 1000] range
      *
      * @param _consensus Address of consensus contract.
      * @param _mOST Address of EIP20 mOST token.
      * @param _stakeMOSTAmount Amount of mOST token in wei required to be
-     *                         staked by each validator on join.
+     *                         staked by each validator on staking.
      * @param _wETH Address of EIP20 wETH token.
      * @param _stakeWETHAmount Amount of wETH token in wei required to be
-     *                         staked by each validator on join.
+     *                         staked by each validator on staking.
      * @param _cashableEarningsPerMille Number ranging from [0-1000] which
      *                                  defines cashable earning per mille.
      * @param _initialReputation Initial reputation assigned when a validator
-     *                           joins.
+     *                           stakes.
      * @param _withdrawalCooldownPeriodInBlocks Defines block delay between
      *                                          deregister and withdraw operation
      *                                          for a validator.
@@ -225,12 +225,12 @@ contract Reputation is ConsensusModule {
 
         require(
             _stakeMOSTAmount > 0,
-            "Stake amount to join in mOST is not positive."
+            "Stake amount in mOST is not positive."
         );
 
         require(
             _stakeWETHAmount > 0,
-            "Stake amount to join in wETH is not positive."
+            "Stake amount in wETH is not positive."
         );
 
         require(
@@ -356,7 +356,7 @@ contract Reputation is ConsensusModule {
      *
      * @dev Function requires:
      *          - only validator can call
-     *          - validator has joined
+     *          - validator has staked
      *          - validator was not slashed
      *          - validator has not withdrawn
      *          - the specified amount is not bigger than cashable earnings
@@ -366,7 +366,7 @@ contract Reputation is ConsensusModule {
      */
     function cashOutEarnings(uint256 _amount)
         external
-        hasJoined(msg.sender)
+        hasStaked(msg.sender)
         isHonest(msg.sender)
         hasNotWithdrawn(msg.sender)
     {
@@ -390,24 +390,24 @@ contract Reputation is ConsensusModule {
     }
 
     /**
-     * @notice Joins a validator.
+     * @notice Stakes a validator.
      *
      * @dev Function requires:
      *          - only consensus can call
      *          - a validator address is not 0
      *          - a withdrawal address is not 0
      *          - a validator address is not same as its withdrawal address
-     *          - a validator has not joined previously
+     *          - a validator has not staked previously
      *          - a withdrawal address has not been used as a validator address
      *          - a validator approved in mOST token contract to transfer
      *            a stake amount.
      *          - a validator approved in wETH token contract to transfer
      *            a stake amount.
      *
-     * @param _validator A validator address to join.
-     * @param _withdrawalAddress A withdrawal address of newly joined validator.
+     * @param _validator A validator address to stake.
+     * @param _withdrawalAddress A withdrawal address of newly staked validator.
      */
-    function join(
+    function stake(
         address _validator,
         address _withdrawalAddress
     )
@@ -431,7 +431,7 @@ contract Reputation is ConsensusModule {
 
         require(
             validators[_validator].status == ValidatorStatus.Undefined,
-            "No validator can rejoin."
+            "No validator can stake again."
         );
 
         require(
@@ -462,7 +462,7 @@ contract Reputation is ConsensusModule {
      *
      * @dev Function requires:
      *          - only consensus can call
-     *          - a validator has joined
+     *          - a validator has staked
      *          - a validator has not withdrawn
      *
      * @param _validator A validator address to slash.
@@ -470,7 +470,7 @@ contract Reputation is ConsensusModule {
     function slash(address _validator)
         external
         onlyConsensus
-        hasJoined(_validator)
+        hasStaked(_validator)
         hasNotWithdrawn(_validator)
         hasNotSlashed(_validator)
     {

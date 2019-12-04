@@ -80,7 +80,7 @@ contract('Reputation::cashoutEarnings', (accounts) => {
       { from: validator.address },
     );
 
-    await reputation.join(
+    await reputation.stake(
       validator.address,
       validator.withdrawalAddress,
       { from: constructorArgs.consensus },
@@ -147,7 +147,7 @@ contract('Reputation::cashoutEarnings', (accounts) => {
       amount,
       { from: unknownValidator },
     ),
-    'Validator has not joined.');
+    'Validator has not staked.');
   });
 
   it('should fail for slashed validator', async () => {

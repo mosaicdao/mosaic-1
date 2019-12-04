@@ -18,7 +18,7 @@ interface ReputationI {
 
     function isSlashed(address _validator) external view returns (bool);
 
-    function join(
+    function stake(
         address _validator,
         address _withdrawalAddress
     )

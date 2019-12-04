@@ -510,8 +510,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             "Core status is not opened or precommitted."
         );
 
-        // Join in reputation contract.
-        reputation.join(msg.sender, _withdrawalAddress);
+        // Stake in reputation contract.
+        reputation.stake(msg.sender, _withdrawalAddress);
 
         // Join in core contract.
         CoreI(_core).join(msg.sender);
@@ -545,8 +545,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             "Core must be in an active state."
         );
 
-        // Join in reputation contract.
-        reputation.join(msg.sender, _withdrawalAddress);
+        // Stake in reputation contract.
+        reputation.stake(msg.sender, _withdrawalAddress);
 
         // Join in core contract.
         CoreI(_core).joinDuringCreation(msg.sender);
