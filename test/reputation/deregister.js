@@ -21,7 +21,7 @@ const Utils = require('../test_lib/utils.js');
 const Reputation = artifacts.require('Reputation');
 const MockToken = artifacts.require('MockToken');
 
-contract('Reputation::logout', (accounts) => {
+contract('Reputation::deregister', (accounts) => {
   let constructorArgs;
   let validator;
   let accountProvider;
@@ -80,8 +80,8 @@ contract('Reputation::logout', (accounts) => {
     );
   });
 
-  it('should be able to logout', async () => {
-    const response = await reputation.logout(
+  it('should be able to deregister', async () => {
+    const response = await reputation.deregister(
       validator.address,
       { from: constructorArgs.consensus },
     );
@@ -94,8 +94,8 @@ contract('Reputation::logout', (accounts) => {
     const validatorObject = await reputation.validators.call(validator.address);
 
     assert.isOk(
-      validatorObject.status.eqn(ValidatorStatus.LoggedOut),
-      `Expected status is ${ValidatorStatus.LoggedOut} but found ${validatorObject.status}`,
+      validatorObject.status.eqn(ValidatorStatus.DeRegistered),
+      `Expected status is ${ValidatorStatus.DeRegistered} but found ${validatorObject.status}`,
     );
     const expectedWithdrawalBlockHeight = response.receipt.blockNumber
       + constructorArgs.withdrawalCooldownPeriodInBlocks;
@@ -109,7 +109,7 @@ contract('Reputation::logout', (accounts) => {
   it('should fail for unknown validator', async () => {
     const unknownValidator = accountProvider.get();
 
-    await Utils.expectRevert(reputation.logout(
+    await Utils.expectRevert(reputation.deregister(
       unknownValidator,
       { from: constructorArgs.consensus },
     ),
@@ -119,17 +119,17 @@ contract('Reputation::logout', (accounts) => {
   it('should fail if transaction is done by account other than consensus', async () => {
     const otherAccount = accountProvider.get();
 
-    await Utils.expectRevert(reputation.logout(
+    await Utils.expectRevert(reputation.deregister(
       validator.address,
       { from: otherAccount },
     ),
     'Only the consensus contract can call this function.');
   });
 
-  it('should fail for logged out validator', async () => {
-    await reputation.logout(validator.address, { from: constructorArgs.consensus });
+  it('should fail for deregistered validator', async () => {
+    await reputation.deregister(validator.address, { from: constructorArgs.consensus });
 
-    await Utils.expectRevert(reputation.logout(
+    await Utils.expectRevert(reputation.deregister(
       validator.address,
       { from: constructorArgs.consensus },
     ),
@@ -137,11 +137,11 @@ contract('Reputation::logout', (accounts) => {
   });
 
   it('should fail for withdraw-ed validator', async () => {
-    await reputation.logout(validator.address, { from: constructorArgs.consensus });
+    await reputation.deregister(validator.address, { from: constructorArgs.consensus });
     await Utils.advanceBlocks(constructorArgs.withdrawalCooldownPeriodInBlocks + 1);
     await reputation.withdraw(validator.address, { from: constructorArgs.consensus });
 
-    await Utils.expectRevert(reputation.logout(
+    await Utils.expectRevert(reputation.deregister(
       validator.address,
       { from: constructorArgs.consensus },
     ),
@@ -151,7 +151,7 @@ contract('Reputation::logout', (accounts) => {
   it('should fail for slashed validator', async () => {
     await reputation.slash(validator.address, { from: constructorArgs.consensus });
 
-    await Utils.expectRevert(reputation.logout(
+    await Utils.expectRevert(reputation.deregister(
       validator.address,
       { from: constructorArgs.consensus },
     ),

@@ -24,7 +24,7 @@ interface ReputationI {
     )
         external;
 
-    function logout(address _validator) external;
+    function deregister(address _validator) external;
 
     function getReputation(address _validator) external view returns (uint256);
 }

@@ -48,10 +48,10 @@ contract Reputation is ConsensusModule {
         /** Validator has put up stake and participates in consensus */
         Staked,
 
-        /** Validator has logged out and no longer participates in consensus */
-        LoggedOut,
+        /** Validator has deregistered and no longer participates in consensus */
+        DeRegistered,
 
-        /** Validator has withdrawn stake after logging out and cooldown period */
+        /** Validator has withdrawn stake after deregistering and cooldown period */
         Withdrawn
     }
 
@@ -90,7 +90,7 @@ contract Reputation is ConsensusModule {
 
     /**
      * A cooldown period for being able to withdraw after a validator
-     * has logged out.
+     * has deregistered.
      */
     uint256 public withdrawalCooldownPeriodInBlocks;
 
@@ -130,11 +130,11 @@ contract Reputation is ConsensusModule {
         _;
     }
 
-    modifier hasLoggedOut(address _validator)
+    modifier hasDeRegistered(address _validator)
     {
         require(
-            validators[_validator].status >= ValidatorStatus.LoggedOut,
-            "Validator has not logged out."
+            validators[_validator].status >= ValidatorStatus.DeRegistered,
+            "Validator has not deregistered."
         );
 
         _;
@@ -193,7 +193,7 @@ contract Reputation is ConsensusModule {
      * @param _initialReputation Initial reputation assigned when a validator
      *                           joins.
      * @param _withdrawalCooldownPeriodInBlocks Defines block delay between
-     *                                          logout and withdraw operation
+     *                                          deregister and withdraw operation
      *                                          for a validator.
      */
     function setup(
@@ -316,7 +316,7 @@ contract Reputation is ConsensusModule {
      *         Only fixed per-mille (`cashableEarningsPerMille`) from the
      *         earned amount is cashable by a validator immediately.
      *         The remaining is locked in the contract and can be cashed out
-     *         only when the validator has logged out and cooling period
+     *         only when the validator has deregistered and cooling period
      *         has elapsed.
      *
      * @dev Function requires:
@@ -407,7 +407,7 @@ contract Reputation is ConsensusModule {
      * @param _validator A validator address to join.
      * @param _withdrawalAddress A withdrawal address of newly joined validator.
      */
-    function join(
+    function stake(
         address _validator,
         address _withdrawalAddress
     )
@@ -489,22 +489,22 @@ contract Reputation is ConsensusModule {
     }
 
     /**
-     * @notice Logs out a validator.
+     * @notice Deregisters a validator.
      *
      * @dev Function requires:
      *          - only consensus can call
      *          - validator is active
      *
-     * @param _validator A validator to log out.
+     * @param _validator A validator to deregister.
      */
-    function logout(address _validator)
+    function deregister(address _validator)
         external
         onlyConsensus
         isActive(_validator)
     {
         ValidatorInfo storage v = validators[_validator];
 
-        v.status = ValidatorStatus.LoggedOut;
+        v.status = ValidatorStatus.DeRegistered;
 
         v.withdrawalBlockHeight = block.number.add(
             withdrawalCooldownPeriodInBlocks
@@ -515,7 +515,7 @@ contract Reputation is ConsensusModule {
      * @notice Withdraws staked and earnings values to a validator.
      *
      * @dev Function requires:
-     *          - a validator has logged out
+     *          - a validator has deregistered
      *          - a validator was not slashed
      *          - a validator has not withdrawn
      *          - a withdrawal cooling period for the validator has elapsed
@@ -524,7 +524,7 @@ contract Reputation is ConsensusModule {
      */
     function withdraw(address _validator)
         external
-        hasLoggedOut(_validator)
+        hasDeRegistered(_validator)
         isHonest(_validator)
         hasNotWithdrawn(_validator)
         withdrawalCooldownPeriodHasElapsed(_validator)

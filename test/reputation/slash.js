@@ -136,7 +136,7 @@ contract('Reputation::slash', (accounts) => {
 
 
   it('should fail if validator has already withdrawn', async () => {
-    await reputation.logout(validator.address, { from: constructorArgs.consensus });
+    await reputation.deregister(validator.address, { from: constructorArgs.consensus });
     await Utils.advanceBlocks(constructorArgs.withdrawalCooldownPeriodInBlocks + 1);
     await reputation.withdraw(validator.address, { from: constructorArgs.consensus });
 

@@ -114,7 +114,7 @@ contract('Reputation::cashoutEarnings', (accounts) => {
   it('should allow cashout of earnings for logged out validator', async () => {
     const amount = 499;
 
-    await reputation.logout(validator.address, { from: constructorArgs.consensus });
+    await reputation.deregister(validator.address, { from: constructorArgs.consensus });
 
     const response = await reputation.cashOutEarnings(
       amount,
@@ -168,7 +168,7 @@ contract('Reputation::cashoutEarnings', (accounts) => {
   it('should fail for withdrawn validator', async () => {
     const amount = 499;
 
-    await reputation.logout(validator.address, { from: constructorArgs.consensus });
+    await reputation.deregister(validator.address, { from: constructorArgs.consensus });
     await Utils.advanceBlocks(constructorArgs.withdrawalCooldownPeriodInBlocks + 1);
     await reputation.withdraw(
       validator.address,

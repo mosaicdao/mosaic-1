@@ -591,7 +591,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
 
         CoreI(_core).logout(msg.sender);
-        reputation.logout(msg.sender);
+        reputation.deregister(msg.sender);
     }
 
     /**

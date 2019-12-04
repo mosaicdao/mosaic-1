@@ -156,7 +156,7 @@ contract('Reputation::decreaseReputation', (accounts) => {
   });
 
   it('should fail for logged out validator', async () => {
-    await reputation.logout(validator.address, { from: constructorArgs.consensus });
+    await reputation.deregister(validator.address, { from: constructorArgs.consensus });
     const delta = 100;
 
     await Utils.expectRevert(reputation.decreaseReputation(
@@ -168,7 +168,7 @@ contract('Reputation::decreaseReputation', (accounts) => {
   });
 
   it('should fail for withdraw-ed validator', async () => {
-    await reputation.logout(validator.address, { from: constructorArgs.consensus });
+    await reputation.deregister(validator.address, { from: constructorArgs.consensus });
     await Utils.advanceBlocks(constructorArgs.withdrawalCooldownPeriodInBlocks + 1);
     await reputation.withdraw(validator.address, { from: constructorArgs.consensus });
 
