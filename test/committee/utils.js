@@ -57,6 +57,22 @@ async function enterMembers(committeeContract, members, consensus) {
   await Promise.all(enterPromises);
 }
 
+async function enterMembersThruConsensus(consensusContract, committeeContract, members) {
+  const sentinelMembers = await committeeContract.SENTINEL_MEMBERS.call();
+
+  const enterPromises = [];
+  for (let i = 0; i < members.length; i += 1) {
+    enterPromises.push(
+      consensusContract.enterCommittee(
+        committeeContract.address,
+        members[i],
+        sentinelMembers,
+      ),
+    );
+  }
+  await Promise.all(enterPromises);
+}
+
 async function submitSealedCommits(committee, members, sealedCommits) {
   assert(members.length === sealedCommits.length);
 
@@ -209,6 +225,7 @@ async function assertCommitteeMembers(committee, dist) {
 module.exports = {
   createCommittee,
   enterMembers,
+  enterMembersThruConsensus,
   submitSealedCommits,
   revealCommits,
   distance,

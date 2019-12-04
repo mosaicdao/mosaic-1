@@ -140,10 +140,16 @@ contract MockConsensus is ConsensusI, ReputationI {
         joinLimit_ = validatorJoinLimit;
     }
 
-    function registerPrecommit(bytes32 _precommitment)
+    function precommitMetablock(bytes32 _precommit)
         external
     {
-        precommitts[msg.sender] = _precommitment;
+        precommitts[msg.sender] = _precommit;
+    }
+
+    function registerCommitteeDecision(bytes32)
+        external
+    {
+        // do nothing for now
     }
 
     function newMetaChain(
@@ -167,27 +173,19 @@ contract MockConsensus is ConsensusI, ReputationI {
     }
 
     function openMetablock(
-        bytes32 _committedOriginObservation,
         uint256 _committedDynasty,
         uint256 _committedAccumulatedGas,
-        bytes32 _committedCommitteeLock,
         bytes32 _committedSource,
-        bytes32 _committedTarget,
         uint256 _committedSourceBlockHeight,
-        uint256 _committedTargetBlockHeight,
         uint256 _deltaGasTarget
     )
         external
     {
         mockCore.openMetablock(
-            _committedOriginObservation,
             _committedDynasty,
             _committedAccumulatedGas,
-            _committedCommitteeLock,
             _committedSource,
-            _committedTarget,
             _committedSourceBlockHeight,
-            _committedTargetBlockHeight,
             _deltaGasTarget
         );
     }

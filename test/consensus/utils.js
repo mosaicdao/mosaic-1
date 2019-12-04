@@ -78,7 +78,7 @@ async function callNewMetaChainOnConsensus(spyAxiom, params) {
 }
 
 async function commit(consensus, params) {
-  await consensus.commit(
+  await consensus.commitMetablock(
     params.chainId,
     params.rlpBlockHeader,
     params.kernelHash,

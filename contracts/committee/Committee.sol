@@ -302,7 +302,6 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
         external
         onlyConsensus
         isOpen
-        returns (bool)
     {
         require(
             _validator != SENTINEL_MEMBERS,
@@ -357,13 +356,11 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
                 // Validator has found its correct nearer and further member
                 // insertMember will pop members beyond committee size.
                 insertMember(_validator, nearerMember, furtherMember);
-                return true;
+                return;
             }
         }
 
         insertMember(_validator, SENTINEL_MEMBERS, furtherMember);
-
-        return true;
     }
 
     /**
@@ -572,7 +569,11 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
                 committeeDecision == bytes32(0) ||
                 committeeDecision == _position
             );
-            committeeDecision = _position;
+
+            if (committeeDecision == bytes32(0)) {
+                committeeDecision = _position;
+                consensus.registerCommitteeDecision(committeeDecision);
+            }
         }
 
         totalPositionsCount = totalPositionsCount.add(1);
