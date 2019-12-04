@@ -645,6 +645,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
             _rootBlockHeight
         );
 
+        require(
+            coreLifetime[core] == CoreLifetime.undefined,
+            "Core lifetime status must be undefined"
+        );
         assignments[chainId] = core;
         anchors[chainId] = _anchor;
         coreLifetime[core] = CoreLifetime.genesis;
