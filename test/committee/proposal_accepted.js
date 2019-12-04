@@ -31,7 +31,7 @@ function createCommitteeMember(account, position) {
   };
 
   member.sealedCommit = CommitteeUtils.sealCommit(
-    position, member.salt,
+    position, member.salt, account,
   );
 
   return member;
