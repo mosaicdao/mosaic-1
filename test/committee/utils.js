@@ -27,9 +27,16 @@ function remove0x(str) {
   return str;
 }
 
-async function createCommittee(consensus, committeeSize, dislocation, proposal, txOptions = {}) {
+function generateRandomMetachainId() {
+  return Utils.getRandomHash().substr(0, 20);
+}
+
+async function createCommittee(
+  chainId, consensus, committeeSize, dislocation, proposal, txOptions = {},
+) {
   const committee = await Committee.new();
   await committee.setup(
+    chainId,
     consensus,
     committeeSize,
     dislocation,
@@ -224,6 +231,7 @@ async function assertCommitteeMembers(committee, dist) {
 
 
 module.exports = {
+  generateRandomMetachainId,
   createCommittee,
   enterMembers,
   enterMembersThruConsensus,

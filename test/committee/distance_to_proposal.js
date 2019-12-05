@@ -26,12 +26,14 @@ contract('Committee::distanceToProposal', (accounts) => {
 
   beforeEach(async () => {
     config = {
+      metachainId: CommitteeUtils.generateRandomMetachainId(),
       committeeSize: 50,
       dislocation: web3.utils.sha3('dislocation'),
       proposal: web3.utils.sha3('proposal'),
       consensus: accountProvider.get(),
     };
     config.committee = await CommitteeUtils.createCommittee(
+      config.metachainId,
       config.consensus,
       config.committeeSize,
       config.dislocation,

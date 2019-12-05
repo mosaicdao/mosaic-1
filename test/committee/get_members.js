@@ -45,6 +45,7 @@ contract('Committee::getMembers', async (accounts) => {
   beforeEach(async () => {
     config = {
       committee: {
+        metachainId: CommitteeUtils.generateRandomMetachainId(),
         size: 3,
         dislocation: web3.utils.sha3('dislocation'),
         proposal: web3.utils.sha3('proposal'),
@@ -53,6 +54,7 @@ contract('Committee::getMembers', async (accounts) => {
     };
 
     config.committee.contract = await CommitteeUtils.createCommittee(
+      config.committee.metachainId,
       config.committee.consensus,
       config.committee.size,
       config.committee.dislocation,
