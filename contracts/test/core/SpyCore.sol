@@ -5,6 +5,8 @@ import "../../proxies/MasterCopyNonUpgradable.sol";
 
 contract SpyCore is MasterCopyNonUpgradable, CoreI{
 
+    uint256 public minimumValidatorCount = 3;
+
     bytes32 public mockedOpenKernelHash;
     bytes32 public mockedPrecommit;
 
@@ -66,7 +68,10 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
         spySource = _source;
         spySourceBlockHeight = _sourceBlockHeight;
     }
-    function joinDuringCreation(address _validator) external {
+    function joinDuringCreation(address _validator)
+        external
+        returns (uint256)
+    {
         spyValidator = _validator;
     }
 

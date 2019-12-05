@@ -96,7 +96,7 @@ contract('Consensus::registerPrecommit', (accounts) => {
       );
 
       assert.isOk(
-        coreLifetime.eqn(consensusUtil.CoreLifetime.activated),
+        coreLifetime.eqn(consensusUtil.CoreLifetime.active),
         'CoreLifetime status should changes to activated',
       );
     });
@@ -104,7 +104,7 @@ contract('Consensus::registerPrecommit', (accounts) => {
     it('should add the proposal in pre-commits mapping', async () => {
       await consensus.setCoreLifetime(
         inputParams.coreAddress1,
-        consensusUtil.CoreLifetime.activated,
+        consensusUtil.CoreLifetime.active,
       );
 
       // The proposal must not exist by default.
@@ -156,8 +156,8 @@ contract('Consensus::registerPrecommit', (accounts) => {
       );
 
       assert.isOk(
-        coreLifetime.eqn(consensusUtil.CoreLifetime.activated),
-        'CoreLifetime status should noy change',
+        coreLifetime.eqn(consensusUtil.CoreLifetime.active),
+        'CoreLifetime status should not change',
       );
     });
   });

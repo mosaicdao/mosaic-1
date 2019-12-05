@@ -38,7 +38,7 @@ contract('Consensus::join', (accounts) => {
     await consensus.setReputation(reputation.address);
     await consensus.setCoreLifetime(
       core.address,
-      consensusUtil.CoreLifetime.activated,
+      consensusUtil.CoreLifetime.active,
     );
 
     joinParams = {
@@ -113,7 +113,7 @@ contract('Consensus::join', (accounts) => {
       );
       await Utils.expectRevert(
         consensusUtil.join(consensus, joinParams),
-        'Core lifetime status must be genesis or activated.',
+        'Core lifetime status must be genesis or active.',
       );
     });
 
@@ -124,7 +124,7 @@ contract('Consensus::join', (accounts) => {
       );
       await Utils.expectRevert(
         consensusUtil.join(consensus, joinParams),
-        'Core lifetime status must be genesis or activated.',
+        'Core lifetime status must be genesis or active.',
       );
     });
 
@@ -135,7 +135,7 @@ contract('Consensus::join', (accounts) => {
       );
       await Utils.expectRevert(
         consensusUtil.join(consensus, joinParams),
-        'Core lifetime status must be genesis or activated.',
+        'Core lifetime status must be genesis or active.',
       );
     });
   });
@@ -152,7 +152,7 @@ contract('Consensus::join', (accounts) => {
     it('should pass when core status is activated', async () => {
       await consensus.setCoreLifetime(
         core.address,
-        consensusUtil.CoreLifetime.activated,
+        consensusUtil.CoreLifetime.active,
       );
       await consensusUtil.join(consensus, joinParams);
     });

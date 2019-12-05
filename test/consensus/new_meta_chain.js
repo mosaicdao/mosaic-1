@@ -90,8 +90,8 @@ contract('Consensus::newMetaChain', (accounts) => {
       );
 
       assert.isOk(
-        coreLifetimeStatus.eqn(consensusUtil.CoreLifetime.genesis),
-        'Corelifetime status must be genesis',
+        coreLifetimeStatus.eqn(consensusUtil.CoreLifetime.creation),
+        'Corelifetime status must be creation',
       );
     });
 

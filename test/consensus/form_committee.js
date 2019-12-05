@@ -41,7 +41,7 @@ contract('Consensus::formCommittee', (accounts) => {
 
     await consensus.setCoreLifetime(
       testInputs.coreAddress,
-      consensusUtil.CoreLifetime.activated,
+      consensusUtil.CoreLifetime.active,
     );
 
     await consensus.registerPrecommit(

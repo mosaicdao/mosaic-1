@@ -23,10 +23,12 @@ contract CoreLifetimeEnum {
         halted,
         // When core is corrupted.
         corrupted,
+        // When core is in creation state.
+        creation,
         // When core is created but no precommit is done.
         genesis,
         // When core is running correctly and pre-committing proposals.
-        activated
+        active
     }
 }
 

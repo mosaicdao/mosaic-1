@@ -41,7 +41,7 @@ contract('Consensus::logout', (accounts) => {
     await contracts.consensus.setReputation(contracts.reputation.address);
     await contracts.consensus.setCoreLifetime(
       contracts.core.address,
-      consensusUtil.CoreLifetime.activated,
+      consensusUtil.CoreLifetime.active,
     );
     await contracts.consensus.setAssignment(chainId, contracts.core.address);
   });
@@ -77,7 +77,7 @@ contract('Consensus::logout', (accounts) => {
       );
       await Utils.expectRevert(
         contracts.consensus.logout(chainId, contracts.core.address, { from: validator }),
-        'Core lifetime status must be genesis or activated.',
+        'Core lifetime status must be genesis or active.',
       );
     });
 
@@ -88,7 +88,7 @@ contract('Consensus::logout', (accounts) => {
       );
       await Utils.expectRevert(
         contracts.consensus.logout(chainId, contracts.core.address, { from: validator }),
-        'Core lifetime status must be genesis or activated.',
+        'Core lifetime status must be genesis or active.',
       );
     });
 
@@ -99,7 +99,7 @@ contract('Consensus::logout', (accounts) => {
       );
       await Utils.expectRevert(
         contracts.consensus.logout(chainId, contracts.core.address, { from: validator }),
-        'Core lifetime status must be genesis or activated.',
+        'Core lifetime status must be genesis or active.',
       );
     });
   });
@@ -116,7 +116,7 @@ contract('Consensus::logout', (accounts) => {
     it('should pass when core lifetime is activated', async () => {
       await contracts.consensus.setCoreLifetime(
         contracts.core.address,
-        consensusUtil.CoreLifetime.activated,
+        consensusUtil.CoreLifetime.active,
       );
       await contracts.consensus.logout(chainId, contracts.core.address, { from: validator });
     });

@@ -123,7 +123,7 @@ contract('Consensus::commit', (accounts) => {
     it('should fail when there is not core for the specified chain id', async () => {
       await Utils.expectRevert(
         consensusUtil.commit(contracts.Consensus, commitParams),
-        'Core lifetime status must be activated',
+        'Core lifetime status must be active',
       );
     });
 
@@ -135,7 +135,7 @@ contract('Consensus::commit', (accounts) => {
       );
       await Utils.expectRevert(
         consensusUtil.commit(contracts.Consensus, commitParams),
-        'Core lifetime status must be activated',
+        'Core lifetime status must be active',
       );
     });
 
@@ -147,7 +147,7 @@ contract('Consensus::commit', (accounts) => {
       );
       await Utils.expectRevert(
         consensusUtil.commit(contracts.Consensus, commitParams),
-        'Core lifetime status must be activated',
+        'Core lifetime status must be active',
       );
     });
 
@@ -159,7 +159,7 @@ contract('Consensus::commit', (accounts) => {
       );
       await Utils.expectRevert(
         consensusUtil.commit(contracts.Consensus, commitParams),
-        'Core lifetime status must be activated',
+        'Core lifetime status must be active',
       );
     });
 
@@ -168,7 +168,7 @@ contract('Consensus::commit', (accounts) => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
       await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        consensusUtil.CoreLifetime.activated,
+        consensusUtil.CoreLifetime.active,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -187,7 +187,7 @@ contract('Consensus::commit', (accounts) => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
       await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        consensusUtil.CoreLifetime.activated,
+        consensusUtil.CoreLifetime.active,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -207,7 +207,7 @@ contract('Consensus::commit', (accounts) => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
       await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        consensusUtil.CoreLifetime.activated,
+        consensusUtil.CoreLifetime.active,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -228,7 +228,7 @@ contract('Consensus::commit', (accounts) => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
       await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        consensusUtil.CoreLifetime.activated,
+        consensusUtil.CoreLifetime.active,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -250,7 +250,7 @@ contract('Consensus::commit', (accounts) => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
       await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        consensusUtil.CoreLifetime.activated,
+        consensusUtil.CoreLifetime.active,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -273,7 +273,7 @@ contract('Consensus::commit', (accounts) => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
       await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        consensusUtil.CoreLifetime.activated,
+        consensusUtil.CoreLifetime.active,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -296,7 +296,7 @@ contract('Consensus::commit', (accounts) => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
       await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        consensusUtil.CoreLifetime.activated,
+        consensusUtil.CoreLifetime.active,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -326,7 +326,7 @@ contract('Consensus::commit', (accounts) => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
       await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        consensusUtil.CoreLifetime.activated,
+        consensusUtil.CoreLifetime.active,
       );
       proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -345,7 +345,7 @@ contract('Consensus::commit', (accounts) => {
     it('should pass when core status is creation', async () => {
       await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        consensusUtil.CoreLifetime.activated,
+        consensusUtil.CoreLifetime.active,
       );
       await consensusUtil.commit(contracts.Consensus, commitParams);
     });
@@ -353,7 +353,7 @@ contract('Consensus::commit', (accounts) => {
     it('should pass when core status is opened', async () => {
       await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        consensusUtil.CoreLifetime.activated,
+        consensusUtil.CoreLifetime.active,
       );
       await consensusUtil.commit(contracts.Consensus, commitParams);
     });
