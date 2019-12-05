@@ -307,7 +307,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         require(
             block.number <= precommit.committeeFormationBlockHeight
                 .sub(COMMITTEE_FORMATION_LENGTH)
-                .add(256),
+                .add(uint256(256)),
             "Committee formation blocksegment is not in most recent 256 blocks."
         );
 
