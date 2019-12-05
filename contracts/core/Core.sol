@@ -879,7 +879,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             coreStatus = CoreStatus.precommitted;
             precommit = _proposal;
             precommitClosureBlockHeight = block.number.add(CORE_LAST_VOTES_WINDOW);
-            consensus.precommitMetablock(_proposal);
+            consensus.precommitMetablock(chainId, _proposal);
         }
     }
 

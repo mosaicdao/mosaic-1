@@ -37,9 +37,11 @@ interface ConsensusI {
     /**
      * @notice Precommits metablock from a core.
      *
+     * @param _chainId Chain id to precommit a proposal.
      * @param _proposal Precommit proposal.
      */
     function precommitMetablock(
+        bytes20 _chainId,
         bytes32 _proposal
     )
         external;
@@ -47,9 +49,14 @@ interface ConsensusI {
     /**
      * @notice Registers a committee's decision.
      *
+     * @param _chainId Chain id to register committee decision.
      * @param _decision Committee's decision.
      */
-    function registerCommitteeDecision(bytes32 _decision) external;
+    function registerCommitteeDecision(
+        bytes20 _chainId,
+        bytes32 _decision
+    )
+        external;
 
     /**
      * @notice Creates a new meta chain.

@@ -33,6 +33,18 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     using SafeMath for uint256;
 
 
+    /* Enums */
+
+    /** Used to define the current round of a metablock. */
+    enum MetablockRound {
+        Undefined,
+        Precommitted,
+        CommitteeFormed,
+        CommitteeDecided,
+        Committed
+    }
+
+
     /* Constants */
 
     /** Committee formation block delay */
@@ -67,10 +79,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
     /* Structs */
 
-    /** Precommit from core for a next metablock */
-    struct Precommit {
-        bytes32 proposal;
-        uint256 committeeFormationBlockHeight;
+    struct Metablock {
+        bytes32 metablockHash;
+        MetablockRound round;
+        uint256 roundBlockNumber;
     }
 
 
@@ -91,29 +103,28 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /** Coinbase split per mille */
     uint256 public coinbaseSplitPerMille;
 
-    /** Block hash of heads of Metablockchains */
-    mapping(bytes20 /* chainId */ => bytes32 /* MetablockHash */) public metablockHeaderTips;
+    /** Mapping of a metablock number to a metablock (per chain).  */
+    mapping(bytes20 => mapping(uint256 => Metablock)) public metablockchains;
 
-    /** Core statuses */
-    mapping(address /* core */ => CoreStatus /* coreStatus */) public coreStatuses;
+    /** Metablock tips' heights per chain. */
+    mapping(bytes20 => uint256) public metablockTips;
 
     /** Assigned core for a given chainId */
     mapping(bytes20 /* chainId */ => address /* core */) public assignments;
 
-    /** Precommitts from cores for metablockchains. */
-    mapping(address /* core */ => Precommit) public precommits;
+    /** Core statuses. */
+    mapping(address /* core */ => CoreStatus /* coreStatus */) public coreStatuses;
+
+    /** Linked-list of committees. */
+    mapping(address => address) public committees;
 
     /** Precommits under consideration of committees. */
     mapping(bytes32 /* precommit */ => CommitteeI /* committee */) public proposals;
 
-    /** Precommits under consideration of committees. */
+    /** Committees' decisions. */
     mapping(address /* committee */ => bytes32 /* commit */) public decisions;
 
-    /** Linked-list of committees */
-    mapping(address => address) public committees;
-
-    // NOTE: consider either storing a linked list; or getting rid of it
-    /** Assigned anchor for a given chainId */
+    /** Assigned anchor for a given chainId. */
     mapping(bytes20 => address) public anchors;
 
     /** Reputation contract for validators */
@@ -253,65 +264,75 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      * @notice Precommits a metablock.
      *
      * @dev Function requires:
+     *          - the given chain id is not 0
+     *          - the given metablock hash is not 0
      *          - only an active core can call
-     *          - precommit is not 0
-     *          - there is no precommit under a consideration of a committees
-     *            by the core
+     *          - caller (core) and the given chain id are matching
+     *          - there is no precommit by associated the core
+     *          - the corresponding metablock round is 'Undefined'
      */
-    function precommitMetablock(bytes32 _proposal)
+    function precommitMetablock(
+        bytes20 _chainId,
+        bytes32 _metablockHash
+    )
         external
         onlyCore
     {
         require(
-            _proposal != bytes32(0),
+            _chainId != bytes20(0),
+            "Chain id is 0"
+        );
+
+        require(
+            _metablockHash != bytes32(0),
             "Proposal is 0."
         );
 
-        Precommit storage precommit = precommits[msg.sender];
+        address core = assignments[_chainId];
+
         require(
-            precommit.proposal == bytes32(0),
-            "There already exists a precommit of the core."
+            msg.sender == core,
+            "Wrong core is precommitting."
         );
-        precommit.proposal = _proposal;
-        precommit.committeeFormationBlockHeight = block.number.add(
-            uint256(COMMITTEE_FORMATION_DELAY)
-        );
+
+        moveToPrecommitRound(_chainId, _metablockHash);
     }
 
     /**
      * @notice Forms a new committee to verify the precommit proposal.
      *
      * @dev Function requires:
-     *          - core has precommitted
+     *          - core has precommitted for the given chain id
      *          - the current block height is bigger than the precommitt's
      *            committee formation height
      *          - committee formation blocksegment must be in the most
      *            recent 256 blocks.
-     *
-     * @param _core Core contract address.
      */
-    function formCommittee(address _core)
+    function formCommittee(bytes20 _chainId)
         external
     {
-        Precommit storage precommit = precommits[_core];
-        require(
-            precommit.proposal != bytes32(0),
-            "Core has not precommitted."
+        (
+            bytes32 metablockHash,
+            uint256 roundBlockNumber
+        ) = moveToCommitteeFormedRound(_chainId);
+
+        uint256 committeeFormationBlockHeight = roundBlockNumber.add(
+            COMMITTEE_FORMATION_LENGTH
         );
 
         require(
-            block.number > precommit.committeeFormationBlockHeight,
+            block.number > committeeFormationBlockHeight,
             "Block height must be higher than set committee formation height."
         );
 
         require(
-            block.number <= precommit.committeeFormationBlockHeight
+            block.number <= committeeFormationBlockHeight
                 .sub(COMMITTEE_FORMATION_LENGTH)
                 .add(256),
             "Committee formation blocksegment is not in most recent 256 blocks."
         );
 
-        uint256 segmentHeight = precommit.committeeFormationBlockHeight;
+        uint256 segmentHeight = committeeFormationBlockHeight;
         bytes32[] memory seedGenerator = new bytes32[](uint256(COMMITTEE_FORMATION_LENGTH));
         for (uint256 i = 0; i < COMMITTEE_FORMATION_LENGTH; i++) {
             seedGenerator[i] = blockhash(segmentHeight);
@@ -322,7 +343,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             abi.encodePacked(seedGenerator)
         );
 
-        startCommittee(seed, precommit.proposal);
+        startCommittee(seed, metablockHash);
     }
 
     /**
@@ -368,16 +389,18 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      * @param _committeeDecision Decision of a caller committee.
      */
     function registerCommitteeDecision(
+        bytes20 _chainId,
         bytes32 _committeeDecision
     )
         external
         onlyCommittee
     {
+        moveToCommitteeDecidedRound(_chainId);
+
         require(
             decisions[msg.sender] == bytes32(0),
-            "Committee's decision has been registered."
+            "Committee's decision has been already registered."
         );
-
         decisions[msg.sender] = _committeeDecision;
     }
 
@@ -427,6 +450,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     )
         external
     {
+        bytes32 metablockHash = moveToCommittedRound(_chainId);
+
         require(
             _source == keccak256(_rlpBlockHeader),
             "Block header does not match with vote message source."
@@ -441,6 +466,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
         assertCommit(
             core,
+            metablockHash,
             _kernelHash,
             _originObservation,
             _dynasty,
@@ -680,8 +706,81 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
     /* Private functions */
 
+    function moveToPrecommitRound(bytes20 _chainId, bytes32 _metablockHash)
+        private
+    {
+        uint256 metablockTip = metablockTips[_chainId];
+        Metablock storage metablock = metablockchains[_chainId][metablockTip];
+
+        assert(metablock.round == MetablockRound.Undefined);
+        assert(metablock.metablockHash == bytes32(0));
+        assert(metablock.roundBlockNumber < block.number);
+
+        metablock.metablockHash = _metablockHash;
+        metablock.round = MetablockRound.Precommitted;
+        metablock.roundBlockNumber = block.number;
+    }
+
+    function moveToCommitteeFormedRound(bytes20 _chainId)
+        private
+        returns(bytes32 metablockHash_, uint256 roundBlockNumber_)
+    {
+        uint256 metablockTip = metablockTips[_chainId];
+        Metablock storage metablock = metablockchains[_chainId][metablockTip];
+
+        require(
+            metablock.round == MetablockRound.Precommitted,
+            "Core has not precommitted for the given chain id."
+        );
+        assert(metablock.metablockHash != bytes32(0));
+        assert(metablock.roundBlockNumber < block.number);
+
+        metablockHash_ = metablock.metablockHash;
+        roundBlockNumber_ = metablock.roundBlockNumber;
+
+        metablock.round = MetablockRound.CommitteeFormed;
+        metablock.roundBlockNumber = block.number;
+    }
+
+    function moveToCommitteeDecidedRound(bytes20 _chainId)
+        private
+    {
+        uint256 metablockTip = metablockTips[_chainId];
+        Metablock storage metablock = metablockchains[_chainId][metablockTip];
+
+        assert(metablock.round == MetablockRound.CommitteeFormed);
+        assert(metablock.metablockHash != bytes32(0));
+        assert(metablock.roundBlockNumber < block.number);
+
+        metablock.round = MetablockRound.CommitteeDecided;
+        metablock.roundBlockNumber = block.number;
+    }
+
+    function moveToCommittedRound(bytes20 _chainId)
+        private
+        returns (bytes32 metablockHash_)
+    {
+        uint256 metablockTip = metablockTips[_chainId];
+        Metablock storage metablock = metablockchains[_chainId][metablockTip];
+
+        require(
+            metablock.round == MetablockRound.CommitteeDecided,
+            "Committee has not decided yet."
+        );
+        assert(metablock.metablockHash != bytes32(0));
+        assert(metablock.roundBlockNumber < block.number);
+
+        metablockHash_ = metablock.metablockHash;
+
+        metablock.round = MetablockRound.Committed;
+        metablock.roundBlockNumber = block.number;
+
+        metablockTips[_chainId] = metablockTips[_chainId].add(1);
+    }
+
     function assertCommit(
         address _core,
+        bytes32 _precommit,
         bytes32 _kernelHash,
         bytes32 _originObservation,
         uint256 _dynasty,
@@ -694,17 +793,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     )
         private
     {
-        bytes32 precommit = precommits[_core].proposal;
-
-        require(
-            precommit != bytes32(0),
-            "Core has not precommitted."
-        );
-
-        // Delete the precommit. This will avoid any re-entrancy with same params.
-        delete precommits[_core];
-
-        address committee = address(proposals[precommit]);
+        address committee = address(proposals[_precommit]);
         require(
             committee != address(0),
             "Committee has not been formed for precommit."
@@ -712,13 +801,16 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
         bytes32 decision = decisions[committee];
 
+        // Pruning committee decision.
+        decisions[committee] = bytes32(0);
+
         require(
             _committeeLock == keccak256(abi.encode(decision)),
             "Committee decision does not match with committee lock."
         );
 
         require(
-            decision == precommit,
+            decision == _precommit,
             "Committee has not agreed with core's precommit."
         );
 
@@ -735,7 +827,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
 
         require(
-            metablockHash == precommit,
+            metablockHash == _precommit,
             "Input parameters do not hash to the core's precommit."
         );
     }
