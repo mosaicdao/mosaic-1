@@ -80,7 +80,7 @@ contract('Reputation::depositEarnings', (accounts) => {
       { from: validator.address },
     );
 
-    await reputation.join(
+    await reputation.stake(
       validator.address,
       validator.withdrawalAddress,
       { from: constructorArgs.consensus },
@@ -174,7 +174,7 @@ contract('Reputation::depositEarnings', (accounts) => {
   it('should fail for logged out validator', async () => {
     const amount = 1000;
 
-    await reputation.logout(validator.address, { from: constructorArgs.consensus });
+    await reputation.deregister(validator.address, { from: constructorArgs.consensus });
 
     await Utils.expectRevert(reputation.depositEarnings(
       validator.address,
@@ -187,7 +187,7 @@ contract('Reputation::depositEarnings', (accounts) => {
   it('should fail for withdrawn validator', async () => {
     const amount = 1000;
 
-    await reputation.logout(validator.address, { from: constructorArgs.consensus });
+    await reputation.deregister(validator.address, { from: constructorArgs.consensus });
 
     await Utils.advanceBlocks(constructorArgs.withdrawalCooldownPeriodInBlocks + 1);
 

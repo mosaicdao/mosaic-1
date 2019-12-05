@@ -95,18 +95,30 @@ contract MockConsensus is ConsensusI, ReputationI {
         mockCore.logout(_validator);
     }
 
+    function stake(address _validator, address _withdrawalAddress)
+        external
+    {
+        // do nothing for now
+    }
+
+    function deregister(address _validator)
+        external
+    {
+        // do nothing for now
+    }
+
     function removeVote(address _validator)
         external
     {
         mockCore.removeVote(_validator);
     }
 
-    function isActive(address _validator)
-        external
+    function isSlashed(address _validator)
+        public
         view
         returns (bool)
     {
-        return (rep[_validator] > 0);
+        return (rep[_validator] == 0);
     }
 
     function getReputation(address _validator)

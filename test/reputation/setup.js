@@ -160,7 +160,7 @@ contract('Reputation::setup', (accounts) => {
         constructorArgs.initialReputation,
         constructorArgs.withdrawalCooldownPeriodInBlocks,
       ),
-      'Stake amount to join in mOST is not positive.',
+      'Stake amount in mOST is not positive.',
     );
   });
 
@@ -196,7 +196,7 @@ contract('Reputation::setup', (accounts) => {
         constructorArgs.initialReputation,
         constructorArgs.withdrawalCooldownPeriodInBlocks,
       ),
-      'Stake amount to join in wETH is not positive.',
+      'Stake amount in wETH is not positive.',
     );
   });
 
