@@ -55,6 +55,11 @@ contract('Consensus::formCommittee', (accounts) => {
     it('should fail when pre-commit proposal does not exists for a given core address', async () => {
       const coreAddress = accountProvider.get();
 
+      await consensus.setCoreLifetime(
+        coreAddress,
+        consensusUtil.CoreLifetime.active,
+      );
+
       await Utils.expectRevert(
         consensus.formCommittee(coreAddress),
         'There does not exist a precommitment of the core to a proposal.',
@@ -135,7 +140,6 @@ contract('Consensus::formCommittee', (accounts) => {
   contract('Positive Tests', () => {
     let committeeFormationBlockHeight;
     beforeEach(async () => {
-
       // Advance by 256 blocks
       await Utils.advanceBlocks(consensusUtil.BlockSegmentLength);
       const initialBlockNumber = await Utils.getBlockNumber();
