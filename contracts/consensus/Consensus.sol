@@ -17,6 +17,7 @@ pragma solidity >=0.5.0 <0.6.0;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "./ConsensusI.sol";
+import "./CoreLifetime.sol";
 import "../anchor/AnchorI.sol";
 import "../axiom/AxiomI.sol";
 import "../block/Block.sol";
@@ -25,7 +26,6 @@ import "../core/CoreI.sol";
 import "../core/CoreStatusEnum.sol";
 import "../reputation/ReputationI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
-import "./CoreLifetime.sol";
 
 contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
 
@@ -290,6 +290,11 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
     function formCommittee(address _core)
         external
     {
+        require(
+            coreLifetime[_core] == CoreLifetime.active,
+            "Core lifetime status must be active"
+        );
+
         Precommit storage precommit = precommits[_core];
         require(
             precommit.proposal != bytes32(0),
@@ -306,11 +311,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
                 .sub(uint256(COMMITTEE_FORMATION_LENGTH))
                 .sub(uint256(256)) < precommit.committeeFormationBlockHeight,
             "Committee formation blocksegment length must be in 256 most recent blocks."
-        );
-
-        require(
-            coreLifetime[_core] == CoreLifetime.active,
-            "Core lifetime status must be active"
         );
 
         uint256 segmentHeight = precommit.committeeFormationBlockHeight;
