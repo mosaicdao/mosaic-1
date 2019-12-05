@@ -313,7 +313,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
         uint256 segmentHeight = precommit.committeeFormationBlockHeight;
         bytes32[] memory seedGenerator = new bytes32[](uint256(COMMITTEE_FORMATION_LENGTH));
-        for (uint256 i = 0; i < COMMITTEE_FORMATION_LENGTH; i++) {
+        for (uint256 i = 0; i < COMMITTEE_FORMATION_LENGTH; i = i.add(1)) {
             seedGenerator[i] = blockhash(segmentHeight);
             segmentHeight = segmentHeight.sub(1);
         }
