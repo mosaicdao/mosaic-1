@@ -27,7 +27,7 @@ before_install:
 install:
   - npm run update
 before_script:
-  - ./tools/run_ganache_cli.sh >> ganache.log
+  - ./tools/run_ganache_cli.sh >> ganache.log &
 script:
   - npm run compile
   - npm run test
