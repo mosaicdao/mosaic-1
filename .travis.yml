@@ -27,10 +27,10 @@ before_install:
 install:
   - npm run update
 before_script:
-  - ./tools/run_ganache_cli.sh &
+  - ./tools/run_ganache_cli.sh </dev/null 1>/dev/null 2>&1 &
 script:
   - npm run compile
   - npm run test
   - npm run test:integration
-# after_script:
-#   - kill $(ps aux | grep 'ganache-cli' | awk '{print $2}')
+after_script:
+  - kill $(ps aux | grep 'ganache-cli' | awk '{print $2}')
