@@ -9,7 +9,7 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
     bytes32 public mockedPrecommit;
 
     address public spyConsensus;
-    bytes20 public spyChainId;
+    bytes32 public spyMetachainId;
     uint256 public spyEpochLength;
     uint256 public spyMinValidators;
     uint256 public spyJoinLimit;
@@ -36,7 +36,7 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
 
     function setup(
         address _consensus,
-        bytes20 _chainId,
+        bytes32 _metachainId,
         uint256 _epochLength,
         uint256 _minValidators,
         uint256 _joinLimit,
@@ -53,7 +53,7 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
     {
 
         spyConsensus = _consensus;
-        spyChainId = _chainId;
+        spyMetachainId = _metachainId;
         spyEpochLength = _epochLength;
         spyMinValidators = _minValidators;
         spyJoinLimit = _joinLimit;

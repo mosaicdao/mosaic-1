@@ -84,7 +84,7 @@ contract('Axiom::newCore', (accounts) => {
 
     newCoreParams = {
       consensus: accountProvider.get(),
-      chainId: accountProvider.get(),
+      metachainId: Utils.getRandomHash(),
       epochLength,
       minValidators: config.minValidators,
       joinLimit: config.joinLimit,
@@ -172,11 +172,11 @@ contract('Axiom::newCore', (accounts) => {
         'Consensus address in spy core contract is not set.',
       );
 
-      const spyChainId = await spyCore.spyChainId.call();
+      const spyMetachainId = await spyCore.spyMetachainId.call();
       assert.strictEqual(
-        Utils.toChecksumAddress(spyChainId),
-        newCoreParams.chainId,
-        'Chain id value in spy core contract is not set.',
+        spyMetachainId,
+        newCoreParams.metachainId,
+        'Metachain id value in spy core contract is not set.',
       );
 
       const spyEpochLength = await spyCore.spyEpochLength.call();

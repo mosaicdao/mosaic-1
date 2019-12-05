@@ -27,7 +27,7 @@ import "../reputation/ReputationI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../version/MosaicVersion.sol";
 
-contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, MosaicVersion {
+contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, ConsensusI {
 
     /* Usings */
 
@@ -67,7 +67,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
 
     /** It is metachain id typehash used to calculate metachain id. */
     bytes32 public constant METACHAIN_ID_TYPEHASH = keccak256(
-        "Metachain(address anchor)"
+        "MetachainId(address anchor)"
     );
 
     /** The callprefix of the Committee::setup function. */
@@ -131,6 +131,9 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
 
     /** Axiom contract address */
     AxiomI public axiom;
+
+    /** Mosaic domain separator */
+    bytes32 public mosaicDomainSeparator;
 
 
     /* Modifiers */
@@ -199,8 +202,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
     )
         external
     {
-        // TODO: create domain separator
-
         // This function must be called only once.
         require(
             address(axiom) == address(0),
@@ -247,6 +248,19 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
         axiom = AxiomI(msg.sender);
 
         committees[SENTINEL_COMMITTEES] = SENTINEL_COMMITTEES;
+
+        uint256 chainId = getChainId();
+
+        mosaicDomainSeparator = keccak256(
+            abi.encode(
+                MOSAIC_DOMAIN_SEPARATOR_TYPEHASH,
+                MOSAIC_DOMAIN_SEPARATOR_NAME,
+                DOMAIN_SEPARATOR_VERSION,
+                chainId,
+                address(this)
+            )
+        );
+
     }
 
     /**
@@ -629,8 +643,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
         external
         onlyAxiom
     {
-        uint256 originChainId = getOriginChainId();
-        bytes32 metachainId = getMetachainId(_anchor, originChainId);
+        bytes32 metachainId = hashMetachainId(_anchor);
+
+        require(
+            assignments[metachainId] == address(0),
+            "A core is already assigned to this metachain."
+        );
 
         address core = newCore(
             metachainId,
@@ -673,26 +691,20 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
      *                            address consensus)`.
      *         <metachainid-typehash> format is MetachainId(address anchor).
      *
-     *         <mosaic-domain-separator> and <metachainid-typehash> is EIP-712 complaint.
-     *
+     *         <mosaic-domain-separator> and <metachainid-typehash> is EIP-712
+     *         complaint.
      * @param _anchor Anchor address of the new meta-chain.
-     * @param _originChainId Chain id of origin chain.
      *
      * @return metachainId_ Metachain id.
      */
-    function getMetachainId(address _anchor, uint256 _originChainId)
+    function hashMetachainId(address _anchor)
         public
         view
         returns(bytes32 metachainId_)
     {
-        bytes32 mosaicDomainSeparatorHash = keccak256(
-            abi.encode(
-                MOSAIC_DOMAIN_SEPARATOR_TYPEHASH,
-                MOSAIC_DOMAIN_SEPARATOR_NAME,
-                DOMAIN_SEPARATOR_VERSION,
-                _originChainId,
-                address(this)
-            )
+        require(
+            address(_anchor) != address(0),
+            "Anchor address must not be 0."
         );
 
         bytes32 metachainIdHash = keccak256(
@@ -703,26 +715,13 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
         );
 
         metachainId_ = keccak256(
-            abi.encode(
+            abi.encodePacked(
                 byte(0x19), // Standard ethereum prefix as per EIP-191.
                 byte(0x4d), // 'M' for Mosaic.
-                mosaicDomainSeparatorHash,
+                mosaicDomainSeparator,
                 metachainIdHash
             )
         );
-    }
-
-    /**
-     * It returns chain id.
-     */
-    function getOriginChainId()
-        public
-        pure
-        returns(uint256 _originChainId)
-    {
-        assembly {
-            _originChainId := chainid()
-        }
     }
 
 
@@ -740,6 +739,19 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
     {
         CoreStatus status = coreStatuses[_core];
         return status >= CoreStatus.creation;
+    }
+
+    /**
+     * It returns chain id.
+     */
+    function getChainId()
+        internal
+        pure
+        returns(uint256 chainId_)
+    {
+        assembly {
+            chainId_ := chainid()
+        }
     }
 
     /**
@@ -773,10 +785,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
     /* Private functions */
 
     /**
-     * @notice Anchor a new state root for specified chain id.
+     * @notice Anchor a new state root for specified metachain id.
 
      * @dev Function requires:
-     *          - anchor for specified chain id should exist.
+     *          - anchor for specified metachain id should exist.
      *
      * @param _metachainId Chain id.
      * @param _rlpBlockHeader RLP encoded block header
@@ -790,7 +802,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
         address anchorAddress = anchors[_metachainId];
         require(
             anchorAddress != address(0),
-            "There is no anchor for the specified chain id."
+            "There is no anchor for the specified metachain id."
         );
 
         Block.Header memory blockHeader = Block.decodeHeader(_rlpBlockHeader);
@@ -947,7 +959,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
      * @notice Validate the params for joining the core.
      *
      * @dev Function requires:
-     *          - chain id should not be 0.
+     *          - metachain id should not be 0.
      *          - core address should not be 0.
      *          - core should be assigned for the specified chain id.
      *          - withdrawal address can't be 0.
@@ -966,7 +978,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
     {
         require(
             _metachainId != bytes20(0),
-            "Chain id is 0."
+            "Metachain id is 0."
         );
 
         require(

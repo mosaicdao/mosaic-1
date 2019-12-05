@@ -40,7 +40,7 @@ async function hashKernel(
   );
 
   const DOMAIN_SEPARATOR_TYPEHASH = web3.utils.keccak256(
-    'EIP712Domain(string name,string version,bytes20 chainId,address verifyingContract)',
+    'EIP712Domain(string name,string version,bytes32 metachainId,address verifyingContract)',
   );
   const DOMAIN_SEPARATOR_NAME = 'Mosaic-Core';
   const DOMAIN_SEPARATOR_VERSION = '0';
@@ -51,7 +51,7 @@ async function hashKernel(
         'bytes32',
         'string',
         'string',
-        'bytes20',
+        'bytes32',
         'address',
       ],
       [
@@ -131,7 +131,7 @@ contract('Core::openMetablock', (accounts) => {
 
   beforeEach(async () => {
     config.consensusCoreArgs = {
-      chainId: accountProvider.get(),
+      chainId: web3.utils.keccak256('metachainid'),
       epochLength: new BN(100),
       minValidatorCount: new BN(5),
       validatorJoinLimit: new BN(20),
