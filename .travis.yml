@@ -34,3 +34,4 @@ script:
   - npm run test:integration
 after_script:
   - kill $(ps aux | grep 'ganache-cli' | awk '{print $2}')
+  - cat ganache.log
