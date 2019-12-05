@@ -717,11 +717,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             "Committee decision does not match with committee lock."
         );
 
-        require(
-            decision == precommit,
-            "Committee has not agreed with core's precommit."
-        );
-
         bytes32 metablockHash = CoreI(_core).hashMetablock(
             _kernelHash,
             _originObservation,
