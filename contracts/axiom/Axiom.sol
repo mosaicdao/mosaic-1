@@ -88,6 +88,9 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
     /** Anchor master copy contract address */
     address public anchorMasterCopy;
 
+    /** Consensus gateway master copy contract address */
+    address public consensusGatewayMasterCopy;
+
     /** Reputation contract address */
     ReputationI public reputation;
 
@@ -110,7 +113,8 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
         address _coreMasterCopy,
         address _committeeMasterCopy,
         address _reputationMasterCopy,
-        address _anchorMasterCopy
+        address _anchorMasterCopy,
+        address _consensusGatewayMasterCopy
     )
         public
     {
@@ -144,12 +148,18 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
             "Anchor master copy address is 0."
         );
 
+        require(
+            _consensusGatewayMasterCopy != address(0),
+            "Consensus gateway master copy address is 0."
+        );
+
         techGov = _techGov;
         consensusMasterCopy = _consensusMasterCopy;
         coreMasterCopy = _coreMasterCopy;
         committeeMasterCopy = _committeeMasterCopy;
         reputationMasterCopy = _reputationMasterCopy;
         anchorMasterCopy = _anchorMasterCopy;
+        consensusGatewayMasterCopy = _consensusGatewayMasterCopy;
     }
 
 
@@ -311,6 +321,34 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
             EPOCH_LENGTH,
             source,
             blockHeader.height
+        );
+    }
+
+    /**
+     * @notice Deploys metachain proxies. Only consensus can call this function.
+     *
+     * @param _anchorSetupData Setup data for anchor contract.
+     * @param _coreSetupData Setup data for core contract.
+     * @param _consensusGatewaySetupData Setup data for consensus gateway contract.
+     *
+     * @return anchor_ Address of anchor contract.
+     * @return core_ Address of core contract.
+     * @return consensusGateway_ Address of consensus gateway contract.
+     */
+    function deployMetachainProxies(
+        bytes calldata _anchorSetupData,
+        bytes calldata _coreSetupData,
+        bytes calldata _consensusGatewaySetupData
+    )
+        external
+        onlyConsensus
+        returns(address anchor_, address core_, address consensusGateway_)
+    {
+        anchor_ = deployProxyContract(anchorMasterCopy, _anchorSetupData);
+        core_ = deployProxyContract(coreMasterCopy, _coreSetupData);
+        consensusGateway_ = deployProxyContract(
+            consensusGatewayMasterCopy,
+            _consensusGatewaySetupData
         );
     }
 

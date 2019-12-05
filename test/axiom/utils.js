@@ -42,6 +42,7 @@ async function deployAxiom(
   committeeMasterCopy,
   reputationMasterCopy,
   anchorMasterCopy,
+  consensusGatewayMasterCopy,
   txOptions,
 ) {
   const axiom = await Axiom.new(
@@ -51,6 +52,7 @@ async function deployAxiom(
     committeeMasterCopy,
     reputationMasterCopy,
     anchorMasterCopy,
+    consensusGatewayMasterCopy,
     txOptions,
   );
   return axiom;
@@ -64,6 +66,7 @@ async function deployAxiomWithConfig(config) {
     config.committeeMasterCopy,
     config.reputationMasterCopy,
     config.anchorMasterCopy,
+    config.consensusGatewayMasterCopy,
     config.txOptions,
   );
 }
