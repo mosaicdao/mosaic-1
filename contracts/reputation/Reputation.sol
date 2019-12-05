@@ -49,10 +49,10 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
         /** Validator has put up stake and participates in consensus */
         Staked,
 
-        /** Validator has logged out and no longer participates in consensus */
-        LoggedOut,
+        /** Validator has deregistered and no longer participates in consensus */
+        Deregistered,
 
-        /** Validator has withdrawn stake after logging out and cooldown period */
+        /** Validator has withdrawn stake after deregistering and cooldown period */
         Withdrawn
     }
 
@@ -77,21 +77,21 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
     /** ERC20 wETH for stakes for validators. */
     ERC20I public wETH;
 
-    /** Required stake amount in mOST to join as a validator. */
+    /** Required stake amount in mOST to stake as a validator. */
     uint256 public stakeMOSTAmount;
 
-    /** Required stake amount in wETH to join as a validator. */
+    /** Required stake amount in wETH to stake as a validator. */
     uint256 public stakeWETHAmount;
 
     /** A per mille of earnings that validator can cash out immediately. */
     uint256 public cashableEarningsPerMille;
 
-    /** An initial reputation for a newly joined validator. */
+    /** An initial reputation for a newly staked validator. */
     uint256 public initialReputation;
 
     /**
      * A cooldown period for being able to withdraw after a validator
-     * has logged out.
+     * has deregistered.
      */
     uint256 public withdrawalCooldownPeriodInBlocks;
 
@@ -111,11 +111,11 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
         _;
     }
 
-    modifier hasJoined(address _validator)
+    modifier hasStaked(address _validator)
     {
         require(
             validators[_validator].status != ValidatorStatus.Undefined,
-            "Validator has not joined."
+            "Validator has not staked."
         );
 
         _;
@@ -131,11 +131,11 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
         _;
     }
 
-    modifier hasLoggedOut(address _validator)
+    modifier hasDeregistered(address _validator)
     {
         require(
-            validators[_validator].status >= ValidatorStatus.LoggedOut,
-            "Validator has not logged out."
+            validators[_validator].status >= ValidatorStatus.Deregistered,
+            "Validator has not deregistered."
         );
 
         _;
@@ -178,23 +178,23 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
      * @dev Function requires:
      *          - mOST token address is not 0
      *          - wETH token address is not 0
-     *          - a stake amount to join in mOST is positive
-     *          - a stake amount to join in wETH is positive
+     *          - a stake amount to stake in mOST is positive
+     *          - a stake amount to stake in wETH is positive
      *          - a cashable earnings per mille is in [0, 1000] range
      *
      * @param _consensus Address of consensus contract.
      * @param _mOST Address of EIP20 mOST token.
      * @param _stakeMOSTAmount Amount of mOST token in wei required to be
-     *                         staked by each validator on join.
+     *                         staked by each validator on staking.
      * @param _wETH Address of EIP20 wETH token.
      * @param _stakeWETHAmount Amount of wETH token in wei required to be
-     *                         staked by each validator on join.
+     *                         staked by each validator on staking.
      * @param _cashableEarningsPerMille Number ranging from [0-1000] which
      *                                  defines cashable earning per mille.
      * @param _initialReputation Initial reputation assigned when a validator
-     *                           joins.
+     *                           stakes.
      * @param _withdrawalCooldownPeriodInBlocks Defines block delay between
-     *                                          logout and withdraw operation
+     *                                          deregister and withdraw operation
      *                                          for a validator.
      */
     function setup(
@@ -226,12 +226,12 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
 
         require(
             _stakeMOSTAmount > 0,
-            "Stake amount to join in mOST is not positive."
+            "Stake amount in mOST is not positive."
         );
 
         require(
             _stakeWETHAmount > 0,
-            "Stake amount to join in wETH is not positive."
+            "Stake amount in wETH is not positive."
         );
 
         require(
@@ -317,7 +317,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
      *         Only fixed per-mille (`cashableEarningsPerMille`) from the
      *         earned amount is cashable by a validator immediately.
      *         The remaining is locked in the contract and can be cashed out
-     *         only when the validator has logged out and cooling period
+     *         only when the validator has deregistered and cooling period
      *         has elapsed.
      *
      * @dev Function requires:
@@ -357,7 +357,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
      *
      * @dev Function requires:
      *          - only validator can call
-     *          - validator has joined
+     *          - validator has staked
      *          - validator was not slashed
      *          - validator has not withdrawn
      *          - the specified amount is not bigger than cashable earnings
@@ -367,7 +367,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
      */
     function cashOutEarnings(uint256 _amount)
         external
-        hasJoined(msg.sender)
+        hasStaked(msg.sender)
         isHonest(msg.sender)
         hasNotWithdrawn(msg.sender)
     {
@@ -391,24 +391,24 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
     }
 
     /**
-     * @notice Joins a validator.
+     * @notice Stakes a validator.
      *
      * @dev Function requires:
      *          - only consensus can call
      *          - a validator address is not 0
      *          - a withdrawal address is not 0
      *          - a validator address is not same as its withdrawal address
-     *          - a validator has not joined previously
+     *          - a validator has not staked previously
      *          - a withdrawal address has not been used as a validator address
      *          - a validator approved in mOST token contract to transfer
      *            a stake amount.
      *          - a validator approved in wETH token contract to transfer
      *            a stake amount.
      *
-     * @param _validator A validator address to join.
-     * @param _withdrawalAddress A withdrawal address of newly joined validator.
+     * @param _validator A validator address to stake.
+     * @param _withdrawalAddress A withdrawal address of newly staked validator.
      */
-    function join(
+    function stake(
         address _validator,
         address _withdrawalAddress
     )
@@ -432,7 +432,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
 
         require(
             validators[_validator].status == ValidatorStatus.Undefined,
-            "No validator can rejoin."
+            "No validator can stake again."
         );
 
         require(
@@ -463,7 +463,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
      *
      * @dev Function requires:
      *          - only consensus can call
-     *          - a validator has joined
+     *          - a validator has staked
      *          - a validator has not withdrawn
      *
      * @param _validator A validator address to slash.
@@ -471,7 +471,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
     function slash(address _validator)
         external
         onlyConsensus
-        hasJoined(_validator)
+        hasStaked(_validator)
         hasNotWithdrawn(_validator)
         hasNotSlashed(_validator)
     {
@@ -490,22 +490,22 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
     }
 
     /**
-     * @notice Logs out a validator.
+     * @notice Deregisters a validator.
      *
      * @dev Function requires:
      *          - only consensus can call
      *          - validator is active
      *
-     * @param _validator A validator to log out.
+     * @param _validator A validator to deregister.
      */
-    function logout(address _validator)
+    function deregister(address _validator)
         external
         onlyConsensus
         isActive(_validator)
     {
         ValidatorInfo storage v = validators[_validator];
 
-        v.status = ValidatorStatus.LoggedOut;
+        v.status = ValidatorStatus.Deregistered;
 
         v.withdrawalBlockHeight = block.number.add(
             withdrawalCooldownPeriodInBlocks
@@ -516,7 +516,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
      * @notice Withdraws staked and earnings values to a validator.
      *
      * @dev Function requires:
-     *          - a validator has logged out
+     *          - a validator has deregistered
      *          - a validator was not slashed
      *          - a validator has not withdrawn
      *          - a withdrawal cooling period for the validator has elapsed
@@ -525,7 +525,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
      */
     function withdraw(address _validator)
         external
-        hasLoggedOut(_validator)
+        hasDeregistered(_validator)
         isHonest(_validator)
         hasNotWithdrawn(_validator)
         withdrawalCooldownPeriodHasElapsed(_validator)
@@ -571,5 +571,19 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
         returns (uint256)
     {
         return validators[_validator].reputation;
+    }
+
+    /**
+     * @notice Check if the validator address is slashed or not.
+     *
+     * @param _validator An address of a validator.
+     * Returns true if the specified address is slashed.
+     */
+    function isSlashed(address _validator)
+        public
+        view
+        returns(bool)
+    {
+        return validators[_validator].status == ValidatorStatus.Slashed;
     }
 }

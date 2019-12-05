@@ -252,7 +252,7 @@ contract('Core::registerVote', (accounts) => {
           config.validator0.proposalSignature.s,
           config.validator0.proposalSignature.v,
         ),
-        'Validator must be active.',
+        'Validator is slashed.',
       );
     });
 

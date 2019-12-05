@@ -60,7 +60,7 @@ contract('Consensus::enterCommittee', (accounts) => {
       await reputation.setIsActive(validator, false);
       await Utils.expectRevert(
         consensus.enterCommittee(committee.address, validator, furtherMember),
-        'Validator is not active.',
+        'Validator is slashed.',
       );
     });
 

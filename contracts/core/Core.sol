@@ -485,7 +485,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *          - if core has precommitted, the given proposal matches with it
      *          - proposal exists at open kernel height
      *          - validator active in this core
-     *          - validator is active
+     *          - validator should not be slashed in reputation contract
      *          - validator has not already cast the same vote
      *          - vote gets updated only if the new vote is at higher dynsaty
      */
@@ -521,8 +521,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             "Validator must be active in this core."
         );
         require(
-            reputation.isActive(validator),
-            "Validator must be active."
+            !reputation.isSlashed(validator),
+            "Validator is slashed."
         );
 
         bytes32 castVote = votes[validator];
