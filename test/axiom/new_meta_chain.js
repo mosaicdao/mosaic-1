@@ -112,8 +112,6 @@ contract('Axiom::newMetaChain', (accounts) => {
     });
 
     it('should validate the spied values of the consensus proxy contract', async () => {
-      const blockHash = web3.utils.sha3(newMetaChainParams.rlpBlockHeader);
-
       await AxiomUtils.newMetaChainWithConfig(axiom, newMetaChainParams);
 
       const consensusContractAddress = await axiom.consensus.call();
@@ -124,13 +122,6 @@ contract('Axiom::newMetaChain', (accounts) => {
         epochLength.eqn(EPOCH_LENGTH),
         true,
         'Epoch length value is not set in the contract.',
-      );
-
-      const source = await consensusProxyContract.source.call();
-      assert.strictEqual(
-        source,
-        blockHash,
-        'Source value is not set in the contract.',
       );
 
       const sourceBlockHeight = await consensusProxyContract.sourceBlockHeight.call();

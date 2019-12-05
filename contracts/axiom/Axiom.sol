@@ -271,8 +271,6 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
             "Consensus must be setup."
         );
 
-        bytes32 source = keccak256(_rootRlpBlockHeader);
-
         Block.Header memory blockHeader = Block.decodeHeader(_rootRlpBlockHeader);
 
         // Task: When new Anchor is implemented, use proxy pattern for deployment.
@@ -286,7 +284,6 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
         consensus.newMetaChain(
             address(anchor),
             EPOCH_LENGTH,
-            source,
             blockHeader.height
         );
     }

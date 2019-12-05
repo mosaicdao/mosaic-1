@@ -83,7 +83,6 @@ contract('Core::assertPrecommit', (accounts) => {
       config.consensusCoreArgs.gasTarget,
       config.consensusCoreArgs.dynasty,
       config.consensusCoreArgs.accumulatedGas,
-      config.consensusCoreArgs.source,
       config.consensusCoreArgs.sourceBlockHeight,
       { from: accountProvider.get() },
     );

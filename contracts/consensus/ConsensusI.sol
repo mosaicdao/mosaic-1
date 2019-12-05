@@ -48,13 +48,11 @@ interface ConsensusI {
      *
      * @param _anchor Anchor address of the new meta-chain.
      * @param _epochLength Epoch length for the new meta-chain.
-     * @param _rootBlockHash Root block hash.
      * @param _rootBlockHeight Root block height.
      */
     function newMetaChain(
         address _anchor,
         uint256 _epochLength,
-        bytes32 _rootBlockHash,
         uint256 _rootBlockHeight
     )
         external;

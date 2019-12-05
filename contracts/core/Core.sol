@@ -192,9 +192,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
     /** Committed dynasty number */
     uint256 public committedDynasty;
 
-    /** Committed source block hash */
-    bytes32 public committedSource;
-
     /** Committed sourceBlockHeight */
     uint256 public committedSourceBlockHeight;
 
@@ -283,7 +280,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         uint256 _gasTarget,
         uint256 _dynasty,
         uint256 _accumulatedGas,
-        bytes32 _source,
         uint256 _sourceBlockHeight
     )
         external
@@ -329,11 +325,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             "Metablock's accumulated gas is 0."
         );
 
-        require(
-            _source != bytes32(0),
-            "Metablock's source is 0."
-        );
-
         domainSeparator = keccak256(
             abi.encode(
                 DOMAIN_SEPARATOR_TYPEHASH,
@@ -364,7 +355,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
         committedDynasty = _dynasty;
         committedAccumulatedGas = _accumulatedGas;
-        committedSource = _source;
         committedSourceBlockHeight = _sourceBlockHeight;
     }
 
@@ -388,8 +378,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *          - source block height is strictly greater than committed
      *            block height
      *          - source block height is a checkpoint
-     *          - source block hash does not match with the committed source
-     *            block hash
      *          - target block height is +1 epoch of the source block height
      *          - a proposal matching with the input parameters does
      *            not exist in the core
@@ -451,10 +439,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         require(
             _target != bytes32(0),
             "Target blockhash must not be null."
-        );
-        require(
-            _source != committedSource,
-            "Source blockhash cannot equal sealed source blockhash."
         );
         require(
             _sourceBlockHeight > committedSourceBlockHeight,
@@ -682,7 +666,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
         committedDynasty = _committedDynasty;
         committedAccumulatedGas = _committedAccumulatedGas;
-        committedSource = _committedSource;
         committedSourceBlockHeight = _committedSourceBlockHeight;
 
         uint256 nextKernelHeight = openKernelHeight.add(1);

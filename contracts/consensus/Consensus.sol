@@ -53,7 +53,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /** The callprefix of the Core::setup function. */
     bytes4 public constant CORE_SETUP_CALLPREFIX = bytes4(
         keccak256(
-            "setup(address,bytes20,uint256,uint256,uint256,address,uint256,bytes32,uint256,uint256,uint256,bytes32,uint256)"
+            "setup(address,bytes20,uint256,uint256,uint256,address,uint256,bytes32,uint256,uint256,uint256,uint256)"
         )
     );
 
@@ -604,13 +604,11 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      *
      * @param _anchor anchor of the new meta-chain.
      * @param _epochLength Epoch length for new meta-chain.
-     * @param _rootBlockHash root block hash.
      * @param _rootBlockHeight root block height.
      */
     function newMetaChain(
         address _anchor,
         uint256 _epochLength,
-        bytes32 _rootBlockHash,
         uint256 _rootBlockHeight
     )
         external
@@ -631,7 +629,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             gasTargetDelta, // gas target
             uint256(0), // dynasty
             uint256(0), // accumulated gas
-            _rootBlockHash,
             _rootBlockHeight
         );
 
@@ -798,7 +795,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      * @param _gasTarget Gas target to close the meta block.
      * @param _dynasty Committed dynasty number.
      * @param _accumulatedGas Accumulated gas.
-     * @param _source Source block hash
      * @param _sourceBlockHeight Source block height.
      * returns Deployed core contract address.
      */
@@ -810,7 +806,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         uint256 _gasTarget,
         uint256 _dynasty,
         uint256 _accumulatedGas,
-        bytes32 _source,
         uint256 _sourceBlockHeight
     )
         private
@@ -829,7 +824,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             _gasTarget,
             _dynasty,
             _accumulatedGas,
-            _source,
             _sourceBlockHeight
         );
 
