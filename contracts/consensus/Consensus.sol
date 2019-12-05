@@ -122,16 +122,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
     /* Modifiers */
 
-    modifier onlyValidator()
-    {
-        require(
-            reputation.isActive(msg.sender),
-            "Validator must be active in the reputation contract."
-        );
-
-        _;
-    }
-
     modifier onlyCore()
     {
         require(
@@ -319,9 +309,9 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      * @notice Enter a validator into the committee.
      *
      * @dev Function requires:
-     *          - committee address should be present.
-     *          - validator should be active.
-     *          - validator successfully enter a committee.
+     *          - committee address should be present
+     *          - validator should not be slashed in reputation contract
+     *          - validator successfully enter a committee
      *
      * @param _committeeAddress Committee address that validator wants to enter.
      * @param _validator Validator address to enter.
@@ -340,8 +330,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
 
         require(
-            reputation.isActive(_validator),
-            "Validator is not active."
+            !reputation.isSlashed(_validator),
+            "Validator is slashed."
         );
 
         CommitteeI committee = CommitteeI(_committeeAddress);
@@ -510,8 +500,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             "Core status is not opened or precommitted."
         );
 
-        // Join in reputation contract.
-        reputation.join(msg.sender, _withdrawalAddress);
+        // Stake in reputation contract.
+        reputation.stake(msg.sender, _withdrawalAddress);
 
         // Join in core contract.
         CoreI(_core).join(msg.sender);
@@ -545,8 +535,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             "Core must be in an active state."
         );
 
-        // Join in reputation contract.
-        reputation.join(msg.sender, _withdrawalAddress);
+        // Stake in reputation contract.
+        reputation.stake(msg.sender, _withdrawalAddress);
 
         // Join in core contract.
         CoreI(_core).joinDuringCreation(msg.sender);
@@ -591,7 +581,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
 
         CoreI(_core).logout(msg.sender);
-        reputation.logout(msg.sender);
+        reputation.deregister(msg.sender);
     }
 
     /**
