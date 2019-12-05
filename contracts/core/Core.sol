@@ -751,6 +751,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *          - a validator has not already joined
      *
      * @param _validator A validator's address to join.
+     *
+     * @return The total count of joined validators.
      */
     function joinDuringCreation(address _validator)
         external
