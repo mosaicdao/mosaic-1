@@ -54,7 +54,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
     /** The callprefix of the Core::setup function. */
     bytes4 public constant CORE_SETUP_CALLPREFIX = bytes4(
         keccak256(
-            "setup(address,bytes20,uint256,uint256,uint256,address,uint256,bytes32,uint256,uint256,uint256,bytes32,uint256)"
+            "setup(address,bytes32,uint256,uint256,uint256,address,uint256,bytes32,uint256,uint256,uint256,bytes32,uint256)"
         )
     );
 
@@ -105,13 +105,13 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
     uint256 public coinbaseSplitPerMille;
 
     /** Block hash of heads of Metablockchains */
-    mapping(bytes20 /* chainId */ => bytes32 /* MetablockHash */) public metablockHeaderTips;
+    mapping(bytes32 /* metachainId */ => bytes32 /* MetablockHash */) public metablockHeaderTips;
 
     /** Core statuses */
     mapping(address /* core */ => CoreStatus /* coreStatus */) public coreStatuses;
 
-    /** Assigned core for a given chainId */
-    mapping(bytes20 /* chainId */ => address /* core */) public assignments;
+    /** Assigned core for a given metachain id */
+    mapping(bytes32 /* metachainId */ => address /* core */) public assignments;
 
     /** Precommitted proposals from core for a metablockchain */
     mapping(address /* core */ => Precommit) public precommits;
@@ -123,8 +123,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
     mapping(address => address) public committees;
 
 // NOTE: consider either storing a linked list; or getting rid of it
-    /** Assigned anchor for a given chainId */
-    mapping(bytes20 => address) public anchors;
+    /** Assigned anchor for a given metachain id */
+    mapping(bytes32 => address) public anchors;
 
     /** Reputation contract for validators */
     ReputationI public reputation;
@@ -369,7 +369,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
      *         proposal, anchors the state root and opens a new matablock.
      *
      * @dev Function requires:
-     *          - chain id should not be 0.
+     *          - metachain id should not be 0.
      *          - source block hash should not be 0.
      *          - target block hash should not be 0.
      *          - target block height should be greater than source block
@@ -380,7 +380,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
      *          - precommit for the specified core doesn't exist.
      *          - provided kernel hash should be equal to open kernel hash.
      *
-     * @param _chainId Chain id.
+     * @param _metachainId metachain id.
      * @param _rlpBlockHeader RLP ecoded block header.
      * @param _kernelHash Kernel hash
      * @param _originObservation Observation of the origin chain.
@@ -396,7 +396,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
      * @param _targetBlockHeight Target block height.
      */
     function commit(
-        bytes20 _chainId,
+        bytes32 _metachainId,
         bytes calldata _rlpBlockHeader,
         bytes32 _kernelHash,
         bytes32 _originObservation,
@@ -411,8 +411,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
         external
     {
         require(
-            _chainId != bytes20(0),
-            "Chain id is 0."
+            _metachainId != bytes20(0),
+            "Metachain id is 0."
         );
 
         require(
@@ -441,7 +441,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
         );
 
         // Make sure that core is valid for given chain id.
-        address core = assignments[_chainId];
+        address core = assignments[_metachainId];
         require(
             isCore(core),
             "There is no core for the specified chain id."
@@ -479,7 +479,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
         verifyCommitteeLock(precommitProposal, _committeeLock);
 
         // Anchor state root.
-        anchorStateRoot(_chainId, _rlpBlockHeader);
+        anchorStateRoot(_metachainId, _rlpBlockHeader);
 
         // Open a new metablock.
         CoreI(core).openMetablock(
@@ -502,19 +502,19 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
      * @dev Function requires:
      *          - core status should be opened or precommitted.
      *
-     * @param _chainId Chain id that validator wants to join.
+     * @param _metachainId Metachain id that validator wants to join.
      * @param _core Core address that validator wants to join.
      * @param _withdrawalAddress A withdrawal address of newly joined validator.
      */
     function join(
-        bytes20 _chainId,
+        bytes32 _metachainId,
         address _core,
         address _withdrawalAddress
     )
         external
     {
         // Validate the join params.
-        validateJoinParams(_chainId, _core, _withdrawalAddress);
+        validateJoinParams(_metachainId, _core, _withdrawalAddress);
 
         // Specified core must have open or precommitted status.
         CoreStatus status = coreStatuses[_core];
@@ -537,20 +537,20 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
      * @dev Function requires:
      *          - core should be in an active state.
      *
-     * @param _chainId Chain id that validator wants to join.
+     * @param _metachainId Metachain id that validator wants to join.
      * @param _core Core address that validator wants to join.
      * @param _withdrawalAddress A withdrawal address of newly joined validator.
      */
 
     function joinDuringCreation(
-        bytes20 _chainId,
+        bytes32 _metachainId,
         address _core,
         address _withdrawalAddress
     )
         external
     {
         // Validate the join params.
-        validateJoinParams(_chainId, _core, _withdrawalAddress);
+        validateJoinParams(_metachainId, _core, _withdrawalAddress);
 
         // Specified core must have creation status.
         require(
@@ -569,23 +569,23 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
      * @notice Validator logs out. This is called by validator address.
      *
      * @dev Function requires:
-     *          - chain id should not be 0.
+     *          - metachain id should not be 0.
      *          - core address should not be 0.
      *          - core should be assigned for the specified chain id.
      *          - core for the specified chain id should exist.
      *
-     * @param _chainId Chain id that validator wants to logout.
+     * @param _metachainId Metachain id that validator wants to logout.
      * @param _core Core address that validator wants to logout.
      */
     function logout(
-        bytes20 _chainId,
+        bytes32 _metachainId,
         address _core
     )
         external
     {
         require(
-            _chainId != bytes20(0),
-            "Chain id is 0."
+            _metachainId != bytes32(0),
+            "Metachain id is 0."
         );
 
         require(
@@ -594,8 +594,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
         );
 
         require(
-            assignments[_chainId] == _core,
-            "Core is not assigned for the specified chain id."
+            assignments[_metachainId] == _core,
+            "Core is not assigned for the specified metachain id."
         );
 
         require(
@@ -608,7 +608,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
     }
 
     /**
-     * @notice Creates a new meta chain given an achor.
+     * @notice Creates a new meta chain given an anchor.
      *         This can be called only by axiom.
      *
      * @dev Function requires:
@@ -629,15 +629,11 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
         external
         onlyAxiom
     {
-        bytes20 chainId = bytes20(_anchor);
-
-        require(
-            assignments[chainId] == address(0),
-            "A core is already assigned to this metachain."
-        );
+        uint256 originChainId = getOriginChainId();
+        bytes32 metachainId = getMetachainId(_anchor, originChainId);
 
         address core = newCore(
-            chainId,
+            metachainId,
             _epochLength,
             uint256(0), // metablock height
             bytes32(0), // parent hash
@@ -648,8 +644,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
             _rootBlockHeight
         );
 
-        assignments[chainId] = core;
-        anchors[chainId] = _anchor;
+        assignments[metachainId] = core;
+        anchors[metachainId] = _anchor;
     }
 
     /** Get minimum validator and join limit count. */
@@ -684,7 +680,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
      *
      * @return metachainId_ Metachain id.
      */
-    function getMetaChainId(address _anchor, uint256 _originChainId)
+    function getMetachainId(address _anchor, uint256 _originChainId)
         public
         view
         returns(bytes32 metachainId_)
@@ -714,6 +710,19 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
                 metachainIdHash
             )
         );
+    }
+
+    /**
+     * It returns chain id.
+     */
+    function getOriginChainId()
+        public
+        pure
+        returns(uint256 _originChainId)
+    {
+        assembly {
+            _originChainId := chainid()
+        }
     }
 
 
@@ -769,16 +778,16 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
      * @dev Function requires:
      *          - anchor for specified chain id should exist.
      *
-     * @param _chainId Chain id.
+     * @param _metachainId Chain id.
      * @param _rlpBlockHeader RLP encoded block header
      */
     function anchorStateRoot(
-        bytes20 _chainId,
+        bytes32 _metachainId,
         bytes memory _rlpBlockHeader
     )
         private
     {
-        address anchorAddress = anchors[_chainId];
+        address anchorAddress = anchors[_metachainId];
         require(
             anchorAddress != address(0),
             "There is no anchor for the specified chain id."
@@ -857,7 +866,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
 
     /**
      * @notice Deploys a new core contract.
-     * @param _chainId Chain id for which the core should be deployed.
+     * @param _metachainId Metachain id for which the core should be deployed.
      * @param _epochLength Epoch length for new core.
      * @param _height Kernel height.
      * @param _parent Kernel parent hash.
@@ -869,7 +878,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
      * returns Deployed core contract address.
      */
     function newCore(
-        bytes20 _chainId,
+        bytes32 _metachainId,
         uint256 _epochLength,
         uint256 _height,
         bytes32 _parent,
@@ -885,7 +894,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
         bytes memory coreSetupData = abi.encodeWithSelector(
             CORE_SETUP_CALLPREFIX,
             address(this),
-            _chainId,
+            _metachainId,
             _epochLength,
             minValidators,
             joinLimit,
@@ -943,12 +952,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
      *          - core should be assigned for the specified chain id.
      *          - withdrawal address can't be 0.
      *
-     * @param _chainId Chain id.
+     * @param _metachainId Metachain id.
      * @param _core Core contract address.
      * @param _withdrawalAddress Withdrawal address.
      */
     function validateJoinParams(
-        bytes20 _chainId,
+        bytes32 _metachainId,
         address _core,
         address _withdrawalAddress
     )
@@ -956,7 +965,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
         view
     {
         require(
-            _chainId != bytes20(0),
+            _metachainId != bytes20(0),
             "Chain id is 0."
         );
 
@@ -966,8 +975,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI, Mosai
         );
 
         require(
-            assignments[_chainId] == _core,
-            "Core is not assigned for the specified chain id."
+            assignments[_metachainId] == _core,
+            "Core is not assigned for the specified metachain id."
         );
 
         require(
