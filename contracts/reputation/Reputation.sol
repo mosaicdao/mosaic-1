@@ -50,7 +50,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
         Staked,
 
         /** Validator has deregistered and no longer participates in consensus */
-        DeRegistered,
+        Deregistered,
 
         /** Validator has withdrawn stake after deregistering and cooldown period */
         Withdrawn
@@ -131,10 +131,10 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
         _;
     }
 
-    modifier hasDeRegistered(address _validator)
+    modifier hasDeregistered(address _validator)
     {
         require(
-            validators[_validator].status >= ValidatorStatus.DeRegistered,
+            validators[_validator].status >= ValidatorStatus.Deregistered,
             "Validator has not deregistered."
         );
 
@@ -505,7 +505,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
     {
         ValidatorInfo storage v = validators[_validator];
 
-        v.status = ValidatorStatus.DeRegistered;
+        v.status = ValidatorStatus.Deregistered;
 
         v.withdrawalBlockHeight = block.number.add(
             withdrawalCooldownPeriodInBlocks
@@ -525,7 +525,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
      */
     function withdraw(address _validator)
         external
-        hasDeRegistered(_validator)
+        hasDeregistered(_validator)
         isHonest(_validator)
         hasNotWithdrawn(_validator)
         withdrawalCooldownPeriodHasElapsed(_validator)

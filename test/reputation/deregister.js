@@ -94,8 +94,8 @@ contract('Reputation::deregister', (accounts) => {
     const validatorObject = await reputation.validators.call(validator.address);
 
     assert.isOk(
-      validatorObject.status.eqn(ValidatorStatus.DeRegistered),
-      `Expected status is ${ValidatorStatus.DeRegistered} but found ${validatorObject.status}`,
+      validatorObject.status.eqn(ValidatorStatus.Deregistered),
+      `Expected status is ${ValidatorStatus.Deregistered} but found ${validatorObject.status}`,
     );
     const expectedWithdrawalBlockHeight = response.receipt.blockNumber
       + constructorArgs.withdrawalCooldownPeriodInBlocks;
