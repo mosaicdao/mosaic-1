@@ -54,7 +54,7 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
     /** The callprefix of the Core::setup function. */
     bytes4 public constant CORE_SETUP_CALLPREFIX = bytes4(
         keccak256(
-            "setup(address,bytes32,uint256,uint256,uint256,address,uint256,bytes32,uint256,uint256,uint256,bytes32,uint256)"
+            "setup(address,bytes32,uint256,uint256,uint256,address,uint256,bytes32,uint256,uint256,uint256,uint256)"
         )
     );
 
@@ -137,16 +137,6 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
 
 
     /* Modifiers */
-
-    modifier onlyValidator()
-    {
-        require(
-            reputation.isActive(msg.sender),
-            "Validator must be active in the reputation contract."
-        );
-
-        _;
-    }
 
     modifier onlyCore()
     {
@@ -425,7 +415,7 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
         external
     {
         require(
-            _chainId != bytes32(0),
+            _metachainId != bytes32(0),
             "Metachain id is 0."
         );
 
