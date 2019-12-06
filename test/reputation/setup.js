@@ -39,7 +39,7 @@ contract('Reputation::setup', (accounts) => {
   });
 
   it('should successfully construct reputation contract', async () => {
-    reputation.setup(
+    await reputation.setup(
       constructorArgs.consensus,
       constructorArgs.mOST,
       constructorArgs.stakeMOSTAmount,
