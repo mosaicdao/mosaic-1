@@ -58,7 +58,7 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
         )
     );
 
-    string public constant MOSAIC_DOMAIN_SEPARATOR_NAME = "Mosaic";
+    string public constant MOSAIC_DOMAIN_SEPARATOR_NAME = "Mosaic-Consensus";
 
     /** It is domain separator typehash used to calculate metachain id. */
     bytes32 public constant MOSAIC_DOMAIN_SEPARATOR_TYPEHASH = keccak256(
@@ -122,7 +122,6 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
     /** Linked-list of committees */
     mapping(address => address) public committees;
 
-// NOTE: consider either storing a linked list; or getting rid of it
     /** Assigned anchor for a given metachain id */
     mapping(bytes32 => address) public anchors;
 
@@ -671,9 +670,9 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
      * @notice Gets metachain id.
      *         Metachain id format :
      *         `0x19 0x4d <mosaic-domain-separator> <metachainid-typehash>` where
-     *         0x19 refers to ethereum initial byte(Refer Eip-191).
-     *         0x4d refers to 'M'.
-     *         <mosaic-domain-separator> format is `MosaicMetachain(string name,
+     *         0x19 signed data as per EIP-191.
+     *         0x4d is version byte for Mosaic.
+     *         <mosaic-domain-separator> format is `MosaicDomain(string name,
      *                            string version,uint256 originChainId,
      *                            address consensus)`.
      *         <metachainid-typehash> format is MetachainId(address anchor).
