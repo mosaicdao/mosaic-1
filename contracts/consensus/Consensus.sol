@@ -50,6 +50,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /** Maximum coinbase split per mille */
     uint256 public constant MAX_COINBASE_SPLIT_PER_MILLE = uint16(1000);
 
+    /** Epoch length */
+    uint256 public constant EPOCH_LENGTH = uint256(100);
+
+    /** Max state roots */
+    uint256 public constant MAX_STATE_ROOTS = uint256(100);
+
     /** The callprefix of the Core::setup function. */
     bytes4 public constant CORE_SETUP_CALLPREFIX = bytes4(
         keccak256(
@@ -593,12 +599,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      *          - core is not assigned to metachain.
      *
      * @param _anchor anchor of the new meta-chain.
-     * @param _epochLength Epoch length for new meta-chain.
      * @param _rootBlockHeight root block height.
      */
     function newMetaChain(
         address _anchor,
-        uint256 _epochLength,
         uint256 _rootBlockHeight
     )
         external
@@ -613,7 +617,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
         address core = newCore(
             chainId,
-            _epochLength,
+            EPOCH_LENGTH,
             uint256(0), // metablock height
             bytes32(0), // parent hash
             gasTargetDelta, // gas target
