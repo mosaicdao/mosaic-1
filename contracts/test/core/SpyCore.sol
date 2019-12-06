@@ -74,7 +74,6 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
     function openMetablock(
         uint256 _committedDynasty,
         uint256 _committedAccumulatedGas,
-        bytes32 _committedSource,
         uint256 _committedSourceBlockHeight,
         uint256 _deltaGasTarget
     )
@@ -82,7 +81,6 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
     {
         spyCommittedDynasty = _committedDynasty;
         spyCommittedAccumulatedGas = _committedAccumulatedGas;
-        spyCommittedSource = _committedSource;
         spyCommittedSourceBlockHeight = _committedSourceBlockHeight;
         spyDeltaGasTarget = _deltaGasTarget;
     }

@@ -194,7 +194,6 @@ contract('Core::openMetablock', (accounts) => {
         config.consensus.openMetablock(
           config.proposalArgs.dynasty,
           config.proposalArgs.accumulatedGas,
-          config.proposalArgs.source,
           config.proposalArgs.sourceBlockHeight,
           config.newMetablockDeltaGasTarget,
         ),
@@ -213,7 +212,6 @@ contract('Core::openMetablock', (accounts) => {
         config.core.openMetablock(
           config.proposalArgs.dynasty,
           config.proposalArgs.accumulatedGas,
-          config.proposalArgs.source,
           config.proposalArgs.sourceBlockHeight,
           config.newMetablockDeltaGasTarget,
         ),
@@ -248,7 +246,6 @@ contract('Core::openMetablock', (accounts) => {
       await config.consensus.openMetablock(
         config.proposalArgs.dynasty,
         config.proposalArgs.accumulatedGas,
-        config.proposalArgs.source,
         config.proposalArgs.sourceBlockHeight,
         config.newMetablockDeltaGasTarget,
       );

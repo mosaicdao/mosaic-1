@@ -28,7 +28,6 @@ interface CoreI {
     function openMetablock(
         uint256 _committedDynasty,
         uint256 _committedAccumulatedGas,
-        bytes32 _committedSource,
         uint256 _committedSourceBlockHeight,
         uint256 _deltaGasTarget
     )

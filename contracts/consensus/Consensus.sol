@@ -450,7 +450,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         CoreI(core).openMetablock(
             _dynasty,
             _accumulatedGas,
-            _source,
             _sourceBlockHeight,
             gasTargetDelta
         );

@@ -609,8 +609,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *
      * @param _committedDynasty Dynasty of an open metablock.
      * @param _committedAccumulatedGas Accumulated gas in an open metablock.
-     * @param _committedSource Source blockhash of a vote message for
-     *                         an open metablock.
      * @param _committedSourceBlockHeight Source block height of a vote message
      *                                    for an open metablock.
      * @param _deltaGasTarget Gas target delta for a new metablock.
@@ -618,7 +616,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
     function openMetablock(
         uint256 _committedDynasty,
         uint256 _committedAccumulatedGas,
-        bytes32 _committedSource,
         uint256 _committedSourceBlockHeight,
         uint256 _deltaGasTarget
     )

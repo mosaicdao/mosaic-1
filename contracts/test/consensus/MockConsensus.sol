@@ -184,7 +184,6 @@ contract MockConsensus is ConsensusI, ReputationI {
     function openMetablock(
         uint256 _committedDynasty,
         uint256 _committedAccumulatedGas,
-        bytes32 _committedSource,
         uint256 _committedSourceBlockHeight,
         uint256 _deltaGasTarget
     )
@@ -193,7 +192,6 @@ contract MockConsensus is ConsensusI, ReputationI {
         mockCore.openMetablock(
             _committedDynasty,
             _committedAccumulatedGas,
-            _committedSource,
             _committedSourceBlockHeight,
             _deltaGasTarget
         );
