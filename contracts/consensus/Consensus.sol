@@ -65,7 +65,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /** The callprefix of the Core::setup function. */
     bytes4 public constant CORE_SETUP_CALLPREFIX = bytes4(
         keccak256(
-            "setup(address,bytes20,uint256,uint256,uint256,address,uint256,bytes32,uint256,uint256,uint256,bytes32,uint256)"
+            "setup(address,bytes20,uint256,uint256,uint256,address,uint256,bytes32,uint256,uint256,uint256,uint256)"
         )
     );
 
@@ -135,16 +135,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
 
     /* Modifiers */
-
-    modifier onlyValidator()
-    {
-        require(
-            reputation.isActive(msg.sender),
-            "Validator must be active in the reputation contract."
-        );
-
-        _;
-    }
 
     modifier onlyCore()
     {
@@ -328,13 +318,13 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         require(
             block.number <= committeeFormationBlockHeight
                 .sub(COMMITTEE_FORMATION_LENGTH)
-                .add(256),
+                .add(uint256(256)),
             "Committee formation blocksegment is not in most recent 256 blocks."
         );
 
         uint256 segmentHeight = committeeFormationBlockHeight;
         bytes32[] memory seedGenerator = new bytes32[](uint256(COMMITTEE_FORMATION_LENGTH));
-        for (uint256 i = 0; i < COMMITTEE_FORMATION_LENGTH; i++) {
+        for (uint256 i = 0; i < COMMITTEE_FORMATION_LENGTH; i = i.add(1)) {
             seedGenerator[i] = blockhash(segmentHeight);
             segmentHeight = segmentHeight.sub(1);
         }
@@ -352,6 +342,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      * @dev Function requires:
      *          - the committee exists
      *          - the validator is active
+     * 			- the validator is not slashed
      *
      * @param _committeeAddress Committee address that validator wants to enter.
      * @param _validator Validator address to enter.
@@ -371,8 +362,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
 
         require(
-            reputation.isActive(_validator),
-            "Validator is not active."
+            !reputation.isSlashed(_validator),
+            "Validator is slashed."
         );
 
         CommitteeI committee = CommitteeI(_committeeAddress);
@@ -485,7 +476,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         CoreI(core).openMetablock(
             _dynasty,
             _accumulatedGas,
-            _source,
             _sourceBlockHeight,
             gasTargetDelta
         );
@@ -519,8 +509,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             "Core status is not opened or precommitted."
         );
 
-        // Join in reputation contract.
-        reputation.join(msg.sender, _withdrawalAddress);
+        // Stake in reputation contract.
+        reputation.stake(msg.sender, _withdrawalAddress);
 
         // Join in core contract.
         CoreI(_core).join(msg.sender);
@@ -554,8 +544,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             "Core must be in an active state."
         );
 
-        // Join in reputation contract.
-        reputation.join(msg.sender, _withdrawalAddress);
+        // Stake in reputation contract.
+        reputation.stake(msg.sender, _withdrawalAddress);
 
         // Join in core contract.
         CoreI(_core).joinDuringCreation(msg.sender);
@@ -600,7 +590,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
 
         CoreI(_core).logout(msg.sender);
-        reputation.logout(msg.sender);
+        reputation.deregister(msg.sender);
     }
 
     /**
@@ -613,13 +603,11 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      *
      * @param _anchor anchor of the new meta-chain.
      * @param _epochLength Epoch length for new meta-chain.
-     * @param _rootBlockHash root block hash.
      * @param _rootBlockHeight root block height.
      */
     function newMetaChain(
         address _anchor,
         uint256 _epochLength,
-        bytes32 _rootBlockHash,
         uint256 _rootBlockHeight
     )
         external
@@ -640,7 +628,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             gasTargetDelta, // gas target
             uint256(0), // dynasty
             uint256(0), // accumulated gas
-            _rootBlockHash,
             _rootBlockHeight
         );
 
@@ -809,11 +796,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             "Committee decision does not match with committee lock."
         );
 
-        require(
-            decision == _precommit,
-            "Committee has not agreed with core's precommit."
-        );
-
         bytes32 metablockHash = CoreI(_core).hashMetablock(
             _kernelHash,
             _originObservation,
@@ -871,7 +853,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      * @param _gasTarget Gas target to close the meta block.
      * @param _dynasty Committed dynasty number.
      * @param _accumulatedGas Accumulated gas.
-     * @param _source Source block hash
      * @param _sourceBlockHeight Source block height.
      * returns Deployed core contract address.
      */
@@ -883,7 +864,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         uint256 _gasTarget,
         uint256 _dynasty,
         uint256 _accumulatedGas,
-        bytes32 _source,
         uint256 _sourceBlockHeight
     )
         private
@@ -902,7 +882,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             _gasTarget,
             _dynasty,
             _accumulatedGas,
-            _source,
             _sourceBlockHeight
         );
 

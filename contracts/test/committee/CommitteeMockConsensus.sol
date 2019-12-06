@@ -66,7 +66,6 @@ contract CommitteeMockConsensus is ConsensusI {
     function newMetaChain(
         address /* _anchor */,
         uint256 /* _epochLength */,
-        bytes32 /* _rootBlockHash */,
         uint256 /* _rootBlockHeight */
     )
         external

@@ -23,7 +23,7 @@ const Utils = require('../test_lib/utils.js');
 const Reputation = artifacts.require('Reputation');
 const MockToken = artifacts.require('MockToken');
 
-contract('Reputation::join', (accounts) => {
+contract('Reputation::stake', (accounts) => {
   let constructorArgs;
   let validator;
   let accountProvider;
@@ -77,8 +77,8 @@ contract('Reputation::join', (accounts) => {
     );
   });
 
-  it('should be able to join validator pool', async () => {
-    const response = await reputation.join(
+  it('should be able to stake in validator pool', async () => {
+    const response = await reputation.stake(
       validator.address,
       validator.withdrawalAddress,
       { from: constructorArgs.consensus },
@@ -91,7 +91,7 @@ contract('Reputation::join', (accounts) => {
   });
 
   it('should create storage for validator', async () => {
-    const response = await reputation.join(
+    const response = await reputation.stake(
       validator.address,
       validator.withdrawalAddress,
       { from: constructorArgs.consensus },
@@ -140,7 +140,7 @@ contract('Reputation::join', (accounts) => {
   });
 
   it('should increase reputation contract balance', async () => {
-    await reputation.join(
+    await reputation.stake(
       validator.address,
       validator.withdrawalAddress,
       { from: constructorArgs.consensus },
@@ -160,17 +160,17 @@ contract('Reputation::join', (accounts) => {
     );
   });
 
-  it('should fail in non consensus address tries to join a validator', async () => {
+  it('should fail in non consensus address tries to stake a validator', async () => {
     const nonConsensusAddress = accountProvider.get();
 
-    await Utils.expectRevert(reputation.join(
+    await Utils.expectRevert(reputation.stake(
       validator.address,
       validator.withdrawalAddress,
       { from: nonConsensusAddress },
     ),
     'Only the consensus contract can call this function.');
   });
-  it('should fail to join validator pool if mOST token is not approved', async () => {
+  it('should fail to stake validator pool if mOST token is not approved', async () => {
     await mOST.approve(
       reputation.address,
       '0',
@@ -179,14 +179,14 @@ contract('Reputation::join', (accounts) => {
 
     // Can't assert message, because transferFrom will revert/throw as per the specification.
     // https://eips.ethereum.org/EIPS/eip-20
-    await Utils.expectRevert(reputation.join(
+    await Utils.expectRevert(reputation.stake(
       validator.address,
       validator.withdrawalAddress,
       { from: constructorArgs.consensus },
     ));
   });
 
-  it('should fail to join validator pool if eETH token is not approved', async () => {
+  it('should fail to stake validator pool if wETH token is not approved', async () => {
     await wETH.approve(
       reputation.address,
       '0',
@@ -195,7 +195,7 @@ contract('Reputation::join', (accounts) => {
 
     // Can't assert message, because transferFrom will revert/throw as per the specification.
     // https://eips.ethereum.org/EIPS/eip-20
-    await Utils.expectRevert(reputation.join(
+    await Utils.expectRevert(reputation.stake(
       validator.address,
       validator.withdrawalAddress,
       { from: constructorArgs.consensus },
@@ -203,7 +203,7 @@ contract('Reputation::join', (accounts) => {
   });
 
   it('should fail for zero validator address', async () => {
-    await Utils.expectRevert(reputation.join(
+    await Utils.expectRevert(reputation.stake(
       NULL_ADDRESS,
       validator.withdrawalAddress,
       { from: constructorArgs.consensus },
@@ -212,7 +212,7 @@ contract('Reputation::join', (accounts) => {
   });
 
   it('should fail for zero withdrawal address', async () => {
-    await Utils.expectRevert(reputation.join(
+    await Utils.expectRevert(reputation.stake(
       validator.address,
       NULL_ADDRESS,
       { from: constructorArgs.consensus },
@@ -221,7 +221,7 @@ contract('Reputation::join', (accounts) => {
   });
 
   it('should fail if validator address is same as withdrawal address', async () => {
-    await Utils.expectRevert(reputation.join(
+    await Utils.expectRevert(reputation.stake(
       validator.address,
       validator.address,
       { from: constructorArgs.consensus },
@@ -229,22 +229,22 @@ contract('Reputation::join', (accounts) => {
     'Validator\'s address is the same as its withdrawal address.');
   });
 
-  it('should fail if validator has already joined', async () => {
-    await reputation.join(
+  it('should fail if validator has already staked', async () => {
+    await reputation.stake(
       validator.address,
       validator.withdrawalAddress,
       { from: constructorArgs.consensus },
     );
 
-    await Utils.expectRevert(reputation.join(
+    await Utils.expectRevert(reputation.stake(
       validator.address,
       validator.withdrawalAddress,
       { from: constructorArgs.consensus },
     ),
-    'No validator can rejoin.');
+    'No validator can stake again.');
   });
 
-  it('should fail if withdrawal address has already joined as validator', async () => {
+  it('should fail if withdrawal address has already staked as validator', async () => {
     await mOST.transfer(
       validator.withdrawalAddress,
       constructorArgs.stakeMOSTAmount,
@@ -267,12 +267,12 @@ contract('Reputation::join', (accounts) => {
       constructorArgs.stakeWETHAmount,
       { from: validator.withdrawalAddress },
     );
-    await reputation.join(
+    await reputation.stake(
       validator.withdrawalAddress,
       validator.address,
       { from: constructorArgs.consensus },
     );
-    await Utils.expectRevert(reputation.join(
+    await Utils.expectRevert(reputation.stake(
       validator.address,
       validator.withdrawalAddress,
       { from: constructorArgs.consensus },

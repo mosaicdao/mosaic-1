@@ -19,7 +19,7 @@ const Utils = require('../test_lib/utils.js');
 
 const ConsensusSetupParamTypes = 'uint256,uint256,uint256,uint256,uint256,address';
 const ReputationSetupParamTypes = 'address,address,uint256,address,uint256,uint256,uint256,uint256';
-const CoreSetupParamTypes = 'address,bytes20,uint256,uint256,uint256,address,uint256,bytes32,uint256,uint256,uint256,bytes32,uint256';
+const CoreSetupParamTypes = 'address,bytes20,uint256,uint256,uint256,address,uint256,bytes32,uint256,uint256,uint256,uint256';
 const CommitteeSetupParamTypes = 'address,uint256,bytes32,bytes32';
 
 const ConsensusSetupFunctionSignature = `setup(${ConsensusSetupParamTypes})`;
@@ -104,7 +104,6 @@ async function encodeNewCoreParams(coreParams) {
       coreParams.gasTarget.toString(10),
       coreParams.dynasty.toString(10),
       coreParams.accumulatedGas.toString(10),
-      coreParams.source,
       coreParams.sourceBlockHeight.toString(10),
     ],
 

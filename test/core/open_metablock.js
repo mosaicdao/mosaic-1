@@ -154,7 +154,6 @@ contract('Core::openMetablock', (accounts) => {
       config.consensusCoreArgs.gasTarget,
       config.consensusCoreArgs.dynasty,
       config.consensusCoreArgs.accumulatedGas,
-      config.consensusCoreArgs.source,
       config.consensusCoreArgs.sourceBlockHeight,
       { from: accountProvider.get() },
     );
@@ -195,7 +194,6 @@ contract('Core::openMetablock', (accounts) => {
         config.consensus.openMetablock(
           config.proposalArgs.dynasty,
           config.proposalArgs.accumulatedGas,
-          config.proposalArgs.source,
           config.proposalArgs.sourceBlockHeight,
           config.newMetablockDeltaGasTarget,
         ),
@@ -214,7 +212,6 @@ contract('Core::openMetablock', (accounts) => {
         config.core.openMetablock(
           config.proposalArgs.dynasty,
           config.proposalArgs.accumulatedGas,
-          config.proposalArgs.source,
           config.proposalArgs.sourceBlockHeight,
           config.newMetablockDeltaGasTarget,
         ),
@@ -249,7 +246,6 @@ contract('Core::openMetablock', (accounts) => {
       await config.consensus.openMetablock(
         config.proposalArgs.dynasty,
         config.proposalArgs.accumulatedGas,
-        config.proposalArgs.source,
         config.proposalArgs.sourceBlockHeight,
         config.newMetablockDeltaGasTarget,
       );
@@ -262,12 +258,6 @@ contract('Core::openMetablock', (accounts) => {
       const committedAccumulatedGas = await config.core.committedAccumulatedGas();
       assert.isOk(
         committedAccumulatedGas.eq(config.proposalArgs.accumulatedGas),
-      );
-
-      const committedSource = await config.core.committedSource();
-      assert.strictEqual(
-        committedSource,
-        config.proposalArgs.source,
       );
 
       const committedSourceBlockHeight = await config.core.committedSourceBlockHeight();

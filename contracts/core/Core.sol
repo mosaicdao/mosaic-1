@@ -192,9 +192,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
     /** Committed dynasty number */
     uint256 public committedDynasty;
 
-    /** Committed source block hash */
-    bytes32 public committedSource;
-
     /** Committed sourceBlockHeight */
     uint256 public committedSourceBlockHeight;
 
@@ -283,7 +280,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         uint256 _gasTarget,
         uint256 _dynasty,
         uint256 _accumulatedGas,
-        bytes32 _source,
         uint256 _sourceBlockHeight
     )
         external
@@ -329,11 +325,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             "Metablock's accumulated gas is 0."
         );
 
-        require(
-            _source != bytes32(0),
-            "Metablock's source is 0."
-        );
-
         domainSeparator = keccak256(
             abi.encode(
                 DOMAIN_SEPARATOR_TYPEHASH,
@@ -364,7 +355,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
         committedDynasty = _dynasty;
         committedAccumulatedGas = _accumulatedGas;
-        committedSource = _source;
         committedSourceBlockHeight = _sourceBlockHeight;
     }
 
@@ -388,8 +378,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *          - source block height is strictly greater than committed
      *            block height
      *          - source block height is a checkpoint
-     *          - source block hash does not match with the committed source
-     *            block hash
      *          - target block height is +1 epoch of the source block height
      *          - a proposal matching with the input parameters does
      *            not exist in the core
@@ -453,10 +441,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             "Target blockhash must not be null."
         );
         require(
-            _source != committedSource,
-            "Source blockhash cannot equal sealed source blockhash."
-        );
-        require(
             _sourceBlockHeight > committedSourceBlockHeight,
             "Source block height must strictly increase."
         );
@@ -501,7 +485,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *          - if core has precommitted, the given proposal matches with it
      *          - proposal exists at open kernel height
      *          - validator active in this core
-     *          - validator is active
+     *          - validator should not be slashed in reputation contract
      *          - validator has not already cast the same vote
      *          - vote gets updated only if the new vote is at higher dynsaty
      */
@@ -537,8 +521,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             "Validator must be active in this core."
         );
         require(
-            reputation.isActive(validator),
-            "Validator must be active."
+            !reputation.isSlashed(validator),
+            "Validator is slashed."
         );
 
         bytes32 castVote = votes[validator];
@@ -625,8 +609,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *
      * @param _committedDynasty Dynasty of an open metablock.
      * @param _committedAccumulatedGas Accumulated gas in an open metablock.
-     * @param _committedSource Source blockhash of a vote message for
-     *                         an open metablock.
      * @param _committedSourceBlockHeight Source block height of a vote message
      *                                    for an open metablock.
      * @param _deltaGasTarget Gas target delta for a new metablock.
@@ -634,7 +616,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
     function openMetablock(
         uint256 _committedDynasty,
         uint256 _committedAccumulatedGas,
-        bytes32 _committedSource,
         uint256 _committedSourceBlockHeight,
         uint256 _deltaGasTarget
     )
@@ -646,7 +627,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
         committedDynasty = _committedDynasty;
         committedAccumulatedGas = _committedAccumulatedGas;
-        committedSource = _committedSource;
         committedSourceBlockHeight = _committedSourceBlockHeight;
 
         uint256 nextKernelHeight = openKernelHeight.add(1);

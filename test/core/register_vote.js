@@ -96,7 +96,6 @@ contract('Core::registerVote', (accounts) => {
       config.consensusCoreArgs.gasTarget,
       config.consensusCoreArgs.dynasty,
       config.consensusCoreArgs.accumulatedGas,
-      config.consensusCoreArgs.source,
       config.consensusCoreArgs.sourceBlockHeight,
       { from: accountProvider.get() },
     );
@@ -179,7 +178,6 @@ contract('Core::registerVote', (accounts) => {
         config.consensusCoreArgs.gasTarget,
         config.consensusCoreArgs.dynasty,
         config.consensusCoreArgs.accumulatedGas,
-        config.consensusCoreArgs.source,
         config.consensusCoreArgs.sourceBlockHeight,
         { from: accountProvider.get() },
       );
@@ -254,7 +252,7 @@ contract('Core::registerVote', (accounts) => {
           config.validator0.proposalSignature.s,
           config.validator0.proposalSignature.v,
         ),
-        'Validator must be active.',
+        'Validator is slashed.',
       );
     });
 

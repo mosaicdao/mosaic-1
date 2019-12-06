@@ -19,7 +19,6 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
     uint256 public spyGasTarget;
     uint256 public spyDynasty;
     uint256 public spyAccumulatedGas;
-    bytes32 public spySource;
     uint256 public spySourceBlockHeight;
 
     address public spyValidator;
@@ -42,7 +41,6 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
         uint256 _gasTarget,
         uint256 _dynasty,
         uint256 _accumulatedGas,
-        bytes32 _source,
         uint256 _sourceBlockHeight
     )
         external
@@ -59,7 +57,6 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
         spyGasTarget = _gasTarget;
         spyDynasty = _dynasty;
         spyAccumulatedGas = _accumulatedGas;
-        spySource = _source;
         spySourceBlockHeight = _sourceBlockHeight;
     }
     function joinDuringCreation(address _validator) external {
@@ -77,7 +74,6 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
     function openMetablock(
         uint256 _committedDynasty,
         uint256 _committedAccumulatedGas,
-        bytes32 _committedSource,
         uint256 _committedSourceBlockHeight,
         uint256 _deltaGasTarget
     )
@@ -85,7 +81,6 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
     {
         spyCommittedDynasty = _committedDynasty;
         spyCommittedAccumulatedGas = _committedAccumulatedGas;
-        spyCommittedSource = _committedSource;
         spyCommittedSourceBlockHeight = _committedSourceBlockHeight;
         spyDeltaGasTarget = _deltaGasTarget;
     }
