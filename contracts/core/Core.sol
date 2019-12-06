@@ -548,10 +548,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
     }
 
     /**
-     * @notice Asserts that given parameters are hashing to the precommit.
-     *
-     * @dev Function requires:
-     *          - core has precommitted
+     * @notice Hashes given parameters of a metablock.
      *
      * @param _kernelHash Kernel hash of a provided metablock.
      * @param _originObservation Origin observation of a provided metablock.
@@ -568,8 +565,9 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      * @param _targetBlockHeight Target block height of a vote message for a
      *                           provided metablock.
      *
+     * @return The precommit's hash.
      */
-    function assertPrecommit(
+    function hashMetablock(
         bytes32 _kernelHash,
         bytes32 _originObservation,
         uint256 _dynasty,
@@ -582,13 +580,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
     )
         public
         view
-        returns (bytes32 proposal_)
+        returns (bytes32 metablockHash_)
     {
-        require(
-            precommit != bytes32(0),
-            "Core has not precommitted to a proposal."
-        );
-
         bytes32 transitionHash = hashTransition(
             _kernelHash,
             _originObservation,
@@ -597,17 +590,12 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             _committeeLock
         );
 
-        proposal_ = hashVoteMessage(
+        metablockHash_ = hashVoteMessage(
             transitionHash,
             _source,
             _target,
             _sourceBlockHeight,
             _targetBlockHeight
-        );
-
-        require(
-            proposal_ == precommit,
-            "Provided metablock does not match precommit."
         );
     }
 
@@ -619,31 +607,16 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *          - only consensus can call
      *          - input parameters match to an open metablock
      *
-     * @param _committedOriginObservation Origin observation of an open
-     *                                    metablock.
      * @param _committedDynasty Dynasty of an open metablock.
      * @param _committedAccumulatedGas Accumulated gas in an open metablock.
-     * @param _committedCommitteeLock Committe lock (transition root hash) of
-     *                                an open metablock.
-     * @param _committedSource Source blockhash of a vote message for
-     *                         an open metablock.
-     * @param _committedTarget Target blockhash of a vote message for
-     *                         an open metablock.
      * @param _committedSourceBlockHeight Source block height of a vote message
-     *                                    for an open metablock.
-     * @param _committedTargetBlockHeight Target block height of a vote message
      *                                    for an open metablock.
      * @param _deltaGasTarget Gas target delta for a new metablock.
      */
     function openMetablock(
-        bytes32 _committedOriginObservation,
         uint256 _committedDynasty,
         uint256 _committedAccumulatedGas,
-        bytes32 _committedCommitteeLock,
-        bytes32 _committedSource,
-        bytes32 _committedTarget,
         uint256 _committedSourceBlockHeight,
-        uint256 _committedTargetBlockHeight,
         uint256 _deltaGasTarget
     )
         external
@@ -651,18 +624,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         whileMetablockPrecommitted
     {
         assert(precommit != bytes32(0));
-
-        assertPrecommit(
-            openKernelHash,
-            _committedOriginObservation,
-            _committedDynasty,
-            _committedAccumulatedGas,
-            _committedCommitteeLock,
-            _committedSource,
-            _committedTarget,
-            _committedSourceBlockHeight,
-            _committedTargetBlockHeight
-        );
 
         committedDynasty = _committedDynasty;
         committedAccumulatedGas = _committedAccumulatedGas;
@@ -898,7 +859,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             coreStatus = CoreStatus.precommitted;
             precommit = _proposal;
             precommitClosureBlockHeight = block.number.add(CORE_LAST_VOTES_WINDOW);
-            consensus.registerPrecommit(_proposal);
+            consensus.precommitMetablock(_proposal);
         }
     }
 
