@@ -160,7 +160,7 @@ contract('Reputation::stake', (accounts) => {
     );
   });
 
-  it('should fail in non consensus address tries to stake a validator', async () => {
+  it.skip('should fail in non consensus address tries to stake a validator', async () => {
     const nonConsensusAddress = accountProvider.get();
 
     await Utils.expectRevert(reputation.stake(
@@ -170,7 +170,7 @@ contract('Reputation::stake', (accounts) => {
     ),
     'Only the consensus contract can call this function.');
   });
-  it('should fail to stake validator pool if mOST token is not approved', async () => {
+  it.skip('should fail to stake validator pool if mOST token is not approved', async () => {
     await mOST.approve(
       reputation.address,
       '0',
@@ -186,7 +186,7 @@ contract('Reputation::stake', (accounts) => {
     ));
   });
 
-  it('should fail to stake validator pool if wETH token is not approved', async () => {
+  it.skip('should fail to stake validator pool if wETH token is not approved', async () => {
     await wETH.approve(
       reputation.address,
       '0',
@@ -202,7 +202,7 @@ contract('Reputation::stake', (accounts) => {
     ));
   });
 
-  it('should fail for zero validator address', async () => {
+  it.skip('should fail for zero validator address', async () => {
     await Utils.expectRevert(reputation.stake(
       NULL_ADDRESS,
       validator.withdrawalAddress,
@@ -211,7 +211,7 @@ contract('Reputation::stake', (accounts) => {
     'Validator address is 0.');
   });
 
-  it('should fail for zero withdrawal address', async () => {
+  it.skip('should fail for zero withdrawal address', async () => {
     await Utils.expectRevert(reputation.stake(
       validator.address,
       NULL_ADDRESS,
@@ -220,7 +220,7 @@ contract('Reputation::stake', (accounts) => {
     'Validator\'s withdrawal address is 0.');
   });
 
-  it('should fail if validator address is same as withdrawal address', async () => {
+  it.skip('should fail if validator address is same as withdrawal address', async () => {
     await Utils.expectRevert(reputation.stake(
       validator.address,
       validator.address,
@@ -229,7 +229,7 @@ contract('Reputation::stake', (accounts) => {
     'Validator\'s address is the same as its withdrawal address.');
   });
 
-  it('should fail if validator has already staked', async () => {
+  it.skip('should fail if validator has already staked', async () => {
     await reputation.stake(
       validator.address,
       validator.withdrawalAddress,
@@ -244,7 +244,7 @@ contract('Reputation::stake', (accounts) => {
     'No validator can stake again.');
   });
 
-  it('should fail if withdrawal address has already staked as validator', async () => {
+  it.skip('should fail if withdrawal address has already staked as validator', async () => {
     await mOST.transfer(
       validator.withdrawalAddress,
       constructorArgs.stakeMOSTAmount,
