@@ -45,7 +45,7 @@ contract('Consensus::formCommittee', (accounts) => {
       CoreStatusUtils.CoreStatus.creation,
     );
 
-    await consensus.registerPrecommit(
+    await consensus.precommitMetablock(
       testInputs.proposal,
       {
         from: testInputs.coreAddress,
@@ -58,7 +58,7 @@ contract('Consensus::formCommittee', (accounts) => {
 
       await Utils.expectRevert(
         consensus.formCommittee(coreAddress),
-        'There does not exist a precommitment of the core to a proposal.',
+        'Core has not precommitted.',
       );
     });
 
@@ -66,7 +66,7 @@ contract('Consensus::formCommittee', (accounts) => {
       await consensus.setPreCommit(testInputs.coreAddress, Utils.ZERO_BYTES32, new BN(10));
       await Utils.expectRevert(
         consensus.formCommittee(testInputs.coreAddress),
-        'There does not exist a precommitment of the core to a proposal.',
+        'Core has not precommitted.',
       );
     });
 
@@ -107,7 +107,7 @@ contract('Consensus::formCommittee', (accounts) => {
 
       await Utils.expectRevert(
         consensus.formCommittee(testInputs.coreAddress),
-        'Committee formation blocksegment length must be in 256 most recent blocks.',
+        'Committee formation blocksegment is not in most recent 256 blocks.',
       );
     });
 
@@ -136,7 +136,6 @@ contract('Consensus::formCommittee', (accounts) => {
   contract('Positive Tests', () => {
     let committeeFormationBlockHeight;
     beforeEach(async () => {
-
       // Advance by 256 blocks
       await Utils.advanceBlocks(consensusUtil.BlockSegmentLength);
       const initialBlockNumber = await Utils.getBlockNumber();
