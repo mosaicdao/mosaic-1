@@ -131,7 +131,7 @@ contract('Reputation::decreaseReputation', (accounts) => {
     );
   });
 
-  it.skip('should fail for unknown validator', async () => {
+  it('should fail for unknown validator', async () => {
     const delta = 10;
     const unknownValidator = accountProvider.get();
 
@@ -143,7 +143,7 @@ contract('Reputation::decreaseReputation', (accounts) => {
     'Validator is not active.');
   });
 
-  it.skip('should fail if transaction is done by account other than consensus', async () => {
+  it('should fail if transaction is done by account other than consensus', async () => {
     const delta = 10;
     const otherAccount = accountProvider.get();
 
@@ -155,7 +155,7 @@ contract('Reputation::decreaseReputation', (accounts) => {
     'Only the consensus contract can call this function.');
   });
 
-  it.skip('should fail for logged out validator', async () => {
+  it('should fail for logged out validator', async () => {
     await reputation.deregister(validator.address, { from: constructorArgs.consensus });
     const delta = 100;
 
@@ -167,7 +167,7 @@ contract('Reputation::decreaseReputation', (accounts) => {
     'Validator is not active.');
   });
 
-  it.skip('should fail for withdraw-ed validator', async () => {
+  it('should fail for withdraw-ed validator', async () => {
     await reputation.deregister(validator.address, { from: constructorArgs.consensus });
     await Utils.advanceBlocks(constructorArgs.withdrawalCooldownPeriodInBlocks + 1);
     await reputation.withdraw(validator.address, { from: constructorArgs.consensus });
@@ -182,7 +182,7 @@ contract('Reputation::decreaseReputation', (accounts) => {
     'Validator is not active.');
   });
 
-  it.skip('should fail for slashed validator', async () => {
+  it('should fail for slashed validator', async () => {
     await reputation.slash(validator.address, { from: constructorArgs.consensus });
     const delta = 100;
 

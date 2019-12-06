@@ -143,7 +143,7 @@ contract('Reputation::depositEarnings', (accounts) => {
     );
   });
 
-  it.skip('should fail for an unknown validator', async () => {
+  it('should fail for an unknown validator', async () => {
     const amount = 1000;
     const unknownValidator = accountProvider.get();
 
@@ -155,7 +155,7 @@ contract('Reputation::depositEarnings', (accounts) => {
     'Validator is not active.');
   });
 
-  it.skip('should fail for slashed validator', async () => {
+  it('should fail for slashed validator', async () => {
     const amount = 1000;
 
     await reputation.slash(
@@ -171,7 +171,7 @@ contract('Reputation::depositEarnings', (accounts) => {
     'Validator is not active.');
   });
 
-  it.skip('should fail for logged out validator', async () => {
+  it('should fail for logged out validator', async () => {
     const amount = 1000;
 
     await reputation.deregister(validator.address, { from: constructorArgs.consensus });
@@ -184,7 +184,7 @@ contract('Reputation::depositEarnings', (accounts) => {
     'Validator is not active.');
   });
 
-  it.skip('should fail for withdrawn validator', async () => {
+  it('should fail for withdrawn validator', async () => {
     const amount = 1000;
 
     await reputation.deregister(validator.address, { from: constructorArgs.consensus });
