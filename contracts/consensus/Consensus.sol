@@ -599,10 +599,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      *          - core is not assigned to metachain.
      *
      * @param _anchor anchor of the new meta-chain.
+     * @param _epochLength Epoch length for new meta-chain.
      * @param _rootBlockHeight root block height.
      */
     function newMetaChain(
         address _anchor,
+        uint256 _epochLength,
         uint256 _rootBlockHeight
     )
         external
@@ -617,7 +619,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
         address core = newCore(
             chainId,
-            EPOCH_LENGTH,
+            _epochLength,
             uint256(0), // metablock height
             bytes32(0), // parent hash
             gasTargetDelta, // gas target
