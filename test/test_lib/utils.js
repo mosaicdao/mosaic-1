@@ -315,8 +315,6 @@ Utils.prototype = {
     }
   },
 
-  getChainId: async () => web3.eth.getChainId(),
-
   encodeFunctionSignature: signature => web3.eth.abi.encodeFunctionSignature(signature),
   encodeParameters: (types, params) => web3.eth.abi.encodeParameters(types, params),
 
