@@ -45,7 +45,6 @@ contract MockConsensus is ConsensusI, ReputationI {
         uint256 _gasTarget,
         uint256 _dynasty,
         uint256 _accumulatedGas,
-        bytes32 _source,
         uint256 _sourceBlockHeight
     )
         public
@@ -66,7 +65,6 @@ contract MockConsensus is ConsensusI, ReputationI {
             _gasTarget,
             _dynasty,
             _accumulatedGas,
-            _source,
             _sourceBlockHeight
         );
     }
@@ -167,7 +165,6 @@ contract MockConsensus is ConsensusI, ReputationI {
     function newMetaChain(
         address _anchor,
         uint256 _epochLength,
-        bytes32 _source,
         uint256 _sourceBlockHeight
     )
         external

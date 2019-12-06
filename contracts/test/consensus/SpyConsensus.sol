@@ -15,7 +15,6 @@ contract SpyConsensus is MasterCopyNonUpgradable, ConsensusI {
 
     address public anchor;
     uint256 public epochLength;
-    bytes32 public source;
     uint256 public sourceBlockHeight;
 
     address public deployedContractAddress;
@@ -45,14 +44,12 @@ contract SpyConsensus is MasterCopyNonUpgradable, ConsensusI {
     function newMetaChain(
         address _anchor,
         uint256 _epochLength,
-        bytes32 _source,
         uint256 _sourceBlockHeight
     )
         external
     {
         anchor = _anchor;
         epochLength = _epochLength;
-        source = _source;
         sourceBlockHeight = _sourceBlockHeight;
     }
 

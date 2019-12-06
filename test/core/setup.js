@@ -38,7 +38,6 @@ async function createCore(args, consensus) {
     args.gasTarget,
     args.dynasty,
     args.accumulatedGas,
-    args.source,
     args.sourceBlockHeight,
     {
       from: consensus,
@@ -143,16 +142,6 @@ contract('Core::constructor', (accounts) => {
         'Metablock\'s accumulated gas is 0.',
       );
     });
-
-    it('should revert as metablock\'s source is 0', async () => {
-      const args = correctArgs;
-      args.source = Utils.ZERO_BYTES32;
-
-      await Utils.expectRevert(
-        createCore(args, config.consensus),
-        'Metablock\'s source is 0.',
-      );
-    });
   });
 
   contract('Positive Tests', async () => {
@@ -229,13 +218,6 @@ contract('Core::constructor', (accounts) => {
         committedAccumulatedGas.cmp(correctArgs.accumulatedGas) === 0,
         `Accumulated gas is set to ${committedAccumulatedGas} `
         + `and is not ${correctArgs.accumulatedGas}`,
-      );
-
-      const committedSource = await core.committedSource();
-      assert.strictEqual(
-        committedSource,
-        correctArgs.source,
-        `Source is set to ${committedSource} and is not ${correctArgs.source}`,
       );
 
       const committedSourceBlockHeight = await core.committedSourceBlockHeight();
