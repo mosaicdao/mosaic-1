@@ -34,10 +34,9 @@ contract ConsensusTest is Consensus {
         coreStatuses[_core] = _status;
     }
 
-    function setPreCommit(
+    function setPrecommit(
         bytes20 _chainId,
-        bytes32 _precommit,
-        uint256 /* _committeeFormationBlockheight */
+        bytes32 _precommit
     )
         external
     {

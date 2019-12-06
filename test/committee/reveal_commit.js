@@ -158,7 +158,7 @@ contract('Committee::revealCommit', async (accounts) => {
   beforeEach(async () => {
     config = {
       committee: {
-        metachainId: CommitteeUtils.generateRandomMetachainId(),
+        metachainId: Utils.generateRandomMetachainId(),
         size: 7,
         dislocation: web3.utils.sha3('dislocation'),
         positionA: web3.utils.sha3('positionA'),

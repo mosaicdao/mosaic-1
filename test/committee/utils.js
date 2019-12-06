@@ -27,10 +27,6 @@ function remove0x(str) {
   return str;
 }
 
-function generateRandomMetachainId() {
-  return Utils.getRandomHash().substr(0, 20);
-}
-
 async function createCommittee(
   chainId, consensus, committeeSize, dislocation, proposal, txOptions = {},
 ) {
@@ -231,7 +227,6 @@ async function assertCommitteeMembers(committee, dist) {
 
 
 module.exports = {
-  generateRandomMetachainId,
   createCommittee,
   enterMembers,
   enterMembersThruConsensus,

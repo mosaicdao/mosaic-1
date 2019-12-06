@@ -32,14 +32,14 @@ contract('Committee:enterCommittee', async (accounts) => {
   beforeEach(async () => {
     config = {
       committee: {
-        metachainId: CommitteeUtils.generateRandomMetachainId(),
+        metachainId: Utils.generateRandomMetachainId(),
         size: 50,
         dislocation: web3.utils.sha3('dislocation'),
         proposal: web3.utils.sha3('proposal'),
         consensus: accountProvider.get(),
       },
       committee3: {
-        metachainId: CommitteeUtils.generateRandomMetachainId(),
+        metachainId: Utils.generateRandomMetachainId(),
         size: 3,
         dislocation: web3.utils.sha3('dislocation'),
         proposal: web3.utils.sha3('proposal'),
@@ -239,7 +239,7 @@ contract('Committee:enterCommittee', async (accounts) => {
 
   contract('Positive Tests', async () => {
     it('should enter only correct validators in the correct order', async () => {
-      const metachainId = CommitteeUtils.generateRandomMetachainId();
+      const metachainId = Utils.generateRandomMetachainId();
       const committeeSize = 50;
       const consensus = accountProvider.get();
       const dislocation = web3.utils.sha3('dislocation1');
@@ -296,7 +296,7 @@ contract('Committee:enterCommittee', async (accounts) => {
     });
 
     it('should enter corrects validators in reverse order', async () => {
-      const metachainId = CommitteeUtils.generateRandomMetachainId();
+      const metachainId = Utils.generateRandomMetachainId();
       const committeeSize = 50;
       const consensus = accountProvider.get();
       const dislocation = web3.utils.sha3('dislocation2');
@@ -352,7 +352,7 @@ contract('Committee:enterCommittee', async (accounts) => {
     });
 
     it('should enter any validator in random order', async () => {
-      const metachainId = CommitteeUtils.generateRandomMetachainId();
+      const metachainId = Utils.generateRandomMetachainId();
       const committeeSize = 50;
       const consensus = accountProvider.get();
       const dislocation = web3.utils.sha3('dislocation3');

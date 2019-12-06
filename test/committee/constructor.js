@@ -20,6 +20,7 @@ const web3 = require('../test_lib/web3.js');
 
 const CommitteeUtils = require('./utils.js');
 
+
 let config = {};
 
 contract('Committee::constructor', (accounts) => {
@@ -27,7 +28,7 @@ contract('Committee::constructor', (accounts) => {
 
   beforeEach(async () => {
     config = {
-      metachainId: CommitteeUtils.generateRandomMetachainId(),
+      metachainId: Utils.generateRandomMetachainId(),
       committeeSize: 50,
       dislocation: web3.utils.sha3('dislocation'),
       proposal: web3.utils.sha3('proposal'),

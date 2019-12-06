@@ -54,7 +54,7 @@ contract('Committee::proposalAccepted', async (accounts) => {
   beforeEach(async () => {
     config = {
       committee: {
-        metachainId: CommitteeUtils.generateRandomMetachainId(),
+        metachainId: Utils.generateRandomMetachainId(),
         size: 3,
         dislocation: web3.utils.sha3('dislocation'),
         proposal: web3.utils.sha3('proposal'),

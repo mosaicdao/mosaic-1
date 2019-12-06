@@ -37,6 +37,8 @@ async function advanceBlock() {
   });
 }
 
+function getRandomHash() { return web3.utils.sha3(`${Date.now()}`); }
+
 const ResultType = {
   FAIL: 0,
   SUCCESS: 1,
@@ -67,6 +69,8 @@ const receipts = [];
 function Utils() {}
 
 Utils.prototype = {
+  generateRandomMetachainId: () => getRandomHash().substr(0, 20),
+
   /** Log receipt. */
   logReceipt: (receipt, description) => {
     receipts.push({
@@ -296,7 +300,7 @@ Utils.prototype = {
     return hash.substring(0, 10);
   },
 
-  getRandomHash: () => web3.utils.sha3(`${Date.now()}`),
+  getRandomHash,
 
   getRandomNumber: max => Math.floor(Math.random() * Math.floor(max)),
 

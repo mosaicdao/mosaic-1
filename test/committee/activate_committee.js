@@ -30,7 +30,7 @@ contract('Committee::activateCommittee', async (accounts) => {
   beforeEach(async () => {
     config = {
       committee: {
-        metachainId: CommitteeUtils.generateRandomMetachainId(),
+        metachainId: Utils.generateRandomMetachainId(),
         size: 7,
         dislocation: web3.utils.sha3('dislocation'),
         proposal: web3.utils.sha3('proposal'),
@@ -90,7 +90,7 @@ contract('Committee::activateCommittee', async (accounts) => {
     it('should fail if committee is not in cooling down mode', async () => {
       const consensus = accountProvider.get();
       const committee = await CommitteeUtils.createCommittee(
-        CommitteeUtils.generateRandomMetachainId(),
+        Utils.generateRandomMetachainId(),
         consensus,
         3,
         web3.utils.sha3('dislocation'),
