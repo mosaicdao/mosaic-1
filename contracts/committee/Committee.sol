@@ -578,17 +578,6 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
         totalPositionsCount = totalPositionsCount.add(1);
     }
 
-    // note: this is old and superceded by the committee decision.
-    // TASK : remove
-    /** @notice Returns true if the proposal reached the quorum. */
-    function proposalAccepted()
-        external
-        view
-        returns (bool)
-    {
-        return positionCounts[proposal] >= quorum;
-    }
-
     /** @notice Returns an array of committee members. */
     function getMembers()
         external
@@ -760,16 +749,15 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
     /** Uses the salt to seal the position. */
     function sealPosition(bytes32 _position, bytes32 _salt)
         private
-        pure
+        view
         returns (bytes32)
     {
         // Returns the sealed position.
         return keccak256(
-            // TODO: note abi.encodePacked seems unneccesary,
-            // is there an overhead?
             abi.encodePacked(
                 _position,
-                _salt
+                _salt,
+                msg.sender
             )
         );
     }

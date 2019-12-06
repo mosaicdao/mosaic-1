@@ -104,7 +104,6 @@ async function encodeNewCoreParams(coreParams) {
       coreParams.gasTarget.toString(10),
       coreParams.dynasty.toString(10),
       coreParams.accumulatedGas.toString(10),
-      coreParams.source,
       coreParams.sourceBlockHeight.toString(10),
     ],
 

@@ -94,7 +94,6 @@ contract('Axiom::newCore', (accounts) => {
       gasTarget: new BN(Utils.getRandomNumber(999999)),
       dynasty: new BN(Utils.getRandomNumber(10)),
       accumulatedGas: new BN(Utils.getRandomNumber(999999)),
-      source: Utils.getRandomHash(),
       sourceBlockHeight: new BN(Utils.getRandomNumber(1000)),
     };
     Object.freeze(newCoreParams);
@@ -240,13 +239,6 @@ contract('Axiom::newCore', (accounts) => {
         spyAccumulatedGas.eq(newCoreParams.accumulatedGas),
         true,
         'Accumulated gas value in spy core contract is not set.',
-      );
-
-      const spySource = await spyCore.spySource.call();
-      assert.strictEqual(
-        spySource,
-        newCoreParams.source,
-        'Source value in spy core contract is not set.',
       );
 
       const spySourceBlockHeight = await spyCore.spySourceBlockHeight.call();

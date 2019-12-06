@@ -53,7 +53,6 @@ contract('Consensus::newMetaChain', (accounts) => {
         contracts.Consensus.newMetaChain(
           inputParams.anchor,
           inputParams.epochLength,
-          inputParams.source,
           inputParams.sourceBlockHeight,
           {
             from: accountProvider.get(),
@@ -127,7 +126,6 @@ contract('Consensus::newMetaChain', (accounts) => {
         gasTarget: 99999,
         dynasty: 0,
         accumulatedGas: 0,
-        source: inputParams.source,
         sourceBlockHeight: inputParams.sourceBlockHeight,
       });
 

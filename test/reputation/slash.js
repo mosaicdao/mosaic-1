@@ -73,7 +73,7 @@ contract('Reputation::slash', (accounts) => {
       { from: validator.address },
     );
 
-    await reputation.join(
+    await reputation.stake(
       validator.address,
       validator.withdrawalAddress,
       { from: constructorArgs.consensus },
@@ -131,12 +131,12 @@ contract('Reputation::slash', (accounts) => {
       otherAccount,
       { from: constructorArgs.consensus },
     ),
-    'Validator has not joined.');
+    'Validator has not staked.');
   });
 
 
   it('should fail if validator has already withdrawn', async () => {
-    await reputation.logout(validator.address, { from: constructorArgs.consensus });
+    await reputation.deregister(validator.address, { from: constructorArgs.consensus });
     await Utils.advanceBlocks(constructorArgs.withdrawalCooldownPeriodInBlocks + 1);
     await reputation.withdraw(validator.address, { from: constructorArgs.consensus });
 

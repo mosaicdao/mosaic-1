@@ -79,7 +79,6 @@ contract('Core::joinDuringCreation', async (accounts) => {
       config.gasTarget,
       config.dynasty,
       config.accumulatedGas,
-      config.source,
       config.sourceBlockHeight,
       {
         from: config.deployer,

@@ -346,9 +346,9 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
      * @notice Enter a validator into the committee.
      *
      * @dev Function requires:
-     *          - committee address should be present.
-     *          - validator should be active.
-     *          - validator successfully enter a committee.
+     *          - committee address should be present
+     *          - validator should not be slashed in reputation contract
+     *          - validator successfully enter a committee
      *
      * @param _committeeAddress Committee address that validator wants to enter.
      * @param _validator Validator address to enter.
@@ -367,8 +367,8 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
         );
 
         require(
-            reputation.isActive(_validator),
-            "Validator is not active."
+            !reputation.isSlashed(_validator),
+            "Validator is slashed."
         );
 
         CommitteeI committee = CommitteeI(_committeeAddress);
@@ -425,7 +425,7 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
         external
     {
         require(
-            _metachainId != bytes20(0),
+            _chainId != bytes32(0),
             "Metachain id is 0."
         );
 
@@ -537,8 +537,8 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
             "Core status is not opened or precommitted."
         );
 
-        // Join in reputation contract.
-        reputation.join(msg.sender, _withdrawalAddress);
+        // Stake in reputation contract.
+        reputation.stake(msg.sender, _withdrawalAddress);
 
         // Join in core contract.
         CoreI(_core).join(msg.sender);
@@ -572,8 +572,8 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
             "Core must be in an active state."
         );
 
-        // Join in reputation contract.
-        reputation.join(msg.sender, _withdrawalAddress);
+        // Stake in reputation contract.
+        reputation.stake(msg.sender, _withdrawalAddress);
 
         // Join in core contract.
         CoreI(_core).joinDuringCreation(msg.sender);
@@ -618,7 +618,7 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
         );
 
         CoreI(_core).logout(msg.sender);
-        reputation.logout(msg.sender);
+        reputation.deregister(msg.sender);
     }
 
     /**
@@ -631,13 +631,11 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
      *
      * @param _anchor anchor of the new meta-chain.
      * @param _epochLength Epoch length for new meta-chain.
-     * @param _rootBlockHash root block hash.
      * @param _rootBlockHeight root block height.
      */
     function newMetaChain(
         address _anchor,
         uint256 _epochLength,
-        bytes32 _rootBlockHash,
         uint256 _rootBlockHeight
     )
         external
@@ -658,7 +656,6 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
             gasTargetDelta, // gas target
             uint256(0), // dynasty
             uint256(0), // accumulated gas
-            _rootBlockHash,
             _rootBlockHeight
         );
 
@@ -885,7 +882,6 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
      * @param _gasTarget Gas target to close the meta block.
      * @param _dynasty Committed dynasty number.
      * @param _accumulatedGas Accumulated gas.
-     * @param _source Source block hash
      * @param _sourceBlockHeight Source block height.
      * returns Deployed core contract address.
      */
@@ -897,7 +893,6 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
         uint256 _gasTarget,
         uint256 _dynasty,
         uint256 _accumulatedGas,
-        bytes32 _source,
         uint256 _sourceBlockHeight
     )
         private
@@ -916,7 +911,6 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
             _gasTarget,
             _dynasty,
             _accumulatedGas,
-            _source,
             _sourceBlockHeight
         );
 

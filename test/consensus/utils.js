@@ -73,7 +73,6 @@ async function callNewMetaChainOnConsensus(spyAxiom, params) {
     params.consensus,
     params.anchor,
     params.epochLength,
-    params.source,
     params.sourceBlockHeight,
   );
 }

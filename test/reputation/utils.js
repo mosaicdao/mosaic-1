@@ -19,7 +19,7 @@ module.exports = {
     Undefined: 0,
     Slashed: 1,
     Staked: 2,
-    LoggedOut: 3,
+    Deregistered: 3,
     Withdrawn: 4,
   },
 };
