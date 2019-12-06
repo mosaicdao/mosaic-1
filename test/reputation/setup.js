@@ -110,7 +110,7 @@ contract('Reputation::setup', (accounts) => {
     );
   });
 
-  it.skip('should fail to construct with zero consensus address', async () => {
+  it('should fail to construct with zero consensus address', async () => {
     constructorArgs.consensus = NULL_ADDRESS;
 
     await Utils.expectRevert(
