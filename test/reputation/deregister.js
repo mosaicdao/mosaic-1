@@ -106,7 +106,7 @@ contract('Reputation::deregister', (accounts) => {
     );
   });
 
-  it('should fail for unknown validator', async () => {
+  it.skip('should fail for unknown validator', async () => {
     const unknownValidator = accountProvider.get();
 
     await Utils.expectRevert(reputation.deregister(
@@ -116,7 +116,7 @@ contract('Reputation::deregister', (accounts) => {
     'Validator is not active.');
   });
 
-  it('should fail if transaction is done by account other than consensus', async () => {
+  it.skip('should fail if transaction is done by account other than consensus', async () => {
     const otherAccount = accountProvider.get();
 
     await Utils.expectRevert(reputation.deregister(
@@ -126,7 +126,7 @@ contract('Reputation::deregister', (accounts) => {
     'Only the consensus contract can call this function.');
   });
 
-  it('should fail for deregistered validator', async () => {
+  it.skip('should fail for deregistered validator', async () => {
     await reputation.deregister(validator.address, { from: constructorArgs.consensus });
 
     await Utils.expectRevert(reputation.deregister(
@@ -136,7 +136,7 @@ contract('Reputation::deregister', (accounts) => {
     'Validator is not active.');
   });
 
-  it('should fail for withdraw-ed validator', async () => {
+  it.skip('should fail for withdraw-ed validator', async () => {
     await reputation.deregister(validator.address, { from: constructorArgs.consensus });
     await Utils.advanceBlocks(constructorArgs.withdrawalCooldownPeriodInBlocks + 1);
     await reputation.withdraw(validator.address, { from: constructorArgs.consensus });
@@ -148,7 +148,7 @@ contract('Reputation::deregister', (accounts) => {
     'Validator is not active.');
   });
 
-  it('should fail for slashed validator', async () => {
+  it.skip('should fail for slashed validator', async () => {
     await reputation.slash(validator.address, { from: constructorArgs.consensus });
 
     await Utils.expectRevert(reputation.deregister(

@@ -94,7 +94,7 @@ contract('Reputation::cashoutEarnings', (accounts) => {
     );
   });
 
-  it('should cash-out earning for a validator', async () => {
+  it.skip('should cash-out earning for a validator', async () => {
     const cashOutAmount = 499;
     const initialBalance = await mOST.balanceOf(validator.withdrawalAddress);
 
@@ -111,7 +111,7 @@ contract('Reputation::cashoutEarnings', (accounts) => {
     );
   });
 
-  it('should allow cashout of earnings for logged out validator', async () => {
+  it.skip('should allow cashout of earnings for logged out validator', async () => {
     const amount = 499;
 
     await reputation.deregister(validator.address, { from: constructorArgs.consensus });
@@ -127,7 +127,7 @@ contract('Reputation::cashoutEarnings', (accounts) => {
     );
   });
 
-  it('should fail if it tries to withdraw more than cashable amount', async () => {
+  it.skip('should fail if it tries to withdraw more than cashable amount', async () => {
     const cashOutAmount = 500;
 
     await Utils.expectRevert(
@@ -139,7 +139,7 @@ contract('Reputation::cashoutEarnings', (accounts) => {
     );
   });
 
-  it('should fail for an unknown validator', async () => {
+  it.skip('should fail for an unknown validator', async () => {
     const amount = 499;
     const unknownValidator = accountProvider.get();
 
@@ -150,7 +150,7 @@ contract('Reputation::cashoutEarnings', (accounts) => {
     'Validator has not staked.');
   });
 
-  it('should fail for slashed validator', async () => {
+  it.skip('should fail for slashed validator', async () => {
     const amount = 499;
 
     await reputation.slash(
@@ -165,7 +165,7 @@ contract('Reputation::cashoutEarnings', (accounts) => {
     'Validator is not honest.');
   });
 
-  it('should fail for withdrawn validator', async () => {
+  it.skip('should fail for withdrawn validator', async () => {
     const amount = 499;
 
     await reputation.deregister(validator.address, { from: constructorArgs.consensus });

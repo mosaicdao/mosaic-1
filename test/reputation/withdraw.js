@@ -145,7 +145,7 @@ contract('Reputation::withdraw', (accounts) => {
     );
   });
 
-  it('should fail to withdraw if validator is not logged out', async () => {
+  it.skip('should fail to withdraw if validator is not logged out', async () => {
     await Utils.expectRevert(reputation.withdraw(
       validator.address,
       { from: constructorArgs.consensus },
@@ -153,7 +153,7 @@ contract('Reputation::withdraw', (accounts) => {
     'Validator has not deregistered.');
   });
 
-  it('should fail to withdraw if validator is not logged out', async () => {
+  it.skip('should fail to withdraw if validator is not logged out', async () => {
     await Utils.expectRevert(reputation.withdraw(
       validator.address,
       { from: constructorArgs.consensus },
@@ -161,7 +161,7 @@ contract('Reputation::withdraw', (accounts) => {
     'Validator has not deregistered.');
   });
 
-  it('should fail to withdraw if validator is slashed', async () => {
+  it.skip('should fail to withdraw if validator is slashed', async () => {
     await reputation.deregister(
       validator.address,
       { from: constructorArgs.consensus },
@@ -179,7 +179,7 @@ contract('Reputation::withdraw', (accounts) => {
     'Validator has not deregistered.');
   });
 
-  it('should fail to withdraw if cool down period has not elapsed', async () => {
+  it.skip('should fail to withdraw if cool down period has not elapsed', async () => {
     await reputation.deregister(
       validator.address,
       { from: constructorArgs.consensus },
@@ -192,7 +192,7 @@ contract('Reputation::withdraw', (accounts) => {
     'Withdrawal cooldown period has not elapsed.');
   });
 
-  it('should fail if validator is already withdrawn', async () => {
+  it.skip('should fail if validator is already withdrawn', async () => {
     await reputation.deregister(
       validator.address,
       { from: constructorArgs.consensus },
