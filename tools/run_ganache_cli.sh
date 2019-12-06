@@ -6,4 +6,5 @@ script_dir_path="$(cd "$(dirname "$0")" && pwd)"
     --accounts=1000 \
     --defaultBalanceEther=10000 \
     --gasLimit 0xfffffffffff \
-    --noVMErrorsOnRPCResponse
+    --verbose \
+    --debug
