@@ -14,6 +14,7 @@
 
 'use strict';
 
+const BN = require('bn.js');
 const Utils = require('../test_lib/utils.js');
 const consensusUtil = require('./utils.js');
 const axiomUtil = require('../axiom/utils');
@@ -84,6 +85,15 @@ contract('Consensus::newMetaChain', (accounts) => {
         assignedCoreId,
         mockedCoreAddress,
         'Assigned core address must be equal to mocked core address.',
+      );
+
+      const coreLifetimeStatus = new BN(
+        await contracts.Consensus.coreLifetimes.call(mockedCoreAddress),
+      );
+
+      assert.isOk(
+        coreLifetimeStatus.eqn(consensusUtil.CoreLifetime.creation),
+        'Corelifetime status must be creation',
       );
     });
 
