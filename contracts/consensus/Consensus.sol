@@ -103,10 +103,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /** Coinbase split per mille */
     uint256 public coinbaseSplitPerMille;
 
-    /** Mapping of a metablock number to a metablock (per chain).  */
+    /** Mapping of a metablock number to a metablock (per metachain).  */
     mapping(bytes20 => mapping(uint256 => Metablock)) public metablockchains;
 
-    /** Metablocks' heights per chain. */
+    /** Metablocks' heights per metachain. */
     mapping(bytes20 => uint256) public metablockTips;
 
     /** Assigned core for a given chainId */
