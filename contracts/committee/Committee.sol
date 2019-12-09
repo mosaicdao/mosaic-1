@@ -245,7 +245,7 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
     {
         require(
             metachainId == bytes20(0),
-            "Core is already setup."
+            "Committee is already setup."
         );
 
         require(

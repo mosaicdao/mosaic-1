@@ -20,7 +20,6 @@ const web3 = require('../test_lib/web3.js');
 
 const CommitteeUtils = require('./utils.js');
 
-
 let config = {};
 
 contract('Committee::constructor', (accounts) => {

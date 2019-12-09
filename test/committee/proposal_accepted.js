@@ -17,6 +17,7 @@
 const crypto = require('crypto');
 
 const { AccountProvider } = require('../test_lib/utils.js');
+const Utils = require('../test_lib/utils.js');
 const web3 = require('../test_lib/web3.js');
 
 const CommitteeUtils = require('./utils.js');

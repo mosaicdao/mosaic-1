@@ -28,7 +28,7 @@ contract CommitteeMockConsensus is ConsensusI {
     /* External Functions */
 
     function registerCommitteeDecision(
-        bytes20 /* _chainId */,
+        bytes20 /* _metachainId */,
         bytes32 _committeeDecision
     )
         external

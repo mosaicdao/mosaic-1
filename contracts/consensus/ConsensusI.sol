@@ -49,11 +49,11 @@ interface ConsensusI {
     /**
      * @notice Registers a committee's decision.
      *
-     * @param _chainId Chain id to register committee decision.
+     * @param _metachainId Metachain id to register committee decision.
      * @param _decision Committee's decision.
      */
     function registerCommitteeDecision(
-        bytes20 _chainId,
+        bytes20 _metachainId,
         bytes32 _decision
     )
         external;
