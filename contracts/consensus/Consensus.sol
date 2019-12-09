@@ -129,7 +129,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
     modifier onlyCore()
     {
         require(
-            isCoreActive(msg.sender),
+            isCoreRunning(msg.sender),
             "Caller must be an active core."
         );
 
@@ -489,7 +489,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
         validateJoinParams(_chainId, _core, _withdrawalAddress);
 
         require(
-            isCoreActive(_core),
+            isCoreRunning(_core),
             "Core lifetime status must be genesis or active."
         );
 
@@ -573,7 +573,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
         );
 
         require(
-            isCoreActive(_core),
+            isCoreRunning(_core),
             "Core lifetime status must be genesis or active."
         );
 
@@ -642,7 +642,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
      * @param _core Core contract address.
      * Returns true if the specified address is a core.
      */
-    function isCoreActive(address _core)
+    function isCoreRunning(address _core)
         internal
         view
         returns (bool)
