@@ -702,7 +702,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         external
         onlyConsensus
         duringCreation
-        returns(uint256)
+        returns(uint256 validatorCount_, uint256 minValidatorCount_)
     {
         // during creation join at creation kernel height
         insertValidator(_validator, creationKernelHeight);
@@ -727,7 +727,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             newProposalSet();
         }
 
-        return countValidators;
+        validatorCount_ = countValidators;
+        minValidatorCount_ = minimumValidatorCount;
     }
 
     /**

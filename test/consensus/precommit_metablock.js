@@ -92,7 +92,7 @@ contract('Consensus::precommitMetablock', (accounts) => {
       );
 
       const coreLifetime = new BN(
-        await consensus.coreLifetime.call(inputParams.coreAddress1),
+        await consensus.coreLifetimes.call(inputParams.coreAddress1),
       );
 
       assert.isOk(
@@ -152,7 +152,7 @@ contract('Consensus::precommitMetablock', (accounts) => {
       );
 
       const coreLifetime = new BN(
-        await consensus.coreLifetime.call(inputParams.coreAddress1),
+        await consensus.coreLifetimes.call(inputParams.coreAddress1),
       );
 
       assert.isOk(

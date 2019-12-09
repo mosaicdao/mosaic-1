@@ -63,7 +63,7 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
     }
     function joinDuringCreation(address _validator)
         external
-        returns (uint256)
+        returns (uint256, uint256)
     {
         spyValidator = _validator;
     }

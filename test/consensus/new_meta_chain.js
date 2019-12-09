@@ -85,7 +85,7 @@ contract('Consensus::newMetaChain', (accounts) => {
       );
 
       const coreLifetimeStatus = new BN(
-        await contracts.Consensus.coreLifetime.call(mockedCoreAddress),
+        await contracts.Consensus.coreLifetimes.call(mockedCoreAddress),
       );
 
       assert.isOk(

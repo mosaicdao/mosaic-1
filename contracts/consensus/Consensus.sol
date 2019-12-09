@@ -96,7 +96,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
     mapping(bytes20 /* chainId */ => bytes32 /* MetablockHash */) public metablockHeaderTips;
 
     /** Core statuses */
-    mapping(address /* core */ => CoreLifetime /* coreLifetime */) public coreLifetime;
+    mapping(address /* core */ => CoreLifetime /* coreLifetime */) public coreLifetimes;
 
     /** Assigned core for a given chainId */
     mapping(bytes20 /* chainId */ => address /* core */) public assignments;
@@ -265,8 +265,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
         );
 
         // On first precommit by a core, CoreLifetime state will change to active.
-        if(coreLifetime[msg.sender] == CoreLifetime.genesis) {
-            coreLifetime[msg.sender] = CoreLifetime.active;
+        if (coreLifetimes[msg.sender] == CoreLifetime.genesis) {
+            coreLifetimes[msg.sender] = CoreLifetime.active;
         }
 
         precommit.proposal = _proposal;
@@ -291,7 +291,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
         external
     {
         require(
-            coreLifetime[_core] == CoreLifetime.active,
+            coreLifetimes[_core] == CoreLifetime.active,
             "Core lifetime status must be active"
         );
 
@@ -438,7 +438,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
         // Makes sure that assigned core is active.
         address core = assignments[_chainId];
         require(
-            coreLifetime[core] == CoreLifetime.active,
+            coreLifetimes[core] == CoreLifetime.active,
             "Core lifetime status must be active"
         );
 
@@ -524,7 +524,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
 
         // Specified core must have genesis lifetime status.
         require(
-            coreLifetime[_core] == CoreLifetime.creation,
+            coreLifetimes[_core] == CoreLifetime.creation,
             "Core lifetime status must be creation."
         );
 
@@ -532,10 +532,11 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
         reputation.stake(msg.sender, _withdrawalAddress);
 
         // Join in core contract.
-        uint256 coreValidatorCount = CoreI(_core).joinDuringCreation(msg.sender);
+        (uint256 validatorCount, uint256 minValidatorCount) =
+            CoreI(_core).joinDuringCreation(msg.sender);
 
-        if(coreValidatorCount == CoreI(_core).minimumValidatorCount()) {
-            coreLifetime[_core] = CoreLifetime.genesis;
+        if (validatorCount >= minValidatorCount) {
+            coreLifetimes[_core] = CoreLifetime.genesis;
         }
     }
 
@@ -647,7 +648,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
         view
         returns (bool)
     {
-        CoreLifetime lifeTimeStatus = coreLifetime[_core];
+        CoreLifetime lifeTimeStatus = coreLifetimes[_core];
         return lifeTimeStatus == CoreLifetime.genesis ||
             lifeTimeStatus == CoreLifetime.active;
     }
@@ -811,7 +812,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
         core_ = axiom.newCore(
             coreSetupData
         );
-        coreLifetime[core_] = CoreLifetime.creation;
+        coreLifetimes[core_] = CoreLifetime.creation;
     }
 
     /**
