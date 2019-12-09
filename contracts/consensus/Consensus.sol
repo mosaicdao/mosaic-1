@@ -106,7 +106,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /** Mapping of a metablock number to a metablock (per chain).  */
     mapping(bytes20 => mapping(uint256 => Metablock)) public metablockchains;
 
-    /** Metablock tips' heights per chain. */
+    /** Metablocks' heights per chain. */
     mapping(bytes20 => uint256) public metablockTips;
 
     /** Assigned core for a given chainId */
@@ -285,13 +285,14 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             "Wrong core is precommitting."
         );
 
-        moveToPrecommitRound(_chainId, _metablockHash);
+        goToPrecommitRound(_chainId, _metablockHash);
     }
 
     /**
      * @notice Forms a new committee to verify the precommit proposal.
      *
      * @dev Function requires:
+     *          - the given chain id is not 0
      *          - core has precommitted for the given chain id
      *          - the current block height is bigger than the precommitt's
      *            committee formation height
@@ -301,10 +302,15 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     function formCommittee(bytes20 _chainId)
         external
     {
+        require(
+            _chainId != bytes20(0),
+            "Chain id is 0"
+        );
+
         (
             bytes32 metablockHash,
             uint256 roundBlockNumber
-        ) = moveToCommitteeFormedRound(_chainId);
+        ) = goToCommitteeFormedRound(_chainId);
 
         uint256 committeeFormationBlockHeight = roundBlockNumber.add(
             COMMITTEE_FORMATION_LENGTH
@@ -374,6 +380,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      * @notice Registers committee decision.
      *
      * @dev Function requires:
+     *          - the given chain id is not 0
      *          - only committee can call
      *          - committee has not yet registered its decision
      *
@@ -386,12 +393,18 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         external
         onlyCommittee
     {
-        moveToCommitteeDecidedRound(_chainId);
+        require(
+            _chainId != bytes20(0),
+            "Chain id is 0"
+        );
 
         require(
             decisions[msg.sender] == bytes32(0),
             "Committee's decision has been already registered."
         );
+
+        goToCommitteeDecidedRound(_chainId);
+
         decisions[msg.sender] = _committeeDecision;
     }
 
@@ -441,7 +454,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     )
         external
     {
-        bytes32 metablockHash = moveToCommittedRound(_chainId);
+        bytes32 metablockHash = goToCommittedRound(_chainId);
 
         require(
             _source == keccak256(_rlpBlockHeader),
@@ -693,7 +706,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
     /* Private functions */
 
-    function moveToPrecommitRound(bytes20 _chainId, bytes32 _metablockHash)
+    function goToPrecommitRound(bytes20 _chainId, bytes32 _metablockHash)
         private
     {
         uint256 metablockTip = metablockTips[_chainId];
@@ -708,7 +721,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         metablock.roundBlockNumber = block.number;
     }
 
-    function moveToCommitteeFormedRound(bytes20 _chainId)
+    function goToCommitteeFormedRound(bytes20 _chainId)
         private
         returns(bytes32 metablockHash_, uint256 roundBlockNumber_)
     {
@@ -729,7 +742,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         metablock.roundBlockNumber = block.number;
     }
 
-    function moveToCommitteeDecidedRound(bytes20 _chainId)
+    function goToCommitteeDecidedRound(bytes20 _chainId)
         private
     {
         uint256 metablockTip = metablockTips[_chainId];
@@ -743,7 +756,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         metablock.roundBlockNumber = block.number;
     }
 
-    function moveToCommittedRound(bytes20 _chainId)
+    function goToCommittedRound(bytes20 _chainId)
         private
         returns (bytes32 metablockHash_)
     {
