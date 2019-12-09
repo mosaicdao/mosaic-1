@@ -10,13 +10,14 @@ module.exports = {
   },
   compilers: {
     solc: {
-      version: '0.5.8',
+      version: '0.5.13',
       settings: {
         optimizer: {
           enabled: true,
           runs: 200,
         },
       },
+      evmVersion: 'istanbul',
     },
   },
   mocha: {

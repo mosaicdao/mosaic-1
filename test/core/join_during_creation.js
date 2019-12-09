@@ -55,7 +55,7 @@ contract('Core::joinDuringCreation', async (accounts) => {
 
   beforeEach(async () => {
     config = {
-      chainId: accountProvider.get(),
+      metachainId: accountProvider.get(),
       epochLength: new BN(100),
       minValidatorCount: new BN(5),
       validatorJoinLimit: new BN(20),
@@ -70,7 +70,7 @@ contract('Core::joinDuringCreation', async (accounts) => {
     };
 
     config.mockConsensus = await CoreUtils.createConsensusCore(
-      config.chainId,
+      config.metachainId,
       config.epochLength,
       config.minValidatorCount,
       config.validatorJoinLimit,

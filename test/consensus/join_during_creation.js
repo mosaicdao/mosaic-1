@@ -42,7 +42,7 @@ contract('Consensus::joinDuringCreation', (accounts) => {
     );
 
     joinParams = {
-      chainId: '0x0000000000000000000000000000000000000222',
+      metachainId: Utils.getRandomHash(),
       core: core.address,
       withdrawalAddress: accountProvider.get(),
       txOptions: {
@@ -51,7 +51,7 @@ contract('Consensus::joinDuringCreation', (accounts) => {
     };
     Object.freeze(joinParams);
 
-    await consensus.setAssignment(joinParams.chainId, core.address);
+    await consensus.setAssignment(joinParams.metachainId, core.address);
   });
 
   contract('Negative Tests', async () => {
@@ -59,11 +59,11 @@ contract('Consensus::joinDuringCreation', (accounts) => {
       const params = Object.assign(
         {},
         joinParams,
-        { chainId: Utils.NULL_ADDRESS },
+        { metachainId: Utils.NULL_ADDRESS },
       );
       await Utils.expectRevert(
         consensusUtil.joinDuringCreation(consensus, params),
-        'Chain id is 0.',
+        'Metachain id is 0.',
       );
     });
 
@@ -80,7 +80,7 @@ contract('Consensus::joinDuringCreation', (accounts) => {
       );
     });
 
-    it('should fail when core is not assigned for specified chain id', async () => {
+    it('should fail when core is not assigned for specified metachain id', async () => {
       const params = Object.assign(
         {},
         joinParams,
@@ -89,7 +89,7 @@ contract('Consensus::joinDuringCreation', (accounts) => {
 
       await Utils.expectRevert(
         consensusUtil.joinDuringCreation(consensus, params),
-        'Core is not assigned for the specified chain id.',
+        'Core is not assigned for the specified metachain id.',
       );
     });
 
