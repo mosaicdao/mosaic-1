@@ -39,10 +39,10 @@ contract('Consensus::formCommittee', (accounts) => {
     testInputs.committeeSize = new BN(100);
     testInputs.coreAddress = accountProvider.get();
     testInputs.proposal = Utils.getRandomHash();
-    testInputs.chainId = Utils.generateRandomMetachainId();
+    testInputs.metachainId = Utils.generateRandomMetachainId();
 
     await consensus.setAssignment(
-      testInputs.chainId,
+      testInputs.metachainId,
       testInputs.coreAddress,
     );
 
@@ -52,7 +52,7 @@ contract('Consensus::formCommittee', (accounts) => {
     );
 
     await consensus.precommitMetablock(
-      testInputs.chainId,
+      testInputs.metachainId,
       testInputs.proposal,
       {
         from: testInputs.coreAddress,

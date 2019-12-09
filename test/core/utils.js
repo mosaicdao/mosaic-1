@@ -31,7 +31,7 @@ async function createValidator() {
 }
 
 async function createConsensusCore(
-  chainId,
+  metachainId,
   epochLength,
   minValidatorCount,
   validatorJoinLimit,
@@ -44,7 +44,7 @@ async function createConsensusCore(
   txOptions = {},
 ) {
   const mockConsensus = await MockConsensus.new(
-    chainId,
+    metachainId,
     epochLength,
     minValidatorCount,
     validatorJoinLimit,
@@ -62,7 +62,7 @@ async function createConsensusCore(
 
 async function createCore(
   consensus,
-  chainId,
+  metachainId,
   epochLength,
   minValidators,
   joinLimit,
@@ -78,7 +78,7 @@ async function createCore(
   const core = await Core.new();
   await core.setup(
     consensus,
-    chainId,
+    metachainId,
     epochLength,
     minValidators,
     joinLimit,

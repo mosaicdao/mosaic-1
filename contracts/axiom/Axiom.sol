@@ -253,7 +253,7 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
     }
 
     /**
-     * @notice Setup a new meta chain. Only technical governance address can
+     * @notice Setup a new metachain. Only technical governance address can
      *         call this function.
      * @param _maxStateRoots The max number of state roots to store in the
      *                       circular buffer.

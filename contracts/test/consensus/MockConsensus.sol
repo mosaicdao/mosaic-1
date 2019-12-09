@@ -36,7 +36,7 @@ contract MockConsensus is ConsensusI, ReputationI {
     /* Special Functions */
 
     constructor(
-        bytes20 _chainId,
+        bytes32 _metachainId,
         uint256 _epochLength,
         uint256 _minValidatorCount,
         uint256 _validatorJoinLimit,
@@ -55,7 +55,7 @@ contract MockConsensus is ConsensusI, ReputationI {
         mockCore = new MockCore();
         mockCore.setup(
 			ConsensusI(address(this)),
-            _chainId,
+            _metachainId,
             _epochLength,
             minValidatorCount,
             validatorJoinLimit,
@@ -150,13 +150,13 @@ contract MockConsensus is ConsensusI, ReputationI {
         joinLimit_ = validatorJoinLimit;
     }
 
-    function precommitMetablock(bytes20 /* _chainId */, bytes32 _precommit)
+    function precommitMetablock(bytes32 /* _metachainId */, bytes32 _precommit)
         external
     {
         precommitts[msg.sender] = _precommit;
     }
 
-    function registerCommitteeDecision(bytes20, bytes32)
+    function registerCommitteeDecision(bytes32, bytes32)
         external
     {
         // do nothing for now

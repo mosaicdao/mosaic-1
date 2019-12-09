@@ -35,13 +35,13 @@ contract ConsensusTest is Consensus {
     }
 
     function setPrecommit(
-        bytes20 _chainId,
+        bytes32 _metachainId,
         bytes32 _precommit
     )
         external
     {
-        uint256 metablockTip = metablockTips[_chainId];
-        Metablock storage metablock = metablockchains[_chainId][metablockTip];
+        uint256 metablockTip = metablockTips[_metachainId];
+        Metablock storage metablock = metablockchains[_metachainId][metablockTip];
 
         metablock.metablockHash = _precommit;
         metablock.round = MetablockRound.Precommitted;
@@ -62,12 +62,12 @@ contract ConsensusTest is Consensus {
     }
 
     function setAssignment(
-        bytes20 _chainId,
+        bytes32 _metachainId,
         address _core
     )
         external
     {
-        assignments[_chainId] = _core;
+        assignments[_metachainId] = _core;
     }
 
     function setCommitteeProposal(
@@ -80,11 +80,11 @@ contract ConsensusTest is Consensus {
     }
 
     function setAnchor(
-        bytes20 _chainId,
+        bytes32 _metachainId,
         address _anchor
     )
         external
     {
-        anchors[_chainId] = _anchor;
+        anchors[_metachainId] = _anchor;
     }
 }

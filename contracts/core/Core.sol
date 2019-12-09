@@ -31,7 +31,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
     /** The kernel of a meta-block header */
     struct Kernel {
-        // Note the height of the metablock in the chain is omitted in the struct
+        // Note the height of the metablock in the metachain is omitted in the struct
 
         /** Hash of the metablock's parent */
         bytes32 parent;
@@ -86,7 +86,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
     /** EIP-712 domain separator for Core */
     bytes32 public constant DOMAIN_SEPARATOR_TYPEHASH = keccak256(
-        "EIP712Domain(string name,string version,bytes20 chainId,address verifyingContract)"
+        "EIP712Domain(string name,string version,bytes32 metachainId,address verifyingContract)"
     );
 
     /** EIP-712 type hash for Kernel. */
@@ -131,8 +131,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
     /** Domain separator */
     bytes32 public domainSeparator;
 
-    /** Chain Id of the meta-blockchain */
-    bytes20 public chainId;
+    /** Metachain Id of the meta-blockchain */
+    bytes32 public metachainId;
 
     /** Core status */
     CoreStatus public coreStatus;
@@ -270,7 +270,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
     function setup(
         ConsensusI _consensus,
-        bytes20 _chainId,
+        bytes32 _metachainId,
         uint256 _epochLength,
         uint256 _minValidators,
         uint256 _joinLimit,
@@ -285,13 +285,13 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         external
     {
         require(
-            chainId == bytes20(0),
+            metachainId == bytes32(0),
             "Core is already setup."
         );
 
         require(
-            _chainId != bytes20(0),
-            "Chain id is 0."
+            _metachainId != bytes32(0),
+            "Metachain id is 0."
         );
 
         require(
@@ -330,7 +330,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
                 DOMAIN_SEPARATOR_TYPEHASH,
                 DOMAIN_SEPARATOR_NAME,
                 DOMAIN_SEPARATOR_VERSION,
-                _chainId,
+                _metachainId,
                 address(this)
             )
         );
@@ -859,7 +859,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             coreStatus = CoreStatus.precommitted;
             precommit = _proposal;
             precommitClosureBlockHeight = block.number.add(CORE_LAST_VOTES_WINDOW);
-            consensus.precommitMetablock(chainId, _proposal);
+            consensus.precommitMetablock(metachainId, _proposal);
         }
     }
 

@@ -80,14 +80,14 @@ contract SpyConsensus is MasterCopyNonUpgradable, ConsensusI {
         require(false, "This should not be called for unit tests.");
     }
 
-    function precommitMetablock(bytes20, bytes32)
+    function precommitMetablock(bytes32, bytes32)
         external
     {
         // This is not used in test so break
         require(false, "This should not be called for unit tests.");
     }
 
-    function registerCommitteeDecision(bytes20, bytes32)
+    function registerCommitteeDecision(bytes32, bytes32)
         external
     {
         // This is not used in test so break.

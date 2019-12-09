@@ -28,7 +28,7 @@ contract CommitteeMockConsensus is ConsensusI {
     /* External Functions */
 
     function registerCommitteeDecision(
-        bytes20 /* _metachainId */,
+        bytes32 /* _metachainId */,
         bytes32 _committeeDecision
     )
         external
@@ -56,7 +56,7 @@ contract CommitteeMockConsensus is ConsensusI {
     }
 
     function precommitMetablock(
-        bytes20 /* _chainId */,
+        bytes32 /* _metachainId */,
         bytes32 /* _proposal */
     )
         external

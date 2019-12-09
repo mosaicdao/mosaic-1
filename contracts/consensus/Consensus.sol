@@ -25,8 +25,9 @@ import "../core/CoreI.sol";
 import "../core/CoreStatusEnum.sol";
 import "../reputation/ReputationI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
+import "../version/MosaicVersion.sol";
 
-contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
+contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, ConsensusI {
 
     /* Usings */
 
@@ -65,8 +66,20 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /** The callprefix of the Core::setup function. */
     bytes4 public constant CORE_SETUP_CALLPREFIX = bytes4(
         keccak256(
-            "setup(address,bytes20,uint256,uint256,uint256,address,uint256,bytes32,uint256,uint256,uint256,uint256)"
+            "setup(address,bytes32,uint256,uint256,uint256,address,uint256,bytes32,uint256,uint256,uint256,uint256)"
         )
+    );
+
+    string public constant MOSAIC_DOMAIN_SEPARATOR_NAME = "Mosaic-Consensus";
+
+    /** It is domain separator typehash used to calculate metachain id. */
+    bytes32 public constant MOSAIC_DOMAIN_SEPARATOR_TYPEHASH = keccak256(
+        "MosaicDomain(string name,string version,uint256 originChainId,address consensus)"
+    );
+
+    /** It is metachain id typehash used to calculate metachain id. */
+    bytes32 public constant METACHAIN_ID_TYPEHASH = keccak256(
+        "MetachainId(address anchor)"
     );
 
     /** The callprefix of the Committee::setup function. */
@@ -104,13 +117,13 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     uint256 public coinbaseSplitPerMille;
 
     /** Mapping of a metablock number to a metablock (per metachain).  */
-    mapping(bytes20 => mapping(uint256 => Metablock)) public metablockchains;
+    mapping(bytes32 => mapping(uint256 => Metablock)) public metablockchains;
 
     /** Metablocks' heights per metachain. */
-    mapping(bytes20 => uint256) public metablockTips;
+    mapping(bytes32 => uint256) public metablockTips;
 
-    /** Assigned core for a given chainId */
-    mapping(bytes20 /* chainId */ => address /* core */) public assignments;
+    /** Assigned core for a given metachain id */
+    mapping(bytes32 /* metachainId */ => address /* core */) public assignments;
 
     /** Core statuses. */
     mapping(address /* core */ => CoreStatus /* coreStatus */) public coreStatuses;
@@ -124,14 +137,17 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     /** Committees' decisions. */
     mapping(address /* committee */ => bytes32 /* commit */) public decisions;
 
-    /** Assigned anchor for a given chainId. */
-    mapping(bytes20 => address) public anchors;
+    /** Assigned anchor for a given metachain id */
+    mapping(bytes32 => address) public anchors;
 
     /** Reputation contract for validators */
     ReputationI public reputation;
 
     /** Axiom contract address */
     AxiomI public axiom;
+
+    /** Mosaic domain separator */
+    bytes32 public mosaicDomainSeparator;
 
 
     /* Modifiers */
@@ -200,8 +216,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     )
         external
     {
-        // TODO: create domain separator
-
         // This function must be called only once.
         require(
             address(axiom) == address(0),
@@ -248,29 +262,42 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         axiom = AxiomI(msg.sender);
 
         committees[SENTINEL_COMMITTEES] = SENTINEL_COMMITTEES;
+
+        uint256 chainId = getChainId();
+
+        mosaicDomainSeparator = keccak256(
+            abi.encode(
+                MOSAIC_DOMAIN_SEPARATOR_TYPEHASH,
+                MOSAIC_DOMAIN_SEPARATOR_NAME,
+                DOMAIN_SEPARATOR_VERSION,
+                chainId,
+                address(this)
+            )
+        );
+
     }
 
     /**
      * @notice Precommits a metablock.
      *
      * @dev Function requires:
-     *          - the given chain id is not 0
+     *          - the given metachain id is not 0
      *          - the given metablock hash is not 0
      *          - only an active core can call
-     *          - caller (core) and the given chain id are matching
+     *          - caller (core) and the given metachain id are matching
      *          - there is no precommit by associated the core
      *          - the corresponding metablock round is 'Undefined'
      */
     function precommitMetablock(
-        bytes20 _chainId,
+        bytes32 _metachainId,
         bytes32 _metablockHash
     )
         external
         onlyCore
     {
         require(
-            _chainId != bytes20(0),
-            "Chain id is 0"
+            _metachainId != bytes32(0),
+            "Metachain id is 0"
         );
 
         require(
@@ -278,39 +305,39 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             "Proposal is 0."
         );
 
-        address core = assignments[_chainId];
+        address core = assignments[_metachainId];
 
         require(
             msg.sender == core,
             "Wrong core is precommitting."
         );
 
-        goToPrecommitRound(_chainId, _metablockHash);
+        goToPrecommitRound(_metachainId, _metablockHash);
     }
 
     /**
      * @notice Forms a new committee to verify the precommit proposal.
      *
      * @dev Function requires:
-     *          - the given chain id is not 0
-     *          - core has precommitted for the given chain id
+     *          - the given metachain id is not 0
+     *          - core has precommitted for the given metachain id
      *          - the current block height is bigger than the precommitt's
      *            committee formation height
      *          - committee formation blocksegment must be in the most
      *            recent 256 blocks.
      */
-    function formCommittee(bytes20 _chainId)
+    function formCommittee(bytes32 _metachainId)
         external
     {
         require(
-            _chainId != bytes20(0),
-            "Chain id is 0"
+            _metachainId != bytes32(0),
+            "Metachain id is 0"
         );
 
         (
             bytes32 metablockHash,
             uint256 roundBlockNumber
-        ) = goToCommitteeFormedRound(_chainId);
+        ) = goToCommitteeFormedRound(_metachainId);
 
         uint256 committeeFormationBlockHeight = roundBlockNumber.add(
             COMMITTEE_FORMATION_LENGTH
@@ -380,22 +407,22 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      * @notice Registers committee decision.
      *
      * @dev Function requires:
-     *          - the given chain id is not 0
+     *          - the given metachain id is not 0
      *          - only committee can call
      *          - committee has not yet registered its decision
      *
      * @param _committeeDecision Decision of a caller committee.
      */
     function registerCommitteeDecision(
-        bytes20 _chainId,
+        bytes32 _metachainId,
         bytes32 _committeeDecision
     )
         external
         onlyCommittee
     {
         require(
-            _chainId != bytes20(0),
-            "Chain id is 0"
+            _metachainId != bytes32(0),
+            "Metachain id is 0"
         );
 
         require(
@@ -403,7 +430,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             "Committee's decision has been already registered."
         );
 
-        goToCommitteeDecidedRound(_chainId);
+        goToCommitteeDecidedRound(_metachainId);
 
         decisions[msg.sender] = _committeeDecision;
     }
@@ -413,8 +440,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      *
      * @dev Function requires:
      *          - block header should match with source blockhash
-     *          - chain id should not be 0
-     *          - a core for the specified chain id should exist
+     *          - metachain id should not be 0
+     *          - a core for the specified metachain id should exist
      *          - precommit for the corresponding core should exist
      *          - committee should have been formed for the precommit
      *          - committee decision should match with the specified
@@ -422,9 +449,9 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      *          - committee decision should match with the core's precommit
      *          - the given metablock parameters should match with the
      *            core's precommit.
-     *          - anchor contract for the given chain id should exist
+     *          - anchor contract for the given metachain id should exist
      *
-     * @param _chainId Chain id.
+     * @param _metachainId Metachain id.
      * @param _rlpBlockHeader RLP ecoded block header.
      * @param _kernelHash Kernel hash
      * @param _originObservation Observation of the origin chain.
@@ -440,7 +467,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      * @param _targetBlockHeight Target block height.
      */
     function commitMetablock(
-        bytes20 _chainId,
+        bytes32 _metachainId,
         bytes calldata _rlpBlockHeader,
         bytes32 _kernelHash,
         bytes32 _originObservation,
@@ -454,7 +481,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     )
         external
     {
-        bytes32 metablockHash = goToCommittedRound(_chainId);
+        bytes32 metablockHash = goToCommittedRound(_metachainId);
 
         require(
             _source == keccak256(_rlpBlockHeader),
@@ -462,10 +489,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
 
         // Makes sure that assigned core is active.
-        address core = assignments[_chainId];
+        address core = assignments[_metachainId];
         require(
             isCore(core),
-            "There is no core for the specified chain id."
+            "There is no core for the specified metachain id."
         );
 
         assertCommit(
@@ -483,7 +510,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
 
         // Anchor state root.
-        anchorStateRoot(_chainId, _rlpBlockHeader);
+        anchorStateRoot(_metachainId, _rlpBlockHeader);
 
         // Open a new metablock.
         CoreI(core).openMetablock(
@@ -501,19 +528,19 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      * @dev Function requires:
      *          - core status should be opened or precommitted.
      *
-     * @param _chainId Chain id that validator wants to join.
+     * @param _metachainId Metachain id that validator wants to join.
      * @param _core Core address that validator wants to join.
      * @param _withdrawalAddress A withdrawal address of newly joined validator.
      */
     function join(
-        bytes20 _chainId,
+        bytes32 _metachainId,
         address _core,
         address _withdrawalAddress
     )
         external
     {
         // Validate the join params.
-        validateJoinParams(_chainId, _core, _withdrawalAddress);
+        validateJoinParams(_metachainId, _core, _withdrawalAddress);
 
         // Specified core must have open or precommitted status.
         CoreStatus status = coreStatuses[_core];
@@ -536,20 +563,20 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      * @dev Function requires:
      *          - core should be in an active state.
      *
-     * @param _chainId Chain id that validator wants to join.
+     * @param _metachainId Metachain id that validator wants to join.
      * @param _core Core address that validator wants to join.
      * @param _withdrawalAddress A withdrawal address of newly joined validator.
      */
 
     function joinDuringCreation(
-        bytes20 _chainId,
+        bytes32 _metachainId,
         address _core,
         address _withdrawalAddress
     )
         external
     {
         // Validate the join params.
-        validateJoinParams(_chainId, _core, _withdrawalAddress);
+        validateJoinParams(_metachainId, _core, _withdrawalAddress);
 
         // Specified core must have creation status.
         require(
@@ -568,23 +595,23 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      * @notice Validator logs out. This is called by validator address.
      *
      * @dev Function requires:
-     *          - chain id should not be 0.
+     *          - metachain id should not be 0.
      *          - core address should not be 0.
-     *          - core should be assigned for the specified chain id.
-     *          - core for the specified chain id should exist.
+     *          - core should be assigned for the specified metachain id.
+     *          - core for the specified metachain id should exist.
      *
-     * @param _chainId Chain id that validator wants to logout.
+     * @param _metachainId Metachain id that validator wants to logout.
      * @param _core Core address that validator wants to logout.
      */
     function logout(
-        bytes20 _chainId,
+        bytes32 _metachainId,
         address _core
     )
         external
     {
         require(
-            _chainId != bytes20(0),
-            "Chain id is 0."
+            _metachainId != bytes32(0),
+            "Metachain id is 0."
         );
 
         require(
@@ -593,13 +620,13 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
 
         require(
-            assignments[_chainId] == _core,
-            "Core is not assigned for the specified chain id."
+            assignments[_metachainId] == _core,
+            "Core is not assigned for the specified metachain id."
         );
 
         require(
             isCore(_core),
-            "There is no core for the specified chain id."
+            "There is no core for the specified metachain id."
         );
 
         CoreI(_core).logout(msg.sender);
@@ -607,7 +634,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     }
 
     /**
-     * @notice Creates a new meta chain given an achor.
+     * @notice Creates a new metachain given an anchor.
      *         This can be called only by axiom.
      *
      * @dev Function requires:
@@ -626,15 +653,15 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         external
         onlyAxiom
     {
-        bytes20 chainId = bytes20(_anchor);
+        bytes32 metachainId = hashMetachainId(_anchor);
 
         require(
-            assignments[chainId] == address(0),
+            assignments[metachainId] == address(0),
             "A core is already assigned to this metachain."
         );
 
         address core = newCore(
-            chainId,
+            metachainId,
             _epochLength,
             uint256(0), // metablock height
             bytes32(0), // parent hash
@@ -644,8 +671,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
             _rootBlockHeight
         );
 
-        assignments[chainId] = core;
-        anchors[chainId] = _anchor;
+        assignments[metachainId] = core;
+        anchors[metachainId] = _anchor;
     }
 
     /** Get minimum validator and join limit count. */
@@ -658,6 +685,53 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         joinLimit_ = joinLimit;
     }
     // Task: Pending functions related to halting and corrupting of core.
+
+
+    /* Public functions */
+
+    /**
+     * @notice Gets metachain id.
+     *         Metachain id format :
+     *         `0x19 0x4d <mosaic-domain-separator> <metachainid-typehash>` where
+     *         0x19 signed data as per EIP-191.
+     *         0x4d is version byte for Mosaic.
+     *         <mosaic-domain-separator> format is `MosaicDomain(string name,
+     *                            string version,uint256 originChainId,
+     *                            address consensus)`.
+     *         <metachainid-typehash> format is MetachainId(address anchor).
+     *
+     *         <mosaic-domain-separator> and <metachainid-typehash> is EIP-712
+     *         complaint.
+     * @param _anchor Anchor address of the new metachain.
+     *
+     * @return metachainId_ Metachain id.
+     */
+    function hashMetachainId(address _anchor)
+        public
+        view
+        returns(bytes32 metachainId_)
+    {
+        require(
+            address(_anchor) != address(0),
+            "Anchor address must not be 0."
+        );
+
+        bytes32 metachainIdHash = keccak256(
+            abi.encode(
+                METACHAIN_ID_TYPEHASH,
+                _anchor
+            )
+        );
+
+        metachainId_ = keccak256(
+            abi.encodePacked(
+                byte(0x19), // Standard ethereum prefix as per EIP-191.
+                byte(0x4d), // 'M' for Mosaic.
+                mosaicDomainSeparator,
+                metachainIdHash
+            )
+        );
+    }
 
 
     /* Internal functions */
@@ -674,6 +748,16 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     {
         CoreStatus status = coreStatuses[_core];
         return status >= CoreStatus.creation;
+    }
+
+    function getChainId()
+        internal
+        pure
+        returns(uint256 chainId_)
+    {
+        assembly {
+            chainId_ := chainid()
+        }
     }
 
     /**
@@ -706,11 +790,11 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
     /* Private functions */
 
-    function goToPrecommitRound(bytes20 _chainId, bytes32 _metablockHash)
+    function goToPrecommitRound(bytes32 _metachainId, bytes32 _metablockHash)
         private
     {
-        uint256 metablockTip = metablockTips[_chainId];
-        Metablock storage metablock = metablockchains[_chainId][metablockTip];
+        uint256 metablockTip = metablockTips[_metachainId];
+        Metablock storage metablock = metablockchains[_metachainId][metablockTip];
 
         assert(metablock.round == MetablockRound.Undefined);
         assert(metablock.metablockHash == bytes32(0));
@@ -721,16 +805,16 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         metablock.roundBlockNumber = block.number;
     }
 
-    function goToCommitteeFormedRound(bytes20 _chainId)
+    function goToCommitteeFormedRound(bytes32 _metachainId)
         private
         returns(bytes32 metablockHash_, uint256 roundBlockNumber_)
     {
-        uint256 metablockTip = metablockTips[_chainId];
-        Metablock storage metablock = metablockchains[_chainId][metablockTip];
+        uint256 metablockTip = metablockTips[_metachainId];
+        Metablock storage metablock = metablockchains[_metachainId][metablockTip];
 
         require(
             metablock.round == MetablockRound.Precommitted,
-            "Core has not precommitted for the given chain id."
+            "Core has not precommitted for the given metachain id."
         );
         assert(metablock.metablockHash != bytes32(0));
         assert(metablock.roundBlockNumber < block.number);
@@ -742,11 +826,11 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         metablock.roundBlockNumber = block.number;
     }
 
-    function goToCommitteeDecidedRound(bytes20 _chainId)
+    function goToCommitteeDecidedRound(bytes32 _metachainId)
         private
     {
-        uint256 metablockTip = metablockTips[_chainId];
-        Metablock storage metablock = metablockchains[_chainId][metablockTip];
+        uint256 metablockTip = metablockTips[_metachainId];
+        Metablock storage metablock = metablockchains[_metachainId][metablockTip];
 
         assert(metablock.round == MetablockRound.CommitteeFormed);
         assert(metablock.metablockHash != bytes32(0));
@@ -756,12 +840,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         metablock.roundBlockNumber = block.number;
     }
 
-    function goToCommittedRound(bytes20 _chainId)
+    function goToCommittedRound(bytes32 _metachainId)
         private
         returns (bytes32 metablockHash_)
     {
-        uint256 metablockTip = metablockTips[_chainId];
-        Metablock storage metablock = metablockchains[_chainId][metablockTip];
+        uint256 metablockTip = metablockTips[_metachainId];
+        Metablock storage metablock = metablockchains[_metachainId][metablockTip];
 
         require(
             metablock.round == MetablockRound.CommitteeDecided,
@@ -775,7 +859,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         metablock.round = MetablockRound.Committed;
         metablock.roundBlockNumber = block.number;
 
-        metablockTips[_chainId] = metablockTips[_chainId].add(1);
+        metablockTips[_metachainId] = metablockTips[_metachainId].add(1);
     }
 
     function assertCommit(
@@ -828,24 +912,24 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
     }
 
     /**
-     * @notice Anchor a new state root for specified chain id.
+     * @notice Anchor a new state root for specified metachain id.
 
      * @dev Function requires:
-     *          - anchor for specified chain id should exist.
+     *          - anchor for specified metachain id should exist.
      *
-     * @param _chainId Chain id.
+     * @param _metachainId Metachain id.
      * @param _rlpBlockHeader RLP encoded block header
      */
     function anchorStateRoot(
-        bytes20 _chainId,
+        bytes32 _metachainId,
         bytes memory _rlpBlockHeader
     )
         private
     {
-        address anchorAddress = anchors[_chainId];
+        address anchorAddress = anchors[_metachainId];
         require(
             anchorAddress != address(0),
-            "There is no anchor for the specified chain id."
+            "There is no anchor for the specified metachain id."
         );
 
         Block.Header memory blockHeader = Block.decodeHeader(_rlpBlockHeader);
@@ -859,7 +943,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
 
     /**
      * @notice Deploys a new core contract.
-     * @param _chainId Chain id for which the core should be deployed.
+     * @param _metachainId Metachain id for which the core should be deployed.
      * @param _epochLength Epoch length for new core.
      * @param _height Kernel height.
      * @param _parent Kernel parent hash.
@@ -870,7 +954,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      * returns Deployed core contract address.
      */
     function newCore(
-        bytes20 _chainId,
+        bytes32 _metachainId,
         uint256 _epochLength,
         uint256 _height,
         bytes32 _parent,
@@ -885,7 +969,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         bytes memory coreSetupData = abi.encodeWithSelector(
             CORE_SETUP_CALLPREFIX,
             address(this),
-            _chainId,
+            _metachainId,
             _epochLength,
             minValidators,
             joinLimit,
@@ -937,17 +1021,17 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
      * @notice Validate the params for joining the core.
      *
      * @dev Function requires:
-     *          - chain id should not be 0.
+     *          - metachain id should not be 0.
      *          - core address should not be 0.
-     *          - core should be assigned for the specified chain id.
+     *          - core should be assigned for the specified metachain id.
      *          - withdrawal address can't be 0.
      *
-     * @param _chainId Chain id.
+     * @param _metachainId Metachain id.
      * @param _core Core contract address.
      * @param _withdrawalAddress Withdrawal address.
      */
     function validateJoinParams(
-        bytes20 _chainId,
+        bytes32 _metachainId,
         address _core,
         address _withdrawalAddress
     )
@@ -955,8 +1039,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         view
     {
         require(
-            _chainId != bytes20(0),
-            "Chain id is 0."
+            _metachainId != bytes32(0),
+            "Metachain id is 0."
         );
 
         require(
@@ -965,8 +1049,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreStatusEnum, ConsensusI {
         );
 
         require(
-            assignments[_chainId] == _core,
-            "Core is not assigned for the specified chain id."
+            assignments[_metachainId] == _core,
+            "Core is not assigned for the specified metachain id."
         );
 
         require(

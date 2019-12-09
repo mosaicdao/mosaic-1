@@ -113,8 +113,8 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
 
     /* Storage */
 
-    /** Chain id of the meta-blockchain */
-    bytes20 public metachainId;
+    /** Metachain id of the meta-blockchain */
+    bytes32 public metachainId;
 
     /** Committee size */
     uint256 public committeeSize;
@@ -235,7 +235,7 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
     /* External functions */
 
     function setup(
-        bytes20 _metachainId,
+        bytes32 _metachainId,
         ConsensusI _consensus,
         uint256 _committeeSize,
         bytes32 _dislocation,
@@ -244,12 +244,12 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
         external
     {
         require(
-            metachainId == bytes20(0),
+            metachainId == bytes32(0),
             "Committee is already setup."
         );
 
         require(
-            _metachainId != bytes20(0),
+            _metachainId != bytes32(0),
             "Metachain id is 0."
         );
 
