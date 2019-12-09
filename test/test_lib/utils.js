@@ -30,9 +30,7 @@ async function advanceBlock() {
         return reject(err);
       }
 
-      const newBlockHash = web3.eth.getBlock('latest').hash;
-
-      return resolve(newBlockHash);
+      return resolve();
     });
   });
 }
