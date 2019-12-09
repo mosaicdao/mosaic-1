@@ -32,7 +32,7 @@ const anchorBlockHeight = 1;
 let contracts = {};
 let commitParams = {};
 
-contract('Consensus::commit', (accounts) => {
+contract('Consensus::commitMetablock', (accounts) => {
   const accountProvider = new Utils.AccountProvider(accounts);
   let committeeSecret;
   beforeEach(async () => {
@@ -73,10 +73,10 @@ contract('Consensus::commit', (accounts) => {
       );
     });
 
-    it('should fail when there is no core for the specified chain id', async () => {
+    it('should fail when there is no core for the specified metachain id', async () => {
       await Utils.expectRevert(
         consensusUtil.commit(contracts.Consensus, commitParams),
-        'There is no core for the specified chain id.',
+        'There is no core for the specified metachain id.',
       );
     });
 
@@ -88,7 +88,7 @@ contract('Consensus::commit', (accounts) => {
       );
       await Utils.expectRevert(
         consensusUtil.commit(contracts.Consensus, commitParams),
-        'There is no core for the specified chain id.',
+        'There is no core for the specified metachain id.',
       );
     });
 
@@ -100,7 +100,7 @@ contract('Consensus::commit', (accounts) => {
       );
       await Utils.expectRevert(
         consensusUtil.commit(contracts.Consensus, commitParams),
-        'There is no core for the specified chain id.',
+        'There is no core for the specified metachain id.',
       );
     });
 
@@ -112,7 +112,7 @@ contract('Consensus::commit', (accounts) => {
       );
       await Utils.expectRevert(
         consensusUtil.commit(contracts.Consensus, commitParams),
-        'There is no core for the specified chain id.',
+        'There is no core for the specified metachain id.',
       );
     });
 
@@ -214,7 +214,7 @@ contract('Consensus::commit', (accounts) => {
       );
     });
 
-    it.skip('should fail when anchor address for specified chain id is 0', async () => {
+    it.skip('should fail when anchor address for specified metachain id is 0', async () => {
       await contracts.Consensus.setAssignment(commitParams.metachainId, contracts.SpyCore.address);
       await contracts.Consensus.setCoreStatus(
         contracts.SpyCore.address,

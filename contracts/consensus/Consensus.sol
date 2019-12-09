@@ -414,7 +414,7 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
      *            core's precommit.
      *          - anchor contract for the given chain id should exist
      *
-     * @param _metachainId metachain id.
+     * @param _metachainId Metachain id.
      * @param _rlpBlockHeader RLP ecoded block header.
      * @param _kernelHash Kernel hash
      * @param _originObservation Observation of the origin chain.
@@ -453,7 +453,7 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
         address core = assignments[_metachainId];
         require(
             isCore(core),
-            "There is no core for the specified chain id."
+            "There is no core for the specified metachain id."
         );
 
         assertCommit(
@@ -662,7 +662,7 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
      *
      *         <mosaic-domain-separator> and <metachainid-typehash> is EIP-712
      *         complaint.
-     * @param _anchor Anchor address of the new meta-chain.
+     * @param _anchor Anchor address of the new metachain.
      *
      * @return metachainId_ Metachain id.
      */
