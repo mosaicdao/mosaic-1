@@ -129,7 +129,7 @@ contract('Consensus::commitMetablock', (accounts) => {
     });
 
     it.skip('should fail when commit proposal is not equal to precommitted proposal', async () => {
-      await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
+      await contracts.Consensus.setAssignment(commitParams.metachainId, contracts.SpyCore.address);
       await contracts.Consensus.setCoreStatus(
         contracts.SpyCore.address,
         CoreStatusUtils.CoreStatus.precommitted,

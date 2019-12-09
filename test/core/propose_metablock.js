@@ -61,7 +61,7 @@ contract('Core::proposeMetablock', async (accounts) => {
 
   beforeEach(async () => {
     config = {
-      chainId: accountProvider.get(),
+      metachainId: Utils.getRandomHash(),
       epochLength: new BN(100),
       minValidatorCount: new BN(5),
       validatorJoinLimit: new BN(20),
@@ -92,7 +92,7 @@ contract('Core::proposeMetablock', async (accounts) => {
     };
 
     config.mockConsensus = await CoreUtils.createConsensusCore(
-      config.chainId,
+      config.metachainId,
       config.epochLength,
       config.minValidatorCount,
       config.validatorJoinLimit,

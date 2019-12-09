@@ -62,7 +62,7 @@ async function createConsensusCore(
 
 async function createCore(
   consensus,
-  chainId,
+  metachainId,
   epochLength,
   minValidators,
   joinLimit,
@@ -78,7 +78,7 @@ async function createCore(
   const core = await Core.new();
   await core.setup(
     consensus,
-    chainId,
+    metachainId,
     epochLength,
     minValidators,
     joinLimit,
