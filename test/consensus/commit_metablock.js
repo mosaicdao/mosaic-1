@@ -146,7 +146,7 @@ contract('Consensus::commit', (accounts) => {
       );
     });
 
-    it('should fail when commit proposal is not equal to precommited proposal', async () => {
+    it.skip('should fail when commit proposal is not equal to precommited proposal', async () => {
       await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
       await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
