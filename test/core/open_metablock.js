@@ -131,7 +131,7 @@ contract('Core::openMetablock', (accounts) => {
 
   beforeEach(async () => {
     config.consensusCoreArgs = {
-      metachainId: web3.utils.keccak256('metachainid'),
+      metachainId: Utils.getRandomHash(),
       epochLength: new BN(100),
       minValidatorCount: new BN(5),
       validatorJoinLimit: new BN(20),
