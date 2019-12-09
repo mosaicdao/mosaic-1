@@ -16,6 +16,7 @@
 
 const Utils = require('../test_lib/utils.js');
 const CoreStatusUtils = require('../test_lib/core_status_utils');
+const consensusUtil = require('./utils.js');
 
 const Consensus = artifacts.require('ConsensusTest');
 const SpyReputation = artifacts.require('SpyReputation');
@@ -39,9 +40,9 @@ contract('Consensus::logout', (accounts) => {
     };
 
     await contracts.consensus.setReputation(contracts.reputation.address);
-    await contracts.consensus.setCoreStatus(
+    await contracts.consensus.setCoreLifetime(
       contracts.core.address,
-      CoreStatusUtils.CoreStatus.opened,
+      consensusUtil.CoreLifetime.active,
     );
     await contracts.consensus.setAssignment(metachainId, contracts.core.address);
   });
@@ -70,61 +71,53 @@ contract('Consensus::logout', (accounts) => {
       );
     });
 
-    it('should fail when core status is undefined', async () => {
-      await contracts.consensus.setCoreStatus(
+    it('should fail when core lifetime is undefined', async () => {
+      await contracts.consensus.setCoreLifetime(
         contracts.core.address,
-        CoreStatusUtils.CoreStatus.undefined,
+        consensusUtil.CoreLifetime.undefined,
       );
       await Utils.expectRevert(
         contracts.consensus.logout(metachainId, contracts.core.address, { from: validator }),
-        'There is no core for the specified metachain id.',
+        'Core lifetime status must be genesis or active.',
       );
     });
 
-    it('should fail when core status is halted', async () => {
-      await contracts.consensus.setCoreStatus(
+    it('should fail when core lifetime is halted', async () => {
+      await contracts.consensus.setCoreLifetime(
         contracts.core.address,
-        CoreStatusUtils.CoreStatus.halted,
+        consensusUtil.CoreLifetime.halted,
       );
       await Utils.expectRevert(
         contracts.consensus.logout(metachainId, contracts.core.address, { from: validator }),
-        'There is no core for the specified metachain id.',
+        'Core lifetime status must be genesis or active.',
       );
     });
 
     it('should fail when core status is corrupted', async () => {
-      await contracts.consensus.setCoreStatus(
+      await contracts.consensus.setCoreLifetime(
         contracts.core.address,
-        CoreStatusUtils.CoreStatus.corrupted,
+        consensusUtil.CoreLifetime.corrupted,
       );
       await Utils.expectRevert(
         contracts.consensus.logout(metachainId, contracts.core.address, { from: validator }),
-        'There is no core for the specified metachain id.',
+        'Core lifetime status must be genesis or active.',
       );
     });
   });
 
   contract('Positive Tests', () => {
-    it('should pass when core status is creation', async () => {
-      await contracts.consensus.setCoreStatus(
+    it('should pass when core lifetime is genesis', async () => {
+      await contracts.consensus.setCoreLifetime(
         contracts.core.address,
-        CoreStatusUtils.CoreStatus.creation,
+        consensusUtil.CoreLifetime.genesis,
       );
       await contracts.consensus.logout(metachainId, contracts.core.address, { from: validator });
     });
 
-    it('should pass when core status is opened', async () => {
-      await contracts.consensus.setCoreStatus(
+    it('should pass when core lifetime is activated', async () => {
+      await contracts.consensus.setCoreLifetime(
         contracts.core.address,
-        CoreStatusUtils.CoreStatus.opened,
-      );
-      await contracts.consensus.logout(metachainId, contracts.core.address, { from: validator });
-    });
-
-    it('should pass when core status is precommitted', async () => {
-      await contracts.consensus.setCoreStatus(
-        contracts.core.address,
-        CoreStatusUtils.CoreStatus.precommitted,
+        consensusUtil.CoreLifetime.active,
       );
       await contracts.consensus.logout(metachainId, contracts.core.address, { from: validator });
     });

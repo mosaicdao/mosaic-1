@@ -25,13 +25,13 @@ contract ConsensusTest is Consensus {
 
     }
 
-    function setCoreStatus(
+    function setCoreLifetime(
         address _core,
-        CoreStatus _status
+        CoreLifetime _status
     )
         external
     {
-        coreStatuses[_core] = _status;
+        coreLifetimes[_core] = _status;
     }
 
     function setPrecommit(

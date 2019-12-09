@@ -695,11 +695,14 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *          - a validator has not already joined
      *
      * @param _validator A validator's address to join.
+     *
+     * @return The total count of joined validators.
      */
     function joinDuringCreation(address _validator)
         external
         onlyConsensus
         duringCreation
+        returns(uint256 validatorCount_, uint256 minValidatorCount_)
     {
         // during creation join at creation kernel height
         insertValidator(_validator, creationKernelHeight);
@@ -723,6 +726,9 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
             newProposalSet();
         }
+
+        validatorCount_ = countValidators;
+        minValidatorCount_ = minimumValidatorCount;
     }
 
     /**

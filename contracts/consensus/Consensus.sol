@@ -17,6 +17,7 @@ pragma solidity >=0.5.0 <0.6.0;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "./ConsensusI.sol";
+import "./CoreLifetime.sol";
 import "../anchor/AnchorI.sol";
 import "../axiom/AxiomI.sol";
 import "../block/Block.sol";
@@ -27,7 +28,7 @@ import "../reputation/ReputationI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../version/MosaicVersion.sol";
 
-contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, ConsensusI {
+contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, ConsensusI {
 
     /* Usings */
 
@@ -125,8 +126,8 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
     /** Assigned core for a given metachain id */
     mapping(bytes32 /* metachainId */ => address /* core */) public assignments;
 
-    /** Core statuses. */
-    mapping(address /* core */ => CoreStatus /* coreStatus */) public coreStatuses;
+    /** Core statuses */
+    mapping(address /* core */ => CoreLifetime /* coreLifetime */) public coreLifetimes;
 
     /** Linked-list of committees. */
     mapping(address => address) public committees;
@@ -155,7 +156,7 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
     modifier onlyCore()
     {
         require(
-            isCore(msg.sender),
+            isCoreRunning(msg.sender),
             "Caller must be an active core."
         );
 
@@ -313,6 +314,11 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
         );
 
         goToPrecommitRound(_metachainId, _metablockHash);
+
+        // On first precommit by a core, CoreLifetime state will change to active.
+        if (coreLifetimes[msg.sender] == CoreLifetime.genesis) {
+            coreLifetimes[msg.sender] = CoreLifetime.active;
+        }
     }
 
     /**
@@ -332,6 +338,12 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
         require(
             _metachainId != bytes32(0),
             "Metachain id is 0"
+        );
+
+        address core = assignments[_metachainId];
+        require(
+            coreLifetimes[core] == CoreLifetime.active,
+            "Core lifetime status must be active"
         );
 
         (
@@ -491,8 +503,8 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
         // Makes sure that assigned core is active.
         address core = assignments[_metachainId];
         require(
-            isCore(core),
-            "There is no core for the specified metachain id."
+            coreLifetimes[core] == CoreLifetime.active,
+            "Core lifetime status must be active"
         );
 
         assertCommit(
@@ -522,8 +534,8 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
     }
 
     /**
-     * @notice Validator joins the core, when core status is opened or
-     *         precommitted. This is called by validator address.
+     * @notice Validator joins the core, when core lifetime status is
+     *         is active. This is called by validator address.
      *
      * @dev Function requires:
      *          - core status should be opened or precommitted.
@@ -542,11 +554,9 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
         // Validate the join params.
         validateJoinParams(_metachainId, _core, _withdrawalAddress);
 
-        // Specified core must have open or precommitted status.
-        CoreStatus status = coreStatuses[_core];
         require(
-            status == CoreStatus.opened || status == CoreStatus.precommitted,
-            "Core status is not opened or precommitted."
+            isCoreRunning(_core),
+            "Core lifetime status must be genesis or active."
         );
 
         // Stake in reputation contract.
@@ -578,17 +588,22 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
         // Validate the join params.
         validateJoinParams(_metachainId, _core, _withdrawalAddress);
 
-        // Specified core must have creation status.
+        // Specified core must have genesis lifetime status.
         require(
-            isCore(_core),
-            "Core must be in an active state."
+            coreLifetimes[_core] == CoreLifetime.creation,
+            "Core lifetime status must be creation."
         );
 
         // Stake in reputation contract.
         reputation.stake(msg.sender, _withdrawalAddress);
 
         // Join in core contract.
-        CoreI(_core).joinDuringCreation(msg.sender);
+        (uint256 validatorCount, uint256 minValidatorCount) =
+            CoreI(_core).joinDuringCreation(msg.sender);
+
+        if (validatorCount >= minValidatorCount) {
+            coreLifetimes[_core] = CoreLifetime.genesis;
+        }
     }
 
     /**
@@ -625,8 +640,8 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
         );
 
         require(
-            isCore(_core),
-            "There is no core for the specified metachain id."
+            isCoreRunning(_core),
+            "Core lifetime status must be genesis or active."
         );
 
         CoreI(_core).logout(msg.sender);
@@ -737,17 +752,18 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
     /* Internal functions */
 
     /**
-     * @notice Check if the core address is active.
+     * @notice Check if the core lifetime state is genesis or active.
      * @param _core Core contract address.
      * Returns true if the specified address is a core.
      */
-    function isCore(address _core)
+    function isCoreRunning(address _core)
         internal
         view
         returns (bool)
     {
-        CoreStatus status = coreStatuses[_core];
-        return status >= CoreStatus.creation;
+        CoreLifetime lifeTimeStatus = coreLifetimes[_core];
+        return lifeTimeStatus == CoreLifetime.genesis ||
+            lifeTimeStatus == CoreLifetime.active;
     }
 
     function getChainId()
@@ -985,6 +1001,7 @@ contract Consensus is MasterCopyNonUpgradable, MosaicVersion, CoreStatusEnum, Co
         core_ = axiom.newCore(
             coreSetupData
         );
+        coreLifetimes[core_] = CoreLifetime.creation;
     }
 
     /**
