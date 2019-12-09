@@ -15,7 +15,6 @@
 'use strict';
 
 const Utils = require('../test_lib/utils.js');
-const consensusUtil = require('./utils.js');
 const CoreStatusUtils = require('../test_lib/core_status_utils');
 
 const Consensus = artifacts.require('ConsensusTest');
@@ -26,11 +25,11 @@ contract('Consensus::logout', (accounts) => {
   const accountProvider = new Utils.AccountProvider(accounts);
 
   let contracts = {};
-  let chainId;
+  let metachainId;
   let validator;
 
   beforeEach(async () => {
-    chainId = '0x0000000000000000000000000000000000000222';
+    metachainId = Utils.getRandomHash();
     validator = accountProvider.get();
 
     contracts = {
@@ -44,30 +43,30 @@ contract('Consensus::logout', (accounts) => {
       contracts.core.address,
       CoreStatusUtils.CoreStatus.opened,
     );
-    await contracts.consensus.setAssignment(chainId, contracts.core.address);
+    await contracts.consensus.setAssignment(metachainId, contracts.core.address);
   });
 
   contract('Negative Tests', async () => {
-    it('should fail when chain id is 0', async () => {
-      chainId = '0x0000000000000000000000000000000000000000';
+    it('should fail when metachain id is 0', async () => {
+      metachainId = '0x0000000000000000000000000000000000000000';
 
       await Utils.expectRevert(
-        contracts.consensus.logout(chainId, contracts.core.address, { from: validator }),
-        'Chain id is 0.',
+        contracts.consensus.logout(metachainId, contracts.core.address, { from: validator }),
+        'Metachain id is 0.',
       );
     });
 
     it('should fail when core address is 0', async () => {
       await Utils.expectRevert(
-        contracts.consensus.logout(chainId, Utils.NULL_ADDRESS, { from: validator }),
+        contracts.consensus.logout(metachainId, Utils.NULL_ADDRESS, { from: validator }),
         'Core address is 0.',
       );
     });
 
     it('should fail when core is not assigned for the specified chain id', async () => {
       await Utils.expectRevert(
-        contracts.consensus.logout(chainId, accountProvider.get(), { from: validator }),
-        'Core is not assigned for the specified chain id.',
+        contracts.consensus.logout(metachainId, accountProvider.get(), { from: validator }),
+        'Core is not assigned for the specified metachain id.',
       );
     });
 
@@ -77,7 +76,7 @@ contract('Consensus::logout', (accounts) => {
         CoreStatusUtils.CoreStatus.undefined,
       );
       await Utils.expectRevert(
-        contracts.consensus.logout(chainId, contracts.core.address, { from: validator }),
+        contracts.consensus.logout(metachainId, contracts.core.address, { from: validator }),
         'There is no core for the specified chain id.',
       );
     });
@@ -88,7 +87,7 @@ contract('Consensus::logout', (accounts) => {
         CoreStatusUtils.CoreStatus.halted,
       );
       await Utils.expectRevert(
-        contracts.consensus.logout(chainId, contracts.core.address, { from: validator }),
+        contracts.consensus.logout(metachainId, contracts.core.address, { from: validator }),
         'There is no core for the specified chain id.',
       );
     });
@@ -99,7 +98,7 @@ contract('Consensus::logout', (accounts) => {
         CoreStatusUtils.CoreStatus.corrupted,
       );
       await Utils.expectRevert(
-        contracts.consensus.logout(chainId, contracts.core.address, { from: validator }),
+        contracts.consensus.logout(metachainId, contracts.core.address, { from: validator }),
         'There is no core for the specified chain id.',
       );
     });
@@ -111,7 +110,7 @@ contract('Consensus::logout', (accounts) => {
         contracts.core.address,
         CoreStatusUtils.CoreStatus.creation,
       );
-      await contracts.consensus.logout(chainId, contracts.core.address, { from: validator });
+      await contracts.consensus.logout(metachainId, contracts.core.address, { from: validator });
     });
 
     it('should pass when core status is opened', async () => {
@@ -119,7 +118,7 @@ contract('Consensus::logout', (accounts) => {
         contracts.core.address,
         CoreStatusUtils.CoreStatus.opened,
       );
-      await contracts.consensus.logout(chainId, contracts.core.address, { from: validator });
+      await contracts.consensus.logout(metachainId, contracts.core.address, { from: validator });
     });
 
     it('should pass when core status is precommitted', async () => {
@@ -127,11 +126,11 @@ contract('Consensus::logout', (accounts) => {
         contracts.core.address,
         CoreStatusUtils.CoreStatus.precommitted,
       );
-      await contracts.consensus.logout(chainId, contracts.core.address, { from: validator });
+      await contracts.consensus.logout(metachainId, contracts.core.address, { from: validator });
     });
 
     it('should called logout function of core contract', async () => {
-      await contracts.consensus.logout(chainId, contracts.core.address, { from: validator });
+      await contracts.consensus.logout(metachainId, contracts.core.address, { from: validator });
       const spyValidator = await contracts.core.spyValidator.call();
       assert.strictEqual(
         spyValidator,
@@ -141,7 +140,7 @@ contract('Consensus::logout', (accounts) => {
     });
 
     it('should called logout function of reputation contract', async () => {
-      await contracts.consensus.logout(chainId, contracts.core.address, { from: validator });
+      await contracts.consensus.logout(metachainId, contracts.core.address, { from: validator });
       const spyValidator = await contracts.reputation.validator.call();
       assert.strictEqual(
         spyValidator,

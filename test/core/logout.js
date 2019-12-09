@@ -47,7 +47,7 @@ contract('Core::logout', async (accounts) => {
 
   beforeEach(async () => {
     config.consensusCoreArgs = {
-      chainId: accountProvider.get(),
+      metachainId: Utils.getRandomHash(),
       epochLength: new BN(100),
       minValidatorCount: new BN(5),
       validatorJoinLimit: new BN(20),
@@ -61,7 +61,7 @@ contract('Core::logout', async (accounts) => {
     };
 
     config.consensus = await CoreUtils.createConsensusCore(
-      config.consensusCoreArgs.chainId,
+      config.consensusCoreArgs.metachainId,
       config.consensusCoreArgs.epochLength,
       config.consensusCoreArgs.minValidatorCount,
       config.consensusCoreArgs.validatorJoinLimit,

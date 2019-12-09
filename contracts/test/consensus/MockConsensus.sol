@@ -36,7 +36,7 @@ contract MockConsensus is ConsensusI, ReputationI {
     /* Special Functions */
 
     constructor(
-        bytes20 _chainId,
+        bytes32 _metachainId,
         uint256 _epochLength,
         uint256 _minValidatorCount,
         uint256 _validatorJoinLimit,
@@ -55,7 +55,7 @@ contract MockConsensus is ConsensusI, ReputationI {
         mockCore = new MockCore();
         mockCore.setup(
 			ConsensusI(address(this)),
-            _chainId,
+            _metachainId,
             _epochLength,
             minValidatorCount,
             validatorJoinLimit,
