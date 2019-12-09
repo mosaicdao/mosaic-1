@@ -47,7 +47,11 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
         )
     );
 
-    /** The callprefix of the Anchor::setup function. */
+    /** The callprefix of the Anchor::setup function.
+     *
+     *  uint256 - maxStateRoots Max number of state root stored in anchor contract.
+     *  address - address of consensus contract.
+     */
     bytes4 public constant ANCHOR_SETUP_CALLPREFIX = bytes4(
         keccak256(
             "setup(uint256,address)"
