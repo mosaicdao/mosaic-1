@@ -101,7 +101,6 @@ contract('Core::proposeMetablock', async (accounts) => {
       config.gasTarget,
       config.dynasty,
       config.accumulatedGas,
-      config.source,
       config.sourceBlockHeight,
       {
         from: config.deployer,
@@ -216,17 +215,6 @@ contract('Core::proposeMetablock', async (accounts) => {
           proposal,
         ),
         'Source block height must be a checkpoint.',
-      );
-    });
-
-    it('should revert if a source block hash matches with the committed one', async () => {
-      proposal.source = config.source;
-      await Utils.expectRevert(
-        proposeMetaBlock(
-          config.core,
-          proposal,
-        ),
-        'Source blockhash cannot equal sealed source blockhash.',
       );
     });
 

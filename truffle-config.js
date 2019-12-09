@@ -20,6 +20,6 @@ module.exports = {
     },
   },
   mocha: {
-    enableTimeouts: false
+    enableTimeouts: false,
   },
 };

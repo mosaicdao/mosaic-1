@@ -28,8 +28,6 @@ contract SpyCommittee is MasterCopyNonUpgradable, CommitteeI{
 
     bool public isEnterCommitteeFunctionCalled;
 
-    bool public enterCommitteeResult;
-
     address public validator;
     address public furtherMember;
 
@@ -38,25 +36,16 @@ contract SpyCommittee is MasterCopyNonUpgradable, CommitteeI{
     {
         isEnterCommitteeFunctionCalled = false;
     }
-    function setEnterCommitteeResult(
-        bool _result
-    )
-        external
-    {
-        enterCommitteeResult = _result;
-    }
 
     function enterCommittee(
         address _validator,
         address _furtherMember
     )
         external
-        returns (bool)
     {
         validator = _validator;
         furtherMember = _furtherMember;
         isEnterCommitteeFunctionCalled = true;
-        return enterCommitteeResult;
     }
 
     function mockCommitteeDecision(bytes32 _committeeDecision) external {

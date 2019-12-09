@@ -45,7 +45,6 @@ contract MockConsensus is ConsensusI, ReputationI {
         uint256 _gasTarget,
         uint256 _dynasty,
         uint256 _accumulatedGas,
-        bytes32 _source,
         uint256 _sourceBlockHeight
     )
         public
@@ -66,7 +65,6 @@ contract MockConsensus is ConsensusI, ReputationI {
             _gasTarget,
             _dynasty,
             _accumulatedGas,
-            _source,
             _sourceBlockHeight
         );
     }
@@ -95,18 +93,30 @@ contract MockConsensus is ConsensusI, ReputationI {
         mockCore.logout(_validator);
     }
 
+    function stake(address _validator, address _withdrawalAddress)
+        external
+    {
+        // do nothing for now
+    }
+
+    function deregister(address _validator)
+        external
+    {
+        // do nothing for now
+    }
+
     function removeVote(address _validator)
         external
     {
         mockCore.removeVote(_validator);
     }
 
-    function isActive(address _validator)
-        external
+    function isSlashed(address _validator)
+        public
         view
         returns (bool)
     {
-        return (rep[_validator] > 0);
+        return (rep[_validator] == 0);
     }
 
     function getReputation(address _validator)
@@ -140,16 +150,21 @@ contract MockConsensus is ConsensusI, ReputationI {
         joinLimit_ = validatorJoinLimit;
     }
 
-    function registerPrecommit(bytes32 _precommitment)
+    function precommitMetablock(bytes32 _precommit)
         external
     {
-        precommitts[msg.sender] = _precommitment;
+        precommitts[msg.sender] = _precommit;
+    }
+
+    function registerCommitteeDecision(bytes32)
+        external
+    {
+        // do nothing for now
     }
 
     function newMetaChain(
         address _anchor,
         uint256 _epochLength,
-        bytes32 _source,
         uint256 _sourceBlockHeight
     )
         external
@@ -167,27 +182,17 @@ contract MockConsensus is ConsensusI, ReputationI {
     }
 
     function openMetablock(
-        bytes32 _committedOriginObservation,
         uint256 _committedDynasty,
         uint256 _committedAccumulatedGas,
-        bytes32 _committedCommitteeLock,
-        bytes32 _committedSource,
-        bytes32 _committedTarget,
         uint256 _committedSourceBlockHeight,
-        uint256 _committedTargetBlockHeight,
         uint256 _deltaGasTarget
     )
         external
     {
         mockCore.openMetablock(
-            _committedOriginObservation,
             _committedDynasty,
             _committedAccumulatedGas,
-            _committedCommitteeLock,
-            _committedSource,
-            _committedTarget,
             _committedSourceBlockHeight,
-            _committedTargetBlockHeight,
             _deltaGasTarget
         );
     }

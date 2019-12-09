@@ -17,8 +17,7 @@ interface CommitteeI {
         address _validator,
         address _furtherMember
     )
-        external
-        returns (bool);
+        external;
 
     /**
      * Committee decision once the quorum is reached.
