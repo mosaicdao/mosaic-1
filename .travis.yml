@@ -30,8 +30,11 @@ before_script:
   - ./tools/run_ganache_cli.sh </dev/null 1>/dev/null 2>&1 &
 script:
   - npm run compile
+  - npm run test test/axiom/*
+  - npm run test test/committee/*
+  - npm run test test/consensus/*
+  - npm run test test/core/*
   - npm run test test/reputation/*
-  - npm run test
   - npm run test:integration
 after_script:
   - kill $(ps aux | grep 'ganache-cli' | awk '{print $2}')
