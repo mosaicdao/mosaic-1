@@ -40,7 +40,6 @@ async function createConsensusCore(
   gasTarget,
   dynasty,
   accumulatedGas,
-  source,
   sourceBlockHeight,
   txOptions = {},
 ) {
@@ -54,7 +53,6 @@ async function createConsensusCore(
     gasTarget,
     dynasty,
     accumulatedGas,
-    source,
     sourceBlockHeight,
     txOptions,
   );
@@ -74,7 +72,6 @@ async function createCore(
   gasTarget,
   dynasty,
   accumulatedGas,
-  source,
   sourceBlockHeight,
   txOptions = {},
 ) {
@@ -91,7 +88,6 @@ async function createCore(
     gasTarget,
     dynasty,
     accumulatedGas,
-    source,
     sourceBlockHeight,
     txOptions,
   );

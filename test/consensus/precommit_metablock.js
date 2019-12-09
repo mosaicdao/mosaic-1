@@ -20,7 +20,7 @@ const consensusUtil = require('./utils.js');
 
 const Consensus = artifacts.require('ConsensusTest');
 
-contract('Consensus::registerPrecommit', (accounts) => {
+contract('Consensus::precommitMetablock', (accounts) => {
   let consensus;
   const inputParams = {};
   const accountProvider = new Utils.AccountProvider(accounts);
@@ -38,7 +38,7 @@ contract('Consensus::registerPrecommit', (accounts) => {
   contract('Negative Tests', async () => {
     it('should fail when caller is not core address', async () => {
       await Utils.expectRevert(
-        consensus.registerPrecommit(
+        consensus.precommitMetablock(
           inputParams.proposal1,
           {
             from: inputParams.coreAddress1,
@@ -53,14 +53,14 @@ contract('Consensus::registerPrecommit', (accounts) => {
         inputParams.coreAddress1,
         consensusUtil.CoreLifetime.genesis,
       );
-      await consensus.registerPrecommit(
+      await consensus.precommitMetablock(
         inputParams.proposal1,
         {
           from: inputParams.coreAddress1,
         },
       );
       await Utils.expectRevert(
-        consensus.registerPrecommit(
+        consensus.precommitMetablock(
           inputParams.proposal2,
           {
             from: inputParams.coreAddress1,
@@ -78,7 +78,7 @@ contract('Consensus::registerPrecommit', (accounts) => {
         consensusUtil.CoreLifetime.genesis,
       );
 
-      const tx = await consensus.registerPrecommit(
+      const tx = await consensus.precommitMetablock(
         inputParams.proposal1,
         {
           from: inputParams.coreAddress1,
@@ -124,7 +124,7 @@ contract('Consensus::registerPrecommit', (accounts) => {
         + `expected value ${0}`,
       );
 
-      const tx = await consensus.registerPrecommit(
+      const tx = await consensus.precommitMetablock(
         inputParams.proposal1,
         {
           from: inputParams.coreAddress1,

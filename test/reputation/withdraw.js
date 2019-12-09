@@ -74,7 +74,7 @@ contract('Reputation::withdraw', (accounts) => {
       { from: validator.address },
     );
 
-    await reputation.join(
+    await reputation.stake(
       validator.address,
       validator.withdrawalAddress,
       { from: constructorArgs.consensus },
@@ -82,7 +82,7 @@ contract('Reputation::withdraw', (accounts) => {
   });
 
   it('should be able to withdraw after cool down period', async () => {
-    await reputation.logout(
+    await reputation.deregister(
       validator.address,
       { from: constructorArgs.consensus },
     );
@@ -113,7 +113,7 @@ contract('Reputation::withdraw', (accounts) => {
     await mOST.approve(reputation.address, validatorEarnings, { from: validator.address });
     await reputation.depositEarnings(validator.address, validatorEarnings);
 
-    await reputation.logout(
+    await reputation.deregister(
       validator.address,
       { from: constructorArgs.consensus },
     );
@@ -150,7 +150,7 @@ contract('Reputation::withdraw', (accounts) => {
       validator.address,
       { from: constructorArgs.consensus },
     ),
-    'Validator has not logged out.');
+    'Validator has not deregistered.');
   });
 
   it('should fail to withdraw if validator is not logged out', async () => {
@@ -158,11 +158,11 @@ contract('Reputation::withdraw', (accounts) => {
       validator.address,
       { from: constructorArgs.consensus },
     ),
-    'Validator has not logged out.');
+    'Validator has not deregistered.');
   });
 
   it('should fail to withdraw if validator is slashed', async () => {
-    await reputation.logout(
+    await reputation.deregister(
       validator.address,
       { from: constructorArgs.consensus },
     );
@@ -176,11 +176,11 @@ contract('Reputation::withdraw', (accounts) => {
       validator.address,
       { from: constructorArgs.consensus },
     ),
-    'Validator has not logged out.');
+    'Validator has not deregistered.');
   });
 
   it('should fail to withdraw if cool down period has not elapsed', async () => {
-    await reputation.logout(
+    await reputation.deregister(
       validator.address,
       { from: constructorArgs.consensus },
     );
@@ -193,7 +193,7 @@ contract('Reputation::withdraw', (accounts) => {
   });
 
   it('should fail if validator is already withdrawn', async () => {
-    await reputation.logout(
+    await reputation.deregister(
       validator.address,
       { from: constructorArgs.consensus },
     );

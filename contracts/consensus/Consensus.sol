@@ -54,7 +54,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
     /** The callprefix of the Core::setup function. */
     bytes4 public constant CORE_SETUP_CALLPREFIX = bytes4(
         keccak256(
-            "setup(address,bytes20,uint256,uint256,uint256,address,uint256,bytes32,uint256,uint256,uint256,bytes32,uint256)"
+            "setup(address,bytes20,uint256,uint256,uint256,address,uint256,bytes32,uint256,uint256,uint256,uint256)"
         )
     );
 
@@ -101,16 +101,19 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
     /** Assigned core for a given chainId */
     mapping(bytes20 /* chainId */ => address /* core */) public assignments;
 
-    /** Precommitted proposals from core for a metablockchain */
+    /** Precommitts from cores for metablockchains. */
     mapping(address /* core */ => Precommit) public precommits;
 
-    /** Proposals under consideration of a committee */
-    mapping(bytes32 /* proposal */ => CommitteeI /* committee */) public proposals;
+    /** Precommits under consideration of committees. */
+    mapping(bytes32 /* precommit */ => CommitteeI /* committee */) public proposals;
+
+    /** Precommits under consideration of committees. */
+    mapping(address /* committee */ => bytes32 /* commit */) public decisions;
 
     /** Linked-list of committees */
     mapping(address => address) public committees;
 
-// NOTE: consider either storing a linked list; or getting rid of it
+    // NOTE: consider either storing a linked list; or getting rid of it
     /** Assigned anchor for a given chainId */
     mapping(bytes20 => address) public anchors;
 
@@ -122,16 +125,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
 
 
     /* Modifiers */
-
-    modifier onlyValidator()
-    {
-        require(
-            reputation.isActive(msg.sender),
-            "Validator must be active in the reputation contract."
-        );
-
-        _;
-    }
 
     modifier onlyCore()
     {
@@ -148,6 +141,16 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
         require(
             address(axiom) == msg.sender,
             "Caller must be axiom address."
+        );
+
+        _;
+    }
+
+    modifier onlyCommittee()
+    {
+        require(
+            committees[msg.sender] != address(0),
+            "Caller must be a committee address."
         );
 
         _;
@@ -238,25 +241,23 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
     }
 
     /**
-     * @notice Register a proposal for commit. This can be called only by the valid
-     *         core address.
+     * @notice Precommits a metablock.
      *
      * @dev Function requires:
-     *          - msg.sender should be valid core address in creation state.
-     *          - proposal should not be null.
-     *          - precommit of same core should not exist.
-     *
-     * @param _proposal Precommit proposal.
+     *          - only an active core can call
+     *          - precommit is not 0
+     *          - there is no precommit under a consideration of a committees
+     *            by the core
      */
-    function registerPrecommit(bytes32 _proposal)
+    function precommitMetablock(bytes32 _proposal)
         external
         onlyCore
     {
         require(
             _proposal != bytes32(0),
-            "Proposal must not be null."
+            "Proposal is 0."
         );
-        // TODO: we can additional
+
         Precommit storage precommit = precommits[msg.sender];
         require(
             precommit.proposal == bytes32(0),
@@ -269,21 +270,20 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
         }
 
         precommit.proposal = _proposal;
-        precommit.committeeFormationBlockHeight = block.number.add(uint256(COMMITTEE_FORMATION_DELAY));
+        precommit.committeeFormationBlockHeight = block.number.add(
+            uint256(COMMITTEE_FORMATION_DELAY)
+        );
     }
 
     /**
-     * @notice Form a new committee to validate the precommit proposal.
-     *
-     * @dev Function assumes block number is greater than 256 plus committee
-     *      formation length.
+     * @notice Forms a new committee to verify the precommit proposal.
      *
      * @dev Function requires:
-     *          - precommitment of the core to a proposal doesn't exist.
-     *          - block height must be higher than set committee formation
-     *            height.
-     *          - committee formation blocksegment length must be in 256 most
-     *            recent blocks.
+     *          - core has precommitted
+     *          - the current block height is bigger than the precommitt's
+     *            committee formation height
+     *          - committee formation blocksegment must be in the most
+     *            recent 256 blocks.
      *
      * @param _core Core contract address.
      */
@@ -298,7 +298,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
         Precommit storage precommit = precommits[_core];
         require(
             precommit.proposal != bytes32(0),
-            "There does not exist a precommitment of the core to a proposal."
+            "Core has not precommitted."
         );
 
         require(
@@ -307,15 +307,15 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
         );
 
         require(
-            block.number
-                .sub(uint256(COMMITTEE_FORMATION_LENGTH))
-                .sub(uint256(256)) < precommit.committeeFormationBlockHeight,
-            "Committee formation blocksegment length must be in 256 most recent blocks."
+            block.number <= precommit.committeeFormationBlockHeight
+                .sub(COMMITTEE_FORMATION_LENGTH)
+                .add(uint256(256)),
+            "Committee formation blocksegment is not in most recent 256 blocks."
         );
 
         uint256 segmentHeight = precommit.committeeFormationBlockHeight;
         bytes32[] memory seedGenerator = new bytes32[](uint256(COMMITTEE_FORMATION_LENGTH));
-        for (uint8 i = 0; i < COMMITTEE_FORMATION_LENGTH; i++) {
+        for (uint256 i = 0; i < COMMITTEE_FORMATION_LENGTH; i = i.add(1)) {
             seedGenerator[i] = blockhash(segmentHeight);
             segmentHeight = segmentHeight.sub(1);
         }
@@ -328,16 +328,17 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
     }
 
     /**
-     * @notice Enter a validator into the committee.
+     * @notice Enters a validator into a committee.
      *
      * @dev Function requires:
-     *          - committee address should be present.
-     *          - validator should be active.
-     *          - validator successfully enter a committee.
+     *          - the committee exists
+     *          - the validator is active
+     * 			- the validator is not slashed
      *
      * @param _committeeAddress Committee address that validator wants to enter.
      * @param _validator Validator address to enter.
-     * @param _furtherMember Validator address that is further member compared to `_validator` address
+     * @param _furtherMember Validator address that is further member
+     *                       compared to the `_validator` address
      */
     function enterCommittee(
         address _committeeAddress,
@@ -352,32 +353,52 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
         );
 
         require(
-            reputation.isActive(_validator),
-            "Validator is not active."
+            !reputation.isSlashed(_validator),
+            "Validator is slashed."
         );
 
         CommitteeI committee = CommitteeI(_committeeAddress);
-        require(
-            committee.enterCommittee(_validator, _furtherMember),
-            "Failed to enter committee."
-        );
+        committee.enterCommittee(_validator, _furtherMember);
     }
 
     /**
-     * @notice Commit a proposal. This verifies the committee lock of the
-     *         proposal, anchors the state root and opens a new matablock.
+     * @notice Registers committee decision.
      *
      * @dev Function requires:
-     *          - chain id should not be 0.
-     *          - source block hash should not be 0.
-     *          - target block hash should not be 0.
-     *          - target block height should be greater than source block
-     *            height.
-     *          - block header should match with vote message source.
-     *          - origin observation should not be 0.
-     *          - core for the specified chain id should exist.
-     *          - precommit for the specified core doesn't exist.
-     *          - provided kernel hash should be equal to open kernel hash.
+     *          - only committee can call
+     *          - committee has not yet registered its decision
+     *
+     * @param _committeeDecision Decision of a caller committee.
+     */
+    function registerCommitteeDecision(
+        bytes32 _committeeDecision
+    )
+        external
+        onlyCommittee
+    {
+        require(
+            decisions[msg.sender] == bytes32(0),
+            "Committee's decision has been registered."
+        );
+
+        decisions[msg.sender] = _committeeDecision;
+    }
+
+    /**
+     * @notice Commits a metablock.
+     *
+     * @dev Function requires:
+     *          - block header should match with source blockhash
+     *          - chain id should not be 0
+     *          - a core for the specified chain id should exist
+     *          - precommit for the corresponding core should exist
+     *          - committee should have been formed for the precommit
+     *          - committee decision should match with the specified
+     *            committee lock
+     *          - committee decision should match with the core's precommit
+     *          - the given metablock parameters should match with the
+     *            core's precommit.
+     *          - anchor contract for the given chain id should exist
      *
      * @param _chainId Chain id.
      * @param _rlpBlockHeader RLP ecoded block header.
@@ -394,7 +415,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
      * @param _sourceBlockHeight Source block height.
      * @param _targetBlockHeight Target block height.
      */
-    function commit(
+    function commitMetablock(
         bytes20 _chainId,
         bytes calldata _rlpBlockHeader,
         bytes32 _kernelHash,
@@ -410,78 +431,20 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
         external
     {
         require(
-            _chainId != bytes20(0),
-            "Chain id is 0."
-        );
-
-        require(
-            _source != bytes32(0),
-            "Source is 0."
-        );
-
-        require(
-            _target != bytes32(0),
-            "Target is 0."
-        );
-
-        require(
-            _targetBlockHeight > _sourceBlockHeight,
-            "Target block height is less than or equal to source block height."
-        );
-
-        require(
             _source == keccak256(_rlpBlockHeader),
             "Block header does not match with vote message source."
         );
 
-        require(
-            _originObservation != bytes32(0),
-            "Origin observation is 0."
-        );
-
-        // Make sure that core is valid for given chain id.
+        // Makes sure that assigned core is active.
         address core = assignments[_chainId];
         require(
             coreLifetime[core] == CoreLifetime.active,
             "Core lifetime status must be active"
         );
 
-        /*
-         * @dev: Please check the following carefully.
-         * Here we assume that the given input parameters are correct. The
-         * actual validation of input parameter will happen in Core::openMetablock.
-         * Here we will make sure that precommit in consensus and core contract
-         * are same. Core::openMetablock will verify that commit formed by input
-         * params is equal to precommit.
-         */
-        bytes32 precommitProposal = precommits[core].proposal;
-
-        // Make sure that precommitProposal exists.
-        require(
-            precommitProposal != bytes32(0),
-            "There is no precommit for the specified core."
-        );
-
-        // Delete the precommit. This will avoid any re-entrancy with same params.
-        delete precommits[core];
-
-        // Verify kernel hash.
-        require(
-            _kernelHash == CoreI(core).openKernelHash(),
-            "Provided kernel hash must be equal to open kernel hash."
-        );
-
-        // Verify commit proposal.
-        verifyCommitProposal(core, precommitProposal);
-
-        // Verify committee lock.
-        verifyCommitteeLock(precommitProposal, _committeeLock);
-
-        // Anchor state root.
-        anchorStateRoot(_chainId, _rlpBlockHeader);
-
-        // Open a new metablock.
-        CoreI(core).openMetablock(
+        assertCommit(
+            core,
+            _kernelHash,
             _originObservation,
             _dynasty,
             _accumulatedGas,
@@ -489,7 +452,17 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
             _source,
             _target,
             _sourceBlockHeight,
-            _targetBlockHeight,
+            _targetBlockHeight
+        );
+
+        // Anchor state root.
+        anchorStateRoot(_chainId, _rlpBlockHeader);
+
+        // Open a new metablock.
+        CoreI(core).openMetablock(
+            _dynasty,
+            _accumulatedGas,
+            _sourceBlockHeight,
             gasTargetDelta
         );
     }
@@ -520,8 +493,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
             "Core lifetime status must be genesis or active."
         );
 
-        // Join in reputation contract.
-        reputation.join(msg.sender, _withdrawalAddress);
+        // Stake in reputation contract.
+        reputation.stake(msg.sender, _withdrawalAddress);
 
         // Join in core contract.
         CoreI(_core).join(msg.sender);
@@ -555,8 +528,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
             "Core lifetime status must be creation."
         );
 
-        // Join in reputation contract.
-        reputation.join(msg.sender, _withdrawalAddress);
+        // Stake in reputation contract.
+        reputation.stake(msg.sender, _withdrawalAddress);
 
         // Join in core contract.
         uint256 coreValidatorCount = CoreI(_core).joinDuringCreation(msg.sender);
@@ -605,7 +578,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
         );
 
         CoreI(_core).logout(msg.sender);
-        reputation.logout(msg.sender);
+        reputation.deregister(msg.sender);
     }
 
     /**
@@ -618,13 +591,11 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
      *
      * @param _anchor anchor of the new meta-chain.
      * @param _epochLength Epoch length for new meta-chain.
-     * @param _rootBlockHash root block hash.
      * @param _rootBlockHeight root block height.
      */
     function newMetaChain(
         address _anchor,
         uint256 _epochLength,
-        bytes32 _rootBlockHash,
         uint256 _rootBlockHeight
     )
         external
@@ -645,7 +616,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
             gasTargetDelta, // gas target
             uint256(0), // dynasty
             uint256(0), // accumulated gas
-            _rootBlockHash,
             _rootBlockHeight
         );
 
@@ -712,6 +682,61 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
 
     /* Private functions */
 
+    function assertCommit(
+        address _core,
+        bytes32 _kernelHash,
+        bytes32 _originObservation,
+        uint256 _dynasty,
+        uint256 _accumulatedGas,
+        bytes32 _committeeLock,
+        bytes32 _source,
+        bytes32 _target,
+        uint256 _sourceBlockHeight,
+        uint256 _targetBlockHeight
+    )
+        private
+    {
+        bytes32 precommit = precommits[_core].proposal;
+
+        require(
+            precommit != bytes32(0),
+            "Core has not precommitted."
+        );
+
+        // Delete the precommit. This will avoid any re-entrancy with same params.
+        delete precommits[_core];
+
+        address committee = address(proposals[precommit]);
+        require(
+            committee != address(0),
+            "Committee has not been formed for precommit."
+        );
+
+        bytes32 decision = decisions[committee];
+
+        require(
+            _committeeLock == keccak256(abi.encode(decision)),
+            "Committee decision does not match with committee lock."
+        );
+
+        bytes32 metablockHash = CoreI(_core).hashMetablock(
+            _kernelHash,
+            _originObservation,
+            _dynasty,
+            _accumulatedGas,
+            _committeeLock,
+            _source,
+            _target,
+            _sourceBlockHeight,
+            _targetBlockHeight
+        );
+
+        require(
+            metablockHash == precommit,
+            "Input parameters do not hash to the core's precommit."
+        );
+    }
+
     /**
      * @notice Anchor a new state root for specified chain id.
 
@@ -743,68 +768,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
     }
 
     /**
-     * @notice Verify if the given commit proposal is same as that precommit in
-     *         core contract.
-     *
-     * @dev Function requires:
-     *          - proposal should be precommitted.
-     *
-     * @param _core Core contract address.
-     * @param _commitProposal Commit proposal.
-     */
-    function verifyCommitProposal(
-        address _core,
-        bytes32 _commitProposal
-    )
-        private
-    {
-        bytes32 precommitProposal = CoreI(_core).precommit();
-        require(
-            precommitProposal == _commitProposal,
-            "Proposal is not precommitted."
-        );
-    }
-
-    /**
-     * @notice Verify if the committee lock given in the commit proposal
-     *         matches the committee decision.
-     *
-     * @dev Function requires:
-     *          - committee should match to the specified vote message.
-     *          - committee proposal is decided.
-     *          - committee decision should match with committee lock.
-     *
-     * @param _commitProposal Proposal to commit.
-     * @param _committeeLock Committee lock specified in the proposal.
-     */
-    function verifyCommitteeLock(
-        bytes32 _commitProposal,
-        bytes32 _committeeLock
-    )
-        private
-        view
-    {
-        CommitteeI committee = proposals[_commitProposal];
-
-        require(
-            committee != CommitteeI(0),
-            "There is no committee matching to the specified vote message."
-        );
-
-        require(
-            committee.committeeDecision() != bytes32(0),
-            "Committee has not decided on the proposal."
-        );
-
-        require(
-            _committeeLock == keccak256(
-                abi.encode(committee.committeeDecision())
-            ),
-            "Committee decision does not match with committee lock."
-        );
-    }
-
-    /**
      * @notice Deploys a new core contract.
      * @param _chainId Chain id for which the core should be deployed.
      * @param _epochLength Epoch length for new core.
@@ -813,7 +776,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
      * @param _gasTarget Gas target to close the meta block.
      * @param _dynasty Committed dynasty number.
      * @param _accumulatedGas Accumulated gas.
-     * @param _source Source block hash
      * @param _sourceBlockHeight Source block height.
      * returns Deployed core contract address.
      */
@@ -825,7 +787,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
         uint256 _gasTarget,
         uint256 _dynasty,
         uint256 _accumulatedGas,
-        bytes32 _source,
         uint256 _sourceBlockHeight
     )
         private
@@ -844,7 +805,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, ConsensusI {
             _gasTarget,
             _dynasty,
             _accumulatedGas,
-            _source,
             _sourceBlockHeight
         );
 

@@ -45,14 +45,14 @@ contract SpyReputation is MasterCopyNonUpgradable, ReputationI {
         activeValidators[_validator] = _active;
     }
 
-    function isActive(
+    function isSlashed(
         address _validator
     )
-        external
+        public
         view
         returns (bool)
     {
-        return activeValidators[_validator];
+        return !activeValidators[_validator];
     }
 
     function setup(
@@ -81,7 +81,7 @@ contract SpyReputation is MasterCopyNonUpgradable, ReputationI {
         return reservedStorageSlotForProxy;
     }
 
-    function join(
+    function stake(
         address _validator,
         address _withdrawalAddress
     )
@@ -91,7 +91,7 @@ contract SpyReputation is MasterCopyNonUpgradable, ReputationI {
         spyWithdrawalAddress = _withdrawalAddress;
     }
 
-    function logout(address _validator) external {
+    function deregister(address _validator) external {
         validator = _validator;
     }
 

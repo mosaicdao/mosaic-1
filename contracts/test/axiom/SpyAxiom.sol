@@ -46,7 +46,6 @@ contract SpyAxiom is AxiomI{
         Consensus _consensus,
         bytes20 _chainId,
         uint256 _epochLength,
-        bytes32 _source,
         uint256 _sourceBlockHeight
     )
         external
@@ -55,7 +54,6 @@ contract SpyAxiom is AxiomI{
             // TODO: align unit tests
             address(_chainId),
             _epochLength,
-            _source,
             _sourceBlockHeight
         );
     }

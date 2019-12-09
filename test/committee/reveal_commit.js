@@ -23,6 +23,8 @@ const web3 = require('../test_lib/web3.js');
 
 const CommitteeUtils = require('./utils.js');
 
+const CommitteeMockConsensus = artifacts.require('CommitteeMockConsensus');
+
 let config = {};
 
 function createCommitteeMember(account, position) {
@@ -77,7 +79,6 @@ async function checkCommitteeStorage(
     },
   );
 
-
   // checking positionCounts
 
   assert.isOk(
@@ -102,7 +103,6 @@ async function checkCommitteeStorage(
     },
   );
 
-
   // checking positionsTaken
 
   assert.isOk(
@@ -126,7 +126,6 @@ async function checkCommitteeStorage(
     },
   );
 
-
   // checking committeeDecision
 
   const committeeDecision = await committee.committeeDecision.call();
@@ -139,7 +138,6 @@ async function checkCommitteeStorage(
     committeeDecision,
     expected.committeeDecision,
   );
-
 
   // checking totalPositionsCount
 
@@ -164,14 +162,14 @@ contract('Committee::revealCommit', async (accounts) => {
         dislocation: web3.utils.sha3('dislocation'),
         positionA: web3.utils.sha3('positionA'),
         positionB: web3.utils.sha3('positionB'),
-        consensus: accountProvider.get(),
+        consensus: await CommitteeMockConsensus.new(),
       },
     };
 
     config.committee.proposal = config.committee.positionA;
 
     config.committee.contract = await CommitteeUtils.createCommittee(
-      config.committee.consensus,
+      config.committee.consensus.address,
       config.committee.size,
       config.committee.dislocation,
       config.committee.proposal,
@@ -213,10 +211,10 @@ contract('Committee::revealCommit', async (accounts) => {
       > config.committee.quorum,
     );
 
-    await CommitteeUtils.enterMembers(
+    await CommitteeUtils.enterMembersThruConsensus(
+      config.committee.consensus,
       config.committee.contract,
       members,
-      config.committee.consensus,
     );
 
     await config.committee.contract.cooldownCommittee(
