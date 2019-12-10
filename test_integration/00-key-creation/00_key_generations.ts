@@ -20,7 +20,7 @@ import Utils from '../Utils';
 const FUNDING_AMOUNT_IN_ETH = '2';
 
 describe('Key generations', async () => {
-  it('Key Generation and funding', async () => {
+  it.skip('Key Generation and funding', async () => {
     const { web3 } = shared.origin;
 
     const accounts = await web3.eth.getAccounts();

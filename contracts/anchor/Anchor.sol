@@ -22,6 +22,7 @@ import "../consensus/ConsensusModule.sol";
 import "../lib/CircularBufferUint.sol";
 import "../lib/MerklePatriciaProof.sol";
 import "../lib/RLP.sol";
+import "../proxies/MasterCopyNonUpgradable.sol";
 
 /**
  * @title Anchor contract which implements StateRootInterface.
@@ -31,7 +32,7 @@ import "../lib/RLP.sol";
  *         roots are exchanged bidirectionally between the anchor and the
  *         co-anchor by the consensus.
  */
-contract Anchor is AnchorI, ConsensusModule, CircularBufferUint {
+contract Anchor is MasterCopyNonUpgradable, AnchorI, ConsensusModule, CircularBufferUint {
 
     /* Usings */
 
@@ -49,33 +50,24 @@ contract Anchor is AnchorI, ConsensusModule, CircularBufferUint {
     mapping (uint256 => bytes32) private stateRoots;
 
 
-    /*  Constructor */
+    /* External functions */
 
-    /**
-     * @notice Contract constructor.
-     *
-     * @param _blockHeight Block height at which _stateRoot needs to store.
-     * @param _stateRoot State root hash of given _blockHeight.
-     * @param _maxStateRoots The max number of state roots to store in the
-     *                       circular buffer.
-     * @param _consensus A consensus address.
-     */
-    constructor(
-        uint256 _blockHeight,
-        bytes32 _stateRoot,
+   /**
+    * @notice Setup function for anchor.
+    *
+    * @param _maxStateRoots The max number of state roots to store in the
+    *                       circular buffer.
+    * @param _consensus A consensus address.
+    */
+    function setup(
         uint256 _maxStateRoots,
         ConsensusI _consensus
     )
-        CircularBufferUint(_maxStateRoots)
-        public
+        external
     {
+        setupCircularBuffer(_maxStateRoots);
         setupConsensus(_consensus);
-        stateRoots[_blockHeight] = _stateRoot;
-        CircularBufferUint.store(_blockHeight);
     }
-
-
-    /* External functions */
 
     /**
      * @notice Get the state root for the given block height.
