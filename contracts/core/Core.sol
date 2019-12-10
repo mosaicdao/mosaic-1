@@ -216,6 +216,9 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
     /** Precommitment closure block height */
     uint256 public precommitClosureBlockHeight;
 
+    /** Origin chain observation blockheight. */
+    uint256 public rootOriginObservationBlockHeight;
+
 
     /* Modifiers */
 
@@ -318,11 +321,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             (_height == uint256(0) && _parent == bytes32(0))
             || (_height != uint256(0) && _parent != bytes32(0)),
             "Height and parent can be 0 only together."
-        );
-
-        require(
-            _accumulatedGas != uint256(0),
-            "Metablock's accumulated gas is 0."
         );
 
         domainSeparator = keccak256(

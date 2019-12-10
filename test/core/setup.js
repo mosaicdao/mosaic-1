@@ -133,17 +133,6 @@ contract('Core::setup', (accounts) => {
       );
     });
 
-    it('should revert as accumulated gas is 0', async () => {
-      const args = correctArgs;
-      args.accumulatedGas = 0;
-
-      await Utils.expectRevert(
-        createCore(args, config.consensus),
-        'Metablock\'s accumulated gas is 0.',
-      );
-    });
-  });
-
   contract('Positive Tests', async () => {
     it('should construct with correct arguments', async () => {
       const core = await createCore(correctArgs, config.consensus);
