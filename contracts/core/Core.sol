@@ -216,9 +216,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
     /** Precommitment closure block height */
     uint256 public precommitClosureBlockHeight;
 
-    /** Origin chain observation blockheight. */
-    uint256 public rootOriginObservationBlockHeight;
-
 
     /* Modifiers */
 
