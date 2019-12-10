@@ -19,26 +19,25 @@ interface CoreI {
 
     function openKernelHash() external returns (bytes32);
 
-    function joinDuringCreation(address _validator) external;
+    function minimumValidatorCount() external returns (uint256);
+
+    function joinDuringCreation(address _validator)
+        external
+        returns(uint256 validatorCount_, uint256 minValidatorCount_);
 
     function join(address _validator) external;
 
     function logout(address _validator) external;
 
     function openMetablock(
-        bytes32 _committedOriginObservation,
         uint256 _committedDynasty,
         uint256 _committedAccumulatedGas,
-        bytes32 _committedCommitteeLock,
-        bytes32 _committedSource,
-        bytes32 _committedTarget,
         uint256 _committedSourceBlockHeight,
-        uint256 _committedTargetBlockHeight,
         uint256 _deltaGasTarget
     )
         external;
 
-    function assertPrecommit(
+    function hashMetablock(
         bytes32 _kernelHash,
         bytes32 _originObservation,
         uint256 _dynasty,
@@ -51,6 +50,6 @@ interface CoreI {
     )
         external
         view
-        returns (bytes32 proposal_);
+        returns (bytes32 metablockHash_);
 }
 

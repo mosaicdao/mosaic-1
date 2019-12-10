@@ -1,3 +1,5 @@
+pragma solidity ^0.5.0;
+
 // Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,14 +14,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-'use strict';
+contract CoreLifetimeEnum {
 
-module.exports = {
-  ValidatorStatus: {
-    Undefined: 0,
-    Slashed: 1,
-    Staked: 2,
-    Deregistered: 3,
-    Withdrawn: 4,
-  },
-};
+    /** Core lifetime enum */
+    enum CoreLifetime {
+        undefined,
+        // When core is halted.
+        halted,
+        // When core is corrupted.
+        corrupted,
+        // When core is in creation state.
+        creation,
+        // When core is created but no precommit is done.
+        genesis,
+        // When core is running correctly and pre-committing proposals.
+        active
+    }
+}
+

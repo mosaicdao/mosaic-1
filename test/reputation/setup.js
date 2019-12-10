@@ -39,7 +39,7 @@ contract('Reputation::setup', (accounts) => {
   });
 
   it('should successfully construct reputation contract', async () => {
-    reputation.setup(
+    await reputation.setup(
       constructorArgs.consensus,
       constructorArgs.mOST,
       constructorArgs.stakeMOSTAmount,
@@ -160,7 +160,7 @@ contract('Reputation::setup', (accounts) => {
         constructorArgs.initialReputation,
         constructorArgs.withdrawalCooldownPeriodInBlocks,
       ),
-      'Stake amount to join in mOST is not positive.',
+      'Stake amount in mOST is not positive.',
     );
   });
 
@@ -196,7 +196,7 @@ contract('Reputation::setup', (accounts) => {
         constructorArgs.initialReputation,
         constructorArgs.withdrawalCooldownPeriodInBlocks,
       ),
-      'Stake amount to join in wETH is not positive.',
+      'Stake amount in wETH is not positive.',
     );
   });
 

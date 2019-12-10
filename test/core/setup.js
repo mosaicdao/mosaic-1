@@ -28,7 +28,7 @@ let config = {};
 async function createCore(args, consensus) {
   return CoreUtils.createCore(
     consensus,
-    args.chainId,
+    args.metachainId,
     args.epochLength,
     args.minValidators,
     args.joinLimit,
@@ -38,7 +38,6 @@ async function createCore(args, consensus) {
     args.gasTarget,
     args.dynasty,
     args.accumulatedGas,
-    args.source,
     args.sourceBlockHeight,
     {
       from: consensus,
@@ -46,12 +45,12 @@ async function createCore(args, consensus) {
   );
 }
 
-contract('Core::constructor', (accounts) => {
+contract('Core::setup', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
 
   beforeEach(async () => {
     correctArgs = {
-      chainId: accountProvider.get(),
+      metachainId: Utils.getRandomHash(),
       epochLength: new BN(100),
       minValidators: new BN(3),
       joinLimit: new BN(5),
@@ -72,13 +71,13 @@ contract('Core::constructor', (accounts) => {
   });
 
   contract('Negative Tests', async () => {
-    it('should revert as chain id is 0', async () => {
+    it('should revert as metachain id is 0', async () => {
       const args = correctArgs;
-      args.chainId = Utils.ZERO_BYTES20;
+      args.metachainId = Utils.ZERO_BYTES32;
 
       await Utils.expectRevert(
         createCore(args, config.consensus),
-        'Chain id is 0.',
+        'Metachain id is 0.',
       );
     });
 
@@ -141,16 +140,6 @@ contract('Core::constructor', (accounts) => {
       await Utils.expectRevert(
         createCore(args, config.consensus),
         'Metablock\'s accumulated gas is 0.',
-      );
-    });
-
-    it('should revert as metablock\'s source is 0', async () => {
-      const args = correctArgs;
-      args.source = Utils.ZERO_BYTES32;
-
-      await Utils.expectRevert(
-        createCore(args, config.consensus),
-        'Metablock\'s source is 0.',
       );
     });
   });
@@ -229,13 +218,6 @@ contract('Core::constructor', (accounts) => {
         committedAccumulatedGas.cmp(correctArgs.accumulatedGas) === 0,
         `Accumulated gas is set to ${committedAccumulatedGas} `
         + `and is not ${correctArgs.accumulatedGas}`,
-      );
-
-      const committedSource = await core.committedSource();
-      assert.strictEqual(
-        committedSource,
-        correctArgs.source,
-        `Source is set to ${committedSource} and is not ${correctArgs.source}`,
       );
 
       const committedSourceBlockHeight = await core.committedSourceBlockHeight();

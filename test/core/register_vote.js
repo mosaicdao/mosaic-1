@@ -73,7 +73,7 @@ contract('Core::registerVote', (accounts) => {
 
   beforeEach(async () => {
     config.consensusCoreArgs = {
-      chainId: accountProvider.get(),
+      metachainId: Utils.getRandomHash(),
       epochLength: new BN(100),
       minValidatorCount: new BN(5),
       validatorJoinLimit: new BN(20),
@@ -87,7 +87,7 @@ contract('Core::registerVote', (accounts) => {
     };
 
     config.consensus = await CoreUtils.createConsensusCore(
-      config.consensusCoreArgs.chainId,
+      config.consensusCoreArgs.metachainId,
       config.consensusCoreArgs.epochLength,
       config.consensusCoreArgs.minValidatorCount,
       config.consensusCoreArgs.validatorJoinLimit,
@@ -96,7 +96,6 @@ contract('Core::registerVote', (accounts) => {
       config.consensusCoreArgs.gasTarget,
       config.consensusCoreArgs.dynasty,
       config.consensusCoreArgs.accumulatedGas,
-      config.consensusCoreArgs.source,
       config.consensusCoreArgs.sourceBlockHeight,
       { from: accountProvider.get() },
     );
@@ -170,7 +169,7 @@ contract('Core::registerVote', (accounts) => {
   contract('Negative Tests', async () => {
     it('should revert if core is not in precommitment window', async () => {
       const consensus = await CoreUtils.createConsensusCore(
-        config.consensusCoreArgs.chainId,
+        config.consensusCoreArgs.metachainId,
         config.consensusCoreArgs.epochLength,
         config.consensusCoreArgs.minValidatorCount,
         config.consensusCoreArgs.validatorJoinLimit,
@@ -179,7 +178,6 @@ contract('Core::registerVote', (accounts) => {
         config.consensusCoreArgs.gasTarget,
         config.consensusCoreArgs.dynasty,
         config.consensusCoreArgs.accumulatedGas,
-        config.consensusCoreArgs.source,
         config.consensusCoreArgs.sourceBlockHeight,
         { from: accountProvider.get() },
       );
@@ -254,7 +252,7 @@ contract('Core::registerVote', (accounts) => {
           config.validator0.proposalSignature.s,
           config.validator0.proposalSignature.v,
         ),
-        'Validator must be active.',
+        'Validator is slashed.',
       );
     });
 

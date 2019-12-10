@@ -44,18 +44,16 @@ contract SpyAxiom is AxiomI{
 
     function callNewMetaChainOnConsensus(
         Consensus _consensus,
-        bytes20 _chainId,
+        address _anchor,
         uint256 _epochLength,
-        bytes32 _source,
         uint256 _sourceBlockHeight
     )
         external
     {
         _consensus.newMetaChain(
             // TODO: align unit tests
-            address(_chainId),
+            _anchor,
             _epochLength,
-            _source,
             _sourceBlockHeight
         );
     }

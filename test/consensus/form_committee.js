@@ -17,7 +17,6 @@
 const BN = require('bn.js');
 const Utils = require('../test_lib/utils.js');
 const consensusUtil = require('./utils.js');
-const CoreStatusUtils = require('../test_lib/core_status_utils');
 const axiomUtil = require('../axiom/utils.js');
 
 const Consensus = artifacts.require('ConsensusTest');
@@ -40,12 +39,12 @@ contract('Consensus::formCommittee', (accounts) => {
     testInputs.coreAddress = accountProvider.get();
     testInputs.proposal = Utils.getRandomHash();
 
-    await consensus.setCoreStatus(
+    await consensus.setCoreLifetime(
       testInputs.coreAddress,
-      CoreStatusUtils.CoreStatus.creation,
+      consensusUtil.CoreLifetime.active,
     );
 
-    await consensus.registerPrecommit(
+    await consensus.precommitMetablock(
       testInputs.proposal,
       {
         from: testInputs.coreAddress,
@@ -56,9 +55,14 @@ contract('Consensus::formCommittee', (accounts) => {
     it('should fail when pre-commit proposal does not exists for a given core address', async () => {
       const coreAddress = accountProvider.get();
 
+      await consensus.setCoreLifetime(
+        coreAddress,
+        consensusUtil.CoreLifetime.active,
+      );
+
       await Utils.expectRevert(
         consensus.formCommittee(coreAddress),
-        'There does not exist a precommitment of the core to a proposal.',
+        'Core has not precommitted.',
       );
     });
 
@@ -66,7 +70,7 @@ contract('Consensus::formCommittee', (accounts) => {
       await consensus.setPreCommit(testInputs.coreAddress, Utils.ZERO_BYTES32, new BN(10));
       await Utils.expectRevert(
         consensus.formCommittee(testInputs.coreAddress),
-        'There does not exist a precommitment of the core to a proposal.',
+        'Core has not precommitted.',
       );
     });
 
@@ -107,7 +111,7 @@ contract('Consensus::formCommittee', (accounts) => {
 
       await Utils.expectRevert(
         consensus.formCommittee(testInputs.coreAddress),
-        'Committee formation blocksegment length must be in 256 most recent blocks.',
+        'Committee formation blocksegment is not in most recent 256 blocks.',
       );
     });
 
@@ -136,7 +140,6 @@ contract('Consensus::formCommittee', (accounts) => {
   contract('Positive Tests', () => {
     let committeeFormationBlockHeight;
     beforeEach(async () => {
-
       // Advance by 256 blocks
       await Utils.advanceBlocks(consensusUtil.BlockSegmentLength);
       const initialBlockNumber = await Utils.getBlockNumber();

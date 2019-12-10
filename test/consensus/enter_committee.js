@@ -60,18 +60,7 @@ contract('Consensus::enterCommittee', (accounts) => {
       await reputation.setIsActive(validator, false);
       await Utils.expectRevert(
         consensus.enterCommittee(committee.address, validator, furtherMember),
-        'Validator is not active.',
-      );
-    });
-
-    it('should fail when committee.enterCommittee fails', async () => {
-      await consensus.setCommittee(committee.address, consensusUtil.SentinelCommittee);
-      await consensus.setReputation(reputation.address);
-      await reputation.setIsActive(validator, true);
-      await committee.setEnterCommitteeResult(false);
-      await Utils.expectRevert(
-        consensus.enterCommittee(committee.address, validator, furtherMember),
-        'Failed to enter committee.',
+        'Validator is slashed.',
       );
     });
   });
@@ -81,7 +70,6 @@ contract('Consensus::enterCommittee', (accounts) => {
       await consensus.setCommittee(committee.address, consensusUtil.SentinelCommittee);
       await consensus.setReputation(reputation.address);
       await reputation.setIsActive(validator, true);
-      await committee.setEnterCommitteeResult(true);
     });
 
     it('should pass when called with correct params', async () => {

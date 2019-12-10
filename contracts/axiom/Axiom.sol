@@ -299,8 +299,6 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
             "Consensus must be setup."
         );
 
-        bytes32 source = keccak256(_rootRlpBlockHeader);
-
         Block.Header memory blockHeader = Block.decodeHeader(_rootRlpBlockHeader);
 
         bytes memory anchorSetupData = abi.encodeWithSelector(
@@ -319,7 +317,6 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
         consensus.newMetaChain(
             address(anchor),
             EPOCH_LENGTH,
-            source,
             blockHeader.height
         );
     }

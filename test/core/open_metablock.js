@@ -27,7 +27,7 @@ const config = {};
 
 async function hashKernel(
   coreAddress,
-  chainId,
+  metachainId,
   height,
   parent,
   updatedValidators,
@@ -40,7 +40,7 @@ async function hashKernel(
   );
 
   const DOMAIN_SEPARATOR_TYPEHASH = web3.utils.keccak256(
-    'EIP712Domain(string name,string version,bytes20 chainId,address verifyingContract)',
+    'EIP712Domain(string name,string version,bytes32 metachainId,address verifyingContract)',
   );
   const DOMAIN_SEPARATOR_NAME = 'Mosaic-Core';
   const DOMAIN_SEPARATOR_VERSION = '0';
@@ -51,14 +51,14 @@ async function hashKernel(
         'bytes32',
         'string',
         'string',
-        'bytes20',
+        'bytes32',
         'address',
       ],
       [
         DOMAIN_SEPARATOR_TYPEHASH,
         DOMAIN_SEPARATOR_NAME,
         DOMAIN_SEPARATOR_VERSION,
-        chainId,
+        metachainId,
         coreAddress,
       ],
     ),
@@ -131,7 +131,7 @@ contract('Core::openMetablock', (accounts) => {
 
   beforeEach(async () => {
     config.consensusCoreArgs = {
-      chainId: accountProvider.get(),
+      metachainId: Utils.getRandomHash(),
       epochLength: new BN(100),
       minValidatorCount: new BN(5),
       validatorJoinLimit: new BN(20),
@@ -145,7 +145,7 @@ contract('Core::openMetablock', (accounts) => {
     };
 
     config.consensus = await CoreUtils.createConsensusCore(
-      config.consensusCoreArgs.chainId,
+      config.consensusCoreArgs.metachainId,
       config.consensusCoreArgs.epochLength,
       config.consensusCoreArgs.minValidatorCount,
       config.consensusCoreArgs.validatorJoinLimit,
@@ -154,7 +154,6 @@ contract('Core::openMetablock', (accounts) => {
       config.consensusCoreArgs.gasTarget,
       config.consensusCoreArgs.dynasty,
       config.consensusCoreArgs.accumulatedGas,
-      config.consensusCoreArgs.source,
       config.consensusCoreArgs.sourceBlockHeight,
       { from: accountProvider.get() },
     );
@@ -193,14 +192,9 @@ contract('Core::openMetablock', (accounts) => {
     it('should revert if core has not precommitted', async () => {
       await Utils.expectRevert(
         config.consensus.openMetablock(
-          config.proposalArgs.originObservation,
           config.proposalArgs.dynasty,
           config.proposalArgs.accumulatedGas,
-          config.proposalArgs.committeeLock,
-          config.proposalArgs.source,
-          config.proposalArgs.target,
           config.proposalArgs.sourceBlockHeight,
-          config.proposalArgs.targetBlockHeight,
           config.newMetablockDeltaGasTarget,
         ),
         'The core must be precommitted.',
@@ -216,145 +210,12 @@ contract('Core::openMetablock', (accounts) => {
 
       await Utils.expectRevert(
         config.core.openMetablock(
-          config.proposalArgs.originObservation,
           config.proposalArgs.dynasty,
           config.proposalArgs.accumulatedGas,
-          config.proposalArgs.committeeLock,
-          config.proposalArgs.source,
-          config.proposalArgs.target,
           config.proposalArgs.sourceBlockHeight,
-          config.proposalArgs.targetBlockHeight,
           config.newMetablockDeltaGasTarget,
         ),
         'Only the consensus contract can call this function.',
-      );
-    });
-
-    it('should revert if input parameters do not match with an open metablock', async () => {
-      await CoreUtils.precommitCore(
-        config.core,
-        config.proposalHash,
-        config.validators,
-      );
-
-      await Utils.expectRevert(
-        config.consensus.openMetablock(
-          CoreUtils.randomSha3(),
-          config.proposalArgs.dynasty,
-          config.proposalArgs.accumulatedGas,
-          config.proposalArgs.committeeLock,
-          config.proposalArgs.source,
-          config.proposalArgs.target,
-          config.proposalArgs.sourceBlockHeight,
-          config.proposalArgs.targetBlockHeight,
-          config.newMetablockDeltaGasTarget,
-        ),
-        'Provided metablock does not match precommit.',
-      );
-
-      await Utils.expectRevert(
-        config.consensus.openMetablock(
-          config.proposalArgs.originObservation,
-          config.proposalArgs.dynasty.add(new BN(1)),
-          config.proposalArgs.accumulatedGas,
-          config.proposalArgs.committeeLock,
-          config.proposalArgs.source,
-          config.proposalArgs.target,
-          config.proposalArgs.sourceBlockHeight,
-          config.proposalArgs.targetBlockHeight,
-          config.newMetablockDeltaGasTarget,
-        ),
-        'Provided metablock does not match precommit.',
-      );
-
-      await Utils.expectRevert(
-        config.consensus.openMetablock(
-          config.proposalArgs.originObservation,
-          config.proposalArgs.dynasty,
-          config.proposalArgs.accumulatedGas.add(new BN(1)),
-          config.proposalArgs.committeeLock,
-          config.proposalArgs.source,
-          config.proposalArgs.target,
-          config.proposalArgs.sourceBlockHeight,
-          config.proposalArgs.targetBlockHeight,
-          config.newMetablockDeltaGasTarget,
-        ),
-        'Provided metablock does not match precommit.',
-      );
-
-      await Utils.expectRevert(
-        config.consensus.openMetablock(
-          config.proposalArgs.originObservation,
-          config.proposalArgs.dynasty,
-          config.proposalArgs.accumulatedGas,
-          CoreUtils.randomSha3(),
-          config.proposalArgs.source,
-          config.proposalArgs.target,
-          config.proposalArgs.sourceBlockHeight,
-          config.proposalArgs.targetBlockHeight,
-          config.newMetablockDeltaGasTarget,
-        ),
-        'Provided metablock does not match precommit.',
-      );
-
-      await Utils.expectRevert(
-        config.consensus.openMetablock(
-          config.proposalArgs.originObservation,
-          config.proposalArgs.dynasty,
-          config.proposalArgs.accumulatedGas,
-          config.proposalArgs.committeeLock,
-          CoreUtils.randomSha3(),
-          config.proposalArgs.target,
-          config.proposalArgs.sourceBlockHeight,
-          config.proposalArgs.targetBlockHeight,
-          config.newMetablockDeltaGasTarget,
-        ),
-        'Provided metablock does not match precommit.',
-      );
-
-      await Utils.expectRevert(
-        config.consensus.openMetablock(
-          config.proposalArgs.originObservation,
-          config.proposalArgs.dynasty,
-          config.proposalArgs.accumulatedGas,
-          config.proposalArgs.committeeLock,
-          config.proposalArgs.source,
-          CoreUtils.randomSha3(),
-          config.proposalArgs.sourceBlockHeight,
-          config.proposalArgs.targetBlockHeight,
-          config.newMetablockDeltaGasTarget,
-        ),
-        'Provided metablock does not match precommit.',
-      );
-
-      await Utils.expectRevert(
-        config.consensus.openMetablock(
-          config.proposalArgs.originObservation,
-          config.proposalArgs.dynasty,
-          config.proposalArgs.accumulatedGas,
-          config.proposalArgs.committeeLock,
-          config.proposalArgs.source,
-          config.proposalArgs.target,
-          config.proposalArgs.sourceBlockHeight.add(config.consensusCoreArgs.epochLength),
-          config.proposalArgs.targetBlockHeight,
-          config.newMetablockDeltaGasTarget,
-        ),
-        'Provided metablock does not match precommit.',
-      );
-
-      await Utils.expectRevert(
-        config.consensus.openMetablock(
-          config.proposalArgs.originObservation,
-          config.proposalArgs.dynasty,
-          config.proposalArgs.accumulatedGas,
-          config.proposalArgs.committeeLock,
-          config.proposalArgs.source,
-          config.proposalArgs.target,
-          config.proposalArgs.sourceBlockHeight,
-          config.proposalArgs.targetBlockHeight.add(config.consensusCoreArgs.epochLength),
-          config.newMetablockDeltaGasTarget,
-        ),
-        'Provided metablock does not match precommit.',
       );
     });
   });
@@ -383,14 +244,9 @@ contract('Core::openMetablock', (accounts) => {
       );
 
       await config.consensus.openMetablock(
-        config.proposalArgs.originObservation,
         config.proposalArgs.dynasty,
         config.proposalArgs.accumulatedGas,
-        config.proposalArgs.committeeLock,
-        config.proposalArgs.source,
-        config.proposalArgs.target,
         config.proposalArgs.sourceBlockHeight,
-        config.proposalArgs.targetBlockHeight,
         config.newMetablockDeltaGasTarget,
       );
 
@@ -402,12 +258,6 @@ contract('Core::openMetablock', (accounts) => {
       const committedAccumulatedGas = await config.core.committedAccumulatedGas();
       assert.isOk(
         committedAccumulatedGas.eq(config.proposalArgs.accumulatedGas),
-      );
-
-      const committedSource = await config.core.committedSource();
-      assert.strictEqual(
-        committedSource,
-        config.proposalArgs.source,
       );
 
       const committedSourceBlockHeight = await config.core.committedSourceBlockHeight();
@@ -453,7 +303,7 @@ contract('Core::openMetablock', (accounts) => {
       const newKernelHash = await config.core.openKernelHash();
       const expectedKernelHash = await hashKernel(
         config.core.address,
-        config.consensusCoreArgs.chainId,
+        config.consensusCoreArgs.metachainId,
         config.consensusCoreArgs.height.add(new BN(1)),
         config.proposalHash,
         updatedValidators,

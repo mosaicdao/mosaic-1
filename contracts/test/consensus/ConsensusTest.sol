@@ -25,13 +25,13 @@ contract ConsensusTest is Consensus {
 
     }
 
-    function setCoreStatus(
+    function setCoreLifetime(
         address _core,
-        CoreStatus _status
+        CoreLifetime _status
     )
         external
     {
-        coreStatuses[_core] = _status;
+        coreLifetimes[_core] = _status;
     }
 
     function setPreCommit(
@@ -61,12 +61,12 @@ contract ConsensusTest is Consensus {
     }
 
     function setAssignment(
-        bytes20 _chainId,
+        bytes32 _metachainId,
         address _core
     )
         external
     {
-        assignments[_chainId] = _core;
+        assignments[_metachainId] = _core;
     }
 
     function setCommitteeProposal(
@@ -79,11 +79,11 @@ contract ConsensusTest is Consensus {
     }
 
     function setAnchor(
-        bytes20 _chainId,
+        bytes32 _metachainId,
         address _anchor
     )
         external
     {
-        anchors[_chainId] = _anchor;
+        anchors[_metachainId] = _anchor;
     }
 }

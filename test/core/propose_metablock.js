@@ -61,7 +61,7 @@ contract('Core::proposeMetablock', async (accounts) => {
 
   beforeEach(async () => {
     config = {
-      chainId: accountProvider.get(),
+      metachainId: Utils.getRandomHash(),
       epochLength: new BN(100),
       minValidatorCount: new BN(5),
       validatorJoinLimit: new BN(20),
@@ -92,7 +92,7 @@ contract('Core::proposeMetablock', async (accounts) => {
     };
 
     config.mockConsensus = await CoreUtils.createConsensusCore(
-      config.chainId,
+      config.metachainId,
       config.epochLength,
       config.minValidatorCount,
       config.validatorJoinLimit,
@@ -101,7 +101,6 @@ contract('Core::proposeMetablock', async (accounts) => {
       config.gasTarget,
       config.dynasty,
       config.accumulatedGas,
-      config.source,
       config.sourceBlockHeight,
       {
         from: config.deployer,
@@ -216,17 +215,6 @@ contract('Core::proposeMetablock', async (accounts) => {
           proposal,
         ),
         'Source block height must be a checkpoint.',
-      );
-    });
-
-    it('should revert if a source block hash matches with the committed one', async () => {
-      proposal.source = config.source;
-      await Utils.expectRevert(
-        proposeMetaBlock(
-          config.core,
-          proposal,
-        ),
-        'Source blockhash cannot equal sealed source blockhash.',
       );
     });
 

@@ -31,7 +31,7 @@ async function createValidator() {
 }
 
 async function createConsensusCore(
-  chainId,
+  metachainId,
   epochLength,
   minValidatorCount,
   validatorJoinLimit,
@@ -40,12 +40,11 @@ async function createConsensusCore(
   gasTarget,
   dynasty,
   accumulatedGas,
-  source,
   sourceBlockHeight,
   txOptions = {},
 ) {
   const mockConsensus = await MockConsensus.new(
-    chainId,
+    metachainId,
     epochLength,
     minValidatorCount,
     validatorJoinLimit,
@@ -54,7 +53,6 @@ async function createConsensusCore(
     gasTarget,
     dynasty,
     accumulatedGas,
-    source,
     sourceBlockHeight,
     txOptions,
   );
@@ -64,7 +62,7 @@ async function createConsensusCore(
 
 async function createCore(
   consensus,
-  chainId,
+  metachainId,
   epochLength,
   minValidators,
   joinLimit,
@@ -74,14 +72,13 @@ async function createCore(
   gasTarget,
   dynasty,
   accumulatedGas,
-  source,
   sourceBlockHeight,
   txOptions = {},
 ) {
   const core = await Core.new();
   await core.setup(
     consensus,
-    chainId,
+    metachainId,
     epochLength,
     minValidators,
     joinLimit,
@@ -91,7 +88,6 @@ async function createCore(
     gasTarget,
     dynasty,
     accumulatedGas,
-    source,
     sourceBlockHeight,
     txOptions,
   );
