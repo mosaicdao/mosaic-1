@@ -55,7 +55,7 @@ contract('Consensus::joinDuringCreation', (accounts) => {
   });
 
   contract('Negative Tests', async () => {
-    it('should fail when chain id is 0', async () => {
+    it('should fail when metachain id is 0', async () => {
       const params = Object.assign(
         {},
         joinParams,

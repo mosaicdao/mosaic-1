@@ -80,7 +80,7 @@ contract('Consensus::join', (accounts) => {
       );
     });
 
-    it('should fail when core is not assigned for specified chain id', async () => {
+    it('should fail when core is not assigned for specified metachain id', async () => {
       const params = Object.assign(
         {},
         joinParams,

@@ -64,7 +64,7 @@ contract('Consensus::logout', (accounts) => {
       );
     });
 
-    it('should fail when core is not assigned for the specified chain id', async () => {
+    it('should fail when core is not assigned for the specified metachain id', async () => {
       await Utils.expectRevert(
         contracts.consensus.logout(metachainId, accountProvider.get(), { from: validator }),
         'Core is not assigned for the specified metachain id.',

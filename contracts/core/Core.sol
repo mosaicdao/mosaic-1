@@ -31,7 +31,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
     /** The kernel of a meta-block header */
     struct Kernel {
-        // Note the height of the metablock in the chain is omitted in the struct
+        // Note the height of the metablock in the metachain is omitted in the struct
 
         /** Hash of the metablock's parent */
         bytes32 parent;
@@ -865,7 +865,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             coreStatus = CoreStatus.precommitted;
             precommit = _proposal;
             precommitClosureBlockHeight = block.number.add(CORE_LAST_VOTES_WINDOW);
-            consensus.precommitMetablock(_proposal);
+            consensus.precommitMetablock(metachainId, _proposal);
         }
     }
 

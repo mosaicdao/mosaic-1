@@ -27,7 +27,10 @@ contract CommitteeMockConsensus is ConsensusI {
 
     /* External Functions */
 
-    function registerCommitteeDecision(bytes32 _committeeDecision)
+    function registerCommitteeDecision(
+        bytes32 /* _metachainId */,
+        bytes32 _committeeDecision
+    )
         external
     {
         require(
@@ -53,16 +56,17 @@ contract CommitteeMockConsensus is ConsensusI {
     }
 
     function precommitMetablock(
-        bytes32 _proposal
+        bytes32 /* _metachainId */,
+        bytes32 /* _proposal */
     )
         external
     {
     }
 
     function newMetaChain(
-        address _anchor,
-        uint256 _epochLength,
-        uint256 _rootBlockHeight
+        address /* _anchor */,
+        uint256 /* _epochLength */,
+        uint256 /* _rootBlockHeight */
     )
         external
     {

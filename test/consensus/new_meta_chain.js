@@ -97,13 +97,13 @@ contract('Consensus::newMetaChain', (accounts) => {
       );
     });
 
-    it('should set chain id in anchors mapping', async () => {
+    it('should set metachain id in anchors mapping', async () => {
       await consensusUtil.callNewMetaChainOnConsensus(contracts.SpyAxiom, inputParams);
       const anchorAddress = await contracts.Consensus.anchors.call(inputParams.metachainId);
       assert.strictEqual(
         anchorAddress,
         inputParams.anchor,
-        'Anchor address must be equal to chain id.',
+        'Anchor address must be equal to metachain id.',
       );
     });
 

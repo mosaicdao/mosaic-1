@@ -34,17 +34,18 @@ contract ConsensusTest is Consensus {
         coreLifetimes[_core] = _status;
     }
 
-    function setPreCommit(
-        address _core,
-        bytes32 _proposal,
-        uint256 _committeeFormationBlockheight
+    function setPrecommit(
+        bytes32 _metachainId,
+        bytes32 _precommit
     )
         external
     {
-        precommits[_core] = Precommit(
-            _proposal,
-            _committeeFormationBlockheight
-        );
+        uint256 metablockTip = metablockTips[_metachainId];
+        Metablock storage metablock = metablockchains[_metachainId][metablockTip];
+
+        metablock.metablockHash = _precommit;
+        metablock.round = MetablockRound.Precommitted;
+        metablock.roundBlockNumber = block.number;
     }
 
     function setCommittee(
