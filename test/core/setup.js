@@ -132,6 +132,7 @@ contract('Core::setup', (accounts) => {
         'Height and parent can be 0 only together.',
       );
     });
+  });
 
   contract('Positive Tests', async () => {
     it('should construct with correct arguments', async () => {
