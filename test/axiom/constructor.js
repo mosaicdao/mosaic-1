@@ -31,6 +31,7 @@ contract('Axiom::constructor', (accounts) => {
       committeeMasterCopy: accountProvider.get(),
       reputationMasterCopy: accountProvider.get(),
       anchorMasterCopy: accountProvider.get(),
+      consensusGatewayMasterCopy: accountProvider.get(),
       txOptions: {
         from: accountProvider.get(),
       },
@@ -48,6 +49,7 @@ contract('Axiom::constructor', (accounts) => {
           config.committeeMasterCopy,
           config.reputationMasterCopy,
           config.anchorMasterCopy,
+          config.consensusGatewayMasterCopy,
           {
             from: accountProvider.get(),
           },
@@ -65,6 +67,7 @@ contract('Axiom::constructor', (accounts) => {
           config.committeeMasterCopy,
           config.reputationMasterCopy,
           config.anchorMasterCopy,
+          config.consensusGatewayMasterCopy,
           {
             from: accountProvider.get(),
           },
@@ -82,6 +85,7 @@ contract('Axiom::constructor', (accounts) => {
           config.committeeMasterCopy,
           config.reputationMasterCopy,
           config.anchorMasterCopy,
+          config.consensusGatewayMasterCopy,
           {
             from: accountProvider.get(),
           },
@@ -99,6 +103,7 @@ contract('Axiom::constructor', (accounts) => {
           Utils.NULL_ADDRESS,
           config.reputationMasterCopy,
           config.anchorMasterCopy,
+          config.consensusGatewayMasterCopy,
           {
             from: accountProvider.get(),
           },
@@ -116,6 +121,7 @@ contract('Axiom::constructor', (accounts) => {
           config.committeeMasterCopy,
           Utils.NULL_ADDRESS,
           config.anchorMasterCopy,
+          config.consensusGatewayMasterCopy,
           {
             from: accountProvider.get(),
           },
