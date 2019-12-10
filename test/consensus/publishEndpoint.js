@@ -25,7 +25,7 @@ const SpyReputation = artifacts.require('SpyReputation');
 const Consensus = artifacts.require('ConsensusTest');
 const Core = artifacts.require('MockCore');
 
-contract('Consensus::setup', (accounts) => {
+contract('Consensus::publishEndPoint', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
   let setupParams = {};
   let consensus;
@@ -137,7 +137,7 @@ contract('Consensus::setup', (accounts) => {
   contract('Negative tests', () => {
     it('should fail when validator is not active', async () => {
       const nonValidator = accountProvider.get();
-      Utils.expectRevert(consensus.publishEndpoint(
+      await Utils.expectRevert(consensus.publishEndpoint(
         publishEndpointParams.metachainId,
         publishEndpointParams.service,
         publishEndpointParams.endpoint,
