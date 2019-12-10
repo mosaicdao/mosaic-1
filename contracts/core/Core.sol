@@ -320,11 +320,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             "Height and parent can be 0 only together."
         );
 
-        require(
-            _accumulatedGas != uint256(0),
-            "Metablock's accumulated gas is 0."
-        );
-
         domainSeparator = keccak256(
             abi.encode(
                 DOMAIN_SEPARATOR_TYPEHASH,

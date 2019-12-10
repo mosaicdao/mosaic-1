@@ -132,16 +132,6 @@ contract('Core::setup', (accounts) => {
         'Height and parent can be 0 only together.',
       );
     });
-
-    it('should revert as accumulated gas is 0', async () => {
-      const args = correctArgs;
-      args.accumulatedGas = 0;
-
-      await Utils.expectRevert(
-        createCore(args, config.consensus),
-        'Metablock\'s accumulated gas is 0.',
-      );
-    });
   });
 
   contract('Positive Tests', async () => {
