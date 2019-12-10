@@ -55,6 +55,11 @@ contract CircularBufferUint {
             "The max number of items to store in a circular buffer must be greater than 0."
         );
 
+        require(
+            items.length == 0,
+            "Circular buffer size can be setup once."
+        );
+
         items.length = _maxItems;
     }
 
