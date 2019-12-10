@@ -49,12 +49,12 @@ contract ConsensusTest is Consensus {
     }
 
     function setCommittee(
-        address _committeeAddress,
-        address _value
+        bytes32 _metachainId,
+        address _committeeAddress
     )
         external
     {
-        committees[_committeeAddress] = _value;
+        committees[_metachainId] = _committeeAddress;
     }
 
     function setReputation(address _reputation) external {

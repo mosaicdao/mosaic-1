@@ -126,14 +126,15 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
     /** Core lifetimes. */
     mapping(address /* core */ => CoreLifetime /* coreLifetime */) public coreLifetimes;
 
+    /** Committees per metachain. */
+    mapping(bytes32 /* metachain id */ => address /* committee */) public committees;
+
+
     /** Precommits under consideration of committees. */
     mapping(bytes32 /* precommit */ => CommitteeI /* committee */) public proposals;
 
     /** Committees' decisions. */
     mapping(address /* committee */ => bytes32 /* commit */) public decisions;
-
-    /** Committees per metachain. */
-    mapping(bytes32 /* metachain id */ => CommitteeI /* committee */) public committees;
 
     /** Assigned anchor for a given metachain id */
     mapping(bytes32 /* metachain id */ => address /* anchor */) public anchors;
@@ -363,7 +364,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             abi.encodePacked(seedGenerator)
         );
 
-        startCommittee(seed, metablockHash);
+        startCommittee(_metachainId, seed, metablockHash);
     }
 
     /**
@@ -423,12 +424,18 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         bytes32 _committeeDecision
     )
         external
-        onlyCommittee
     {
         require(
             _metachainId != bytes32(0),
-            "Metachain id is 0"
+            "Metachain id is 0."
         );
+
+        address committee = committees[_metachainId];
+        require(
+            committee == msg.sender,
+            "Wrong committee calls."
+        );
+        delete committees[_metachainId];
 
         require(
             decisions[msg.sender] == bytes32(0),
@@ -803,8 +810,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      */
     function startCommittee(
         bytes32 _metachainId,
-        bytes32 _proposal,
-        bytes32 _dislocation
+        bytes32 _dislocation,
+        bytes32 _proposal
     )
         internal
     {
@@ -821,7 +828,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
         CommitteeI committee_ = newCommittee(committeeSize, _dislocation, _proposal);
 
-        committees[_metachainId] = committee_;
+        committees[_metachainId] = address(committee_);
         proposals[_proposal] = committee_;
     }
 
