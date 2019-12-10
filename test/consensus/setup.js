@@ -212,7 +212,6 @@ contract('Consensus::setup', (accounts) => {
         `Committee formation delay value from contract ${committeeFormationDelay} `
         + `must be equal to expected value ${ConsensusUtils.CommitteeFormationDelay}`,
       );
-
     });
 
     it('Verify committee formation length constant value', async () => {

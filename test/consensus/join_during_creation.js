@@ -16,7 +16,6 @@
 
 const Utils = require('../test_lib/utils.js');
 const consensusUtil = require('./utils.js');
-const CoreStatusUtils = require('../test_lib/core_status_utils');
 
 const Consensus = artifacts.require('ConsensusTest');
 const SpyReputation = artifacts.require('SpyReputation');
@@ -37,10 +36,13 @@ contract('Consensus::joinDuringCreation', (accounts) => {
     core = await SpyCore.new();
 
     await consensus.setReputation(reputation.address);
-    await consensus.setCoreStatus(core.address, CoreStatusUtils.CoreStatus.creation);
+    await consensus.setCoreLifetime(
+      core.address,
+      consensusUtil.CoreLifetime.creation,
+    );
 
     joinParams = {
-      chainId: '0x0000000000000000000000000000000000000222',
+      metachainId: Utils.getRandomHash(),
       core: core.address,
       withdrawalAddress: accountProvider.get(),
       txOptions: {
@@ -49,7 +51,7 @@ contract('Consensus::joinDuringCreation', (accounts) => {
     };
     Object.freeze(joinParams);
 
-    await consensus.setAssignment(joinParams.chainId, core.address);
+    await consensus.setAssignment(joinParams.metachainId, core.address);
   });
 
   contract('Negative Tests', async () => {
@@ -57,11 +59,11 @@ contract('Consensus::joinDuringCreation', (accounts) => {
       const params = Object.assign(
         {},
         joinParams,
-        { chainId: Utils.NULL_ADDRESS },
+        { metachainId: Utils.NULL_ADDRESS },
       );
       await Utils.expectRevert(
         consensusUtil.joinDuringCreation(consensus, params),
-        'Chain id is 0.',
+        'Metachain id is 0.',
       );
     });
 
@@ -78,16 +80,16 @@ contract('Consensus::joinDuringCreation', (accounts) => {
       );
     });
 
-    it('should fail when core is not assigned for specified chain id', async () => {
+    it('should fail when core is not assigned for specified metachain id', async () => {
       const params = Object.assign(
         {},
         joinParams,
-        { core: accountProvider.get()},
+        { core: accountProvider.get() },
       );
 
       await Utils.expectRevert(
         consensusUtil.joinDuringCreation(consensus, params),
-        'Core is not assigned for the specified chain id.',
+        'Core is not assigned for the specified metachain id.',
       );
     });
 
@@ -105,44 +107,41 @@ contract('Consensus::joinDuringCreation', (accounts) => {
     });
 
     it('should fail when core status is undefined', async () => {
-      await consensus.setCoreStatus(core.address, CoreStatusUtils.CoreStatus.undefined);
+      await consensus.setCoreLifetime(
+        core.address,
+        consensusUtil.CoreLifetime.undefined,
+      );
       await Utils.expectRevert(
         consensusUtil.joinDuringCreation(consensus, joinParams),
-        'Core must be in an active state.',
+        'Core lifetime status must be creation.',
       );
     });
 
     it('should fail when core status is halted', async () => {
-      await consensus.setCoreStatus(core.address, CoreStatusUtils.CoreStatus.halted);
+      await consensus.setCoreLifetime(
+        core.address,
+        consensusUtil.CoreLifetime.halted,
+      );
       await Utils.expectRevert(
         consensusUtil.joinDuringCreation(consensus, joinParams),
-        'Core must be in an active state.',
+        'Core lifetime status must be creation.',
       );
     });
 
     it('should fail when core status is corrupted', async () => {
-      await consensus.setCoreStatus(core.address, CoreStatusUtils.CoreStatus.corrupted);
+      await consensus.setCoreLifetime(
+        core.address,
+        consensusUtil.CoreLifetime.halted,
+      );
       await Utils.expectRevert(
         consensusUtil.joinDuringCreation(consensus, joinParams),
-        'Core must be in an active state.',
+        'Core lifetime status must be creation.',
       );
     });
-
   });
 
   contract('Positive Tests', () => {
-    it('should pass when core status is creation', async () => {
-      await consensus.setCoreStatus(core.address, CoreStatusUtils.CoreStatus.creation);
-      await consensusUtil.joinDuringCreation(consensus, joinParams);
-    });
-
-    it('should pass when core status is opened', async () => {
-      await consensus.setCoreStatus(core.address, CoreStatusUtils.CoreStatus.opened);
-      await consensusUtil.joinDuringCreation(consensus, joinParams);
-    });
-
-    it('should pass when core status is precommited', async () => {
-      await consensus.setCoreStatus(core.address, CoreStatusUtils.CoreStatus.precommitted);
+    it('should pass when core lifetime is genesis', async () => {
       await consensusUtil.joinDuringCreation(consensus, joinParams);
     });
 
