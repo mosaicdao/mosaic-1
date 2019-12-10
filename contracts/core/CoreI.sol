@@ -47,5 +47,11 @@ interface CoreI {
         external
         view
         returns (bytes32 metablockHash_);
+
+    function isValidator(address _account)
+        external
+        view
+        returns (bool);
+
 }
 
