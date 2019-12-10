@@ -64,7 +64,7 @@ contract('Axiom::deployMetachainProxies', (accounts) => {
     );
     const newCoreParams = {
       consensus: accountProvider.get(),
-      chainId: accountProvider.get(),
+      metachainId: Utils.getRandomHash(),
       epochLength: new BN('100'),
       minValidators: new BN('10'),
       joinLimit: new BN('10'),
