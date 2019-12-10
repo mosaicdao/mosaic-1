@@ -34,6 +34,7 @@
   "devDependencies": {
     "@types/mocha": "5.2.7",
     "@types/web3": "1.2.2",
+    "abi-decoder": "2.2.2",
     "assert": "2.0.0",
     "bn.js": "5.0.0",
     "chai": "4.2.0",
@@ -50,7 +51,6 @@
     "typechain": "0.3.14",
     "typescript": "3.7.2",
     "web3": "1.2.1",
-    "ethereumjs-util": "6.2.0",
-    "abi-decoder": "1.2.0"
+    "ethereumjs-util": "6.2.0"
   }
 }
