@@ -43,9 +43,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
     /** Committee formation mixing length */
     uint256 public constant COMMITTEE_FORMATION_LENGTH = uint8(7);
 
-    /** Sentinel pointer for marking end of linked-list of committees */
-    address public constant SENTINEL_COMMITTEES = address(0x1);
-
     /** Minimum required validators */
     uint256 public constant MIN_REQUIRED_VALIDATORS = uint8(5);
 
@@ -123,11 +120,11 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
     /** Precommits under consideration of committees. */
     mapping(address /* committee */ => bytes32 /* commit */) public decisions;
 
-    /** Linked-list of committees */
-    mapping(address => address) public committees;
+    /** Committees per metachain. */
+    mapping(bytes32 /* metachain id */ => CommitteeI /* committee */) public committees;
 
     /** Assigned anchor for a given metachain id */
-    mapping(bytes32 => address) public anchors;
+    mapping(bytes32 /* metachain id */ => address /* anchor */) public anchors;
 
     /** Reputation contract for validators */
     ReputationI public reputation;
@@ -156,16 +153,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         require(
             address(axiom) == msg.sender,
             "Caller must be axiom address."
-        );
-
-        _;
-    }
-
-    modifier onlyCommittee()
-    {
-        require(
-            committees[msg.sender] != address(0),
-            "Caller must be a committee address."
         );
 
         _;
@@ -249,8 +236,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         reputation = ReputationI(_reputation);
 
         axiom = AxiomI(msg.sender);
-
-        committees[SENTINEL_COMMITTEES] = SENTINEL_COMMITTEES;
 
         uint256 chainId = getChainId();
 
@@ -357,34 +342,42 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      * @notice Enters a validator into a committee.
      *
      * @dev Function requires:
-     *          - the committee exists
-     *          - the validator is active
-     * 			- the validator is not slashed
+     *          - core has been assigned for the given metachain id
+     *          - committee has been formed for the given metachain id
+     *          - valid validator is given
+     *              - is registered in the given core
+     *              - has not been slashed
      *
-     * @param _committeeAddress Committee address that validator wants to enter.
+     * @param _metachainId Metachain id for the committee to enter.
      * @param _validator Validator address to enter.
      * @param _furtherMember Validator address that is further member
      *                       compared to the `_validator` address
      */
     function enterCommittee(
-        address _committeeAddress,
+        bytes32 _metachainId,
         address _validator,
         address _furtherMember
     )
         external
     {
+        address core = assignments[_metachainId];
         require(
-            committees[_committeeAddress] != address(0),
-            "Committee does not exist."
+            core != address(0),
+            "Core has not been assigned for the given metachain id."
         );
 
         require(
-            !reputation.isSlashed(_validator),
-            "Validator is slashed."
+            isValidator(core, _validator),
+            "Invalid validator was given."
         );
 
-        CommitteeI committee = CommitteeI(_committeeAddress);
-        committee.enterCommittee(_validator, _furtherMember);
+        address committee = committees[_metachainId];
+        require(
+            committee != address(0),
+            "Committee has not been formed for the given metachain id."
+        );
+
+        CommitteeI(committee).enterCommittee(_validator, _furtherMember);
     }
 
     /**
@@ -558,8 +551,9 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         reputation.stake(msg.sender, _withdrawalAddress);
 
         // Join in core contract.
-        (uint256 validatorCount, uint256 minValidatorCount) =
-            CoreI(_core).joinDuringCreation(msg.sender);
+        (
+            uint256 validatorCount, uint256 minValidatorCount
+        ) = CoreI(_core).joinDuringCreation(msg.sender);
 
         if (validatorCount >= minValidatorCount) {
             coreLifetimes[_core] = CoreLifetime.genesis;
@@ -605,6 +599,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         );
 
         CoreI(_core).logout(msg.sender);
+
         reputation.deregister(msg.sender);
     }
 
@@ -708,6 +703,25 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         );
     }
 
+    /**
+     * @notice isValidator() function checks if the given validator is an
+     *         active validator in the given core and has not been slashed.
+     *
+     * @param _core Core to check the validator against.
+     * @param _validator Validator's address to check.
+     *
+     * @return Returns true, if the given validator is an active validator
+     *         in the given core and has not been slashed.
+     */
+    function isValidator(address _core, address _validator)
+        public
+        view
+        returns (bool isValidator_)
+    {
+        isValidator_ = CoreI(_core).isValidator(_validator)
+            && !reputation.isSlashed(_validator);
+    }
+
 
     /* Internal functions */
 
@@ -740,29 +754,37 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
     }
 
     /**
-     * @notice Start a new committee.
+     * @notice Starts a new committee.
 
      * @dev Function requires:
-     *          - committee for the proposal should not exist.
+     *          - there is no committee for the given metachain id
+     *          - committee for the given proposal does not exist
      *
+     * @param _metachainId Metachain id
      * @param _dislocation Hash to shuffle validators.
      * @param _proposal Proposal under consideration for committee.
      */
     function startCommittee(
-        bytes32 _dislocation,
-        bytes32 _proposal
+        bytes32 _metachainId,
+        bytes32 _proposal,
+        bytes32 _dislocation
     )
         internal
     {
+        address committee = committees[_metachainId];
+        require(
+            committee != address(0),
+            "There is a committee for the given metachain id."
+        );
+
         require(
             proposals[_proposal] == CommitteeI(0),
             "There already exists a committee for the proposal."
         );
 
         CommitteeI committee_ = newCommittee(committeeSize, _dislocation, _proposal);
-        committees[address(committee_)] = committees[SENTINEL_COMMITTEES];
-        committees[SENTINEL_COMMITTEES] = address(committee_);
 
+        committees[_metachainId] = committee_;
         proposals[_proposal] = committee_;
     }
 
