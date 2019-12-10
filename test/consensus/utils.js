@@ -136,4 +136,12 @@ module.exports = {
   METACHAIN_ID_TYPEHASH,
   getMetachainId,
   getMetachainIdHash,
+  CoreLifetime: {
+    undefined: 0,
+    halted: 1,
+    corrupted: 2,
+    creation: 3,
+    genesis: 4,
+    active: 5,
+  },
 };

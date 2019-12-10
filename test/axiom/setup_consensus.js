@@ -22,6 +22,7 @@ const ProxyTruffleArtifact = require('../../build/contracts/Proxy.json');
 
 const SpyReputation = artifacts.require('SpyReputation');
 const SpyConsensus = artifacts.require('SpyConsensus');
+const SpyAnchor = artifacts.require('SpyAnchor');
 
 let config = {};
 let contracts = {};
@@ -34,6 +35,7 @@ contract('Axiom::setupConsensus', (accounts) => {
     contracts = {
       SpyConsensus: await SpyConsensus.new(),
       SpyReputation: await SpyReputation.new(),
+      SpyAnchor: await SpyAnchor.new(),
     };
     Object.freeze(contracts);
 
@@ -43,6 +45,7 @@ contract('Axiom::setupConsensus', (accounts) => {
       coreMasterCopy: accountProvider.get(),
       committeeMasterCopy: accountProvider.get(),
       reputationMasterCopy: contracts.SpyReputation.address,
+      anchorMasterCopy: contracts.SpyAnchor.address,
       txOptions: {
         from: accountProvider.get(),
       },

@@ -19,7 +19,6 @@ const web3 = require('../test_lib/web3.js');
 
 const Utils = require('../test_lib/utils.js');
 const consensusUtil = require('./utils.js');
-const CoreStatusUtils = require('../test_lib/core_status_utils');
 
 const Consensus = artifacts.require('ConsensusTest');
 const SpyCore = artifacts.require('SpyCore');
@@ -76,51 +75,51 @@ contract('Consensus::commitMetablock', (accounts) => {
     it('should fail when there is no core for the specified metachain id', async () => {
       await Utils.expectRevert(
         consensusUtil.commit(contracts.Consensus, commitParams),
-        'There is no core for the specified metachain id.',
+        'Core lifetime status must be active',
       );
     });
 
     it('should fail when core status is undefined', async () => {
       await contracts.Consensus.setAssignment(commitParams.metachainId, contracts.SpyCore.address);
-      await contracts.Consensus.setCoreStatus(
+      await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.undefined,
+        consensusUtil.CoreLifetime.undefined,
       );
       await Utils.expectRevert(
         consensusUtil.commit(contracts.Consensus, commitParams),
-        'There is no core for the specified metachain id.',
+        'Core lifetime status must be active',
       );
     });
 
     it('should fail when core status is halted', async () => {
       await contracts.Consensus.setAssignment(commitParams.metachainId, contracts.SpyCore.address);
-      await contracts.Consensus.setCoreStatus(
+      await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.halted,
+        consensusUtil.CoreLifetime.halted,
       );
       await Utils.expectRevert(
         consensusUtil.commit(contracts.Consensus, commitParams),
-        'There is no core for the specified metachain id.',
+        'Core lifetime status must be active',
       );
     });
 
     it('should fail when core status is corrupted', async () => {
       await contracts.Consensus.setAssignment(commitParams.metachainId, contracts.SpyCore.address);
-      await contracts.Consensus.setCoreStatus(
+      await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.corrupted,
+        consensusUtil.CoreLifetime.corrupted,
       );
       await Utils.expectRevert(
         consensusUtil.commit(contracts.Consensus, commitParams),
-        'There is no core for the specified metachain id.',
+        'Core lifetime status must be active',
       );
     });
 
     it.skip('should fail when precommit proposal is 0', async () => {
       await contracts.Consensus.setAssignment(commitParams.metachainId, contracts.SpyCore.address);
-      await contracts.Consensus.setCoreStatus(
+      await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.precommitted,
+        consensusUtil.CoreLifetime.active,
       );
       await Utils.expectRevert(
         consensusUtil.commit(contracts.Consensus, commitParams),
@@ -128,11 +127,30 @@ contract('Consensus::commitMetablock', (accounts) => {
       );
     });
 
-    it.skip('should fail when commit proposal is not equal to precommitted proposal', async () => {
-      await contracts.Consensus.setAssignment(commitParams.metachainId, contracts.SpyCore.address);
-      await contracts.Consensus.setCoreStatus(
+    it.skip('should fail when specified kernel hash is not equal to open kernel hash', async () => {
+      await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
+      await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.precommitted,
+        consensusUtil.CoreLifetime.active,
+      );
+      const proposal = Utils.getRandomHash();
+      const currentBlock = await Utils.getBlockNumber();
+      await contracts.Consensus.setPreCommit(
+        contracts.SpyCore.address,
+        proposal,
+        currentBlock.addn(consensusUtil.CommitteeFormationDelay),
+      );
+      await Utils.expectRevert(
+        consensusUtil.commit(contracts.Consensus, commitParams),
+        'Provided kernel hash must be equal to open kernel hash.',
+      );
+    });
+
+    it.skip('should fail when commit proposal is not equal to precommited proposal', async () => {
+      await contracts.Consensus.setAssignment(commitParams.chainId, contracts.SpyCore.address);
+      await contracts.Consensus.setCoreLifetime(
+        contracts.SpyCore.address,
+        consensusUtil.CoreLifetime.active,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -150,9 +168,9 @@ contract('Consensus::commitMetablock', (accounts) => {
 
     it('should fail when committee address is 0', async () => {
       await contracts.Consensus.setAssignment(commitParams.metachainId, contracts.SpyCore.address);
-      await contracts.Consensus.setCoreStatus(
+      await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.precommitted,
+        consensusUtil.CoreLifetime.active,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -171,9 +189,9 @@ contract('Consensus::commitMetablock', (accounts) => {
 
     it.skip('should fail when committee decision is 0', async () => {
       await contracts.Consensus.setAssignment(commitParams.metachainId, contracts.SpyCore.address);
-      await contracts.Consensus.setCoreStatus(
+      await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.precommitted,
+        consensusUtil.CoreLifetime.active,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -193,9 +211,9 @@ contract('Consensus::commitMetablock', (accounts) => {
 
     it('should fail when committee decision does not match the provided committee lock', async () => {
       await contracts.Consensus.setAssignment(commitParams.metachainId, contracts.SpyCore.address);
-      await contracts.Consensus.setCoreStatus(
+      await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.precommitted,
+        consensusUtil.CoreLifetime.active,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -216,9 +234,9 @@ contract('Consensus::commitMetablock', (accounts) => {
 
     it.skip('should fail when anchor address for specified metachain id is 0', async () => {
       await contracts.Consensus.setAssignment(commitParams.metachainId, contracts.SpyCore.address);
-      await contracts.Consensus.setCoreStatus(
+      await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.precommitted,
+        consensusUtil.CoreLifetime.active,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -239,9 +257,9 @@ contract('Consensus::commitMetablock', (accounts) => {
 
     it.skip('should fail when called 2nd time with same parameteres', async () => {
       await contracts.Consensus.setAssignment(commitParams.metachainId, contracts.SpyCore.address);
-      await contracts.Consensus.setCoreStatus(
+      await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.precommitted,
+        consensusUtil.CoreLifetime.active,
       );
       const proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -269,9 +287,9 @@ contract('Consensus::commitMetablock', (accounts) => {
     let proposal;
     beforeEach(async () => {
       await contracts.Consensus.setAssignment(commitParams.metachainId, contracts.SpyCore.address);
-      await contracts.Consensus.setCoreStatus(
+      await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.precommitted,
+        consensusUtil.CoreLifetime.active,
       );
       proposal = Utils.getRandomHash();
       const currentBlock = await Utils.getBlockNumber();
@@ -288,17 +306,17 @@ contract('Consensus::commitMetablock', (accounts) => {
     });
 
     it.skip('should pass when core status is creation', async () => {
-      await contracts.Consensus.setCoreStatus(
+      await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.creation,
+        consensusUtil.CoreLifetime.active,
       );
       await consensusUtil.commit(contracts.Consensus, commitParams);
     });
 
     it.skip('should pass when core status is opened', async () => {
-      await contracts.Consensus.setCoreStatus(
+      await contracts.Consensus.setCoreLifetime(
         contracts.SpyCore.address,
-        CoreStatusUtils.CoreStatus.opened,
+        consensusUtil.CoreLifetime.active,
       );
       await consensusUtil.commit(contracts.Consensus, commitParams);
     });

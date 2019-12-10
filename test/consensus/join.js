@@ -16,7 +16,6 @@
 
 const Utils = require('../test_lib/utils.js');
 const consensusUtil = require('./utils.js');
-const CoreStatusUtils = require('../test_lib/core_status_utils');
 
 const Consensus = artifacts.require('ConsensusTest');
 const SpyReputation = artifacts.require('SpyReputation');
@@ -37,7 +36,10 @@ contract('Consensus::join', (accounts) => {
     core = await SpyCore.new();
 
     await consensus.setReputation(reputation.address);
-    await consensus.setCoreStatus(core.address, CoreStatusUtils.CoreStatus.opened);
+    await consensus.setCoreLifetime(
+      core.address,
+      consensusUtil.CoreLifetime.active,
+    );
 
     joinParams = {
       metachainId: '0x0000000000000000000000000000000000000222',
@@ -82,7 +84,7 @@ contract('Consensus::join', (accounts) => {
       const params = Object.assign(
         {},
         joinParams,
-        { core: accountProvider.get()},
+        { core: accountProvider.get() },
       );
 
       await Utils.expectRevert(
@@ -105,46 +107,53 @@ contract('Consensus::join', (accounts) => {
     });
 
     it('should fail when core status is undefined', async () => {
-      await consensus.setCoreStatus(core.address, CoreStatusUtils.CoreStatus.undefined);
-      await Utils.expectRevert(
-        consensusUtil.join(consensus, joinParams),
-        'Core status is not opened or precommitted.',
+      await consensus.setCoreLifetime(
+        core.address,
+        consensusUtil.CoreLifetime.undefined,
       );
-    });
-
-    it('should fail when core status is creation', async () => {
-      await consensus.setCoreStatus(core.address, CoreStatusUtils.CoreStatus.creation);
       await Utils.expectRevert(
         consensusUtil.join(consensus, joinParams),
-        'Core status is not opened or precommitted.',
+        'Core lifetime status must be genesis or active.',
       );
     });
 
     it('should fail when core status is halted', async () => {
-      await consensus.setCoreStatus(core.address, CoreStatusUtils.CoreStatus.halted);
+      await consensus.setCoreLifetime(
+        core.address,
+        consensusUtil.CoreLifetime.halted,
+      );
       await Utils.expectRevert(
         consensusUtil.join(consensus, joinParams),
-        'Core status is not opened or precommitted.',
+        'Core lifetime status must be genesis or active.',
       );
     });
 
     it('should fail when core status is corrupted', async () => {
-      await consensus.setCoreStatus(core.address, CoreStatusUtils.CoreStatus.corrupted);
+      await consensus.setCoreLifetime(
+        core.address,
+        consensusUtil.CoreLifetime.corrupted,
+      );
       await Utils.expectRevert(
         consensusUtil.join(consensus, joinParams),
-        'Core status is not opened or precommitted.',
+        'Core lifetime status must be genesis or active.',
       );
     });
   });
 
   contract('Positive Tests', () => {
-    it('should pass when core status is opened', async () => {
-      await consensus.setCoreStatus(core.address, CoreStatusUtils.CoreStatus.opened);
+    it('should pass when core status is genesis', async () => {
+      await consensus.setCoreLifetime(
+        core.address,
+        consensusUtil.CoreLifetime.genesis,
+      );
       await consensusUtil.join(consensus, joinParams);
     });
 
-    it('should pass when core status is precommited', async () => {
-      await consensus.setCoreStatus(core.address, CoreStatusUtils.CoreStatus.precommitted);
+    it('should pass when core status is activated', async () => {
+      await consensus.setCoreLifetime(
+        core.address,
+        consensusUtil.CoreLifetime.active,
+      );
       await consensusUtil.join(consensus, joinParams);
     });
 

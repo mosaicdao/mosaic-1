@@ -20,15 +20,18 @@ const Utils = require('../test_lib/utils.js');
 const ConsensusSetupParamTypes = 'uint256,uint256,uint256,uint256,uint256,address';
 const ReputationSetupParamTypes = 'address,address,uint256,address,uint256,uint256,uint256,uint256';
 const CoreSetupParamTypes = 'address,bytes32,uint256,uint256,uint256,address,uint256,bytes32,uint256,uint256,uint256,uint256';
+const AnchorSetupParamTypes = 'uint256,address';
 const CommitteeSetupParamTypes = 'address,uint256,bytes32,bytes32';
 
 const ConsensusSetupFunctionSignature = `setup(${ConsensusSetupParamTypes})`;
 const ReputationSetupFunctionSignature = `setup(${ReputationSetupParamTypes})`;
+const AnchorSetupFunctionSignature = `setup(${AnchorSetupParamTypes})`;
 const CoreSetupFunctionSignature = `setup(${CoreSetupParamTypes})`;
 const CommitteeSetupFunctionSignature = `setup(${CommitteeSetupParamTypes})`;
 
 const ConsensusSetupCallPrefix = Utils.encodeFunctionSignature(ConsensusSetupFunctionSignature);
 const ReputationSetupCallPrefix = Utils.encodeFunctionSignature(ReputationSetupFunctionSignature);
+const AnchorSetupCallPrefix = Utils.encodeFunctionSignature(AnchorSetupFunctionSignature);
 const CoreSetupCallPrefix = Utils.encodeFunctionSignature(CoreSetupFunctionSignature);
 const CommitteeSetupCallPrefix = Utils.encodeFunctionSignature(CommitteeSetupFunctionSignature);
 
@@ -38,6 +41,7 @@ async function deployAxiom(
   coreMasterCopy,
   committeeMasterCopy,
   reputationMasterCopy,
+  anchorMasterCopy,
   txOptions,
 ) {
   const axiom = await Axiom.new(
@@ -46,6 +50,7 @@ async function deployAxiom(
     coreMasterCopy,
     committeeMasterCopy,
     reputationMasterCopy,
+    anchorMasterCopy,
     txOptions,
   );
   return axiom;
@@ -58,6 +63,7 @@ async function deployAxiomWithConfig(config) {
     config.coreMasterCopy,
     config.committeeMasterCopy,
     config.reputationMasterCopy,
+    config.anchorMasterCopy,
     config.txOptions,
   );
 }
@@ -136,6 +142,7 @@ module.exports = {
   CommitteeSetupFunctionSignature,
   ConsensusSetupCallPrefix,
   ReputationSetupCallPrefix,
+  AnchorSetupCallPrefix,
   CoreSetupCallPrefix,
   CommitteeSetupCallPrefix,
   deployAxiom,
