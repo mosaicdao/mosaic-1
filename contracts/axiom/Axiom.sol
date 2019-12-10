@@ -110,6 +110,7 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
      * @param _committeeMasterCopy Committee master copy contract address.
      * @param _reputationMasterCopy Reputation master copy contract address.
      * @param _anchorMasterCopy Anchor master copy contract address.
+     * @param _consensusGatewayMasterCopy Consensus gateway master copy contract address.
      */
     constructor(
         address _techGov,

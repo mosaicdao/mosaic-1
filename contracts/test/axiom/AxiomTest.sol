@@ -18,7 +18,6 @@ import "../../axiom/Axiom.sol";
 
 contract AxiomTest is Axiom {
 
-
     /* Special Member Functions */
 
     /**
@@ -30,6 +29,7 @@ contract AxiomTest is Axiom {
      * @param _committeeMasterCopy Committee master copy contract address.
      * @param _reputationMasterCopy Reputation master copy contract address.
      * @param _anchorMasterCopy Anchor master copy contract address.
+     * @param _consensusGatewayMasterCopy Consensus gateway master copy contract address.
      */
     constructor(
         address _techGov,
