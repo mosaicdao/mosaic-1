@@ -1,11 +1,26 @@
 pragma solidity ^0.5.0;
 
 import "../../anchor/AnchorI.sol";
+import "../../consensus/ConsensusI.sol";
+import "../../proxies/MasterCopyNonUpgradable.sol";
 
-contract SpyAnchor is AnchorI{
+contract SpyAnchor is MasterCopyNonUpgradable, AnchorI{
 
     uint256 public spyBlockHeight;
     bytes32 public spyStateRoot;
+    uint256 public spyMaxStateRoot;
+    address public spyConsensus;
+
+
+    function setup(
+        uint256 _maxStateRoots,
+        ConsensusI _consensus
+    )
+        external
+    {
+        spyMaxStateRoot = _maxStateRoots;
+        spyConsensus = address(_consensus);
+    }
 
     function getLatestStateRootBlockHeight()
         external

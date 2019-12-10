@@ -19,7 +19,7 @@ import Interacts from "../../interacts/Interacts";
 
 const FUNDING_AMOUNT_IN_ETHER = '2';
 describe('Deployment', async () => {
-  it('Contract deployment', async () => {
+  it.skip('Contract deployment', async () => {
 
     const {
       Axiom,
@@ -47,7 +47,7 @@ describe('Deployment', async () => {
 
   });
 
-  it('Token deployment and fund validator', async () => {
+  it.skip('Token deployment and fund validator', async () => {
     const {
       MockToken,
     } = shared.artifacts;
