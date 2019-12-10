@@ -27,11 +27,12 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
 
     using SafeMath for uint256;
 
+    /* Events */
+
+    /* Emitted when new metachain is created */
+    event MetachainCreated(bytes32 metachainId);
 
     /* Constants */
-
-    /** Epoch length */
-    uint256 public constant EPOCH_LENGTH = uint256(100);
 
     /** The callprefix of the Reputation::setup function. */
     bytes4 public constant REPUTATION_SETUP_CALLPREFIX = bytes4(
@@ -44,17 +45,6 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
     bytes4 public constant CONSENSUS_SETUP_CALLPREFIX = bytes4(
         keccak256(
             "setup(uint256,uint256,uint256,uint256,uint256,address)"
-        )
-    );
-
-    /** The callprefix of the Anchor::setup function.
-     *
-     *  uint256 - maxStateRoots Max number of state root stored in anchor contract.
-     *  address - address of consensus contract.
-     */
-    bytes4 public constant ANCHOR_SETUP_CALLPREFIX = bytes4(
-        keccak256(
-            "setup(uint256,address)"
         )
     );
 
@@ -288,42 +278,16 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
     /**
      * @notice Setup a new meta chain. Only technical governance address can
      *         call this function.
-     * @param _maxStateRoots The max number of state roots to store in the
-     *                       circular buffer.
-     * @param _rootRlpBlockHeader RLP encoded block header of root block.
      */
-    function newMetaChain(
-        uint256 _maxStateRoots,
-        bytes calldata _rootRlpBlockHeader
-    )
+    function newMetaChain()
         external
         onlyTechGov
+        returns(bytes32 metachainId_)
     {
-        require(
-            address(consensus) != address(0),
-            "Consensus must be setup."
-        );
 
-        Block.Header memory blockHeader = Block.decodeHeader(_rootRlpBlockHeader);
+        metachainId_ = consensus.newMetaChain();
 
-        bytes memory anchorSetupData = abi.encodeWithSelector(
-            ANCHOR_SETUP_CALLPREFIX,
-            _maxStateRoots,
-            consensus
-        );
-
-        address anchor = address(
-            createProxy(
-                anchorMasterCopy,
-                anchorSetupData
-            )
-        );
-
-        consensus.newMetaChain(
-            address(anchor),
-            EPOCH_LENGTH,
-            blockHeader.height
-        );
+        emit MetachainCreated(metachainId_);
     }
 
     /**

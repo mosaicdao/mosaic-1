@@ -78,6 +78,31 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         )
     );
 
+    //todo fix this when consensus gateway is implemented.
+    /** The callprefix of the ConsensusGateway::setup function. */
+    bytes4 public constant CONSENSUS_GATEWAY_SETUP_CALL_PREFIX = bytes4(
+        keccak256(
+            "setup()"
+        )
+    );
+
+    /** The callprefix of the Anchor::setup function.
+     *
+     *  uint256 - maxStateRoots Max number of state root stored in anchor contract.
+     *  address - address of consensus contract.
+     */
+    bytes4 public constant ANCHOR_SETUP_CALLPREFIX = bytes4(
+        keccak256(
+            "setup(uint256,address)"
+        )
+    );
+
+    /* Max number of state roots anchor stores. */
+    uint256 public constant ANCHOR_MAX_STATE_ROOTS = 100;
+
+    /** Epoch length */
+    uint256 public constant EPOCH_LENGTH = uint256(100);
+
 
     /* Structs */
 
@@ -128,6 +153,9 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
     /** Assigned anchor for a given metachain id */
     mapping(bytes32 => address) public anchors;
+
+    /** Assigned consensus gateways for a given metachain id */
+    mapping(bytes32 => address) public consensusGateways;
 
     /** Reputation contract for validators */
     ReputationI public reputation;
@@ -608,46 +636,56 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         reputation.deregister(msg.sender);
     }
 
-    /**
-     * @notice Creates a new meta chain given an anchor.
+    /** @notice Creates a new meta chain given an anchor.
      *         This can be called only by axiom.
      *
      * @dev Function requires:
      *          - msg.sender should be axiom contract.
      *          - core is not assigned to metachain.
-     *
-     * @param _anchor anchor of the new meta-chain.
-     * @param _epochLength Epoch length for new meta-chain.
-     * @param _rootBlockHeight root block height.
      */
-    function newMetaChain(
-        address _anchor,
-        uint256 _epochLength,
-        uint256 _rootBlockHeight
-    )
+    function newMetaChain()
         external
         onlyAxiom
+        returns(bytes32 metachainId_)
     {
-        bytes32 metachainId = hashMetachainId(_anchor);
 
-        require(
-            assignments[metachainId] == address(0),
-            "A core is already assigned to this metachain."
+        bytes memory anchorSetupCallData = anchorSetupData(
+            ANCHOR_MAX_STATE_ROOTS,
+            address(this)
         );
-
-        address core = newCore(
-            metachainId,
-            _epochLength,
+        bytes memory coreSetupCallData = coreSetupData(
+            metachainId_,
+            EPOCH_LENGTH,
             uint256(0), // metablock height
             bytes32(0), // parent hash
             gasTargetDelta, // gas target
             uint256(0), // dynasty
             uint256(0), // accumulated gas
-            _rootBlockHeight
+            bytes32(0), // source
+            0 // todo should be fixed with remove source block height in core-setup.
         );
 
-        assignments[metachainId] = core;
-        anchors[metachainId] = _anchor;
+        bytes memory consensusGatewaySetupCallData = consensusGatewaySetupData();
+
+        (address anchor, address core, address consensusGateway) =
+            axiom.deployMetachainProxies(
+                anchorSetupCallData,
+                coreSetupCallData,
+                consensusGatewaySetupCallData
+            );
+
+        metachainId_ = hashMetachainId(anchor);
+
+        require(
+            assignments[metachainId_] == address(0),
+            "A core is already assigned to this metachain."
+        );
+
+        assignments[metachainId_] = core;
+        anchors[metachainId_] = anchor;
+        consensusGateways[metachainId_] = consensusGateway;
+
+        coreLifetimes[core] = CoreLifetime.creation;
     }
 
     /** Get minimum validator and join limit count. */
@@ -863,10 +901,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      * @param _gasTarget Gas target to close the meta block.
      * @param _dynasty Committed dynasty number.
      * @param _accumulatedGas Accumulated gas.
+     * @param _source Source block hash
      * @param _sourceBlockHeight Source block height.
+     *
      * returns Deployed core contract address.
      */
-    function newCore(
+    function coreSetupData(
         bytes32 _metachainId,
         uint256 _epochLength,
         uint256 _height,
@@ -874,12 +914,14 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         uint256 _gasTarget,
         uint256 _dynasty,
         uint256 _accumulatedGas,
+        bytes32 _source,
         uint256 _sourceBlockHeight
     )
         private
-        returns (address core_)
+        view
+        returns (bytes memory coreSetupCallData_)
     {
-        bytes memory coreSetupData = abi.encodeWithSelector(
+        coreSetupCallData_ = abi.encodeWithSelector(
             CORE_SETUP_CALLPREFIX,
             address(this),
             _metachainId,
@@ -892,13 +934,44 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             _gasTarget,
             _dynasty,
             _accumulatedGas,
+            _source,
             _sourceBlockHeight
         );
+    }
 
-        core_ = axiom.newCore(
-            coreSetupData
+    /**
+     * Creates anchor setup data.
+     *
+     * @param _maxStateRoots Maximum stateroots core can store.
+     * @param _consensus Address of consensus contract.
+     */
+    function anchorSetupData(
+        uint256 _maxStateRoots,
+        address _consensus
+    )
+        private
+        pure
+        returns (bytes memory anchorSetupCallData_)
+    {
+        anchorSetupCallData_ = abi.encodeWithSelector(
+            ANCHOR_SETUP_CALLPREFIX,
+            _maxStateRoots,
+            _consensus
         );
-        coreLifetimes[core_] = CoreLifetime.creation;
+    }
+
+    /**
+     * Creates consensus gateway setup data.
+     */
+    function consensusGatewaySetupData()
+        private
+        pure
+        returns(bytes memory consensusGatewaySetupCallData_)
+    {
+        // todo implement this after consensus gateway implementation.
+        consensusGatewaySetupCallData_ = abi.encodeWithSelector(
+            CONSENSUS_GATEWAY_SETUP_CALL_PREFIX
+        );
     }
 
     /**
