@@ -19,7 +19,11 @@ interface CoreI {
 
     function openKernelHash() external returns (bytes32);
 
-    function joinDuringCreation(address _validator) external;
+    function minimumValidatorCount() external returns (uint256);
+
+    function joinDuringCreation(address _validator)
+        external
+        returns(uint256 validatorCount_, uint256 minValidatorCount_);
 
     function join(address _validator) external;
 
