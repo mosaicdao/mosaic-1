@@ -679,9 +679,9 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
     /**
      * @notice Joins a validator while core is in created state.
-     *         Once the minimum number of validators joined, core is opened,
-     *         with the metablock parameters specified in the constructor
-     *         and joined validators during core is in created state.
+     *         Once the minimum number of validators has joined, core is opened,
+     *         with the metablock parameters specified in the constructor.
+     *         Validators join when core is in created state.
      *
      * @dev Function requires:
      *          - only consensus can call

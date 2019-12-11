@@ -23,7 +23,6 @@ import "../axiom/AxiomI.sol";
 import "../block/Block.sol";
 import "../committee/CommitteeI.sol";
 import "../core/CoreI.sol";
-import "../core/CoreStatusEnum.sol";
 import "../reputation/ReputationI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../version/MosaicVersion.sol";
