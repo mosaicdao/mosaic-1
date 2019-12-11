@@ -56,7 +56,7 @@ contract('Consensus::join', (accounts) => {
   contract('Negative Tests', async () => {
     it('should fail when metachainId is invalid', async () => {
       const joinParams1 = {
-        metachainId: '0x0000000000000000000000000000000000000000'
+        metachainId: '0x0000000000000000000000000000000000000000',
         withdrawalAddress: accountProvider.get(),
         txOptions: {
           from: accountProvider.get(),
