@@ -216,6 +216,12 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
     /** Precommitment closure block height */
     uint256 public precommitClosureBlockHeight;
 
+    /**
+     * Block number at which core status is changed to creation.
+     * It will be used by validators to create GenesisFile.
+     */
+    uint256 public rootOriginObservationBlockHeight;
+
 
     /* Modifiers */
 
@@ -342,6 +348,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         joinLimit = _joinLimit;
 
         creationKernelHeight = _height;
+        openKernelHeight = _height;
 
         Kernel storage creationKernel = kernels[_height];
         creationKernel.parent = _parent;
@@ -709,7 +716,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         if (countValidators >= minimumValidatorCount) {
             quorum = calculateQuorum(countValidators);
             precommitClosureBlockHeight = CORE_OPEN_VOTES_WINDOW;
-            openKernelHeight = creationKernelHeight;
             openKernelHash = hashKernel(
                 creationKernelHeight,
                 creationKernel.parent,
@@ -718,6 +724,9 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
                 creationKernel.gasTarget
             );
             coreStatus = CoreStatus.opened;
+            // Core status would be changed to `opened`.
+            // So `rootOriginObservationBlockHeight` would be set once.
+            rootOriginObservationBlockHeight = block.number;
 
             newProposalSet();
         }
