@@ -145,7 +145,7 @@ contract('Core::joinDuringCreation', async (accounts) => {
         config.mockConsensus.joinDuringCreation(
           accountProvider.get(),
         ),
-        'The core must be under creation.',
+        'The core must be created.',
       );
     });
   });

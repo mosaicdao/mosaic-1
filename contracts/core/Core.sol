@@ -222,8 +222,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
     modifier duringCreation()
     {
         require(
-            coreStatus == CoreStatus.creation,
-            "The core must be under creation."
+            coreStatus == CoreStatus.created,
+            "The core must be created."
         );
         _;
     }
@@ -332,7 +332,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
         setupConsensus(_consensus);
 
-        coreStatus = CoreStatus.creation;
+        coreStatus = CoreStatus.created;
 
         epochLength = _epochLength;
 
@@ -678,14 +678,14 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
     }
 
     /**
-     * @notice Joins a validator while core is in creation state.
+     * @notice Joins a validator while core is in created state.
      *         Once the minimum number of validators joined, core is opened,
      *         with the metablock parameters specified in the constructor
-     *         and joined validators during creation.
+     *         and joined validators during core is in created state.
      *
      * @dev Function requires:
      *          - only consensus can call
-     *          - core is in creation state
+     *          - core is in created state
      *          - a validator's address is not null
      *          - a validator has not already joined
      *
@@ -699,7 +699,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         duringCreation
         returns(uint256 validatorCount_, uint256 minValidatorCount_)
     {
-        // during creation join at creation kernel height
+        // during created state, validators join at creation kernel height
         insertValidator(_validator, creationKernelHeight);
 
         Kernel storage creationKernel = kernels[creationKernelHeight];
