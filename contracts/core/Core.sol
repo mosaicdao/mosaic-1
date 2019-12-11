@@ -216,7 +216,10 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
     /** Precommitment closure block height */
     uint256 public precommitClosureBlockHeight;
 
-    /** Origin chain observation blockheight. */
+    /**
+     * Block number at which core status is changed to creation.
+     * It will be used by validators to create GenesisFile.
+     */
     uint256 public rootOriginObservationBlockHeight;
 
 
