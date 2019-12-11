@@ -19,12 +19,11 @@ notifications:
 node_js:
   - "8"
 before_install:
+  - sudo apt-get update
   - sudo apt-get install nodejs
   - sudo apt-get install npm
   - sudo apt-get install software-properties-common
   - sudo add-apt-repository -y ppa:ethereum/ethereum
-install:
-  - npm run update
 before_script:
   - ./tools/run_ganache_cli.sh </dev/null 1>/dev/null 2>&1 &
 script:
