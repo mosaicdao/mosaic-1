@@ -54,28 +54,17 @@ contract('Consensus::joinDuringCreation', (accounts) => {
   });
 
   contract('Negative Tests', async () => {
-    it('should fail when chain id is 0', async () => {
-      const params = Object.assign(
-        {},
-        joinParams,
-        { metachainId: Utils.NULL_ADDRESS },
-      );
+    it('should fail when metachainId is invalid', async () => {
+      const joinParams1 = {
+        metachainId: '0x0000000000000000000000000000000000000000',
+        withdrawalAddress: accountProvider.get(),
+        txOptions: {
+          from: accountProvider.get(),
+        },
+      };
       await Utils.expectRevert(
-        consensusUtil.joinDuringCreation(consensus, params),
-        'Metachain id is 0.',
-      );
-    });
-
-    it('should fail when withdrawal address is 0', async () => {
-      const params = Object.assign(
-        {},
-        joinParams,
-        { withdrawalAddress: Utils.NULL_ADDRESS },
-      );
-
-      await Utils.expectRevert(
-        consensusUtil.joinDuringCreation(consensus, params),
-        'Withdrawal address is 0.',
+        consensusUtil.joinDuringCreation(consensus, joinParams1),
+        'Core address is 0.',
       );
     });
 
@@ -114,10 +103,6 @@ contract('Consensus::joinDuringCreation', (accounts) => {
   });
 
   contract('Positive Tests', () => {
-    it('should pass when core lifetime is genesis', async () => {
-      await consensusUtil.joinDuringCreation(consensus, joinParams);
-    });
-
     it('should call join function of reputation contract with correct params', async () => {
       await consensusUtil.joinDuringCreation(consensus, joinParams);
 

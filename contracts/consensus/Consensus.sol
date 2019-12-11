@@ -498,6 +498,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      *         This is called by validator address.
      *
      * @dev Function requires:
+     *          - core address is 0.
      *          - core lifetime status must be genesis or active.
      *
      * @param _metachainId Metachain id that validator wants to join.
@@ -510,9 +511,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         external
     {
         address core = assignments[_metachainId];
-
-        // Validate the join params.
-        validateJoinParams(_metachainId, core, _withdrawalAddress);
+        require(
+            core != address(0),
+            "Core address is 0."
+        );
 
         require(
             isCoreRunning(core),
@@ -531,6 +533,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      *         This is called by validator address.
      *
      * @dev Function requires:
+     *          - core address is 0.
      *          - core life time status must be creation.
      *
      * @param _metachainId Metachain id that validator wants to join.
@@ -544,8 +547,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         external
     {
         address core = assignments[_metachainId];
-        // Validate the join params.
-        validateJoinParams(_metachainId, core, _withdrawalAddress);
+        require(
+            core != address(0),
+            "Core address is 0."
+        );
 
         // Specified core must have creation lifetime status.
         require(
@@ -928,41 +933,5 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         );
 
         committee_ = CommitteeI(committeeAddress);
-    }
-
-    /**
-     * @notice Validate the params for joining the core.
-     *
-     * @dev Function requires:
-     *          - metachain id should not be 0.
-     *          - core address should not be 0.
-     *          - withdrawal address can't be 0.
-     *
-     * @param _metachainId Metachain id.
-     * @param _core Core contract address.
-     * @param _withdrawalAddress Withdrawal address.
-     */
-    function validateJoinParams(
-        bytes32 _metachainId,
-        address _core,
-        address _withdrawalAddress
-    )
-        private
-        pure
-    {
-        require(
-            _metachainId != bytes32(0),
-            "Metachain id is 0."
-        );
-
-        require(
-            _core != address(0),
-            "Core address is 0."
-        );
-
-        require(
-            _withdrawalAddress != address(0),
-            "Withdrawal address is 0."
-        );
     }
 }

@@ -54,28 +54,17 @@ contract('Consensus::join', (accounts) => {
   });
 
   contract('Negative Tests', async () => {
-    it('should fail when metachain id is 0', async () => {
-      const params = Object.assign(
-        {},
-        joinParams,
-        { metachainId: Utils.NULL_ADDRESS },
-      );
+    it('should fail when metachainId is invalid', async () => {
+      const joinParams1 = {
+        metachainId: '0x0000000000000000000000000000000000000000'
+        withdrawalAddress: accountProvider.get(),
+        txOptions: {
+          from: accountProvider.get(),
+        },
+      };
       await Utils.expectRevert(
-        consensusUtil.join(consensus, params),
-        'Metachain id is 0.',
-      );
-    });
-
-    it('should fail when withdrawal address is 0', async () => {
-      const params = Object.assign(
-        {},
-        joinParams,
-        { withdrawalAddress: Utils.NULL_ADDRESS },
-      );
-
-      await Utils.expectRevert(
-        consensusUtil.join(consensus, params),
-        'Withdrawal address is 0.',
+        consensusUtil.join(consensus, joinParams1),
+        'Core address is 0.',
       );
     });
 
