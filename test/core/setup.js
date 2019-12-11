@@ -184,6 +184,13 @@ contract('Core::setup', (accounts) => {
         + `and is not ${correctArgs.height}`,
       );
 
+      const openKernelHeight = await core.openKernelHeight();
+      assert.isOk(
+        openKernelHeight.cmp(correctArgs.height) === 0,
+        `Open kernel height is set to ${openKernelHeight} `
+        + `and is not ${correctArgs.height}`,
+      );
+
       const kernel = await core.kernels(correctArgs.height);
       assert.strictEqual(
         kernel.parent,
