@@ -494,28 +494,28 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
     }
 
     /**
-     * @notice Validator joins the core, when core lifetime status is
-     *         is active. This is called by validator address.
+     * @notice Validator joins the core, when core is running.
+     *         This is called by validator address.
      *
      * @dev Function requires:
-     *          - core status should be opened or precommitted.
+     *          - core lifetime status must be genesis or active.
      *
      * @param _metachainId Metachain id that validator wants to join.
-     * @param _core Core address that validator wants to join.
      * @param _withdrawalAddress A withdrawal address of newly joined validator.
      */
     function join(
         bytes32 _metachainId,
-        address _core,
         address _withdrawalAddress
     )
         external
     {
+        address core = assignments[_metachainId];
+
         // Validate the join params.
-        validateJoinParams(_metachainId, _core, _withdrawalAddress);
+        validateJoinParams(_metachainId, core, _withdrawalAddress);
 
         require(
-            isCoreRunning(_core),
+            isCoreRunning(core),
             "Core lifetime status must be genesis or active."
         );
 
@@ -523,34 +523,33 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         reputation.stake(msg.sender, _withdrawalAddress);
 
         // Join in core contract.
-        CoreI(_core).join(msg.sender);
+        CoreI(core).join(msg.sender);
     }
 
     /**
-     * @notice Validator joins the core, when core status is creation.
+     * @notice Validator joins the core, when core lifetime status is creation.
      *         This is called by validator address.
      *
      * @dev Function requires:
-     *          - core should be in an active state.
+     *          - core life time status must be creation.
      *
      * @param _metachainId Metachain id that validator wants to join.
-     * @param _core Core address that validator wants to join.
      * @param _withdrawalAddress A withdrawal address of newly joined validator.
      */
 
     function joinDuringCreation(
         bytes32 _metachainId,
-        address _core,
         address _withdrawalAddress
     )
         external
     {
+        address core = assignments[_metachainId];
         // Validate the join params.
-        validateJoinParams(_metachainId, _core, _withdrawalAddress);
+        validateJoinParams(_metachainId, core, _withdrawalAddress);
 
-        // Specified core must have genesis lifetime status.
+        // Specified core must have creation lifetime status.
         require(
-            coreLifetimes[_core] == CoreLifetime.creation,
+            coreLifetimes[core] == CoreLifetime.creation,
             "Core lifetime status must be creation."
         );
 
@@ -559,10 +558,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
         // Join in core contract.
         (uint256 validatorCount, uint256 minValidatorCount) =
-            CoreI(_core).joinDuringCreation(msg.sender);
+            CoreI(core).joinDuringCreation(msg.sender);
 
         if (validatorCount >= minValidatorCount) {
-            coreLifetimes[_core] = CoreLifetime.genesis;
+            coreLifetimes[core] = CoreLifetime.genesis;
         }
     }
 
@@ -937,7 +936,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      * @dev Function requires:
      *          - metachain id should not be 0.
      *          - core address should not be 0.
-     *          - core should be assigned for the specified chain id.
      *          - withdrawal address can't be 0.
      *
      * @param _metachainId Metachain id.
@@ -950,21 +948,16 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         address _withdrawalAddress
     )
         private
-        view
+        pure
     {
         require(
-            _metachainId != bytes20(0),
+            _metachainId != bytes32(0),
             "Metachain id is 0."
         );
 
         require(
             _core != address(0),
             "Core address is 0."
-        );
-
-        require(
-            assignments[_metachainId] == _core,
-            "Core is not assigned for the specified metachain id."
         );
 
         require(

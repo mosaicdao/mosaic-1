@@ -43,7 +43,6 @@ contract('Consensus::joinDuringCreation', (accounts) => {
 
     joinParams = {
       metachainId: Utils.getRandomHash(),
-      core: core.address,
       withdrawalAddress: accountProvider.get(),
       txOptions: {
         from: accountProvider.get(),
@@ -64,32 +63,6 @@ contract('Consensus::joinDuringCreation', (accounts) => {
       await Utils.expectRevert(
         consensusUtil.joinDuringCreation(consensus, params),
         'Metachain id is 0.',
-      );
-    });
-
-    it('should fail when core address is 0', async () => {
-      const params = Object.assign(
-        {},
-        joinParams,
-        { core: Utils.NULL_ADDRESS },
-      );
-
-      await Utils.expectRevert(
-        consensusUtil.joinDuringCreation(consensus, params),
-        'Core address is 0.',
-      );
-    });
-
-    it('should fail when core is not assigned for specified metachain id', async () => {
-      const params = Object.assign(
-        {},
-        joinParams,
-        { core: accountProvider.get() },
-      );
-
-      await Utils.expectRevert(
-        consensusUtil.joinDuringCreation(consensus, params),
-        'Core is not assigned for the specified metachain id.',
       );
     });
 
