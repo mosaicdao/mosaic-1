@@ -33,3 +33,6 @@ interacts/*
 
 # NPM package generated files:
 contract_build
+
+cache/
+artifacts/

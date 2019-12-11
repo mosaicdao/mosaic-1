@@ -44,7 +44,7 @@ const contracts = {};
 contractNames.forEach((contract) => {
   const contractPath = path.join(
     __dirname,
-    `../build/contracts/${contract}.json`,
+    `../artifacts/${contract}.json`,
   );
 
   if (!fs.existsSync(contractPath)) {

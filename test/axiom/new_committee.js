@@ -18,7 +18,7 @@ const BN = require('bn.js');
 const { AccountProvider } = require('../test_lib/utils.js');
 const Utils = require('../test_lib/utils.js');
 const AxiomUtils = require('./utils.js');
-const ProxyTruffleArtifact = require('../../build/contracts/Proxy.json');
+const ProxyTruffleArtifact = require('../../artifacts/Proxy.json');
 
 const SpyConsensus = artifacts.require('SpyConsensus');
 const SpyReputation = artifacts.require('SpyReputation');

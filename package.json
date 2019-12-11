@@ -5,15 +5,15 @@
   "main": "index.js",
   "scripts": {
     "update": "git submodule update --init --recursive && npm ci",
-    "compile": "truffle compile --all",
+    "compile": "buidler compile",
     "lint:js": "find ./test -name \"*.js\" | xargs eslint",
     "lint:js:fix": "npm run lint:js -- --fix",
     "lint:sol:solium": "solium --dir contracts/",
     "lint:sol:solium:fix": "npm run lint:sol:solium -- --fix",
     "test": "npm run test:contracts",
-    "test:contracts": "truffle test",
+    "test:contracts": "buidler test",
     "test:integration": "cd test_integration && tsc && ./main.sh",
-    "test:dev": "truffle test test/consensus/commit.js",
+    "test:dev": "buidler test test/consensus/commit.js",
     "ganache-cli": "./tools/run_ganache_cli.sh",
     "make:all": "lint:sol:solium && lint:js && compile:all && test:contracts",
     "clean": "rm -r contract_build/contracts.json interacts/* build/* 2> /dev/null || true",
@@ -32,6 +32,9 @@
   },
   "homepage": "https://github.com/mosaicdao/mosaic-1#readme",
   "devDependencies": {
+    "@nomiclabs/buidler": "^1.0.1",
+    "@nomiclabs/buidler-truffle5": "^1.0.1",
+    "@nomiclabs/buidler-web3": "^1.0.1",
     "@types/mocha": "5.2.7",
     "@types/web3": "1.2.2",
     "assert": "2.0.0",
@@ -45,10 +48,9 @@
     "mocha": "6.2.0",
     "openzeppelin-solidity": "2.1.1",
     "solium": "1.2.4",
-    "truffle": "5.1.3",
     "ts-generator": "0.0.8",
     "typechain": "0.3.14",
     "typescript": "3.7.2",
-    "web3": "1.2.4"
+    "web3": "^1.2.4"
   }
 }
