@@ -19,7 +19,6 @@ notifications:
 node_js:
   - "8"
 before_install:
-  - sudo apt-get update
   - sudo apt-get install nodejs
   - sudo apt-get install npm
   - sudo apt-get install software-properties-common
