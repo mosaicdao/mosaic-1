@@ -693,7 +693,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         address core = assignments[_metachainId];
         require(
             core != address(0),
-            "Invalid metachain id"
+            "No core exists for the metachain id."
         );
 
         require(

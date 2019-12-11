@@ -106,7 +106,7 @@ contract('Consensus::publishEndPoint', (accounts) => {
       assert.strictEqual(
         eventData._metachainId,
         publishEndpointParams.metachainId,
-        'Invalid metachain id',
+        'No core exists for the metachain id.',
       );
 
       assert.strictEqual(
