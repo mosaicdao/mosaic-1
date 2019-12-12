@@ -63,7 +63,7 @@ contract('Consensus::publishEndPoint', (accounts) => {
     await reputation.setIsActive(publishEndpointParams.validator, true);
 
     await core.setOpenkernelHeight(openKernelHeight);
-    await core.activateValidator(
+    await core.addValidator(
       publishEndpointParams.validator,
       coreParams.beginHeight,
       coreParams.endHeight,
@@ -104,30 +104,30 @@ contract('Consensus::publishEndPoint', (accounts) => {
       const eventData = event.EndpointPublished;
 
       assert.strictEqual(
-        eventData._metachainId,
+        eventData.metachainId,
         publishEndpointParams.metachainId,
         'No core exists for the metachain id.',
       );
 
       assert.strictEqual(
-        eventData._core,
+        eventData.core,
         core.address,
         'Invalid core address');
 
       assert.strictEqual(
-        eventData._validator,
+        eventData.validator,
         publishEndpointParams.validator,
         'Incorrect validator address',
       );
 
       assert.strictEqual(
-        eventData._service,
+        eventData.service,
         publishEndpointParams.service,
         'Incorrect service address',
       );
 
       assert.strictEqual(
-        eventData._endpoint,
+        eventData.endpoint,
         publishEndpointParams.endpoint,
         'Incorrect service address',
       );

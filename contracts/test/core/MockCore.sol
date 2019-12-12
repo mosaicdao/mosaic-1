@@ -107,7 +107,7 @@ contract MockCore is Core {
         return proposals[_kernelHeight][SENTINEL_PROPOSALS] != bytes32(0);
     }
 
-    function activateValidator(
+    function addValidator(
         address _validator,
         uint256 beginHeight,
         uint256 endHeight

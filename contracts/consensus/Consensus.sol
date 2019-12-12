@@ -34,14 +34,15 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
     using SafeMath for uint256;
 
+
     /* Events */
 
     event EndpointPublished(
-        bytes32 _metachainId,
-        address _core,
-        address _validator,
-        string _service,
-        string _endpoint
+        bytes32 metachainId,
+        address core,
+        address validator,
+        string service,
+        string endpoint
     );
 
 

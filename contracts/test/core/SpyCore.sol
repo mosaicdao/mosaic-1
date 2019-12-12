@@ -132,6 +132,6 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
         view
         returns (bool)
     {
-
+        require(false, "This should not be called for unit tests.");
     }
 }
