@@ -225,7 +225,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
     /* Modifiers */
 
-    modifier duringCreation()
+    modifier beforeOpen()
     {
         require(
             coreStatus == CoreStatus.created,
@@ -685,14 +685,13 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
     }
 
     /**
-     * @notice Joins a validator while core is in created state.
+     * @notice Joins a validator before core is opened.
      *         Once the minimum number of validators has joined, core is opened,
      *         with the metablock parameters specified in the constructor.
-     *         Validators join when core is in created state.
      *
      * @dev Function requires:
      *          - only consensus can call
-     *          - core is in created state
+     *          - core is created state and not open
      *          - a validator's address is not null
      *          - a validator has not already joined
      *
@@ -700,10 +699,10 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *
      * @return The total count of joined validators.
      */
-    function joinDuringCreation(address _validator)
+    function joinBeforeOpen(address _validator)
         external
         onlyConsensus
-        duringCreation
+        beforeOpen
         returns(uint256 validatorCount_, uint256 minValidatorCount_)
     {
         // during created state, validators join at creation kernel height

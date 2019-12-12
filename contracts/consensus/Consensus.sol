@@ -526,11 +526,11 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
     }
 
     /**
-     * @notice Validator joins the core, when core status is creation.
+     * @notice Validator joins the core, when core lifetime status is creation.
      *         This is called by validator address.
      *
      * @dev Function requires:
-     *          - core should be in an active state.
+     *          - core life time should be in creation state.
      *
      * @param _metachainId Metachain id that validator wants to join.
      * @param _core Core address that validator wants to join.
@@ -558,7 +558,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
         // Join in core contract.
         (uint256 validatorCount, uint256 minValidatorCount) =
-            CoreI(_core).joinDuringCreation(msg.sender);
+            CoreI(_core).joinBeforeOpen(msg.sender);
 
         if (validatorCount >= minValidatorCount) {
             coreLifetimes[_core] = CoreLifetime.genesis;

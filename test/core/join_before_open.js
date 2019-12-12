@@ -51,7 +51,7 @@ async function assertConfigInCreation(core) {
   );
 }
 
-contract('Core::joinDuringCreation', async (accounts) => {
+contract('Core::joinBeforeOpen', async (accounts) => {
   const accountProvider = new AccountProvider(accounts);
 
   beforeEach(async () => {
@@ -97,7 +97,7 @@ contract('Core::joinDuringCreation', async (accounts) => {
     it('should fail if a caller is not consensus', async () => {
       assertConfigInCreation(config.mockCore);
       await Utils.expectRevert(
-        config.mockCore.joinDuringCreation(
+        config.mockCore.joinBeforeOpen(
           accountProvider.get(),
           {
             from: accountProvider.get(), // not a consensus

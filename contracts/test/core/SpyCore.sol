@@ -61,7 +61,7 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
         spyAccumulatedGas = _accumulatedGas;
         spySourceBlockHeight = _sourceBlockHeight;
     }
-    function joinDuringCreation(address _validator)
+    function joinBeforeOpen(address _validator)
         external
         returns (uint256, uint256)
     {
