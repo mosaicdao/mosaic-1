@@ -29,19 +29,16 @@ interface AxiomI {
     /**
      * @notice Deploys metachain proxies. Only consensus can call this function.
      *
-     * @param _anchorSetupData Setup data for anchor contract.
      * @param _coreSetupData Setup data for core contract.
      * @param _consensusGatewaySetupData Setup data for consensus gateway contract.
      *
-     * @return anchor_ Address of anchor contract.
      * @return core_ Address of core contract.
      * @return consensusGateway_ Address of consensus gateway contract.
      */
     function deployMetachainProxies(
-        bytes calldata _anchorSetupData,
         bytes calldata _coreSetupData,
         bytes calldata _consensusGatewaySetupData
     )
         external
-        returns(address anchor_, address core_, address consensusGateway_);
+        returns(address core_, address consensusGateway_);
 }

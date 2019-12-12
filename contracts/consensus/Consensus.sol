@@ -667,9 +667,9 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
         bytes memory consensusGatewaySetupCallData = consensusGatewaySetupData();
 
-        (address anchor, address core, address consensusGateway) =
+        address anchor;
+        (address core, address consensusGateway) =
             axiom.deployMetachainProxies(
-                anchorSetupCallData,
                 coreSetupCallData,
                 consensusGatewaySetupCallData
             );
