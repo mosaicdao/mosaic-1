@@ -106,4 +106,20 @@ contract MockCore is Core {
     {
         return proposals[_kernelHeight][SENTINEL_PROPOSALS] != bytes32(0);
     }
+
+    function addValidator(
+        address _validator,
+        uint256 beginHeight,
+        uint256 endHeight
+    )
+        public
+    {
+        validatorBeginHeight[_validator] = beginHeight;
+        validatorEndHeight[_validator] = endHeight;
+    }
+
+    function setOpenkernelHeight(uint256 _openKernelHeight) public {
+        openKernelHeight = _openKernelHeight;
+    }
+
 }
