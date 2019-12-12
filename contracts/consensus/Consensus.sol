@@ -53,12 +53,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
     /** Maximum coinbase split per mille */
     uint256 public constant MAX_COINBASE_SPLIT_PER_MILLE = uint16(1000);
 
-    /** Gas price to calculate reward */
-    uint256 public constant FEE_GAS_PRICE = uint256(0);
-
-    /** Gas limit to calculate reward */
-    uint256 public constant FEE_GAS_LIMIT = uint256(0);
-
     /** The callprefix of the Core::setup function. */
     bytes4 public constant CORE_SETUP_CALLPREFIX = bytes4(
         keccak256(
@@ -111,6 +105,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
     /** Coinbase split per mille */
     uint256 public coinbaseSplitPerMille;
+
+    /** Gas price to calculate reward */
+    uint256 public feeGasPrice;
+
+    /** Gas limit to calculate reward */
+    uint256 public feeGasLimit;
 
     /** Block hash of heads of Metablockchains */
     mapping(bytes32 /* metachainId */ => bytes32 /* MetablockHash */) public metablockHeaderTips;
@@ -504,8 +504,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
     }
 
     /**
-     * @notice Validator joins the core, when core is running.
-     *         This is called by validator address.
+     * @notice Validator joins the core, when core lifetime status is genesis
+     *         or active. This is called by validator address.
      *
      * @dev Function requires:
      *          - core address is 0.
@@ -580,8 +580,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             ConsensusGatewayI consensusGateway = consensusGateways[_metachainId];
             consensusGateway.declareOpenKernel(
                 core,
-                FEE_GAS_PRICE,
-                FEE_GAS_LIMIT
+                feeGasPrice,
+                feeGasLimit
             );
         }
     }
