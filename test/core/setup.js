@@ -132,16 +132,6 @@ contract('Core::setup', (accounts) => {
         'Height and parent can be 0 only together.',
       );
     });
-
-    it('should revert as accumulated gas is 0', async () => {
-      const args = correctArgs;
-      args.accumulatedGas = 0;
-
-      await Utils.expectRevert(
-        createCore(args, config.consensus),
-        'Metablock\'s accumulated gas is 0.',
-      );
-    });
   });
 
   contract('Positive Tests', async () => {
@@ -191,6 +181,13 @@ contract('Core::setup', (accounts) => {
       assert.isOk(
         creationKernelHeight.cmp(correctArgs.height) === 0,
         `Creation kernel height is set to ${creationKernelHeight} `
+        + `and is not ${correctArgs.height}`,
+      );
+
+      const openKernelHeight = await core.openKernelHeight();
+      assert.isOk(
+        openKernelHeight.cmp(correctArgs.height) === 0,
+        `Open kernel height is set to ${openKernelHeight} `
         + `and is not ${correctArgs.height}`,
       );
 

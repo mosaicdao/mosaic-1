@@ -24,6 +24,7 @@ const SpyConsensus = artifacts.require('SpyConsensus');
 const SpyReputation = artifacts.require('SpyReputation');
 const SpyCore = artifacts.require('SpyCore');
 const SpyAnchor = artifacts.require('SpyAnchor');
+const SpyConsensusGateway = artifacts.require('SpyConsensusGateway');
 
 const epochLength = new BN(100);
 let constructionParams = {};
@@ -43,6 +44,7 @@ contract('Axiom::newCore', (accounts) => {
       SpyReputation: await SpyReputation.new(),
       SpyCore: await SpyCore.new(),
       SpyAnchor: await SpyAnchor.new(),
+      SpyConsensusGateway: await SpyConsensusGateway.new(),
     };
     Object.freeze(contracts);
 
@@ -53,6 +55,7 @@ contract('Axiom::newCore', (accounts) => {
       committeeMasterCopy: accountProvider.get(),
       reputationMasterCopy: contracts.SpyReputation.address,
       anchorMasterCopy: contracts.SpyAnchor.address,
+      consensusGatewayMasterCopy: contracts.SpyConsensusGateway.address,
       txOptions: {
         from: accountProvider.get(),
       },
