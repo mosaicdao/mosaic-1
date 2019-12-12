@@ -4,7 +4,6 @@
   "description": "Mosaic",
   "main": "index.js",
   "scripts": {
-    "update": "git submodule update --init --recursive && npm ci",
     "compile": "truffle compile --all",
     "lint:js": "find ./test -name \"*.js\" | xargs eslint",
     "lint:js:fix": "npm run lint:js -- --fix",
@@ -45,10 +44,11 @@
     "mocha": "6.2.0",
     "openzeppelin-solidity": "2.1.1",
     "solium": "1.2.4",
-    "truffle": "5.1.0",
+    "truffle": "5.0.43",
     "ts-generator": "0.0.8",
     "typechain": "0.3.14",
     "typescript": "3.7.2",
-    "web3": "1.2.4"
+    "web3": "1.2.1",
+    "ethereumjs-util": "6.2.0"
   }
 }

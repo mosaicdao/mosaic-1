@@ -86,7 +86,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
     /** EIP-712 domain separator for Core */
     bytes32 public constant DOMAIN_SEPARATOR_TYPEHASH = keccak256(
-        "EIP712Domain(string name,string version,bytes20 chainId,address verifyingContract)"
+        "EIP712Domain(string name,string version,bytes32 metachainId,address verifyingContract)"
     );
 
     /** EIP-712 type hash for Kernel. */
@@ -131,8 +131,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
     /** Domain separator */
     bytes32 public domainSeparator;
 
-    /** Chain Id of the meta-blockchain */
-    bytes20 public chainId;
+    /** Metachain Id of the meta-blockchain */
+    bytes32 public metachainId;
 
     /** Core status */
     CoreStatus public coreStatus;
@@ -216,6 +216,12 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
     /** Precommitment closure block height */
     uint256 public precommitClosureBlockHeight;
 
+    /**
+     * Block number at which core status is changed to creation.
+     * It will be used by validators to create GenesisFile.
+     */
+    uint256 public rootOriginObservationBlockHeight;
+
 
     /* Modifiers */
 
@@ -270,7 +276,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
     function setup(
         ConsensusI _consensus,
-        bytes20 _chainId,
+        bytes32 _metachainId,
         uint256 _epochLength,
         uint256 _minValidators,
         uint256 _joinLimit,
@@ -285,13 +291,13 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         external
     {
         require(
-            chainId == bytes20(0),
+            metachainId == bytes32(0),
             "Core is already setup."
         );
 
         require(
-            _chainId != bytes20(0),
-            "Chain id is 0."
+            _metachainId != bytes32(0),
+            "Metachain id is 0."
         );
 
         require(
@@ -320,17 +326,12 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             "Height and parent can be 0 only together."
         );
 
-        require(
-            _accumulatedGas != uint256(0),
-            "Metablock's accumulated gas is 0."
-        );
-
         domainSeparator = keccak256(
             abi.encode(
                 DOMAIN_SEPARATOR_TYPEHASH,
                 DOMAIN_SEPARATOR_NAME,
                 DOMAIN_SEPARATOR_VERSION,
-                _chainId,
+                _metachainId,
                 address(this)
             )
         );
@@ -347,6 +348,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         joinLimit = _joinLimit;
 
         creationKernelHeight = _height;
+        openKernelHeight = _height;
 
         Kernel storage creationKernel = kernels[_height];
         creationKernel.parent = _parent;
@@ -695,11 +697,14 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *          - a validator has not already joined
      *
      * @param _validator A validator's address to join.
+     *
+     * @return The total count of joined validators.
      */
     function joinDuringCreation(address _validator)
         external
         onlyConsensus
         duringCreation
+        returns(uint256 validatorCount_, uint256 minValidatorCount_)
     {
         // during creation join at creation kernel height
         insertValidator(_validator, creationKernelHeight);
@@ -711,7 +716,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         if (countValidators >= minimumValidatorCount) {
             quorum = calculateQuorum(countValidators);
             precommitClosureBlockHeight = CORE_OPEN_VOTES_WINDOW;
-            openKernelHeight = creationKernelHeight;
             openKernelHash = hashKernel(
                 creationKernelHeight,
                 creationKernel.parent,
@@ -720,9 +724,15 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
                 creationKernel.gasTarget
             );
             coreStatus = CoreStatus.opened;
+            // Core status would be changed to `opened`.
+            // So `rootOriginObservationBlockHeight` would be set once.
+            rootOriginObservationBlockHeight = block.number;
 
             newProposalSet();
         }
+
+        validatorCount_ = countValidators;
+        minValidatorCount_ = minimumValidatorCount;
     }
 
     /**

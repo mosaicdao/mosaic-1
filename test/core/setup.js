@@ -28,7 +28,7 @@ let config = {};
 async function createCore(args, consensus) {
   return CoreUtils.createCore(
     consensus,
-    args.chainId,
+    args.metachainId,
     args.epochLength,
     args.minValidators,
     args.joinLimit,
@@ -45,12 +45,12 @@ async function createCore(args, consensus) {
   );
 }
 
-contract('Core::constructor', (accounts) => {
+contract('Core::setup', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
 
   beforeEach(async () => {
     correctArgs = {
-      chainId: accountProvider.get(),
+      metachainId: Utils.getRandomHash(),
       epochLength: new BN(100),
       minValidators: new BN(3),
       joinLimit: new BN(5),
@@ -71,13 +71,13 @@ contract('Core::constructor', (accounts) => {
   });
 
   contract('Negative Tests', async () => {
-    it('should revert as chain id is 0', async () => {
+    it('should revert as metachain id is 0', async () => {
       const args = correctArgs;
-      args.chainId = Utils.ZERO_BYTES20;
+      args.metachainId = Utils.ZERO_BYTES32;
 
       await Utils.expectRevert(
         createCore(args, config.consensus),
-        'Chain id is 0.',
+        'Metachain id is 0.',
       );
     });
 
@@ -132,16 +132,6 @@ contract('Core::constructor', (accounts) => {
         'Height and parent can be 0 only together.',
       );
     });
-
-    it('should revert as accumulated gas is 0', async () => {
-      const args = correctArgs;
-      args.accumulatedGas = 0;
-
-      await Utils.expectRevert(
-        createCore(args, config.consensus),
-        'Metablock\'s accumulated gas is 0.',
-      );
-    });
   });
 
   contract('Positive Tests', async () => {
@@ -191,6 +181,13 @@ contract('Core::constructor', (accounts) => {
       assert.isOk(
         creationKernelHeight.cmp(correctArgs.height) === 0,
         `Creation kernel height is set to ${creationKernelHeight} `
+        + `and is not ${correctArgs.height}`,
+      );
+
+      const openKernelHeight = await core.openKernelHeight();
+      assert.isOk(
+        openKernelHeight.cmp(correctArgs.height) === 0,
+        `Open kernel height is set to ${openKernelHeight} `
         + `and is not ${correctArgs.height}`,
       );
 

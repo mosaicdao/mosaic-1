@@ -22,6 +22,7 @@ const CommitteeFormationLength = 7;
 const BlockSegmentLength = 256;
 const MinimumRequiredValidators = 5;
 const MaximumCoinbaseSplitPerMille = 1000;
+const METACHAIN_ID_TYPEHASH = web3.utils.keccak256('MetachainId(address anchor)');
 
 async function setup(consensus, setupConfig) {
   return consensus.setup(
@@ -51,7 +52,7 @@ async function getDislocation(committeeFormationBlockHeight) {
 
 async function join(consensus, joinParams) {
   await consensus.join(
-    joinParams.chainId,
+    joinParams.metachainId,
     joinParams.core,
     joinParams.withdrawalAddress,
     joinParams.txOptions,
@@ -60,7 +61,7 @@ async function join(consensus, joinParams) {
 
 async function joinDuringCreation(consensus, joinParams) {
   await consensus.joinDuringCreation(
-    joinParams.chainId,
+    joinParams.metachainId,
     joinParams.core,
     joinParams.withdrawalAddress,
     joinParams.txOptions,
@@ -70,7 +71,7 @@ async function joinDuringCreation(consensus, joinParams) {
 async function callNewMetaChainOnConsensus(spyAxiom, params) {
   await spyAxiom.callNewMetaChainOnConsensus(
     params.consensus,
-    params.chainId,
+    params.anchor,
     params.epochLength,
     params.sourceBlockHeight,
   );
@@ -78,7 +79,7 @@ async function callNewMetaChainOnConsensus(spyAxiom, params) {
 
 async function commit(consensus, params) {
   await consensus.commitMetablock(
-    params.chainId,
+    params.metachainId,
     params.rlpBlockHeader,
     params.kernelHash,
     params.originObservation,
@@ -92,6 +93,32 @@ async function commit(consensus, params) {
     params.txOptions,
   );
 }
+
+async function hashMetachainId(consensus, params) {
+  return consensus.hashMetachainId(
+    params.anchor,
+    params.txOptions,
+  );
+}
+
+function getMetachainId(mosaicDomainSeparator, metachainIdHash) {
+  return web3.utils.soliditySha3(
+    { t: 'bytes1', v: '0x19' },
+    { t: 'bytes1', v: '0x4d' },
+    { t: 'bytes32', v: mosaicDomainSeparator },
+    { t: 'bytes32', v: metachainIdHash },
+  );
+}
+
+function getMetachainIdHash(anchor, metachainIdTypeHash) {
+  return web3.utils.sha3(
+    web3.eth.abi.encodeParameters(
+      ['bytes32', 'address'],
+      [metachainIdTypeHash, anchor],
+    ),
+  );
+}
+
 module.exports = {
   SentinelCommittee,
   CommitteeFormationDelay,
@@ -105,4 +132,16 @@ module.exports = {
   joinDuringCreation,
   callNewMetaChainOnConsensus,
   commit,
+  hashMetachainId,
+  METACHAIN_ID_TYPEHASH,
+  getMetachainId,
+  getMetachainIdHash,
+  CoreLifetime: {
+    undefined: 0,
+    halted: 1,
+    corrupted: 2,
+    creation: 3,
+    genesis: 4,
+    active: 5,
+  },
 };

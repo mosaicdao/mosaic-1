@@ -20,6 +20,7 @@ const { AccountProvider } = require('../test_lib/utils.js');
 const CoreStatusUtils = require('../test_lib/core_status_utils');
 const CoreUtils = require('./utils.js');
 const Utils = require('../test_lib/utils.js');
+const web3 = require('../test_lib/web3.js');
 
 const MockCore = artifacts.require('MockCore');
 
@@ -55,7 +56,7 @@ contract('Core::joinDuringCreation', async (accounts) => {
 
   beforeEach(async () => {
     config = {
-      chainId: accountProvider.get(),
+      metachainId: accountProvider.get(),
       epochLength: new BN(100),
       minValidatorCount: new BN(5),
       validatorJoinLimit: new BN(20),
@@ -70,7 +71,7 @@ contract('Core::joinDuringCreation', async (accounts) => {
     };
 
     config.mockConsensus = await CoreUtils.createConsensusCore(
-      config.chainId,
+      config.metachainId,
       config.epochLength,
       config.minValidatorCount,
       config.validatorJoinLimit,
@@ -239,6 +240,7 @@ contract('Core::joinDuringCreation', async (accounts) => {
       const validator = accountProvider.get();
       expectedUpdatedValidators.push(validator);
       expectedUpdatedReputations.push(new BN(1));
+      const expectedRootOriginObservationBlock = await web3.eth.getBlockNumber() + 1;
       await config.mockConsensus.joinDuringCreation(validator);
       const valCount = await config.mockCore.countValidators.call();
       assert.isOk(
@@ -288,6 +290,13 @@ contract('Core::joinDuringCreation', async (accounts) => {
       );
       assert.isOk(
         isProposalSetInitialized,
+      );
+
+      const actualRootOriginObservationBlock = await config.mockCore
+        .rootOriginObservationBlockHeight.call();
+      assert.strictEqual(
+        actualRootOriginObservationBlock.eqn(expectedRootOriginObservationBlock),
+        true,
       );
     });
   });

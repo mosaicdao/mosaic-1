@@ -23,6 +23,8 @@ const ProxyTruffleArtifact = require('../../build/contracts/Proxy.json');
 const SpyConsensus = artifacts.require('SpyConsensus');
 const SpyReputation = artifacts.require('SpyReputation');
 const SpyCore = artifacts.require('SpyCore');
+const SpyAnchor = artifacts.require('SpyAnchor');
+const SpyConsensusGateway = artifacts.require('SpyConsensusGateway');
 
 const epochLength = new BN(100);
 let constructionParams = {};
@@ -41,6 +43,8 @@ contract('Axiom::newCore', (accounts) => {
       SpyConsensus: await SpyConsensus.new(),
       SpyReputation: await SpyReputation.new(),
       SpyCore: await SpyCore.new(),
+      SpyAnchor: await SpyAnchor.new(),
+      SpyConsensusGateway: await SpyConsensusGateway.new(),
     };
     Object.freeze(contracts);
 
@@ -50,6 +54,8 @@ contract('Axiom::newCore', (accounts) => {
       coreMasterCopy: contracts.SpyCore.address,
       committeeMasterCopy: accountProvider.get(),
       reputationMasterCopy: contracts.SpyReputation.address,
+      anchorMasterCopy: contracts.SpyAnchor.address,
+      consensusGatewayMasterCopy: contracts.SpyConsensusGateway.address,
       txOptions: {
         from: accountProvider.get(),
       },
@@ -84,7 +90,7 @@ contract('Axiom::newCore', (accounts) => {
 
     newCoreParams = {
       consensus: accountProvider.get(),
-      chainId: accountProvider.get(),
+      metachainId: Utils.getRandomHash(),
       epochLength,
       minValidators: config.minValidators,
       joinLimit: config.joinLimit,
@@ -171,11 +177,11 @@ contract('Axiom::newCore', (accounts) => {
         'Consensus address in spy core contract is not set.',
       );
 
-      const spyChainId = await spyCore.spyChainId.call();
+      const spyMetachainId = await spyCore.spyMetachainId.call();
       assert.strictEqual(
-        Utils.toChecksumAddress(spyChainId),
-        newCoreParams.chainId,
-        'Chain id value in spy core contract is not set.',
+        spyMetachainId,
+        newCoreParams.metachainId,
+        'Metachain id value in spy core contract is not set.',
       );
 
       const spyEpochLength = await spyCore.spyEpochLength.call();

@@ -30,6 +30,8 @@ contract('Axiom::constructor', (accounts) => {
       coreMasterCopy: accountProvider.get(),
       committeeMasterCopy: accountProvider.get(),
       reputationMasterCopy: accountProvider.get(),
+      anchorMasterCopy: accountProvider.get(),
+      consensusGatewayMasterCopy: accountProvider.get(),
       txOptions: {
         from: accountProvider.get(),
       },
@@ -46,6 +48,8 @@ contract('Axiom::constructor', (accounts) => {
           config.coreMasterCopy,
           config.committeeMasterCopy,
           config.reputationMasterCopy,
+          config.anchorMasterCopy,
+          config.consensusGatewayMasterCopy,
           {
             from: accountProvider.get(),
           },
@@ -62,6 +66,8 @@ contract('Axiom::constructor', (accounts) => {
           config.coreMasterCopy,
           config.committeeMasterCopy,
           config.reputationMasterCopy,
+          config.anchorMasterCopy,
+          config.consensusGatewayMasterCopy,
           {
             from: accountProvider.get(),
           },
@@ -78,6 +84,8 @@ contract('Axiom::constructor', (accounts) => {
           Utils.NULL_ADDRESS,
           config.committeeMasterCopy,
           config.reputationMasterCopy,
+          config.anchorMasterCopy,
+          config.consensusGatewayMasterCopy,
           {
             from: accountProvider.get(),
           },
@@ -94,6 +102,8 @@ contract('Axiom::constructor', (accounts) => {
           config.coreMasterCopy,
           Utils.NULL_ADDRESS,
           config.reputationMasterCopy,
+          config.anchorMasterCopy,
+          config.consensusGatewayMasterCopy,
           {
             from: accountProvider.get(),
           },
@@ -110,6 +120,8 @@ contract('Axiom::constructor', (accounts) => {
           config.coreMasterCopy,
           config.committeeMasterCopy,
           Utils.NULL_ADDRESS,
+          config.anchorMasterCopy,
+          config.consensusGatewayMasterCopy,
           {
             from: accountProvider.get(),
           },
@@ -161,6 +173,13 @@ contract('Axiom::constructor', (accounts) => {
         config.reputationMasterCopy,
         'Reputation master copy address should match.',
       );
+
+      const anchorMasterCopyFromContract = await axiom.anchorMasterCopy.call();
+      assert.strictEqual(
+        anchorMasterCopyFromContract,
+        config.anchorMasterCopy,
+        'Anchor master copy address should match.',
+      );
     });
 
     it('should get correct value for reputation setup call prefix', async () => {
@@ -186,6 +205,19 @@ contract('Axiom::constructor', (accounts) => {
         callPrefix,
         expectedCallPrefix,
         'Call prefix for consensus should match.',
+      );
+    });
+
+    it('should get correct value for anchor setup call prefix', async () => {
+      const axiom = await AxiomUtils.deployAxiomWithConfig(config);
+
+      const callPrefix = await axiom.ANCHOR_SETUP_CALLPREFIX.call();
+      const expectedCallPrefix = AxiomUtils.AnchorSetupCallPrefix;
+
+      assert.strictEqual(
+        callPrefix,
+        expectedCallPrefix,
+        'Call prefix for anchor should match.',
       );
     });
 

@@ -19,11 +19,14 @@ const { AccountProvider } = require('../test_lib/utils.js');
 const web3 = require('../test_lib/web3.js');
 const Utils = require('../test_lib/utils.js');
 const AxiomUtils = require('./utils.js');
-const AnchorTruffleArtifact = require('../../build/contracts/Anchor.json');
+const ProxyTruffleArtifact = require('../../build/contracts/Proxy.json');
 
 
 const SpyConsensus = artifacts.require('SpyConsensus');
 const SpyReputation = artifacts.require('SpyReputation');
+const SpyAnchor = artifacts.require('SpyAnchor');
+const SpyConsensusGateway = artifacts.require('SpyConsensusGateway');
+
 const EPOCH_LENGTH = 100;
 
 let config = {};
@@ -39,6 +42,8 @@ contract('Axiom::newMetaChain', (accounts) => {
     contracts = {
       SpyConsensus: await SpyConsensus.new(),
       SpyReputation: await SpyReputation.new(),
+      SpyAnchor: await SpyAnchor.new(),
+      SpyConsensusGateway: await SpyConsensusGateway.new(),
     };
 
     constructionParams = {
@@ -47,6 +52,8 @@ contract('Axiom::newMetaChain', (accounts) => {
       coreMasterCopy: accountProvider.get(),
       committeeMasterCopy: accountProvider.get(),
       reputationMasterCopy: contracts.SpyReputation.address,
+      anchorMasterCopy: contracts.SpyAnchor.address,
+      consensusGatewayMasterCopy: contracts.SpyConsensusGateway.address,
       txOptions: {
         from: accountProvider.get(),
       },
@@ -102,12 +109,27 @@ contract('Axiom::newMetaChain', (accounts) => {
       const consensusContractAddress = await axiom.consensus.call();
       const consensusProxyContract = await SpyConsensus.at(consensusContractAddress);
 
-      const anchor = await consensusProxyContract.anchor.call();
-      const contractByteCode = await Utils.getCode(anchor);
+      const anchorAddress = await consensusProxyContract.anchor.call();
+      const contractByteCode = await Utils.getCode(anchorAddress);
       assert.strictEqual(
         contractByteCode,
-        AnchorTruffleArtifact.deployedBytecode,
-        'Anchor contract byte code must match the compiled binary.',
+        ProxyTruffleArtifact.deployedBytecode,
+        'Proxy of Anchor contract byte code must match the compiled binary.',
+      );
+
+      const anchor = await SpyAnchor.at(anchorAddress);
+      const maxStateRootFromAnchor = new BN(await anchor.spyMaxStateRoot.call());
+      const consensusFromAnchor = await anchor.spyConsensus.call();
+
+      assert.isOk(
+        maxStateRootFromAnchor.eq(newMetaChainParams.maxStateRoots),
+        `Max state root from anchor ${maxStateRootFromAnchor.toString(10)}`
+        + ` must match to ${newMetaChainParams.maxStateRoots.toString(10)}`,
+      );
+      assert.strictEqual(
+        consensusContractAddress,
+        consensusFromAnchor,
+        'Consensus address from axiom must match to anchor',
       );
     });
 
