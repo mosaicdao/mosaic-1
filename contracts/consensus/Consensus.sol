@@ -508,8 +508,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      *         or active. This is called by validator address.
      *
      * @dev Function requires:
-     *          - core address is 0.
-     *          - core lifetime status must be genesis or active.
+     *          - core address is 0
+     *          - core lifetime status must be genesis or active
      *
      * @param _metachainId Metachain id that validator wants to join.
      * @param _withdrawalAddress A withdrawal address of newly joined validator.
@@ -543,8 +543,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      *         This is called by validator address.
      *
      * @dev Function requires:
-     *          - core address is 0.
-     *          - core life time status must be creation.
+     *          - core address is 0
+     *          - core life time status must be creation
      *
      * @param _metachainId Metachain id that validator wants to join.
      * @param _withdrawalAddress A withdrawal address of newly joined validator.
