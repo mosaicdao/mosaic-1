@@ -129,7 +129,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
     /** Committees per metachain. */
     mapping(bytes32 /* metachain id */ => address /* committee */) public committees;
 
-
     /** Precommits under consideration of committees. */
     mapping(bytes32 /* precommit */ => CommitteeI /* committee */) public proposals;
 
@@ -384,15 +383,15 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      */
     function enterCommittee(
         bytes32 _metachainId,
+        address _core,
         address _validator,
         address _furtherMember
     )
         external
     {
-        address core = assignments[_metachainId];
         require(
-            core != address(0),
-            "Core has not been assigned for the given metachain id."
+            isCoreRunning(_core),
+            "Invalid core has been specified."
         );
 
         require(
@@ -413,8 +412,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      * @notice Registers committee decision.
      *
      * @dev Function requires:
-     *          - the given metachain id is not 0
-     *          - only committee can call
+     *          - only committee for the given metachain id can call
      *          - committee has not yet registered its decision
      *
      * @param _committeeDecision Decision of a caller committee.
@@ -425,17 +423,11 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
     )
         external
     {
-        require(
-            _metachainId != bytes32(0),
-            "Metachain id is 0."
-        );
-
         address committee = committees[_metachainId];
         require(
             committee == msg.sender,
             "Wrong committee calls."
         );
-        delete committees[_metachainId];
 
         require(
             decisions[msg.sender] == bytes32(0),
@@ -520,6 +512,9 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             _sourceBlockHeight,
             _targetBlockHeight
         );
+
+        // Prunes formed committee for the given metachain id.
+        delete committees[_metachainId];
 
         // Anchor state root.
         anchorStateRoot(_metachainId, _rlpBlockHeader);
@@ -750,25 +745,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         );
     }
 
-    /**
-     * @notice isValidator() function checks if the given validator is an
-     *         active validator in the given core and has not been slashed.
-     *
-     * @param _core Core to check the validator against.
-     * @param _validator Validator's address to check.
-     *
-     * @return Returns true, if the given validator is an active validator
-     *         in the given core and has not been slashed.
-     */
-    function isValidator(address _core, address _validator)
-        public
-        view
-        returns (bool isValidator_)
-    {
-        isValidator_ = CoreI(_core).isValidator(_validator)
-            && !reputation.isSlashed(_validator);
-    }
-
 
     /* Internal functions */
 
@@ -830,6 +806,25 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
         committees[_metachainId] = address(committee_);
         proposals[_proposal] = committee_;
+    }
+
+    /**
+     * @notice isValidator() function checks if the given validator is an
+     *         active validator in the given core and has not been slashed.
+     *
+     * @param _core Core to check the validator against.
+     * @param _validator Validator's address to check.
+     *
+     * @return Returns true, if the given validator is an active validator
+     *         in the given core and has not been slashed.
+     */
+    function isValidator(address _core, address _validator)
+        internal
+        view
+        returns (bool isValidator_)
+    {
+        isValidator_ = CoreI(_core).isValidator(_validator)
+            && !reputation.isSlashed(_validator);
     }
 
 
