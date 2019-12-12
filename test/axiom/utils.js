@@ -14,13 +14,13 @@
 
 'use strict';
 
-const Axiom = artifacts.require('Axiom');
+const Axiom = artifacts.require('AxiomTest');
 const Utils = require('../test_lib/utils.js');
 
 const ConsensusSetupParamTypes = 'uint256,uint256,uint256,uint256,uint256,address';
 const ReputationSetupParamTypes = 'address,address,uint256,address,uint256,uint256,uint256,uint256';
-const CoreSetupParamTypes = 'address,bytes32,uint256,uint256,uint256,address,uint256,bytes32,uint256,uint256,uint256,uint256';
 const AnchorSetupParamTypes = 'uint256,address';
+const CoreSetupParamTypes = 'address,bytes32,uint256,uint256,uint256,address,uint256,bytes32,uint256,uint256,uint256,uint256';
 const CommitteeSetupParamTypes = 'address,uint256,bytes32,bytes32';
 
 const ConsensusSetupFunctionSignature = `setup(${ConsensusSetupParamTypes})`;
@@ -28,12 +28,16 @@ const ReputationSetupFunctionSignature = `setup(${ReputationSetupParamTypes})`;
 const AnchorSetupFunctionSignature = `setup(${AnchorSetupParamTypes})`;
 const CoreSetupFunctionSignature = `setup(${CoreSetupParamTypes})`;
 const CommitteeSetupFunctionSignature = `setup(${CommitteeSetupParamTypes})`;
+const ConsensusGatewayFunctionSignature = 'setup()';
 
 const ConsensusSetupCallPrefix = Utils.encodeFunctionSignature(ConsensusSetupFunctionSignature);
 const ReputationSetupCallPrefix = Utils.encodeFunctionSignature(ReputationSetupFunctionSignature);
 const AnchorSetupCallPrefix = Utils.encodeFunctionSignature(AnchorSetupFunctionSignature);
 const CoreSetupCallPrefix = Utils.encodeFunctionSignature(CoreSetupFunctionSignature);
 const CommitteeSetupCallPrefix = Utils.encodeFunctionSignature(CommitteeSetupFunctionSignature);
+const ConsensusGatewaySetupCallPrefix = Utils.encodeFunctionSignature(
+  ConsensusGatewayFunctionSignature,
+);
 
 async function deployAxiom(
   techGov,
@@ -42,6 +46,7 @@ async function deployAxiom(
   committeeMasterCopy,
   reputationMasterCopy,
   anchorMasterCopy,
+  consensusGatewayMasterCopy,
   txOptions,
 ) {
   const axiom = await Axiom.new(
@@ -51,6 +56,7 @@ async function deployAxiom(
     committeeMasterCopy,
     reputationMasterCopy,
     anchorMasterCopy,
+    consensusGatewayMasterCopy,
     txOptions,
   );
   return axiom;
@@ -64,6 +70,7 @@ async function deployAxiomWithConfig(config) {
     config.committeeMasterCopy,
     config.reputationMasterCopy,
     config.anchorMasterCopy,
+    config.consensusGatewayMasterCopy,
     config.txOptions,
   );
 }
@@ -131,6 +138,25 @@ async function encodeNewCommitteeParams(committeeParams) {
   return `${callPrefix}${callData.substring(2)}`;
 }
 
+async function encodeNewAnchorParams(anchorParams) {
+  const callPrefix = await Utils.encodeFunctionSignature(AnchorSetupFunctionSignature);
+  const callData = await Utils.encodeParameters(
+    AnchorSetupParamTypes.split(','),
+    [
+      anchorParams.maxStateRoots.toString(10),
+      anchorParams.consensus,
+    ],
+  );
+
+  return `${callPrefix}${callData.substring(2)}`;
+}
+
+async function encodeNewConsensusGatewayParam() {
+  const callPrefix = await Utils.encodeFunctionSignature(ConsensusGatewayFunctionSignature);
+
+  return `${callPrefix}`;
+}
+
 module.exports = {
   ConsensusSetupParamTypes,
   ReputationSetupParamTypes,
@@ -145,10 +171,13 @@ module.exports = {
   AnchorSetupCallPrefix,
   CoreSetupCallPrefix,
   CommitteeSetupCallPrefix,
+  ConsensusGatewaySetupCallPrefix,
   deployAxiom,
   deployAxiomWithConfig,
   setupConsensusWithConfig,
   newMetaChainWithConfig,
   encodeNewCoreParams,
   encodeNewCommitteeParams,
+  encodeNewAnchorParams,
+  encodeNewConsensusGatewayParam,
 };
