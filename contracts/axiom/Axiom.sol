@@ -291,7 +291,7 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
     }
 
     /**
-     * @notice Deploys anchor contract.
+     * @notice Deploys proxy for anchor contract.
      *
      * @param _anchorSetupData Setup data for anchor contract.
      *

@@ -636,7 +636,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         reputation.deregister(msg.sender);
     }
 
-    /** @notice Creates a new meta chain given an anchor.
+    /** @notice Creates a new meta chain.
      *         This can be called only by axiom.
      *
      * @dev Function requires:
