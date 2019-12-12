@@ -123,4 +123,15 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
     function openKernelHash() external returns (bytes32) {
         return mockedOpenKernelHash;
     }
+
+    // Note: Implementation will be done once it is required. As the method is
+    // in ICore interface, we would need it, otherwise SpyCore deployment cannot
+    // be done.
+    function isValidator(address _account)
+        external
+        view
+        returns (bool)
+    {
+        require(false, "This should not be called for unit tests.");
+    }
 }
