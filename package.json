@@ -4,7 +4,6 @@
   "description": "Mosaic",
   "main": "index.js",
   "scripts": {
-    "update": "git submodule update --init --recursive && npm ci",
     "compile": "truffle compile --all",
     "lint:js": "find ./test -name \"*.js\" | xargs eslint",
     "lint:js:fix": "npm run lint:js -- --fix",
