@@ -7,9 +7,13 @@ contract SpyAxiom is AxiomI{
 
     address public constant mockedCommitteeAddress = address(111);
     address public constant mockedCoreAddress = address(112);
+    address public constant mockedAnchorAddress = address(113);
+    address public constant mockedConsensusGatewayAddress = address(114);
 
     bytes public spyNewCommitteeCallData;
     bytes public spyNewCoreCallData;
+    bytes public spyNewAnchorCallData;
+    bytes public spyNewConsensusGatewayCallData;
 
     function setupConsensus(Consensus _consensus) public  {
         _consensus.setup(
@@ -49,4 +53,28 @@ contract SpyAxiom is AxiomI{
     {
         _consensus.newMetaChain();
     }
+
+    function deployMetachainProxies(
+        bytes calldata _coreSetupData,
+        bytes calldata _consensusGatewaySetupData
+    )
+        external
+        returns(address core_, address consensusGateway_){
+
+        spyNewCoreCallData = _coreSetupData;
+        spyNewConsensusGatewayCallData = _consensusGatewaySetupData;
+
+        core_ = mockedCoreAddress;
+        consensusGateway_ = mockedConsensusGatewayAddress;
+    }
+
+    function deployAnchor(
+        bytes calldata _anchorSetupData
+    )
+        external
+        returns(address anchor_) {
+        spyNewAnchorCallData = _anchorSetupData;
+        anchor_ = mockedAnchorAddress;
+    }
+
 }

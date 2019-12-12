@@ -653,6 +653,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             ANCHOR_MAX_STATE_ROOTS,
             address(this)
         );
+
+        address anchor = axiom.deployAnchor(anchorSetupCallData);
+        metachainId_ = hashMetachainId(anchor);
+
         bytes memory coreSetupCallData = coreSetupData(
             metachainId_,
             EPOCH_LENGTH,
@@ -661,20 +665,16 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             gasTargetDelta, // gas target
             uint256(0), // dynasty
             uint256(0), // accumulated gas
-            bytes32(0), // source
             0 // todo should be fixed with remove source block height in core-setup.
         );
 
         bytes memory consensusGatewaySetupCallData = consensusGatewaySetupData();
 
-        address anchor;
         (address core, address consensusGateway) =
             axiom.deployMetachainProxies(
                 coreSetupCallData,
                 consensusGatewaySetupCallData
             );
-
-        metachainId_ = hashMetachainId(anchor);
 
         require(
             assignments[metachainId_] == address(0),
@@ -901,7 +901,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      * @param _gasTarget Gas target to close the meta block.
      * @param _dynasty Committed dynasty number.
      * @param _accumulatedGas Accumulated gas.
-     * @param _source Source block hash
      * @param _sourceBlockHeight Source block height.
      *
      * returns Deployed core contract address.
@@ -914,7 +913,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         uint256 _gasTarget,
         uint256 _dynasty,
         uint256 _accumulatedGas,
-        bytes32 _source,
         uint256 _sourceBlockHeight
     )
         private
@@ -934,7 +932,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             _gasTarget,
             _dynasty,
             _accumulatedGas,
-            _source,
             _sourceBlockHeight
         );
     }

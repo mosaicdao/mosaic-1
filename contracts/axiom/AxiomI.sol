@@ -41,4 +41,15 @@ interface AxiomI {
     )
         external
         returns(address core_, address consensusGateway_);
+
+    /**
+     * @notice Deploys anchor contract.
+     *
+     * @param _anchorSetupData Setup data for anchor contract.
+     *
+     * @return anchor_ Address of anchor contract.
+     */
+    function deployAnchor(bytes calldata _anchorSetupData)
+        external
+        returns(address anchor_);
 }
