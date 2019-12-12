@@ -75,7 +75,7 @@ contract Proof is CircularBufferUint{
             "State root provider address is 0."
         );
 
-        CircularBufferUint.setMaxItems(_maxStorageRootItems);
+        CircularBufferUint.setupCircularBuffer(_maxStorageRootItems);
 
         storageAccount = _storageAccount;
         stateRootProvider = _stateRootProvider;
