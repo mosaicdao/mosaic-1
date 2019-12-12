@@ -24,8 +24,8 @@ contract MessageOutbox is MessageBox {
     /** Mapping to indicate that message hash exists in outbox. */
     mapping(bytes32 => bool) public outbox;
 
-    /** Domain separator for outbox */
-    bytes32 public outboxDomainSeparator;
+    /** Outbound message identifier */
+    bytes32 public outboundMessageIdentifier;
 
     /** Message inbox address */
     address public messageInbox;
@@ -59,35 +59,41 @@ contract MessageOutbox is MessageBox {
             _gasPrice,
             _gasLimit,
             _sender,
-            outboxDomainSeparator
+            outboundMessageIdentifier
         );
     }
 
 
     /* Internal Functions. */
 
-    // TODO: change `chainId` to `metachainId`
     /**
      * @notice Setup message outbox.
-     * @param _chainId Chain identifier.
+     *
+     * @dev Function requires:
+     *          - outboundMessageIdentifier must be zero
+     *          - metachainId must not be zero
+     *          - messageInbox address must not be zero
+     *          - verifyingAddress must not be zero
+     *
+     * @param _metachainId Metachain identifier.
      * @param _messageInbox MessageInbox contract address.
      * @param _verifyingAddress Address of verifying contract.
      */
     function setupMessageOutbox(
-        bytes20 _chainId,
+        bytes32 _metachainId,
         address _messageInbox,
         address _verifyingAddress
     )
         internal
     {
         require(
-            outboxDomainSeparator == bytes32(0),
+            outboundMessageIdentifier == bytes32(0),
             "Message outbox is already setup."
         );
 
         require(
-            _chainId != bytes20(0),
-            "Chain id is 0."
+            _metachainId != bytes32(0),
+            "Metachain id is 0."
         );
 
         require(
@@ -102,12 +108,12 @@ contract MessageOutbox is MessageBox {
 
         messageInbox = _messageInbox;
 
-        outboxDomainSeparator = keccak256(
+        outboundMessageIdentifier = keccak256(
             abi.encode(
                 DOMAIN_SEPARATOR_TYPEHASH,
                 DOMAIN_SEPARATOR_NAME,
                 DOMAIN_SEPARATOR_VERSION,
-                _chainId,
+                _metachainId,
                 _verifyingAddress
             )
         );
@@ -116,6 +122,10 @@ contract MessageOutbox is MessageBox {
     /**
      * @notice Declare a new message. This will update the outbox value to
      *         `true` for the given message hash.
+     *
+     * @dev Function requires:
+     *          - message should not exists in outbox
+     *
      * @param _intentHash Intent hash of message.
      * @param _nonce Nonce of sender.
      * @param _gasPrice Gas price.
@@ -139,7 +149,7 @@ contract MessageOutbox is MessageBox {
             _gasPrice,
             _gasLimit,
             _sender,
-            outboxDomainSeparator
+            outboundMessageIdentifier
         );
 
         require(

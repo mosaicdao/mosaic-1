@@ -14,15 +14,13 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../lib/CircularBufferUint2.sol";
+import "../lib/CircularBufferUint.sol";
 import "./StateRootI.sol";
 import "../lib/RLP.sol";
 import "../lib/MerklePatriciaProof.sol";
 import "../lib/BytesLib.sol";
 
-// TODO: Once  CircularBufferUint contract is updated in other issue/PR rename
-// `CircularBufferUint2` to `CircularBufferUint`
-contract Proof is CircularBufferUint2{
+contract Proof is CircularBufferUint{
 
     /* Variables */
 
@@ -43,6 +41,12 @@ contract Proof is CircularBufferUint2{
 
     /**
      * @notice Setup the proof contract. This can be called only once.
+     *
+     * @dev Function requires:
+     *          - proof contract must not be already initialized
+     *          - storageAccount must not be zero
+     *          - stateRootProvider must not be zero
+     *
      * @param _storageAccount Storage account that will be proved.
      * @param _stateRootProvider State root provider contract address.
      * @param _maxStorageRootItems Defines how many storage roots should be
@@ -71,7 +75,7 @@ contract Proof is CircularBufferUint2{
             "State root provider address is 0."
         );
 
-        CircularBufferUint2.setupCircularBuffer(_maxStorageRootItems);
+        CircularBufferUint.setMaxItems(_maxStorageRootItems);
 
         storageAccount = _storageAccount;
         stateRootProvider = _stateRootProvider;
@@ -85,6 +89,11 @@ contract Proof is CircularBufferUint2{
      *  @notice Verify merkle proof of a storage contract address.
      *          Trust factor is brought by state roots of the contract which
      *          implements StateRootInterface.
+     *  @dev Function requires:
+     *          - rlpAccount length must not be zero
+     *          - rlpParentNodes length must not be zero
+     *          - statRoot must not be zero
+     *
      *  @param _blockHeight Block height at which Gateway/CoGateway is to be
      *                      proven.
      *  @param _rlpAccount RLP encoded account node object.
@@ -130,7 +139,7 @@ contract Proof is CircularBufferUint2{
             );
 
             storageRoots[_blockHeight] = storageRoot;
-            uint256 oldestStoredBlockHeight = CircularBufferUint2.store(_blockHeight);
+            uint256 oldestStoredBlockHeight = CircularBufferUint.store(_blockHeight);
             delete storageRoots[oldestStoredBlockHeight];
         }
     }
@@ -138,6 +147,10 @@ contract Proof is CircularBufferUint2{
     /**
      * @notice Prove the existence of data in the storage contract by providing
      *         the Merkle proof.
+     *
+     * @dev Function requires:
+     *          - storageRoot must not be zero
+     *
      * @param _path Storage path
      * @param _value Storage value.
      * @param _blockHeight Storage root block height.

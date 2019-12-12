@@ -20,13 +20,12 @@ contract MessageBox is MosaicVersion {
 
     /* Constants */
 
-    /** EIP-712 domain separator name for Core */
+    /** EIP-712 domain separator name for Message bus */
     string public constant DOMAIN_SEPARATOR_NAME = "Message-Bus";
 
-    // TODO: change `bytes20 chainId` to `bytes32 metachainId`.
-    /** EIP-712 domain separator for Core */
+    /** EIP-712 domain separator for Message bus */
     bytes32 public constant DOMAIN_SEPARATOR_TYPEHASH = keccak256(
-        "EIP712Domain(string name,string version,bytes20 chainId,address verifyingContract)"
+        "EIP712Domain(string name,string version,bytes32 metachainId,address verifyingContract)"
     );
 
     /** Message type hash */
@@ -74,7 +73,7 @@ contract MessageBox is MosaicVersion {
         messageHash_ = keccak256(
             abi.encodePacked(
                 byte(0x19),
-                byte(0x01),
+                byte(0x4d),
                 _domainSeparator,
                 typedMessageHash
             )

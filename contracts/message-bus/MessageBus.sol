@@ -19,6 +19,6 @@ import "./Proof.sol";
 import "./MessageInbox.sol";
 import "./MessageOutbox.sol";
 
-contract MessageBus is MessageInbox, MessageOutbox {
+contract MessageBus is MessageOutbox, MessageInbox {
 
 }
