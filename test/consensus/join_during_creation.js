@@ -20,6 +20,7 @@ const consensusUtil = require('./utils.js');
 const Consensus = artifacts.require('ConsensusTest');
 const SpyReputation = artifacts.require('SpyReputation');
 const SpyCore = artifacts.require('SpyCore');
+const SpyConsensusGateway = artifacts.require('SpyConsensusGateway');
 
 contract('Consensus::joinDuringCreation', (accounts) => {
   const accountProvider = new Utils.AccountProvider(accounts);
@@ -27,6 +28,7 @@ contract('Consensus::joinDuringCreation', (accounts) => {
   let consensus;
   let reputation;
   let core;
+  let consensusGateway;
 
   let joinParams = {};
 
@@ -34,6 +36,7 @@ contract('Consensus::joinDuringCreation', (accounts) => {
     consensus = await Consensus.new();
     reputation = await SpyReputation.new();
     core = await SpyCore.new();
+    consensusGateway = await SpyConsensusGateway.new();
 
     await consensus.setReputation(reputation.address);
     await consensus.setCoreLifetime(
@@ -51,6 +54,7 @@ contract('Consensus::joinDuringCreation', (accounts) => {
     Object.freeze(joinParams);
 
     await consensus.setAssignment(joinParams.metachainId, core.address);
+    await consensus.setConsensusGateway(joinParams.metachainId, consensusGateway.address);
   });
 
   contract('Negative Tests', async () => {
@@ -103,7 +107,7 @@ contract('Consensus::joinDuringCreation', (accounts) => {
   });
 
   contract('Positive Tests', () => {
-    it('should call join function of reputation contract with correct params', async () => {
+    it('should call joinDuringCreation with correct params', async () => {
       await consensusUtil.joinDuringCreation(consensus, joinParams);
 
       const validator = await reputation.validator.call();
@@ -119,16 +123,19 @@ contract('Consensus::joinDuringCreation', (accounts) => {
         joinParams.withdrawalAddress,
         'Withdrawal address not set in spy reputation contract',
       );
-    });
-
-    it('should call join function of core contract with correct params', async () => {
-      await consensusUtil.joinDuringCreation(consensus, joinParams);
 
       const spyValidator = await core.spyValidator.call();
       assert.strictEqual(
         spyValidator,
         joinParams.txOptions.from,
         'Validator address not set in spy core contract',
+      );
+
+      const spyCoreFromConsensusGateway = await consensusGateway.spyCore.call();
+      assert.strictEqual(
+        spyCoreFromConsensusGateway,
+        core.address,
+        'Core address not set in spy consensus gateway contract',
       );
     });
   });

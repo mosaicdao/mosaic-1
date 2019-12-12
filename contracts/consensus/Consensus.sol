@@ -27,6 +27,7 @@ import "../core/CoreStatusEnum.sol";
 import "../reputation/ReputationI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../version/MosaicVersion.sol";
+import "../consensus-gateway/ConsensusGatewayI.sol";
 
 contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, ConsensusI {
 
@@ -51,6 +52,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
     /** Maximum coinbase split per mille */
     uint256 public constant MAX_COINBASE_SPLIT_PER_MILLE = uint16(1000);
+
+    /** Gas price to calculate reward */
+    uint256 public constant FEE_GAS_PRICE = uint256(0);
+
+    /** Gas limit to calculate reward */
+    uint256 public constant FEE_GAS_LIMIT = uint256(0);
 
     /** The callprefix of the Core::setup function. */
     bytes4 public constant CORE_SETUP_CALLPREFIX = bytes4(
@@ -128,6 +135,9 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
     /** Assigned anchor for a given metachain id */
     mapping(bytes32 => address) public anchors;
+
+    /** Assigned consensus gateways for a given metachain id */
+    mapping(bytes32 => ConsensusGatewayI) public consensusGateways;
 
     /** Reputation contract for validators */
     ReputationI public reputation;
@@ -567,6 +577,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
         if (validatorCount >= minValidatorCount) {
             coreLifetimes[core] = CoreLifetime.genesis;
+            ConsensusGatewayI consensusGateway = consensusGateways[_metachainId];
+            consensusGateway.declareOpenKernel(
+                core,
+                FEE_GAS_PRICE,
+                FEE_GAS_LIMIT
+            );
         }
     }
 
