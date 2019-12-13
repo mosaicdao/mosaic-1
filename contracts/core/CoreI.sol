@@ -21,7 +21,7 @@ interface CoreI {
 
     function minimumValidatorCount() external returns (uint256);
 
-    function joinDuringCreation(address _validator)
+    function joinBeforeOpen(address _validator)
         external
         returns(uint256 validatorCount_, uint256 minValidatorCount_);
 

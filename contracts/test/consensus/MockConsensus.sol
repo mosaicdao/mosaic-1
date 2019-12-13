@@ -76,7 +76,7 @@ contract MockConsensus is ConsensusI, ReputationI {
         external
     {
         rep[_validator] = uint256(1);
-        mockCore.joinDuringCreation(_validator);
+        mockCore.joinBeforeOpen(_validator);
     }
 
     function join(address _validator)
