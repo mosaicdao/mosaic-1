@@ -54,14 +54,6 @@ interface ConsensusI {
     /**
      * @notice Creates a new meta chain.
      *
-     * @param _anchor Anchor address of the new meta-chain.
-     * @param _epochLength Epoch length for the new meta-chain.
-     * @param _rootBlockHeight Root block height.
      */
-    function newMetaChain(
-        address _anchor,
-        uint256 _epochLength,
-        uint256 _rootBlockHeight
-    )
-        external;
+    function newMetaChain() external returns(bytes32 metachainId_);
 }
