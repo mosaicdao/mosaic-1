@@ -24,7 +24,7 @@ contract('Core::getOpenKernel', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
   let core;
   const kernelData = {
-    openKernelHeight: new BN(100),
+    openKernelHeight: new BN(Utils.getRandomNumber(99999)),
     openKernelHash: Utils.getRandomHash(),
   };
 
@@ -36,13 +36,13 @@ contract('Core::getOpenKernel', (accounts) => {
   });
 
   contract('Positive Tests', async () => {
-    it('should return openkernelhash and openkernelheight ', async () => {
+    it('should return open kernel hash and open kernel height ', async () => {
       const actualKernelData = await core.getOpenKernel.call();
 
       assert.strictEqual(
         actualKernelData.openKernelHash_,
         kernelData.openKernelHash,
-        'Invalid openkernelhash',
+        'Invalid open kernel hash',
       );
       assert.strictEqual(
         kernelData.openKernelHeight.eq(actualKernelData.openKernelHeight_),
