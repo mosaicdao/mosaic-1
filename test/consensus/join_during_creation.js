@@ -14,12 +14,14 @@
 
 'use strict';
 
+const BN = require('bn.js');
 const Utils = require('../test_lib/utils.js');
 const consensusUtil = require('./utils.js');
 
 const Consensus = artifacts.require('ConsensusTest');
 const SpyReputation = artifacts.require('SpyReputation');
 const SpyCore = artifacts.require('SpyCore');
+const SpyConsensusGateway = artifacts.require('SpyConsensusGateway');
 
 contract('Consensus::joinDuringCreation', (accounts) => {
   const accountProvider = new Utils.AccountProvider(accounts);
@@ -27,6 +29,7 @@ contract('Consensus::joinDuringCreation', (accounts) => {
   let consensus;
   let reputation;
   let core;
+  let consensusGateway;
 
   let joinParams = {};
 
@@ -34,6 +37,7 @@ contract('Consensus::joinDuringCreation', (accounts) => {
     consensus = await Consensus.new();
     reputation = await SpyReputation.new();
     core = await SpyCore.new();
+    consensusGateway = await SpyConsensusGateway.new();
 
     await consensus.setReputation(reputation.address);
     await consensus.setCoreLifetime(
@@ -43,7 +47,6 @@ contract('Consensus::joinDuringCreation', (accounts) => {
 
     joinParams = {
       metachainId: Utils.getRandomHash(),
-      core: core.address,
       withdrawalAddress: accountProvider.get(),
       txOptions: {
         from: accountProvider.get(),
@@ -52,57 +55,19 @@ contract('Consensus::joinDuringCreation', (accounts) => {
     Object.freeze(joinParams);
 
     await consensus.setAssignment(joinParams.metachainId, core.address);
+    await consensus.setConsensusGateway(joinParams.metachainId, consensusGateway.address);
   });
 
   contract('Negative Tests', async () => {
-    it('should fail when chain id is 0', async () => {
-      const params = Object.assign(
+    it('should fail when metachainId is invalid', async () => {
+      const invalidJoinParams = Object.assign(
         {},
         joinParams,
         { metachainId: Utils.NULL_ADDRESS },
       );
       await Utils.expectRevert(
-        consensusUtil.joinDuringCreation(consensus, params),
-        'Metachain id is 0.',
-      );
-    });
-
-    it('should fail when core address is 0', async () => {
-      const params = Object.assign(
-        {},
-        joinParams,
-        { core: Utils.NULL_ADDRESS },
-      );
-
-      await Utils.expectRevert(
-        consensusUtil.joinDuringCreation(consensus, params),
-        'Core address is 0.',
-      );
-    });
-
-    it('should fail when core is not assigned for specified metachain id', async () => {
-      const params = Object.assign(
-        {},
-        joinParams,
-        { core: accountProvider.get() },
-      );
-
-      await Utils.expectRevert(
-        consensusUtil.joinDuringCreation(consensus, params),
-        'Core is not assigned for the specified metachain id.',
-      );
-    });
-
-    it('should fail when withdrawal address is 0', async () => {
-      const params = Object.assign(
-        {},
-        joinParams,
-        { withdrawalAddress: Utils.NULL_ADDRESS },
-      );
-
-      await Utils.expectRevert(
-        consensusUtil.joinDuringCreation(consensus, params),
-        'Withdrawal address is 0.',
+        consensusUtil.joinDuringCreation(consensus, invalidJoinParams),
+        'Core does not exist for given metachain.',
       );
     });
 
@@ -141,11 +106,7 @@ contract('Consensus::joinDuringCreation', (accounts) => {
   });
 
   contract('Positive Tests', () => {
-    it('should pass when core lifetime is genesis', async () => {
-      await consensusUtil.joinDuringCreation(consensus, joinParams);
-    });
-
-    it('should call join function of reputation contract with correct params', async () => {
+    it('should call joinDuringCreation with correct params', async () => {
       await consensusUtil.joinDuringCreation(consensus, joinParams);
 
       const validator = await reputation.validator.call();
@@ -161,16 +122,38 @@ contract('Consensus::joinDuringCreation', (accounts) => {
         joinParams.withdrawalAddress,
         'Withdrawal address not set in spy reputation contract',
       );
-    });
-
-    it('should call join function of core contract with correct params', async () => {
-      await consensusUtil.joinDuringCreation(consensus, joinParams);
 
       const spyValidator = await core.spyValidator.call();
       assert.strictEqual(
         spyValidator,
         joinParams.txOptions.from,
         'Validator address not set in spy core contract',
+      );
+
+      const spyCoreFromConsensusGateway = await consensusGateway.spyCore.call();
+      assert.strictEqual(
+        spyCoreFromConsensusGateway,
+        core.address,
+        'Core address not set in spy consensus gateway contract',
+      );
+      const spyFeeGasPriceFromConsensusGateway = new BN(
+        await consensusGateway.spyFeeGasPrice.call(),
+      );
+      const feeGasPrice = new BN(await consensus.feeGasPrice.call());
+      assert.strictEqual(
+        spyFeeGasPriceFromConsensusGateway.toString(10),
+        feeGasPrice.toString(10),
+        'feeGasPrice is not set in spy consensus gateway contract',
+      );
+
+      const spyFeeGasLimitFromConsensusGateway = new BN(
+        await consensusGateway.spyFeeGasLimit.call(),
+      );
+      const feeGasLimit = new BN(await consensus.feeGasLimit.call());
+      assert.strictEqual(
+        spyFeeGasLimitFromConsensusGateway.toString(10),
+        feeGasLimit.toString(10),
+        'feeGasLimit is not set in spy consensus gateway contract',
       );
     });
   });
