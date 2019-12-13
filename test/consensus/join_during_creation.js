@@ -59,16 +59,14 @@ contract('Consensus::joinDuringCreation', (accounts) => {
 
   contract('Negative Tests', async () => {
     it('should fail when metachainId is invalid', async () => {
-      const joinParams1 = {
-        metachainId: '0x0000000000000000000000000000000000000000',
-        withdrawalAddress: accountProvider.get(),
-        txOptions: {
-          from: accountProvider.get(),
-        },
-      };
+      const invalidJoinParams = Object.assign(
+        {},
+        joinParams,
+        { metachainId: '0x0000000000000000000000000000000000000000' },
+      );
       await Utils.expectRevert(
-        consensusUtil.joinDuringCreation(consensus, joinParams1),
-        'Core address is 0.',
+        consensusUtil.joinDuringCreation(consensus, invalidJoinParams),
+        'Core does not exist for given metachain.',
       );
     });
 

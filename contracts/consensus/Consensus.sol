@@ -285,6 +285,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             )
         );
 
+        feeGasPrice = uint256(0);
+        feeGasLimit = uint256(0);
     }
 
     /**
@@ -519,7 +521,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      *         or active. This is called by validator address.
      *
      * @dev Function requires:
-     *          - core address is 0
+     *          - Core should exist for given metachain
      *          - core lifetime status must be genesis or active
      *
      * @param _metachainId Metachain id that validator wants to join.
@@ -534,7 +536,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         address core = assignments[_metachainId];
         require(
             core != address(0),
-            "Core address is 0."
+            "Core does not exist for given metachain."
         );
 
         require(
@@ -554,7 +556,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      *         This is called by validator address.
      *
      * @dev Function requires:
-     *          - core address is 0
+     *          - Core should exist for given metachain
      *          - core life time status must be creation
      *
      * @param _metachainId Metachain id that validator wants to join.
@@ -570,7 +572,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         address core = assignments[_metachainId];
         require(
             core != address(0),
-            "Core address is 0."
+            "Core does not exist for given metachain."
         );
 
         // Specified core must have creation lifetime status.
@@ -589,6 +591,11 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         if (validatorCount >= minValidatorCount) {
             coreLifetimes[core] = CoreLifetime.genesis;
             ConsensusGatewayI consensusGateway = consensusGateways[_metachainId];
+            require(
+                address(consensusGateway) != address(0),
+                "Consensus gateway does not exist for given metachain."
+            );
+
             consensusGateway.declareOpenKernel(
                 core,
                 feeGasPrice,
