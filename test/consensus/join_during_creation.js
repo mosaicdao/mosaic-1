@@ -14,6 +14,7 @@
 
 'use strict';
 
+const BN = require('bn.js');
 const Utils = require('../test_lib/utils.js');
 const consensusUtil = require('./utils.js');
 
@@ -62,7 +63,7 @@ contract('Consensus::joinDuringCreation', (accounts) => {
       const invalidJoinParams = Object.assign(
         {},
         joinParams,
-        { metachainId: '0x0000000000000000000000000000000000000000' },
+        { metachainId: Utils.NULL_ADDRESS },
       );
       await Utils.expectRevert(
         consensusUtil.joinDuringCreation(consensus, invalidJoinParams),
@@ -134,6 +135,25 @@ contract('Consensus::joinDuringCreation', (accounts) => {
         spyCoreFromConsensusGateway,
         core.address,
         'Core address not set in spy consensus gateway contract',
+      );
+      const spyFeeGasPriceFromConsensusGateway = new BN(
+        await consensusGateway.spyFeeGasPrice.call(),
+      );
+      const feeGasPrice = new BN(await consensus.feeGasPrice.call());
+      assert.strictEqual(
+        spyFeeGasPriceFromConsensusGateway.toString(10),
+        feeGasPrice.toString(10),
+        'feeGasPrice is not set in spy consensus gateway contract',
+      );
+
+      const spyFeeGasLimitFromConsensusGateway = new BN(
+        await consensusGateway.spyFeeGasLimit.call(),
+      );
+      const feeGasLimit = new BN(await consensus.feeGasLimit.call());
+      assert.strictEqual(
+        spyFeeGasLimitFromConsensusGateway.toString(10),
+        feeGasLimit.toString(10),
+        'feeGasLimit is not set in spy consensus gateway contract',
       );
     });
   });

@@ -615,11 +615,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         if (validatorCount >= minValidatorCount) {
             coreLifetimes[core] = CoreLifetime.genesis;
             ConsensusGatewayI consensusGateway = consensusGateways[_metachainId];
-            require(
-                address(consensusGateway) != address(0),
-                "Consensus gateway does not exist for given metachain."
-            );
-
+            assert(address(consensusGateway) != address(0));
             consensusGateway.declareOpenKernel(
                 core,
                 feeGasPrice,

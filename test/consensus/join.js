@@ -58,7 +58,7 @@ contract('Consensus::join', (accounts) => {
       const invalidJoinParams = Object.assign(
         {},
         joinParams,
-        { metachainId: '0x0000000000000000000000000000000000000000' },
+        { metachainId: Utils.NULL_ADDRESS },
       );
       await Utils.expectRevert(
         consensusUtil.join(consensus, invalidJoinParams),
