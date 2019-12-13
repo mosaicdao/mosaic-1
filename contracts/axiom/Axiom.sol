@@ -27,10 +27,12 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
 
     using SafeMath for uint256;
 
+
     /* Events */
 
     /* Emitted when new metachain is created */
     event MetachainCreated(bytes32 metachainId);
+
 
     /* Constants */
 

@@ -665,7 +665,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             gasTargetDelta, // gas target
             uint256(0), // dynasty
             uint256(0), // accumulated gas
-            0 // todo should be fixed with remove source block height in core-setup.
+            0 // source block height
         );
 
         bytes memory consensusGatewaySetupCallData = consensusGatewaySetupData();
@@ -675,11 +675,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
                 coreSetupCallData,
                 consensusGatewaySetupCallData
             );
-
-        require(
-            assignments[metachainId_] == address(0),
-            "A core is already assigned to this metachain."
-        );
 
         assignments[metachainId_] = core;
         anchors[metachainId_] = anchor;
