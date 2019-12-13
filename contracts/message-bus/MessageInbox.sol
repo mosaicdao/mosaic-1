@@ -31,7 +31,7 @@ contract MessageInbox is MessageBox, Proof {
     address public messageOutbox;
 
     /** Outbox storage index */
-    uint8 outboxStorageIndex;
+    uint8 public outboxStorageIndex;
 
 
     /* External Functions. */
@@ -40,27 +40,27 @@ contract MessageInbox is MessageBox, Proof {
      * @notice Generate inbox message hash from the input params
      * @param _intentHash Intent hash of message.
      * @param _nonce Nonce of sender.
-     * @param _gasPrice Gas price.
-     * @param _gasLimit Gas limit.
+     * @param _feeGasPrice Fee gas price.
+     * @param _feeGasLimit Fee gas limit.
      * @param _sender Sender address.
      * @return messageHash_ Message hash.
      */
     function inboxMessageHash(
         bytes32 _intentHash,
         uint256 _nonce,
-        uint256 _gasPrice,
-        uint256 _gasLimit,
+        uint256 _feeGasPrice,
+        uint256 _feeGasLimit,
         address _sender
     )
         external
         view
         returns (bytes32 messageHash_)
     {
-        messageHash_ = _messageHash(
+        messageHash_ = MessageBox.messageHash(
             _intentHash,
             _nonce,
-            _gasPrice,
-            _gasLimit,
+            _feeGasPrice,
+            _feeGasLimit,
             _sender,
             inboundMessageIdentifier
         );
@@ -110,7 +110,7 @@ contract MessageInbox is MessageBox, Proof {
 
         require(
             _messageOutbox != address(0),
-            "Inbox address is 0."
+            "Outbox address is 0."
         );
 
         require(
@@ -140,7 +140,7 @@ contract MessageInbox is MessageBox, Proof {
          *       already has the validations for the input params, so avoided
          *       the duplications here.
          */
-        Proof.initialize(
+        Proof.setupProof(
             _messageOutbox,
             _stateRootProvider,
             _maxStorageRootItems
@@ -180,8 +180,8 @@ contract MessageInbox is MessageBox, Proof {
      *
      * @param _intentHash Intent hash of message.
      * @param _nonce Nonce of sender.
-     * @param _gasPrice Gas price.
-     * @param _gasLimit Gas limit.
+     * @param _feeGasPrice Fee gas price.
+     * @param _feeGasLimit Fee gas limit.
      * @param _sender Sender address.
      * @param _blockHeight Block height for fetching storage root.
      * @param _rlpParentNodes RLP encoded parent node data to prove in
@@ -191,8 +191,8 @@ contract MessageInbox is MessageBox, Proof {
     function confirmMessage(
         bytes32 _intentHash,
         uint256 _nonce,
-        uint256 _gasPrice,
-        uint256 _gasLimit,
+        uint256 _feeGasPrice,
+        uint256 _feeGasLimit,
         address _sender,
         uint256 _blockHeight,
         bytes memory _rlpParentNodes
@@ -200,11 +200,11 @@ contract MessageInbox is MessageBox, Proof {
         internal
         returns (bytes32 messageHash_)
     {
-        messageHash_ = _messageHash(
+        messageHash_ = MessageBox.messageHash(
             _intentHash,
             _nonce,
-            _gasPrice,
-            _gasLimit,
+            _feeGasPrice,
+            _feeGasLimit,
             _sender,
             inboundMessageIdentifier
         );

@@ -52,7 +52,7 @@ contract Proof is CircularBufferUint{
      * @param _maxStorageRootItems Defines how many storage roots should be
      *                             stored in circular buffer.
      */
-    function initialize(
+    function setupProof(
         address _storageAccount,
         StateRootI _stateRootProvider,
         uint256 _maxStorageRootItems

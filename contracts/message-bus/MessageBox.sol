@@ -31,7 +31,7 @@ contract MessageBox is MosaicVersion {
     /** Message type hash */
     bytes32 public constant MESSAGE_TYPEHASH = keccak256(
         abi.encode(
-            "Message(bytes32 intentHash,uint256 nonce,uint256 gasPrice,uint256 gasLimit,address sender)"
+            "Message(bytes32 intentHash,uint256 nonce,uint256 feeGasPrice,uint256 feeGasLimit,address sender)"
         )
     );
 
@@ -42,16 +42,17 @@ contract MessageBox is MosaicVersion {
      * @notice Generate message hash from the input params
      * @param _intentHash Intent hash of message.
      * @param _nonce Nonce of sender.
-     * @param _gasPrice Gas price.
-     * @param _gasLimit Gas limit.
+     * @param _feeGasPrice Fee gas price.
+     * @param _feeGasLimit Fee gas limit.
      * @param _sender Sender address.
+     * @param _domainSeparator Domain separator
      * @return messageHash_ Message hash.
      */
-    function _messageHash(
+    function messageHash(
         bytes32 _intentHash,
         uint256 _nonce,
-        uint256 _gasPrice,
-        uint256 _gasLimit,
+        uint256 _feeGasPrice,
+        uint256 _feeGasLimit,
         address _sender,
         bytes32 _domainSeparator
     )
@@ -64,8 +65,8 @@ contract MessageBox is MosaicVersion {
                 MESSAGE_TYPEHASH,
                 _intentHash,
                 _nonce,
-                _gasPrice,
-                _gasLimit,
+                _feeGasPrice,
+                _feeGasLimit,
                 _sender
             )
         );
@@ -73,7 +74,7 @@ contract MessageBox is MosaicVersion {
         messageHash_ = keccak256(
             abi.encodePacked(
                 byte(0x19),
-                byte(0x4d),
+                byte(0x4d), // 0x4d is for M (Mosaic)
                 _domainSeparator,
                 typedMessageHash
             )

@@ -37,27 +37,27 @@ contract MessageOutbox is MessageBox {
      * @notice Generate outbox message hash from the input params
      * @param _intentHash Intent hash of message.
      * @param _nonce Nonce of sender.
-     * @param _gasPrice Gas price.
-     * @param _gasLimit Gas limit.
+     * @param _feeGasPrice Fee gas price.
+     * @param _feeGasLimit Fee gas limit.
      * @param _sender Sender address.
      * @return messageHash_ Message hash.
      */
     function outboxMessageHash(
         bytes32 _intentHash,
         uint256 _nonce,
-        uint256 _gasPrice,
-        uint256 _gasLimit,
+        uint256 _feeGasPrice,
+        uint256 _feeGasLimit,
         address _sender
     )
         external
         view
         returns (bytes32 messageHash_)
     {
-        messageHash_ = _messageHash(
+        messageHash_ = MessageBox.messageHash(
             _intentHash,
             _nonce,
-            _gasPrice,
-            _gasLimit,
+            _feeGasPrice,
+            _feeGasLimit,
             _sender,
             outboundMessageIdentifier
         );
@@ -128,26 +128,26 @@ contract MessageOutbox is MessageBox {
      *
      * @param _intentHash Intent hash of message.
      * @param _nonce Nonce of sender.
-     * @param _gasPrice Gas price.
-     * @param _gasLimit Gas limit.
+     * @param _feeGasPrice Fee gas price.
+     * @param _feeGasLimit Fee gas limit.
      * @param _sender Sender address.
      * @return messageHash_ Message hash
      */
     function declareMessage(
         bytes32 _intentHash,
         uint256 _nonce,
-        uint256 _gasPrice,
-        uint256 _gasLimit,
+        uint256 _feeGasPrice,
+        uint256 _feeGasLimit,
         address _sender
     )
         internal
         returns (bytes32 messageHash_)
     {
-        messageHash_ = _messageHash(
+        messageHash_ = MessageBox.messageHash(
             _intentHash,
             _nonce,
-            _gasPrice,
-            _gasLimit,
+            _feeGasPrice,
+            _feeGasLimit,
             _sender,
             outboundMessageIdentifier
         );
