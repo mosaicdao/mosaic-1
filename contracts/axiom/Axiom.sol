@@ -28,10 +28,13 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
     using SafeMath for uint256;
 
 
-    /* Constants */
+    /* Events */
 
-    /** Epoch length */
-    uint256 public constant EPOCH_LENGTH = uint256(100);
+    /* Emitted when new metachain is created */
+    event MetachainCreated(bytes32 metachainId);
+
+
+    /* Constants */
 
     /** The callprefix of the Reputation::setup function. */
     bytes4 public constant REPUTATION_SETUP_CALLPREFIX = bytes4(
@@ -44,17 +47,6 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
     bytes4 public constant CONSENSUS_SETUP_CALLPREFIX = bytes4(
         keccak256(
             "setup(uint256,uint256,uint256,uint256,uint256,address)"
-        )
-    );
-
-    /** The callprefix of the Anchor::setup function.
-     *
-     *  uint256 - maxStateRoots Max number of state root stored in anchor contract.
-     *  address - address of consensus contract.
-     */
-    bytes4 public constant ANCHOR_SETUP_CALLPREFIX = bytes4(
-        keccak256(
-            "setup(uint256,address)"
         )
     );
 
@@ -288,65 +280,50 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
     /**
      * @notice Setup a new meta chain. Only technical governance address can
      *         call this function.
-     * @param _maxStateRoots The max number of state roots to store in the
-     *                       circular buffer.
-     * @param _rootRlpBlockHeader RLP encoded block header of root block.
      */
-    function newMetaChain(
-        uint256 _maxStateRoots,
-        bytes calldata _rootRlpBlockHeader
-    )
+    function newMetaChain()
         external
         onlyTechGov
+        returns(bytes32 metachainId_)
     {
-        require(
-            address(consensus) != address(0),
-            "Consensus must be setup."
-        );
 
-        Block.Header memory blockHeader = Block.decodeHeader(_rootRlpBlockHeader);
+        metachainId_ = consensus.newMetaChain();
 
-        bytes memory anchorSetupData = abi.encodeWithSelector(
-            ANCHOR_SETUP_CALLPREFIX,
-            _maxStateRoots,
-            consensus
-        );
+        emit MetachainCreated(metachainId_);
+    }
 
-        address anchor = address(
-            createProxy(
-                anchorMasterCopy,
-                anchorSetupData
-            )
-        );
-
-        consensus.newMetaChain(
-            address(anchor),
-            EPOCH_LENGTH,
-            blockHeader.height
-        );
+    /**
+     * @notice Deploys proxy for anchor contract.
+     *
+     * @param _anchorSetupData Setup data for anchor contract.
+     *
+     * @return anchor_ Address of anchor contract.
+     */
+    function deployAnchor(bytes calldata _anchorSetupData)
+        external
+        onlyConsensus
+        returns(address anchor_)
+    {
+        anchor_ = deployProxyContract(anchorMasterCopy, _anchorSetupData);
     }
 
     /**
      * @notice Deploys metachain proxies. Only consensus can call this function.
      *
-     * @param _anchorSetupData Setup data for anchor contract.
      * @param _coreSetupData Setup data for core contract.
      * @param _consensusGatewaySetupData Setup data for consensus gateway contract.
      *
-     * @return anchor_ Address of anchor contract.
      * @return core_ Address of core contract.
      * @return consensusGateway_ Address of consensus gateway contract.
      */
     function deployMetachainProxies(
-        bytes calldata _anchorSetupData,
         bytes calldata _coreSetupData,
         bytes calldata _consensusGatewaySetupData
     )
         external
         onlyConsensus
-        returns(address anchor_, address core_, address consensusGateway_)
+        returns(address core_, address consensusGateway_)
     {
-        anchor_ = deployProxyContract(anchorMasterCopy, _anchorSetupData);
         core_ = deployProxyContract(coreMasterCopy, _coreSetupData);
         consensusGateway_ = deployProxyContract(
             consensusGatewayMasterCopy,

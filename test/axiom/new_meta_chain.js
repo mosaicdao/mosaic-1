@@ -19,15 +19,11 @@ const { AccountProvider } = require('../test_lib/utils.js');
 const web3 = require('../test_lib/web3.js');
 const Utils = require('../test_lib/utils.js');
 const AxiomUtils = require('./utils.js');
-const ProxyTruffleArtifact = require('../../build/contracts/Proxy.json');
-
 
 const SpyConsensus = artifacts.require('SpyConsensus');
 const SpyReputation = artifacts.require('SpyReputation');
 const SpyAnchor = artifacts.require('SpyAnchor');
 const SpyConsensusGateway = artifacts.require('SpyConsensusGateway');
-
-const EPOCH_LENGTH = 100;
 
 let config = {};
 let contracts = {};
@@ -79,9 +75,6 @@ contract('Axiom::newMetaChain', (accounts) => {
     await AxiomUtils.setupConsensusWithConfig(axiom, config);
 
     newMetaChainParams = {
-      maxStateRoots: new BN(10),
-      rlpBlockHeader: '0xf901f9a083cafc574e1f51ba9dc0568fc617a08ea2429fb384059c972f13b19fa1c8dd55a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347948888f1f195afa192cfee860698584c030f4c9db1a0ef1552a40b7165c3cd773806b9e0c165b75356e0314bf0706f279c729f51e017a05fe50b260da6308036625b850b5d6ced6d0a9f814c0688bc91ffb7b7a3a54b67a0bc37d79753ad738a6dac4921e57392f145d8887476de3f783dfa7edae9283e52b90100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008302000001832fefd8825208845506eb0780a0bd4472abb6659ebe3ee06ee4d7b72a00a9f4d001caca51342001075469aff49888a13a5a8c8f2bb1c4',
-      sourceBlockHeight: new BN(1),
       txOptions: {
         from: constructionParams.techGov,
       },
@@ -103,54 +96,26 @@ contract('Axiom::newMetaChain', (accounts) => {
       await AxiomUtils.newMetaChainWithConfig(axiom, newMetaChainParams);
     });
 
-    it('should deploy anchor contract', async () => {
-      await AxiomUtils.newMetaChainWithConfig(axiom, newMetaChainParams);
-
-      const consensusContractAddress = await axiom.consensus.call();
-      const consensusProxyContract = await SpyConsensus.at(consensusContractAddress);
-
-      const anchorAddress = await consensusProxyContract.anchor.call();
-      const contractByteCode = await Utils.getCode(anchorAddress);
-      assert.strictEqual(
-        contractByteCode,
-        ProxyTruffleArtifact.deployedBytecode,
-        'Proxy of Anchor contract byte code must match the compiled binary.',
-      );
-
-      const anchor = await SpyAnchor.at(anchorAddress);
-      const maxStateRootFromAnchor = new BN(await anchor.spyMaxStateRoot.call());
-      const consensusFromAnchor = await anchor.spyConsensus.call();
-
-      assert.isOk(
-        maxStateRootFromAnchor.eq(newMetaChainParams.maxStateRoots),
-        `Max state root from anchor ${maxStateRootFromAnchor.toString(10)}`
-        + ` must match to ${newMetaChainParams.maxStateRoots.toString(10)}`,
-      );
-      assert.strictEqual(
-        consensusContractAddress,
-        consensusFromAnchor,
-        'Consensus address from axiom must match to anchor',
-      );
-    });
 
     it('should validate the spied values of the consensus proxy contract', async () => {
-      await AxiomUtils.newMetaChainWithConfig(axiom, newMetaChainParams);
+      const response = await AxiomUtils.newMetaChainWithConfig(axiom, newMetaChainParams);
 
-      const consensusContractAddress = await axiom.consensus.call();
-      const consensusProxyContract = await SpyConsensus.at(consensusContractAddress);
+      assert.isOk(
+        response.receipt.logs.length > 0,
+        'Must emit event',
+      );
+      const eventObject = response.receipt.logs[0];
 
-      const epochLength = await consensusProxyContract.epochLength.call();
       assert.strictEqual(
-        epochLength.eqn(EPOCH_LENGTH),
-        true,
-        'Epoch length value is not set in the contract.',
+        eventObject.event,
+        'MetachainCreated',
+        'Must emit MetachainCreated event',
       );
 
-      const sourceBlockHeight = await consensusProxyContract.sourceBlockHeight.call();
       assert.strictEqual(
-        sourceBlockHeight.eq(newMetaChainParams.sourceBlockHeight),
-        true,
-        'Source block height value is not set in the contract.',
+        eventObject.args.metachainId,
+        web3.utils.sha3('1'),
+        'Must emit correct metachain Id',
       );
     });
   });
