@@ -57,5 +57,7 @@ interface CoreI {
         view
         returns (bool);
 
+    function getOpenKernel() external returns (bytes32, uint256);
+
 }
 

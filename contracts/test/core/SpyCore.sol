@@ -127,7 +127,7 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
     // Note: Implementation will be done once it is required. As the method is
     // in ICore interface, we would need it, otherwise SpyCore deployment cannot
     // be done.
-    function isValidator(address _account)
+    function isValidator(address)
         external
         view
         returns (bool)

@@ -823,6 +823,22 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
     }
 
     /**
+     * It returns open kernel hash and height.
+     *
+     * @return Metablock's openKernelHash and openKernelHeight.
+     */
+    function getOpenKernel()
+        external
+        returns(bytes32 openKernelHash_, uint256 openKernelHeight_)
+    {
+        openKernelHash_ = openKernelHash;
+        openKernelHeight_ = openKernelHeight;
+    }
+
+
+    /* Public functions */
+
+    /**
      * @notice Validator is active if open kernel height is
      *           - greater or equal than validator's begin height
      *           - and, less or equal than validator's end height
