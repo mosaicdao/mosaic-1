@@ -610,7 +610,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
         // Join in core contract.
         (uint256 validatorCount, uint256 minValidatorCount) =
-            CoreI(_core).joinBeforeOpen(msg.sender);
+            CoreI(core).joinBeforeOpen(msg.sender);
 
         if (validatorCount >= minValidatorCount) {
             coreLifetimes[core] = CoreLifetime.genesis;
