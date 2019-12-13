@@ -23,7 +23,6 @@ import "../axiom/AxiomI.sol";
 import "../block/Block.sol";
 import "../committee/CommitteeI.sol";
 import "../core/CoreI.sol";
-import "../core/CoreStatusEnum.sol";
 import "../reputation/ReputationI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../version/MosaicVersion.sol";
@@ -581,8 +580,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      *         This is called by validator address.
      *
      * @dev Function requires:
-     *          - Core should exist for given metachain
-     *          - core life time status must be creation
+     *          - core should exist for given metachain
+     *          - core life time should be in creation state
      *
      * @param _metachainId Metachain id that validator wants to join.
      * @param _withdrawalAddress A withdrawal address of newly joined validator.
@@ -611,7 +610,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
         // Join in core contract.
         (uint256 validatorCount, uint256 minValidatorCount) =
-            CoreI(core).joinDuringCreation(msg.sender);
+            CoreI(_core).joinBeforeOpen(msg.sender);
 
         if (validatorCount >= minValidatorCount) {
             coreLifetimes[core] = CoreLifetime.genesis;
