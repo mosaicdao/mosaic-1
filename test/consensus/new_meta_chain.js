@@ -61,14 +61,6 @@ contract('Consensus::newMetaChain', (accounts) => {
         'Caller must be axiom address.',
       );
     });
-
-    it('should fail when metachain id already exists', async () => {
-      await consensusUtil.callNewMetaChainOnConsensus(contracts.SpyAxiom, inputParams);
-      await Utils.expectRevert(
-        consensusUtil.callNewMetaChainOnConsensus(contracts.SpyAxiom, inputParams),
-        'A core is already assigned to this metachain.',
-      );
-    });
   });
 
   contract('Positive Tests', () => {
