@@ -134,4 +134,10 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
     {
         require(false, "This should not be called for unit tests.");
     }
+
+    function getOpenKernel()
+        external
+        returns (bytes32, uint256) {
+        require(false, "This should not be called for unit tests.");
+    }
 }
