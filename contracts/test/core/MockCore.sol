@@ -122,4 +122,8 @@ contract MockCore is Core {
         openKernelHeight = _openKernelHeight;
     }
 
+    function setOpenKernelHash(bytes32 _openKernelHash) public {
+        openKernelHash = _openKernelHash;
+    }
+
 }
