@@ -35,6 +35,17 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
     using SafeMath for uint256;
 
 
+    /* Events */
+
+    event EndpointPublished(
+        bytes32 metachainId,
+        address core,
+        address validator,
+        string service,
+        string endpoint
+    );
+
+
     /* Constants */
 
     /** Committee formation block delay */
@@ -693,6 +704,51 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         joinLimit_ = joinLimit;
     }
     // Task: Pending functions related to halting and corrupting of core.
+
+    /**
+     * @notice It publishes the endpoint.
+     *
+     * @dev Function requires:
+     *          - only validator can call.
+     *          - validator is not slashed.
+     *          - metachain id should be valid.
+     *
+     * @param _metachainId Metachain id.
+     * @param _service Service can be ipfs, enode, etc.
+     * @param _endpoint Url for the service.
+     */
+    function publishEndpoint(
+        bytes32 _metachainId,
+        string calldata _service,
+        string calldata _endpoint
+    )
+        external
+    {
+        address core = assignments[_metachainId];
+        require(
+            core != address(0),
+            "No core exists for the metachain id."
+        );
+
+        require(
+            CoreI(core).isValidator(msg.sender),
+            "Validator is not active."
+        );
+
+        require(
+            !reputation.isSlashed(msg.sender),
+            "Validator is slashed."
+        );
+
+        emit EndpointPublished(
+            _metachainId,
+            core,
+            msg.sender,
+            _service,
+            _endpoint
+        );
+    }
+
 
 
     /* Public functions */
