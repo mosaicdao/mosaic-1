@@ -225,11 +225,11 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
     /* Modifiers */
 
-    modifier duringCreation()
+    modifier beforeOpen()
     {
         require(
-            coreStatus == CoreStatus.creation,
-            "The core must be under creation."
+            coreStatus == CoreStatus.created,
+            "The core must be created."
         );
         _;
     }
@@ -338,7 +338,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
         setupConsensus(_consensus);
 
-        coreStatus = CoreStatus.creation;
+        coreStatus = CoreStatus.created;
 
         epochLength = _epochLength;
 
@@ -685,14 +685,13 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
     }
 
     /**
-     * @notice Joins a validator while core is in creation state.
-     *         Once the minimum number of validators joined, core is opened,
-     *         with the metablock parameters specified in the constructor
-     *         and joined validators during creation.
+     * @notice Joins a validator before core is opened.
+     *         Once the minimum number of validators has joined, core is opened,
+     *         with the metablock parameters specified in the constructor.
      *
      * @dev Function requires:
      *          - only consensus can call
-     *          - core is in creation state
+     *          - core is created state and not open
      *          - a validator's address is not null
      *          - a validator has not already joined
      *
@@ -700,13 +699,13 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *
      * @return The total count of joined validators.
      */
-    function joinDuringCreation(address _validator)
+    function joinBeforeOpen(address _validator)
         external
         onlyConsensus
-        duringCreation
+        beforeOpen
         returns(uint256 validatorCount_, uint256 minValidatorCount_)
     {
-        // during creation join at creation kernel height
+        // during created state, validators join at creation kernel height
         insertValidator(_validator, creationKernelHeight);
 
         Kernel storage creationKernel = kernels[creationKernelHeight];
@@ -821,6 +820,22 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
         countLogOutMessages = countLogOutMessages.add(1);
     }
+
+    /**
+     * It returns open kernel hash and height.
+     *
+     * @return Metablock's openKernelHash and openKernelHeight.
+     */
+    function getOpenKernel()
+        external
+        returns(bytes32 openKernelHash_, uint256 openKernelHeight_)
+    {
+        openKernelHash_ = openKernelHash;
+        openKernelHeight_ = openKernelHeight;
+    }
+
+
+    /* Public functions */
 
     /**
      * @notice Validator is active if open kernel height is

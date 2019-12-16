@@ -21,7 +21,7 @@ interface CoreI {
 
     function minimumValidatorCount() external returns (uint256);
 
-    function joinDuringCreation(address _validator)
+    function joinBeforeOpen(address _validator)
         external
         returns(uint256 validatorCount_, uint256 minValidatorCount_);
 
@@ -51,5 +51,13 @@ interface CoreI {
         external
         view
         returns (bytes32 metablockHash_);
+
+    function isValidator(address _account)
+        external
+        view
+        returns (bool);
+
+    function getOpenKernel() external returns (bytes32, uint256);
+
 }
 

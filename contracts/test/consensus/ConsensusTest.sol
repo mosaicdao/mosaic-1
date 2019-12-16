@@ -87,4 +87,13 @@ contract ConsensusTest is Consensus {
     {
         anchors[_metachainId] = _anchor;
     }
+
+    function setConsensusGateway(
+        bytes32 _metachainId,
+        address _consensusGateway
+    )
+        external
+    {
+        consensusGateways[_metachainId] = ConsensusGatewayI(_consensusGateway);
+    }
 }

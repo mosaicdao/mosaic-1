@@ -23,15 +23,13 @@ const SpyConsensus = artifacts.require('SpyConsensus');
 
 const { AccountProvider } = require('../test_lib/utils.js');
 const AxiomUtils = require('./utils.js');
-const Utils = require('../test_lib/utils.js');
 const web3 = require('../test_lib/web3');
 
 contract('Axiom::deployMetachainProxies', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
   let config = {};
   let axiomContract;
-  let coreSetupdata;
-  let consensusGatewaySetupData;
+  let anchorSetupData;
   let consensus;
 
   beforeEach(async () => {
@@ -60,39 +58,24 @@ contract('Axiom::deployMetachainProxies', (accounts) => {
         from: accountProvider.get(),
       },
     );
-    const newCoreParams = {
+
+    anchorSetupData = await AxiomUtils.encodeNewAnchorParams({
+      maxStateRoots: new BN('100'),
       consensus: accountProvider.get(),
-      metachainId: Utils.getRandomHash(),
-      epochLength: new BN('100'),
-      minValidators: new BN('10'),
-      joinLimit: new BN('10'),
-      reputation: accountProvider.get(),
-      height: new BN(Utils.getRandomNumber(1000)),
-      parent: Utils.getRandomHash(),
-      gasTarget: new BN(Utils.getRandomNumber(999999)),
-      dynasty: new BN(Utils.getRandomNumber(10)),
-      accumulatedGas: new BN(Utils.getRandomNumber(999999)),
-      source: Utils.getRandomHash(),
-      sourceBlockHeight: new BN(Utils.getRandomNumber(1000)),
-    };
+    });
 
-    coreSetupdata = await AxiomUtils.encodeNewCoreParams(newCoreParams);
-    consensusGatewaySetupData = await AxiomUtils.encodeNewConsensusGatewayParam();
-
-    consensus = newCoreParams.consensus;
-    await axiomContract.setConsensus(newCoreParams.consensus);
+    consensus = accountProvider.get();
+    await axiomContract.setConsensus(consensus);
   });
 
   contract('Positive Tests', () => {
-    it('should deploy metachain proxies', async () => {
-      const returnValues = await axiomContract.deployMetachainProxies.call(
-        coreSetupdata,
-        consensusGatewaySetupData,
+    it('should deploy anchor proxy', async () => {
+      const anchorAddress = await axiomContract.deployAnchor.call(
+        anchorSetupData,
         { from: consensus },
       );
-      const response = await axiomContract.deployMetachainProxies(
-        coreSetupdata,
-        consensusGatewaySetupData,
+      const response = await axiomContract.deployAnchor(
+        anchorSetupData,
         { from: consensus },
       );
 
@@ -100,23 +83,10 @@ contract('Axiom::deployMetachainProxies', (accounts) => {
         response.receipt.status,
         'Transaction should success',
       );
-      assert.isOk(
-        web3.utils.isAddress(returnValues.core_),
-        'It should return valid core address',
-      );
-      assert.isOk(
-        web3.utils.isAddress(returnValues.consensusGateway_),
-        'It should return valid consensus gateway address',
-      );
 
       assert.isOk(
-        (await Utils.getCode(returnValues.core_)).length > 2,
-        'Core proxy must be deployed',
-      );
-
-      assert.isOk(
-        (await Utils.getCode(returnValues.consensusGateway_)).length > 2,
-        'Consensus gateway proxy must be deployed',
+        web3.utils.isAddress(anchorAddress),
+        'It should return valid anchor address',
       );
     });
   });

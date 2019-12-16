@@ -43,7 +43,6 @@ contract('Consensus::join', (accounts) => {
 
     joinParams = {
       metachainId: '0x0000000000000000000000000000000000000222',
-      core: core.address,
       withdrawalAddress: accountProvider.get(),
       txOptions: {
         from: accountProvider.get(),
@@ -55,54 +54,15 @@ contract('Consensus::join', (accounts) => {
   });
 
   contract('Negative Tests', async () => {
-    it('should fail when metachain id is 0', async () => {
-      const params = Object.assign(
+    it('should fail when metachainId is invalid', async () => {
+      const invalidJoinParams = Object.assign(
         {},
         joinParams,
         { metachainId: Utils.NULL_ADDRESS },
       );
       await Utils.expectRevert(
-        consensusUtil.join(consensus, params),
-        'Metachain id is 0.',
-      );
-    });
-
-    it('should fail when core address is 0', async () => {
-      const params = Object.assign(
-        {},
-        joinParams,
-        { core: Utils.NULL_ADDRESS },
-      );
-
-      await Utils.expectRevert(
-        consensusUtil.join(consensus, params),
-        'Core address is 0.',
-      );
-    });
-
-    it('should fail when core is not assigned for specified metachain id', async () => {
-      const params = Object.assign(
-        {},
-        joinParams,
-        { core: accountProvider.get() },
-      );
-
-      await Utils.expectRevert(
-        consensusUtil.join(consensus, params),
-        'Core is not assigned for the specified metachain id.',
-      );
-    });
-
-    it('should fail when withdrawal address is 0', async () => {
-      const params = Object.assign(
-        {},
-        joinParams,
-        { withdrawalAddress: Utils.NULL_ADDRESS },
-      );
-
-      await Utils.expectRevert(
-        consensusUtil.join(consensus, params),
-        'Withdrawal address is 0.',
+        consensusUtil.join(consensus, invalidJoinParams),
+        'Core does not exist for given metachain.',
       );
     });
 
