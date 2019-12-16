@@ -6,8 +6,9 @@ import "../ERC20I.sol";
 
 contract ConsensusGatewayBase is ConsensusModule {
 
-    /* Constants */
+    /* Storage */
 
+    /** Address of MOst contract address. */
     ERC20I public  most;
 
 
