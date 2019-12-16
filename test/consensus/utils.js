@@ -53,7 +53,6 @@ async function getDislocation(committeeFormationBlockHeight) {
 async function join(consensus, joinParams) {
   await consensus.join(
     joinParams.metachainId,
-    joinParams.core,
     joinParams.withdrawalAddress,
     joinParams.txOptions,
   );
@@ -62,7 +61,6 @@ async function join(consensus, joinParams) {
 async function joinDuringCreation(consensus, joinParams) {
   await consensus.joinDuringCreation(
     joinParams.metachainId,
-    joinParams.core,
     joinParams.withdrawalAddress,
     joinParams.txOptions,
   );

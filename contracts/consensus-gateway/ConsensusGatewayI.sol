@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity >=0.5.0 <0.6.0;
 
 // Copyright 2019 OpenST Ltd.
 //
@@ -14,18 +14,7 @@ pragma solidity ^0.5.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../../proxies/MasterCopyNonUpgradable.sol";
-import "../../consensus-gateway/ConsensusGatewayI.sol";
-
-contract SpyConsensusGateway is MasterCopyNonUpgradable, ConsensusGatewayI {
-
-    address public spyCore;
-    uint256 public spyFeeGasPrice;
-    uint256 public spyFeeGasLimit;
-
-    function setup() public {
-        // do nothing
-    }
+interface ConsensusGatewayI {
 
     function declareOpenKernel(
         address _core,
@@ -33,10 +22,5 @@ contract SpyConsensusGateway is MasterCopyNonUpgradable, ConsensusGatewayI {
         uint256 _feeGasLimit
     )
         external
-        returns (bytes32)
-    {
-        spyCore = _core;
-        spyFeeGasPrice = _feeGasPrice;
-        spyFeeGasLimit = _feeGasLimit;
-    }
+        returns (bytes32);
 }
