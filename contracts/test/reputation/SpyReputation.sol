@@ -26,7 +26,7 @@ contract SpyReputation is MasterCopyNonUpgradable, ReputationI {
     address public validator;
 
     address public consensus;
-    address public mOST;
+    address public most;
     uint256 public stakeMOSTAmount;
     address public wETH;
     uint256 public stakeWETHAmount;
@@ -57,7 +57,7 @@ contract SpyReputation is MasterCopyNonUpgradable, ReputationI {
 
     function setup(
         address _consensus,
-        address _mOST,
+        address _most,
         uint256 _stakeMOSTAmount,
         address _wETH,
         uint256 _stakeWETHAmount,
@@ -68,7 +68,7 @@ contract SpyReputation is MasterCopyNonUpgradable, ReputationI {
         external
     {
         consensus =_consensus;
-        mOST = _mOST;
+        most = _most;
         stakeMOSTAmount =_stakeMOSTAmount;
         wETH = _wETH;
         stakeWETHAmount =_stakeWETHAmount;

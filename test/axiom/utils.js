@@ -82,7 +82,7 @@ async function setupConsensusWithConfig(axiom, config) {
     config.joinLimit,
     config.gasTargetDelta,
     config.coinbaseSplitPermille,
-    config.mOST,
+    config.most,
     config.stakeMOSTAmount,
     config.wETH,
     config.stakeWETHAmount,

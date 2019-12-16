@@ -71,13 +71,13 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
 
     /* Storage */
 
-    /** ERC20 mOST for stakes and earnings for validators. */
-    ERC20I public mOST;
+    /** ERC20 MOST for stakes and earnings for validators. */
+    ERC20I public most;
 
     /** ERC20 wETH for stakes for validators. */
     ERC20I public wETH;
 
-    /** Required stake amount in mOST to stake as a validator. */
+    /** Required stake amount in MOST to stake as a validator. */
     uint256 public stakeMOSTAmount;
 
     /** Required stake amount in wETH to stake as a validator. */
@@ -176,15 +176,15 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
 
     /**
      * @dev Function requires:
-     *          - mOST token address is not 0
+     *          - MOST token address is not 0
      *          - wETH token address is not 0
-     *          - a stake amount to stake in mOST is positive
+     *          - a stake amount to stake in MOST is positive
      *          - a stake amount to stake in wETH is positive
      *          - a cashable earnings per mille is in [0, 1000] range
      *
      * @param _consensus Address of consensus contract.
-     * @param _mOST Address of EIP20 mOST token.
-     * @param _stakeMOSTAmount Amount of mOST token in wei required to be
+     * @param _most Address of EIP20 MOST token.
+     * @param _stakeMOSTAmount Amount of MOST token in wei required to be
      *                         staked by each validator on staking.
      * @param _wETH Address of EIP20 wETH token.
      * @param _stakeWETHAmount Amount of wETH token in wei required to be
@@ -199,7 +199,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
      */
     function setup(
         ConsensusI _consensus,
-        ERC20I _mOST,
+        ERC20I _most,
         uint256 _stakeMOSTAmount,
         ERC20I _wETH,
         uint256 _stakeWETHAmount,
@@ -210,13 +210,13 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
         external
     {
         require(
-            address(mOST) == address(0) && address(wETH) == address(0),
+            address(most) == address(0) && address(wETH) == address(0),
             "Reputation is already setup."
         );
 
         require(
-            _mOST != ERC20I(0),
-            "mOST token address is 0."
+            _most != ERC20I(0),
+            "MOST token address is 0."
         );
 
         require(
@@ -226,7 +226,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
 
         require(
             _stakeMOSTAmount > 0,
-            "Stake amount in mOST is not positive."
+            "Stake amount in MOST is not positive."
         );
 
         require(
@@ -245,7 +245,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
         );
 
         setupConsensus(_consensus);
-        mOST = ERC20I(_mOST);
+        most = ERC20I(_most);
         wETH = ERC20I(_wETH);
         stakeMOSTAmount = _stakeMOSTAmount;
         stakeWETHAmount = _stakeWETHAmount;
@@ -323,7 +323,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
      * @dev Function requires:
      *          - a validator is active
      *          - a caller has approved the contract to transfer
-     *            `_amount` mOST from its address to the contract address.
+     *            `_amount` MOST from its address to the contract address.
      *
      * @param _validator A validator to deposit earnings.
      * @param _amount An amount of earnings of a validator.
@@ -346,7 +346,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
         );
 
         require(
-            mOST.transferFrom(msg.sender, address(this), _amount),
+            most.transferFrom(msg.sender, address(this), _amount),
             "Failed to transfer earnings to the contract address."
         );
     }
@@ -383,7 +383,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
         );
 
         require(
-            mOST.transfer(
+            most.transfer(
                 v.withdrawalAddress, _amount
             ),
             "Failed to transfer cashable earnings to withdrawal address."
@@ -400,7 +400,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
      *          - a validator address is not same as its withdrawal address
      *          - a validator has not staked previously
      *          - a withdrawal address has not been used as a validator address
-     *          - a validator approved in mOST token contract to transfer
+     *          - a validator approved in MOST token contract to transfer
      *            a stake amount.
      *          - a validator approved in wETH token contract to transfer
      *            a stake amount.
@@ -448,8 +448,8 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
         v.withdrawalBlockHeight = MAX_UINT256;
 
         require(
-            mOST.transferFrom(_validator, address(this), stakeMOSTAmount),
-            "Failed to transfer mOST stake amount from a validator."
+            most.transferFrom(_validator, address(this), stakeMOSTAmount),
+            "Failed to transfer MOST stake amount from a validator."
         );
 
         require(
@@ -478,14 +478,14 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
         ValidatorInfo storage v = validators[_validator];
 
         v.status = ValidatorStatus.Slashed;
-        uint256 totalmOSTAmountToBurn = v.lockedEarnings
+        uint256 totalMOSTAmountToBurn = v.lockedEarnings
             .add(v.cashableEarnings)
             .add(stakeMOSTAmount);
 
         v.lockedEarnings = 0;
         v.cashableEarnings = 0;
 
-        assert(mOST.transfer(burner, totalmOSTAmountToBurn));
+        assert(most.transfer(burner, totalMOSTAmountToBurn));
         assert(wETH.transfer(burner, stakeWETHAmount));
     }
 
@@ -541,7 +541,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
         v.cashableEarnings = 0;
 
         require(
-            mOST.transfer(
+            most.transfer(
                 v.withdrawalAddress,
                 stakeMOSTAmount.add(
                     lockedEarnings
@@ -549,7 +549,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
                     cashableEarnings
                 )
             ),
-            "Failed to withdraw staked and earned mOST amounts."
+            "Failed to withdraw staked and earned MOST amounts."
         );
 
         require(
