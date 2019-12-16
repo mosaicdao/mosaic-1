@@ -18,6 +18,9 @@ import "./MessageBox.sol";
 import "./StateRootI.sol";
 import "./Proof.sol";
 
+/**
+ * @title MessageInbox - Contract to confirm the messages declared in MessageOutbox
+ */
 contract MessageInbox is MessageBox, Proof {
 
     // TODO: If we want to revert, may be the value will change to MessageBoxEnum.(still to think on this)
@@ -34,7 +37,7 @@ contract MessageInbox is MessageBox, Proof {
     uint8 public outboxStorageIndex;
 
 
-    /* External Functions. */
+    /* External Functions */
 
     /**
      * @notice Generate inbox message hash from the input params
@@ -67,7 +70,7 @@ contract MessageInbox is MessageBox, Proof {
     }
 
 
-    /* Internal Functions. */
+    /* Internal Functions */
 
     /**
      * @notice Setup message inbox.
@@ -136,9 +139,10 @@ contract MessageInbox is MessageBox, Proof {
             )
         );
 
-        /* @dev: Please note that no validations are done here. Proof::setup
+        /*
+         * @dev: Please note that no validations are done here. Proof::setup
          *       already has the validations for the input params, so avoided
-         *       the duplications here.
+         *       the duplicate validations here.
          */
         Proof.setupProof(
             _messageOutbox,

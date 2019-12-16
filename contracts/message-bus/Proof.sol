@@ -20,6 +20,9 @@ import "../lib/RLP.sol";
 import "../lib/MerklePatriciaProof.sol";
 import "../lib/BytesLib.sol";
 
+/**
+ * @title Proof - Contract to prove accounts and storage.
+ */
 contract Proof is CircularBufferUint{
 
     /* Variables */
@@ -150,6 +153,7 @@ contract Proof is CircularBufferUint{
      *
      * @dev Function requires:
      *          - storageRoot must not be zero
+     *          - Merkle proof verification should succeed
      *
      * @param _path Storage path
      * @param _value Storage value.

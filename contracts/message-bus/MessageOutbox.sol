@@ -16,6 +16,9 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "./MessageBox.sol";
 
+/**
+ * @title MessageOutbox - Contract to declare messages on the origin chain.
+ */
 contract MessageOutbox is MessageBox {
 
     /* Variables */
@@ -64,7 +67,7 @@ contract MessageOutbox is MessageBox {
     }
 
 
-    /* Internal Functions. */
+    /* Internal Functions */
 
     /**
      * @notice Setup message outbox.

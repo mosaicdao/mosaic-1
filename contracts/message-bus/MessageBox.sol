@@ -16,6 +16,9 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "../version/MosaicVersion.sol";
 
+/**
+ * @title MessageBox - Contains common code that will be used by MessageInbox and MessageOutbox
+ */
 contract MessageBox is MosaicVersion {
 
     /* Constants */
