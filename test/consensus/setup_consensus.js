@@ -17,7 +17,7 @@
 const { AccountProvider } = require('../test_lib/utils.js');
 const Utils = require('../test_lib/utils.js');
 
-const ConsensusModule = artifacts.require('ConsensusModule');
+const ConsensusModule = artifacts.require('ConsensusModuleTest');
 
 contract('ConsensusModule::setupConsensus', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
@@ -31,15 +31,15 @@ contract('ConsensusModule::setupConsensus', (accounts) => {
   contract('Negative Tests', () => {
     it('should fail to set when consensus address is null', async () => {
       await Utils.expectRevert(
-        consensusModule.setupConsensus(Utils.NULL_ADDRESS),
+        consensusModule.setupConsensusExternal(Utils.NULL_ADDRESS),
         'Consensus address must not be null.',
       );
     });
 
     it('should fail to set when consensus address is already set', async () => {
-      await consensusModule.setupConsensus(consensusAddress);
+      await consensusModule.setupConsensusExternal(consensusAddress);
       await Utils.expectRevert(
-        consensusModule.setupConsensus(consensusAddress),
+        consensusModule.setupConsensusExternal(consensusAddress),
         'Consensus address is already present.',
       );
     });
@@ -47,7 +47,7 @@ contract('ConsensusModule::setupConsensus', (accounts) => {
 
   contract('Positive Tests', () => {
     it('should set consensus address successfully', async () => {
-      await consensusModule.setupConsensus(consensusAddress);
+      await consensusModule.setupConsensusExternal(consensusAddress);
       const actualConsensusAddress = await consensusModule.consensus.call();
       assert.strictEqual(
         actualConsensusAddress,
