@@ -16,7 +16,7 @@
 
 const BN = require('bn.js');
 
-const ConsensusGatewayBase = artifacts.require('ConsensusGatewayBase');
+const ConsensusGatewayBase = artifacts.require('ConsensusGatewayBaseTest');
 
 const { AccountProvider } = require('../test_lib/utils.js');
 
@@ -29,7 +29,7 @@ contract('ConsensusGatewayBase::setup', (accounts) => {
 
     const consensusGatewayBase = await ConsensusGatewayBase.new();
 
-    await consensusGatewayBase.setup(
+    await consensusGatewayBase.setupExternal(
       most,
       currentMetaBlockHeight,
     );

@@ -14,37 +14,18 @@ pragma solidity ^0.5.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../ERC20I.sol";
+import "../../consensus-gateway/ConsensusGatewayBase.sol";
 
-/** Base contract for ConsensusGateway and ConsensusCogateway contracts. */
-contract ConsensusGatewayBase {
-
-    /* Storage */
-
-    /** Address of most contract on origin or auxiliary chain. */
-    ERC20I public most;
-
-    /** Mapping of message sender and nonce. */
-    mapping(address => uint256) public  nonces;
-
-    /** Height of current metablock */
-    uint256 public currentMetablockHeight;
+contract ConsensusGatewayBaseTest is ConsensusGatewayBase {
 
 
-    /** External functions. */
-
-    function setup(
+    function setupExternal(
         ERC20I _most,
         uint256 _currentMetablockHeight
     )
-        internal
+        external
     {
-        require(
-            address(_most) != address(0),
-            "most address must not be 0."
-        );
-
-        currentMetablockHeight = _currentMetablockHeight;
-        most = _most;
+        ConsensusGatewayBase.setup(_most, _currentMetablockHeight);
     }
+
 }
