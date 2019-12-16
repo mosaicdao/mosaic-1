@@ -23,7 +23,7 @@ import "../lib/BytesLib.sol";
 /**
  * @title Proof - Contract to prove accounts and storage.
  */
-contract Proof is CircularBufferUint{
+contract Proof is CircularBufferUint {
 
     /* Variables */
 
