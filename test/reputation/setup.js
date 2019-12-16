@@ -27,7 +27,7 @@ contract('Reputation::setup', (accounts) => {
   beforeEach(async () => {
     constructorArgs = {
       consensus: accountProvider.get(),
-      mOST: accountProvider.get(),
+      most: accountProvider.get(),
       stakeMOSTAmount: 200,
       wETH: accountProvider.get(),
       stakeWETHAmount: 100,
@@ -41,7 +41,7 @@ contract('Reputation::setup', (accounts) => {
   it('should successfully construct reputation contract', async () => {
     await reputation.setup(
       constructorArgs.consensus,
-      constructorArgs.mOST,
+      constructorArgs.most,
       constructorArgs.stakeMOSTAmount,
       constructorArgs.wETH,
       constructorArgs.stakeWETHAmount,
@@ -51,7 +51,7 @@ contract('Reputation::setup', (accounts) => {
     );
 
     const consensus = await reputation.consensus.call();
-    const mOST = await reputation.mOST.call();
+    const most = await reputation.most.call();
     const wETH = await reputation.wETH.call();
     const stakeMOSTAmount = await reputation.stakeMOSTAmount.call();
     const stakeWETHAmount = await reputation.stakeWETHAmount.call();
@@ -68,9 +68,9 @@ contract('Reputation::setup', (accounts) => {
     );
 
     assert.strictEqual(
-      mOST === constructorArgs.mOST,
+      most === constructorArgs.most,
       true,
-      `mOST address is set to ${mOST} and is not ${constructorArgs.mOST}.`,
+      `MOST address is set to ${most} and is not ${constructorArgs.most}.`,
     );
 
     assert.strictEqual(
@@ -116,7 +116,7 @@ contract('Reputation::setup', (accounts) => {
     await Utils.expectRevert(
       reputation.setup(
         constructorArgs.consensus,
-        constructorArgs.mOST,
+        constructorArgs.most,
         constructorArgs.stakeMOSTAmount,
         constructorArgs.wETH,
         constructorArgs.stakeWETHAmount,
@@ -128,13 +128,13 @@ contract('Reputation::setup', (accounts) => {
     );
   });
 
-  it('should fail to construct with zero mOST address', async () => {
-    constructorArgs.mOST = NULL_ADDRESS;
+  it('should fail to construct with zero MOST address', async () => {
+    constructorArgs.most = NULL_ADDRESS;
 
     await Utils.expectRevert(
       reputation.setup(
         constructorArgs.consensus,
-        constructorArgs.mOST,
+        constructorArgs.most,
         constructorArgs.stakeMOSTAmount,
         constructorArgs.wETH,
         constructorArgs.stakeWETHAmount,
@@ -142,7 +142,7 @@ contract('Reputation::setup', (accounts) => {
         constructorArgs.initialReputation,
         constructorArgs.withdrawalCooldownPeriodInBlocks,
       ),
-      'mOST token address is 0.',
+      'MOST token address is 0.',
     );
   });
 
@@ -152,7 +152,7 @@ contract('Reputation::setup', (accounts) => {
     await Utils.expectRevert(
       reputation.setup(
         constructorArgs.consensus,
-        constructorArgs.mOST,
+        constructorArgs.most,
         constructorArgs.stakeMOSTAmount,
         constructorArgs.wETH,
         constructorArgs.stakeWETHAmount,
@@ -160,7 +160,7 @@ contract('Reputation::setup', (accounts) => {
         constructorArgs.initialReputation,
         constructorArgs.withdrawalCooldownPeriodInBlocks,
       ),
-      'Stake amount in mOST is not positive.',
+      'Stake amount in MOST is not positive.',
     );
   });
 
@@ -170,7 +170,7 @@ contract('Reputation::setup', (accounts) => {
     await Utils.expectRevert(
       reputation.setup(
         constructorArgs.consensus,
-        constructorArgs.mOST,
+        constructorArgs.most,
         constructorArgs.stakeMOSTAmount,
         constructorArgs.wETH,
         constructorArgs.stakeWETHAmount,
@@ -188,7 +188,7 @@ contract('Reputation::setup', (accounts) => {
     await Utils.expectRevert(
       reputation.setup(
         constructorArgs.consensus,
-        constructorArgs.mOST,
+        constructorArgs.most,
         constructorArgs.stakeMOSTAmount,
         constructorArgs.wETH,
         constructorArgs.stakeWETHAmount,
@@ -206,7 +206,7 @@ contract('Reputation::setup', (accounts) => {
     await Utils.expectRevert(
       reputation.setup(
         constructorArgs.consensus,
-        constructorArgs.mOST,
+        constructorArgs.most,
         constructorArgs.stakeMOSTAmount,
         constructorArgs.wETH,
         constructorArgs.stakeWETHAmount,
@@ -224,7 +224,7 @@ contract('Reputation::setup', (accounts) => {
     await Utils.expectRevert(
       reputation.setup(
         constructorArgs.consensus,
-        constructorArgs.mOST,
+        constructorArgs.most,
         constructorArgs.stakeMOSTAmount,
         constructorArgs.wETH,
         constructorArgs.stakeWETHAmount,

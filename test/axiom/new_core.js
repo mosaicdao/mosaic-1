@@ -68,7 +68,7 @@ contract('Axiom::newCore', (accounts) => {
       joinLimit: new BN(10),
       gasTargetDelta: new BN(1000000000000000),
       coinbaseSplitPermille: new BN(50),
-      mOST: accountProvider.get(),
+      most: accountProvider.get(),
       stakeMOSTAmount: new BN(300000),
       wETH: accountProvider.get(),
       stakeWETHAmount: new BN(300000),
