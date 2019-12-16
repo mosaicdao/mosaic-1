@@ -76,7 +76,7 @@ contract ConsensusTest is Consensus {
     )
         external
     {
-        proposals[_proposal] = CommitteeI(_committeeAddress);
+        committees[_proposal] = _committeeAddress;
     }
 
     function setAnchor(

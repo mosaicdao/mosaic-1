@@ -192,16 +192,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
     /* Modifiers */
 
-    modifier onlyRunningCore()
-    {
-        require(
-            isCoreRunning(msg.sender),
-            "Caller must be an active core."
-        );
-
-        _;
-    }
-
     modifier onlyAxiom()
     {
         require(
@@ -313,10 +303,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      * @dev Function requires:
      *          - the given metachain id is not 0
      *          - the given metablock hash is not 0
-     *          - caller (core) matches with an assigned core for the given
+     *          - the caller matches with an assigned core for the given
      *            metachain id
-     *          - caller (core) is running
-     *          - the corresponding metablock round is 'Undefined'
+     *          - the caller (core) is running
+     *          - the corresponding metablock's round is 'Undefined'
      */
     function precommitMetablock(
         bytes32 _metachainId,
@@ -338,12 +328,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
         require(
             msg.sender == core,
-            "Wrong core is precommitting."
+            "Caller is not an assigned core for the given metachain id."
         );
 
         require(
             isCoreRunning(core),
-            "Core is not running."
+            "Caller (core) is not running."
         );
 
         goToPrecommitRound(_metachainId, _metablockHash);
@@ -405,18 +395,22 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             abi.encodePacked(seedGenerator)
         );
 
-        startCommittee(_metachainId, seed, metablockHash);
+        startCommittee(seed, metablockHash);
     }
 
     /**
      * @notice Enters a validator into a committee.
      *
      * @dev Function requires:
-     *          - core has been assigned for the given metachain id
-     *          - committee has been formed for the given metachain id
+     *          - the given metachain id is not 0
+     *          - the given core's address is not 0
+     *          - the given validator's address is not 0
+     *          - the given 'further' validator's address is not 0
+     *          - the given core is running
      *          - valid validator is given
-     *              - is registered in the given core
+     *              - is active in the given core
      *              - has not been slashed
+     *          - the corresponding metablock's round is 'CommitteeFormed'
      *
      * @param _metachainId Metachain id for the committee to enter.
      * @param _validator Validator address to enter.
@@ -432,8 +426,28 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         external
     {
         require(
+            _metachainId != bytes32(0),
+            "Metachain id is 0."
+        );
+
+        require(
+            _core != address(0),
+            "Core's address is 0."
+        );
+
+        require(
+            _validator != address(0),
+            "Validator's address is 0."
+        );
+
+        require(
+            _furtherMember != address(0),
+            "Further validator's address is 0."
+        );
+
+        require(
             isCoreRunning(_core),
-            "Invalid core has been specified."
+            "The given core is not running."
         );
 
         require(
@@ -458,10 +472,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
     /**
      * @notice Registers committee decision.
      *
-     * @dev Function requires:
-     *          - only committee for the given metachain id can call
-     *          - committee has not yet registered its decision
-     *
      * @param _committeeDecision Decision of a caller committee.
      */
     function registerCommitteeDecision(
@@ -472,6 +482,11 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
     {
         uint256 metablockTip = metablockTips[_metachainId];
         Metablock storage metablock = metablockchains[_metachainId][metablockTip];
+
+        require(
+            metablock.round == MetablockRound.CommitteeFormed,
+            "Committee has not been formed for the given metachain id."
+        );
 
         address committee = committees[metablock.metablockHash];
         require(
@@ -889,28 +904,18 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
     /**
      * @notice Starts a new committee.
-
-     * @dev Function requires:
-     *          - there is no committee for the given metachain id
-     *          - committee for the given proposal does not exist
      *
-     * @param _metachainId Metachain id
      * @param _dislocation Hash to shuffle validators.
      * @param _metablockHash Proposal under consideration for committee.
      */
     function startCommittee(
-        bytes32 _metachainId,
         bytes32 _dislocation,
         bytes32 _metablockHash
     )
         internal
     {
-        require(
-            committees[_metablockHash] == address(0),
-            "There already exists a committee for the given metablock."
-        );
-
-        assert(decisions[_metablockHash] = bytes32(0));
+        assert(committees[_metablockHash] == address(0));
+        assert(decisions[_metablockHash] == bytes32(0));
 
         CommitteeI committee_ = newCommittee(committeeSize, _dislocation, _metablockHash);
 
@@ -966,7 +971,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
         require(
             metablock.round == MetablockRound.Precommitted,
-            "Core has not precommitted for the given metachain id."
+            "Metablock's round is not 'Precommitted'."
         );
         assert(metablock.metablockHash != bytes32(0));
         assert(metablock.roundBlockNumber < block.number);
@@ -984,7 +989,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         uint256 metablockTip = metablockTips[_metachainId];
         Metablock storage metablock = metablockchains[_metachainId][metablockTip];
 
-        assert(metablock.round == MetablockRound.CommitteeFormed);
+        require(
+            metablock.round == MetablockRound.CommitteeFormed,
+            "Metablock's round is not 'CommitteeDecided'"
+        );
         assert(metablock.metablockHash != bytes32(0));
         assert(metablock.roundBlockNumber < block.number);
 
@@ -1001,7 +1009,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
         require(
             metablock.round == MetablockRound.CommitteeDecided,
-            "Committee has not decided yet."
+            "Metablock's round is not 'CommitteeDecided'."
         );
         assert(metablock.metablockHash != bytes32(0));
         assert(metablock.roundBlockNumber < block.number);
@@ -1028,17 +1036,9 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         uint256 _targetBlockHeight
     )
         private
+        view
     {
-        address committee = address(proposals[_precommit]);
-        require(
-            committee != address(0),
-            "Committee has not been formed for precommit."
-        );
-
-        bytes32 decision = decisions[committee];
-
-        // Pruning committee decision.
-        decisions[committee] = bytes32(0);
+        bytes32 decision = decisions[_precommit];
 
         require(
             _committeeLock == keccak256(abi.encode(decision)),
