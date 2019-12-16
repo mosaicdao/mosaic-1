@@ -142,7 +142,7 @@ contract('Reputation::setup', (accounts) => {
         constructorArgs.initialReputation,
         constructorArgs.withdrawalCooldownPeriodInBlocks,
       ),
-      'mOST token address is 0.',
+      'MOST token address is 0.',
     );
   });
 
@@ -160,7 +160,7 @@ contract('Reputation::setup', (accounts) => {
         constructorArgs.initialReputation,
         constructorArgs.withdrawalCooldownPeriodInBlocks,
       ),
-      'Stake amount in mOST is not positive.',
+      'Stake amount in MOST is not positive.',
     );
   });
 
