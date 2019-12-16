@@ -1,3 +1,5 @@
+pragma solidity >=0.5.0 <0.6.0;
+
 // Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,35 +14,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-'use strict';
+interface ConsensusGatewayI {
 
-const BN = require('bn.js');
-
-const CoreStatus = {
-  undefined: 0,
-  terminated: 1,
-  created: 2,
-  opened: 3,
-  precommitted: 4,
-};
-Object.freeze(CoreStatus);
-
-function isCoreCreated(status) {
-  return new BN(CoreStatus.created).cmp(status) === 0;
+    function declareOpenKernel(
+        address _core,
+        uint256 _feeGasPrice,
+        uint256 _feeGasLimit
+    )
+        external
+        returns (bytes32);
 }
-
-function isCoreOpened(status) {
-  return new BN(CoreStatus.opened).cmp(status) === 0;
-}
-
-function isCorePrecommitted(status) {
-  return new BN(CoreStatus.precommitted).cmp(status) === 0;
-}
-
-
-module.exports = {
-  isCoreCreated,
-  isCoreOpened,
-  isCorePrecommitted,
-  CoreStatus,
-};

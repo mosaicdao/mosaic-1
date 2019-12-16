@@ -33,6 +33,7 @@
   "devDependencies": {
     "@types/mocha": "5.2.7",
     "@types/web3": "1.2.2",
+    "abi-decoder": "2.2.2",
     "assert": "2.0.0",
     "bn.js": "5.0.0",
     "chai": "4.2.0",

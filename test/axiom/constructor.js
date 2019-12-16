@@ -207,31 +207,5 @@ contract('Axiom::constructor', (accounts) => {
         'Call prefix for consensus should match.',
       );
     });
-
-    it('should get correct value for anchor setup call prefix', async () => {
-      const axiom = await AxiomUtils.deployAxiomWithConfig(config);
-
-      const callPrefix = await axiom.ANCHOR_SETUP_CALLPREFIX.call();
-      const expectedCallPrefix = AxiomUtils.AnchorSetupCallPrefix;
-
-      assert.strictEqual(
-        callPrefix,
-        expectedCallPrefix,
-        'Call prefix for anchor should match.',
-      );
-    });
-
-    it('should get correct value for epochLength constant', async () => {
-      const axiom = await AxiomUtils.deployAxiomWithConfig(config);
-
-      const epochLength = await axiom.EPOCH_LENGTH.call();
-      const expectedEpochLength = 100;
-
-      assert.strictEqual(
-        epochLength.eqn(expectedEpochLength),
-        true,
-        `Epoch length ${epochLength.toString(10)} from contract must be equal to ${expectedEpochLength}`,
-      );
-    });
   });
 });

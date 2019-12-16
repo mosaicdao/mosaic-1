@@ -15,10 +15,28 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 
 import "../../proxies/MasterCopyNonUpgradable.sol";
+import "../../consensus-gateway/ConsensusGatewayI.sol";
 
-contract SpyConsensusGateway is MasterCopyNonUpgradable {
+contract SpyConsensusGateway is MasterCopyNonUpgradable, ConsensusGatewayI {
+
+    address public spyCore;
+    uint256 public spyFeeGasPrice;
+    uint256 public spyFeeGasLimit;
 
     function setup() public {
         // do nothing
+    }
+
+    function declareOpenKernel(
+        address _core,
+        uint256 _feeGasPrice,
+        uint256 _feeGasLimit
+    )
+        external
+        returns (bytes32)
+    {
+        spyCore = _core;
+        spyFeeGasPrice = _feeGasPrice;
+        spyFeeGasLimit = _feeGasLimit;
     }
 }

@@ -37,12 +37,14 @@ contract('Consensus::newMetaChain', (accounts) => {
 
     const anchor = accountProvider.get();
 
+    const mockedAnchorAddress = await contracts.SpyAxiom.mockedAnchorAddress.call();
+    const hashedMetaChain = await contracts.Consensus.hashMetachainId.call(mockedAnchorAddress);
     inputParams = {
       consensus: contracts.Consensus.address,
-      metachainId: await consensusUtil.hashMetachainId(contracts.Consensus, { anchor }),
+      metachainId: hashedMetaChain,
       epochLength: 100,
-      source: Utils.getRandomHash(),
-      sourceBlockHeight: 8888,
+      source: Utils.ZERO_BYTES32,
+      sourceBlockHeight: 0,
       anchor,
     };
     Object.freeze(inputParams);
@@ -52,22 +54,11 @@ contract('Consensus::newMetaChain', (accounts) => {
     it('should fail when caller is not axiom contract address', async () => {
       await Utils.expectRevert(
         contracts.Consensus.newMetaChain(
-          inputParams.anchor,
-          inputParams.epochLength,
-          inputParams.sourceBlockHeight,
           {
             from: accountProvider.get(),
           },
         ),
         'Caller must be axiom address.',
-      );
-    });
-
-    it('should fail when metachain id already exists', async () => {
-      await consensusUtil.callNewMetaChainOnConsensus(contracts.SpyAxiom, inputParams);
-      await Utils.expectRevert(
-        consensusUtil.callNewMetaChainOnConsensus(contracts.SpyAxiom, inputParams),
-        'A core is already assigned to this metachain.',
       );
     });
   });
@@ -97,13 +88,14 @@ contract('Consensus::newMetaChain', (accounts) => {
       );
     });
 
-    it('should set metachain id in anchors mapping', async () => {
+    it('should set chain id in anchors mapping', async () => {
       await consensusUtil.callNewMetaChainOnConsensus(contracts.SpyAxiom, inputParams);
+      const mockedAnchorAddress = await contracts.SpyAxiom.mockedAnchorAddress.call();
       const anchorAddress = await contracts.Consensus.anchors.call(inputParams.metachainId);
       assert.strictEqual(
         anchorAddress,
-        inputParams.anchor,
-        'Anchor address must be equal to metachain id.',
+        mockedAnchorAddress,
+        'Anchor address must be equal to expected.',
       );
     });
 
@@ -124,25 +116,50 @@ contract('Consensus::newMetaChain', (accounts) => {
                 );
             }
        */
-      const expectedCallData = await axiomUtil.encodeNewCoreParams({
+      const expectedCoreCallData = await axiomUtil.encodeNewCoreParams({
         consensus: contracts.Consensus.address,
         metachainId: inputParams.metachainId,
-        epochLength: inputParams.epochLength,
-        minValidators: 5,
-        joinLimit: 6,
+        epochLength: new BN(inputParams.epochLength),
+        minValidators: new BN(5),
+        joinLimit: new BN(6),
         reputation: '0x0000000000000000000000000000000000000001',
-        height: 0,
+        height: new BN(0),
         parent: Utils.ZERO_BYTES32,
-        gasTarget: 99999,
-        dynasty: 0,
-        accumulatedGas: 0,
-        sourceBlockHeight: inputParams.sourceBlockHeight,
+        gasTarget: new BN(99999),
+        dynasty: new BN(0),
+        accumulatedGas: new BN(0),
+        sourceBlockHeight: new BN(inputParams.sourceBlockHeight),
       });
 
       assert.strictEqual(
         newCoreCallData,
-        expectedCallData,
-        'Call data from spy contract must match the expected data',
+        expectedCoreCallData,
+        'Core setup call data from spy contract must match the expected data',
+      );
+
+      const newConsensusGatewayCallData = await contracts.SpyAxiom
+        .spyNewConsensusGatewayCallData.call();
+
+      const expectedConsensusGatewayData = await axiomUtil.encodeNewConsensusGatewayParam();
+
+      assert.strictEqual(
+        newConsensusGatewayCallData,
+        expectedConsensusGatewayData,
+        'Consensus gatway setup call data from spy contract must match the expected data',
+      );
+
+      const newAnchorCallData = await contracts.SpyAxiom.spyNewAnchorCallData.call();
+      const expectedAnchorCallData = await axiomUtil.encodeNewAnchorParams(
+        {
+          maxStateRoots: new BN(100),
+          consensus: inputParams.consensus,
+        },
+      );
+
+      assert.strictEqual(
+        newAnchorCallData,
+        expectedAnchorCallData,
+        'Anchor setup call data from spy contract must match the expected data',
       );
     });
   });
