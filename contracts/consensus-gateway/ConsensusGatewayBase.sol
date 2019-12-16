@@ -26,7 +26,7 @@ contract ConsensusGatewayBase {
     ERC20I public most;
 
     /** Mapping of message sender and nonce. */
-    mapping(address => uint256) nonces;
+    mapping(address => uint256) public  nonces;
 
     /** Height of current metablock */
     uint256 public currentMetablockHeight;
