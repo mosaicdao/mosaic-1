@@ -121,7 +121,7 @@ contract('Reputation::slash', (accounts) => {
       validator.address,
       { from: otherAccount },
     ),
-      'Only the consensus contract can call this function.');
+    'Only the consensus contract can call this function.');
   });
 
   it.skip('should fail if validator has not joined', async () => {
@@ -131,7 +131,7 @@ contract('Reputation::slash', (accounts) => {
       otherAccount,
       { from: constructorArgs.consensus },
     ),
-      'Validator has not staked.');
+    'Validator has not staked.');
   });
 
 
@@ -144,7 +144,7 @@ contract('Reputation::slash', (accounts) => {
       validator.address,
       { from: constructorArgs.consensus },
     ),
-      'Validator has withdrawn.');
+    'Validator has withdrawn.');
   });
 
   it('should fail to slash already slashed validator', async () => {
@@ -157,6 +157,6 @@ contract('Reputation::slash', (accounts) => {
       validator.address,
       { from: constructorArgs.consensus },
     ),
-      'Validator has slashed.');
+    'Validator has slashed.');
   });
 });

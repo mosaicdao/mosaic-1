@@ -147,7 +147,7 @@ contract('Reputation::cashoutEarnings', (accounts) => {
       amount,
       { from: unknownValidator },
     ),
-      'Validator has not staked.');
+    'Validator has not staked.');
   });
 
   it('should fail for slashed validator', async () => {
@@ -162,7 +162,7 @@ contract('Reputation::cashoutEarnings', (accounts) => {
       amount,
       { from: validator.address },
     ),
-      'Validator is not honest.');
+    'Validator is not honest.');
   });
 
   it('should fail for withdrawn validator', async () => {
@@ -179,6 +179,6 @@ contract('Reputation::cashoutEarnings', (accounts) => {
       amount,
       { from: validator.address },
     ),
-      'Validator has withdrawn.');
+    'Validator has withdrawn.');
   });
 });

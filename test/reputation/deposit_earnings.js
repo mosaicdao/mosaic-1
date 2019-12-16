@@ -152,7 +152,7 @@ contract('Reputation::depositEarnings', (accounts) => {
       amount,
       { from: depositor },
     ),
-      'Validator is not active.');
+    'Validator is not active.');
   });
 
   it('should fail for slashed validator', async () => {
@@ -168,7 +168,7 @@ contract('Reputation::depositEarnings', (accounts) => {
       amount,
       { from: depositor },
     ),
-      'Validator is not active.');
+    'Validator is not active.');
   });
 
   it('should fail for logged out validator', async () => {
@@ -181,7 +181,7 @@ contract('Reputation::depositEarnings', (accounts) => {
       amount,
       { from: depositor },
     ),
-      'Validator is not active.');
+    'Validator is not active.');
   });
 
   it('should fail for withdrawn validator', async () => {
@@ -201,6 +201,6 @@ contract('Reputation::depositEarnings', (accounts) => {
       amount,
       { from: depositor },
     ),
-      'Validator is not active.');
+    'Validator is not active.');
   });
 });

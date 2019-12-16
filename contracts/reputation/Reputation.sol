@@ -71,13 +71,13 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
 
     /* Storage */
 
-    /** ERC20 most for stakes and earnings for validators. */
+    /** ERC20 MOST for stakes and earnings for validators. */
     ERC20I public most;
 
     /** ERC20 wETH for stakes for validators. */
     ERC20I public wETH;
 
-    /** Required stake amount in most to stake as a validator. */
+    /** Required stake amount in MOST to stake as a validator. */
     uint256 public stakeMOSTAmount;
 
     /** Required stake amount in wETH to stake as a validator. */
