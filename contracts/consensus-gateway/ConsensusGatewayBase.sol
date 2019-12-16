@@ -19,6 +19,14 @@ import "../ERC20I.sol";
 /** Base contract for ConsensusGateway and ConsensusCogateway contracts. */
 contract ConsensusGatewayBase {
 
+    /* Constants */
+    bytes32 public constant KERNEL_INTENT_TYPEHASH = keccak256(
+        abi.encode(
+            "KernelIntent(uint256 height,bytes32 kernelHash)"
+        )
+    );
+
+
     /* Storage */
 
     /** Address of most contract on origin or auxiliary chain. */
@@ -31,7 +39,26 @@ contract ConsensusGatewayBase {
     uint256 public currentMetablockHeight;
 
 
-    /** External functions. */
+    /* Public function */
+
+    function hashKernelIntent(
+        uint256 _height,
+        bytes32 _kernelHash
+    )
+        public
+        returns(bytes32 kernelIntentHash_)
+    {
+        kernelIntentHash_ = keccak256(
+            abi.encode(
+                KERNEL_INTENT_TYPEHASH,
+                _height,
+                _kernelHash
+            )
+        );
+    }
+
+
+    /* Internal functions. */
 
     function setup(
         ERC20I _most,
