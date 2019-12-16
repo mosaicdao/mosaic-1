@@ -28,7 +28,7 @@ contract('Reputation::stake', (accounts) => {
   let validator;
   let accountProvider;
   let reputation;
-  let mOST;
+  let most;
   let wETH;
 
   beforeEach(async () => {
@@ -37,13 +37,13 @@ contract('Reputation::stake', (accounts) => {
       address: accountProvider.get(),
       withdrawalAddress: accountProvider.get(),
     };
-    mOST = await MockToken.new(18, { from: validator.address });
+    most = await MockToken.new(18, { from: validator.address });
     wETH = await MockToken.new(18, { from: validator.address });
 
 
     constructorArgs = {
       consensus: accountProvider.get(),
-      mOST: mOST.address,
+      most: most.address,
       stakeMOSTAmount: 200,
       wETH: wETH.address,
       stakeWETHAmount: 100,
@@ -55,7 +55,7 @@ contract('Reputation::stake', (accounts) => {
     reputation = await Reputation.new();
     await reputation.setup(
       constructorArgs.consensus,
-      constructorArgs.mOST,
+      constructorArgs.most,
       constructorArgs.stakeMOSTAmount,
       constructorArgs.wETH,
       constructorArgs.stakeWETHAmount,
@@ -64,7 +64,7 @@ contract('Reputation::stake', (accounts) => {
       constructorArgs.withdrawalCooldownPeriodInBlocks,
     );
 
-    await mOST.approve(
+    await most.approve(
       reputation.address,
       constructorArgs.stakeMOSTAmount,
       { from: validator.address },
@@ -112,7 +112,7 @@ contract('Reputation::stake', (accounts) => {
     assert.isOk(
       validatorObject.reputation.eqn(constructorArgs.initialReputation),
       `Initial reputation should be ${constructorArgs.initialReputation.toString(10)}`
-        + ` but found ${validatorObject.reputation.toString(10)}`,
+      + ` but found ${validatorObject.reputation.toString(10)}`,
     );
 
     assert.strictEqual(
@@ -146,12 +146,12 @@ contract('Reputation::stake', (accounts) => {
       { from: constructorArgs.consensus },
     );
 
-    const reputationMOSTBalance = await mOST.balanceOf.call(reputation.address);
+    const reputationMOSTBalance = await most.balanceOf.call(reputation.address);
     const reputationWETHBalance = await wETH.balanceOf.call(reputation.address);
 
     assert.isOk(
       reputationMOSTBalance.eqn(constructorArgs.stakeMOSTAmount),
-      `Expected mOST balance is ${constructorArgs.stakeMOSTAmount} but found ${reputationMOSTBalance.toString(10)}`,
+      `Expected MOST balance is ${constructorArgs.stakeMOSTAmount} but found ${reputationMOSTBalance.toString(10)}`,
     );
 
     assert.isOk(
@@ -163,15 +163,17 @@ contract('Reputation::stake', (accounts) => {
   it('should fail in non consensus address tries to stake a validator', async () => {
     const nonConsensusAddress = accountProvider.get();
 
-    await Utils.expectRevert(reputation.stake(
-      validator.address,
-      validator.withdrawalAddress,
-      { from: nonConsensusAddress },
-    ),
-    'Only the consensus contract can call this function.');
+    await Utils.expectRevert(
+      reputation.stake(
+        validator.address,
+        validator.withdrawalAddress,
+        { from: nonConsensusAddress },
+      ),
+      'Only the consensus contract can call this function.',
+    );
   });
-  it('should fail to stake validator pool if mOST token is not approved', async () => {
-    await mOST.approve(
+  it('should fail to stake validator pool if MOST token is not approved', async () => {
+    await most.approve(
       reputation.address,
       '0',
       { from: validator.address },
@@ -245,7 +247,7 @@ contract('Reputation::stake', (accounts) => {
   });
 
   it('should fail if withdrawal address has already staked as validator', async () => {
-    await mOST.transfer(
+    await most.transfer(
       validator.withdrawalAddress,
       constructorArgs.stakeMOSTAmount,
       { from: validator.address },
@@ -256,7 +258,7 @@ contract('Reputation::stake', (accounts) => {
       { from: validator.address },
     );
 
-    await mOST.approve(
+    await most.approve(
       reputation.address,
       constructorArgs.stakeMOSTAmount,
       { from: validator.withdrawalAddress },
