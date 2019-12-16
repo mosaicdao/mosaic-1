@@ -25,7 +25,7 @@ contract CoConsensusModule {
      * @notice It sets address for coConsensus contract.
      * @param _coConsensus Address of coConsensus contract.
      */
-    function setupCoConsensus(CoConsensusI _coConsensus) public {
+    function setupCoConsensus(CoConsensusI _coConsensus) internal {
         require(
             address(coConsensus) == address(0),
             "CoConsensus address is already present."
