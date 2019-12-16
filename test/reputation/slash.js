@@ -25,7 +25,7 @@ contract('Reputation::slash', (accounts) => {
   let validator;
   let accountProvider;
   let reputation;
-  let mOST;
+  let most;
   let wETH;
   const validatorEarnings = 101;
 
@@ -35,12 +35,12 @@ contract('Reputation::slash', (accounts) => {
       address: accountProvider.get(),
       withdrawalAddress: accountProvider.get(),
     };
-    mOST = await MockToken.new(18, { from: validator.address });
+    most = await MockToken.new(18, { from: validator.address });
     wETH = await MockToken.new(18, { from: validator.address });
 
     constructorArgs = {
       consensus: accountProvider.get(),
-      mOST: mOST.address,
+      most: most.address,
       stakeMOSTAmount: 200,
       wETH: wETH.address,
       stakeWETHAmount: 100,
@@ -52,7 +52,7 @@ contract('Reputation::slash', (accounts) => {
     reputation = await Reputation.new();
     await reputation.setup(
       constructorArgs.consensus,
-      constructorArgs.mOST,
+      constructorArgs.most,
       constructorArgs.stakeMOSTAmount,
       constructorArgs.wETH,
       constructorArgs.stakeWETHAmount,
@@ -61,7 +61,7 @@ contract('Reputation::slash', (accounts) => {
       constructorArgs.withdrawalCooldownPeriodInBlocks,
     );
 
-    await mOST.approve(
+    await most.approve(
       reputation.address,
       constructorArgs.stakeMOSTAmount,
       { from: validator.address },
@@ -79,13 +79,13 @@ contract('Reputation::slash', (accounts) => {
       { from: constructorArgs.consensus },
     );
 
-    await mOST.approve(reputation.address, validatorEarnings, { from: validator.address });
+    await most.approve(reputation.address, validatorEarnings, { from: validator.address });
     await reputation.depositEarnings(validator.address, validatorEarnings);
   });
 
   it('should be able to slash a validator', async () => {
     const beforeWETHBalance = await wETH.balanceOf(reputation.address);
-    const beforeMOSTBalance = await mOST.balanceOf(reputation.address);
+    const beforeMOSTBalance = await most.balanceOf(reputation.address);
 
     const response = await reputation.slash(
       validator.address,
@@ -93,7 +93,7 @@ contract('Reputation::slash', (accounts) => {
     );
 
     const afterWETHBalance = await wETH.balanceOf(reputation.address);
-    const afterMOSTBalance = await mOST.balanceOf(reputation.address);
+    const afterMOSTBalance = await most.balanceOf(reputation.address);
 
     assert.isOk(
       response.receipt.status,
@@ -103,13 +103,13 @@ contract('Reputation::slash', (accounts) => {
     assert.isOk(
       beforeWETHBalance.sub(afterWETHBalance).eqn(constructorArgs.stakeWETHAmount),
       `WETH staked amount must be burned expected change is balance is ${constructorArgs.stakeWETHAmount} but `
-       + `found ${beforeMOSTBalance.sub(afterWETHBalance)} `,
+      + `found ${beforeMOSTBalance.sub(afterWETHBalance)} `,
     );
 
     assert.isOk(
       beforeMOSTBalance.sub(afterMOSTBalance)
         .eqn(constructorArgs.stakeMOSTAmount + validatorEarnings),
-      `mOST staked amount and earning must be burned expected change is balance is ${constructorArgs.stakeMOSTAmount + validatorEarnings} but `
+      `MOST staked amount and earning must be burned expected change is balance is ${constructorArgs.stakeMOSTAmount + validatorEarnings} but `
       + `found ${beforeMOSTBalance.sub(afterWETHBalance)} `,
     );
   });

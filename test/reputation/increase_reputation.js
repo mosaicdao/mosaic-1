@@ -25,7 +25,7 @@ contract('Reputation::increaseReputation', (accounts) => {
   let validator;
   let accountProvider;
   let reputation;
-  let mOST;
+  let most;
   let wETH;
 
   beforeEach(async () => {
@@ -34,12 +34,12 @@ contract('Reputation::increaseReputation', (accounts) => {
       address: accountProvider.get(),
       withdrawalAddress: accountProvider.get(),
     };
-    mOST = await MockToken.new(18, { from: validator.address });
+    most = await MockToken.new(18, { from: validator.address });
     wETH = await MockToken.new(18, { from: validator.address });
 
     constructorArgs = {
       consensus: accountProvider.get(),
-      mOST: mOST.address,
+      most: most.address,
       stakeMOSTAmount: 200,
       wETH: wETH.address,
       stakeWETHAmount: 100,
@@ -51,7 +51,7 @@ contract('Reputation::increaseReputation', (accounts) => {
     reputation = await Reputation.new();
     await reputation.setup(
       constructorArgs.consensus,
-      constructorArgs.mOST,
+      constructorArgs.most,
       constructorArgs.stakeMOSTAmount,
       constructorArgs.wETH,
       constructorArgs.stakeWETHAmount,
@@ -60,7 +60,7 @@ contract('Reputation::increaseReputation', (accounts) => {
       constructorArgs.withdrawalCooldownPeriodInBlocks,
     );
 
-    await mOST.approve(
+    await most.approve(
       reputation.address,
       constructorArgs.stakeMOSTAmount,
       { from: validator.address },
