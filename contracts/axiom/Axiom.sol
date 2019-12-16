@@ -171,7 +171,7 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
      * @param _joinLimit Maximum number of validators that can join in a core.
      * @param _gasTargetDelta Gas target delta to open new metablock.
      * @param _coinbaseSplitPerMille Coinbase split per mille.
-     * @param _most most token address.
+     * @param _most MOST token address.
      * @param _stakeMOSTAmount Amount of MOST that will be staked by validators.
      * @param _wETH wEth token address.
      * @param _stakeWETHAmount Amount of wEth that will be staked by validators.

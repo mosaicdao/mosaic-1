@@ -169,7 +169,8 @@ contract('Reputation::stake', (accounts) => {
         validator.withdrawalAddress,
         { from: nonConsensusAddress },
       ),
-      'Only the consensus contract can call this function.');
+      'Only the consensus contract can call this function.',
+    );
   });
   it('should fail to stake validator pool if MOST token is not approved', async () => {
     await most.approve(
@@ -209,7 +210,7 @@ contract('Reputation::stake', (accounts) => {
       validator.withdrawalAddress,
       { from: constructorArgs.consensus },
     ),
-      'Validator address is 0.');
+    'Validator address is 0.');
   });
 
   it('should fail for zero withdrawal address', async () => {
@@ -218,7 +219,7 @@ contract('Reputation::stake', (accounts) => {
       NULL_ADDRESS,
       { from: constructorArgs.consensus },
     ),
-      'Validator\'s withdrawal address is 0.');
+    'Validator\'s withdrawal address is 0.');
   });
 
   it('should fail if validator address is same as withdrawal address', async () => {
@@ -227,7 +228,7 @@ contract('Reputation::stake', (accounts) => {
       validator.address,
       { from: constructorArgs.consensus },
     ),
-      'Validator\'s address is the same as its withdrawal address.');
+    'Validator\'s address is the same as its withdrawal address.');
   });
 
   it('should fail if validator has already staked', async () => {
@@ -242,7 +243,7 @@ contract('Reputation::stake', (accounts) => {
       validator.withdrawalAddress,
       { from: constructorArgs.consensus },
     ),
-      'No validator can stake again.');
+    'No validator can stake again.');
   });
 
   it('should fail if withdrawal address has already staked as validator', async () => {
@@ -278,6 +279,6 @@ contract('Reputation::stake', (accounts) => {
       validator.withdrawalAddress,
       { from: constructorArgs.consensus },
     ),
-      'The specified withdrawal address was registered as validator.');
+    'The specified withdrawal address was registered as validator.');
   });
 });
