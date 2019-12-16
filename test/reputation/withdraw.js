@@ -26,7 +26,7 @@ contract('Reputation::withdraw', (accounts) => {
   let validator;
   let accountProvider;
   let reputation;
-  let mOST;
+  let most;
   let wETH;
   const validatorEarnings = 101;
 
@@ -36,12 +36,12 @@ contract('Reputation::withdraw', (accounts) => {
       address: accountProvider.get(),
       withdrawalAddress: accountProvider.get(),
     };
-    mOST = await MockToken.new(18, { from: validator.address });
+    most = await MockToken.new(18, { from: validator.address });
     wETH = await MockToken.new(18, { from: validator.address });
 
     constructorArgs = {
       consensus: accountProvider.get(),
-      mOST: mOST.address,
+      most: most.address,
       stakeMOSTAmount: 200,
       wETH: wETH.address,
       stakeWETHAmount: 100,
@@ -53,7 +53,7 @@ contract('Reputation::withdraw', (accounts) => {
     reputation = await Reputation.new();
     await reputation.setup(
       constructorArgs.consensus,
-      constructorArgs.mOST,
+      constructorArgs.most,
       constructorArgs.stakeMOSTAmount,
       constructorArgs.wETH,
       constructorArgs.stakeWETHAmount,
@@ -62,7 +62,7 @@ contract('Reputation::withdraw', (accounts) => {
       constructorArgs.withdrawalCooldownPeriodInBlocks,
     );
 
-    await mOST.approve(
+    await most.approve(
       reputation.address,
       constructorArgs.stakeMOSTAmount,
       { from: validator.address },
@@ -108,9 +108,9 @@ contract('Reputation::withdraw', (accounts) => {
 
   it('should receive funds after withdrawal', async () => {
     const beforeWETHBalance = await wETH.balanceOf(validator.withdrawalAddress);
-    const beforeMOSTBalance = await mOST.balanceOf(validator.withdrawalAddress);
+    const beforeMOSTBalance = await most.balanceOf(validator.withdrawalAddress);
 
-    await mOST.approve(reputation.address, validatorEarnings, { from: validator.address });
+    await most.approve(reputation.address, validatorEarnings, { from: validator.address });
     await reputation.depositEarnings(validator.address, validatorEarnings);
 
     await reputation.deregister(
@@ -126,7 +126,7 @@ contract('Reputation::withdraw', (accounts) => {
     );
 
     const afterWETHBalance = await wETH.balanceOf(validator.withdrawalAddress);
-    const afterMOSTBalance = await mOST.balanceOf(validator.withdrawalAddress);
+    const afterMOSTBalance = await most.balanceOf(validator.withdrawalAddress);
 
     const diffInWETHBalance = afterWETHBalance.sub(beforeWETHBalance);
     const diffInMOSTBalance = afterMOSTBalance.sub(beforeMOSTBalance);
@@ -150,7 +150,7 @@ contract('Reputation::withdraw', (accounts) => {
       validator.address,
       { from: constructorArgs.consensus },
     ),
-    'Validator has not deregistered.');
+      'Validator has not deregistered.');
   });
 
   it('should fail to withdraw if validator is not logged out', async () => {
@@ -158,7 +158,7 @@ contract('Reputation::withdraw', (accounts) => {
       validator.address,
       { from: constructorArgs.consensus },
     ),
-    'Validator has not deregistered.');
+      'Validator has not deregistered.');
   });
 
   it('should fail to withdraw if validator is slashed', async () => {
@@ -176,7 +176,7 @@ contract('Reputation::withdraw', (accounts) => {
       validator.address,
       { from: constructorArgs.consensus },
     ),
-    'Validator has not deregistered.');
+      'Validator has not deregistered.');
   });
 
   it('should fail to withdraw if cool down period has not elapsed', async () => {
@@ -189,7 +189,7 @@ contract('Reputation::withdraw', (accounts) => {
       validator.address,
       { from: constructorArgs.consensus },
     ),
-    'Withdrawal cooldown period has not elapsed.');
+      'Withdrawal cooldown period has not elapsed.');
   });
 
   it('should fail if validator is already withdrawn', async () => {
@@ -209,6 +209,6 @@ contract('Reputation::withdraw', (accounts) => {
       validator.address,
       { from: constructorArgs.consensus },
     ),
-    'Validator has withdrawn.');
+      'Validator has withdrawn.');
   });
 });

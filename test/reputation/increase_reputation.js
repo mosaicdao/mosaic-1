@@ -25,7 +25,7 @@ contract('Reputation::increaseReputation', (accounts) => {
   let validator;
   let accountProvider;
   let reputation;
-  let mOST;
+  let most;
   let wETH;
 
   beforeEach(async () => {
@@ -34,12 +34,12 @@ contract('Reputation::increaseReputation', (accounts) => {
       address: accountProvider.get(),
       withdrawalAddress: accountProvider.get(),
     };
-    mOST = await MockToken.new(18, { from: validator.address });
+    most = await MockToken.new(18, { from: validator.address });
     wETH = await MockToken.new(18, { from: validator.address });
 
     constructorArgs = {
       consensus: accountProvider.get(),
-      mOST: mOST.address,
+      most: most.address,
       stakeMOSTAmount: 200,
       wETH: wETH.address,
       stakeWETHAmount: 100,
@@ -51,7 +51,7 @@ contract('Reputation::increaseReputation', (accounts) => {
     reputation = await Reputation.new();
     await reputation.setup(
       constructorArgs.consensus,
-      constructorArgs.mOST,
+      constructorArgs.most,
       constructorArgs.stakeMOSTAmount,
       constructorArgs.wETH,
       constructorArgs.stakeWETHAmount,
@@ -60,7 +60,7 @@ contract('Reputation::increaseReputation', (accounts) => {
       constructorArgs.withdrawalCooldownPeriodInBlocks,
     );
 
-    await mOST.approve(
+    await most.approve(
       reputation.address,
       constructorArgs.stakeMOSTAmount,
       { from: validator.address },
@@ -122,7 +122,7 @@ contract('Reputation::increaseReputation', (accounts) => {
       delta,
       { from: constructorArgs.consensus },
     ),
-    'Validator is not active.');
+      'Validator is not active.');
   });
 
   it('should fail if transaction is done by account other than consensus', async () => {
@@ -134,7 +134,7 @@ contract('Reputation::increaseReputation', (accounts) => {
       delta,
       { from: otherAccount },
     ),
-    'Only the consensus contract can call this function.');
+      'Only the consensus contract can call this function.');
   });
 
   it('should fail for logged out validator', async () => {
@@ -146,7 +146,7 @@ contract('Reputation::increaseReputation', (accounts) => {
       delta,
       { from: constructorArgs.consensus },
     ),
-    'Validator is not active.');
+      'Validator is not active.');
   });
 
   it('should fail for withdraw-ed validator', async () => {
@@ -161,7 +161,7 @@ contract('Reputation::increaseReputation', (accounts) => {
       delta,
       { from: constructorArgs.consensus },
     ),
-    'Validator is not active.');
+      'Validator is not active.');
   });
 
   it('should fail for slashed validator', async () => {
@@ -173,6 +173,6 @@ contract('Reputation::increaseReputation', (accounts) => {
       delta,
       { from: constructorArgs.consensus },
     ),
-    'Validator is not active.');
+      'Validator is not active.');
   });
 });

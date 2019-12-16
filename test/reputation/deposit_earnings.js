@@ -25,7 +25,7 @@ contract('Reputation::depositEarnings', (accounts) => {
   let validator;
   let accountProvider;
   let reputation;
-  let mOST;
+  let most;
   let wETH;
   let depositor;
 
@@ -35,17 +35,17 @@ contract('Reputation::depositEarnings', (accounts) => {
       address: accountProvider.get(),
       withdrawalAddress: accountProvider.get(),
     };
-    mOST = await MockToken.new(18, { from: validator.address });
+    most = await MockToken.new(18, { from: validator.address });
     wETH = await MockToken.new(18, { from: validator.address });
 
     depositor = accountProvider.get();
 
     const funds = '1000000000000000000000';
-    await mOST.transfer(depositor, funds, { from: validator.address });
+    await most.transfer(depositor, funds, { from: validator.address });
 
     constructorArgs = {
       consensus: accountProvider.get(),
-      mOST: mOST.address,
+      most: most.address,
       stakeMOSTAmount: 200,
       wETH: wETH.address,
       stakeWETHAmount: 100,
@@ -57,7 +57,7 @@ contract('Reputation::depositEarnings', (accounts) => {
     reputation = await Reputation.new();
     await reputation.setup(
       constructorArgs.consensus,
-      constructorArgs.mOST,
+      constructorArgs.most,
       constructorArgs.stakeMOSTAmount,
       constructorArgs.wETH,
       constructorArgs.stakeWETHAmount,
@@ -66,9 +66,9 @@ contract('Reputation::depositEarnings', (accounts) => {
       constructorArgs.withdrawalCooldownPeriodInBlocks,
     );
 
-    await mOST.approve(reputation.address, funds, { from: depositor });
+    await most.approve(reputation.address, funds, { from: depositor });
 
-    await mOST.approve(
+    await most.approve(
       reputation.address,
       constructorArgs.stakeMOSTAmount,
       { from: validator.address },
@@ -104,14 +104,14 @@ contract('Reputation::depositEarnings', (accounts) => {
   it('should transfer funds to reputation contract', async () => {
     const amount = 111;
 
-    const initialBalance = await mOST.balanceOf(reputation.address);
+    const initialBalance = await most.balanceOf(reputation.address);
     await reputation.depositEarnings(
       validator.address,
       amount,
       { from: depositor },
     );
 
-    const finalBalance = await mOST.balanceOf(reputation.address);
+    const finalBalance = await most.balanceOf(reputation.address);
 
     assert.isOk(
       finalBalance.sub(initialBalance).eqn(amount),
@@ -152,7 +152,7 @@ contract('Reputation::depositEarnings', (accounts) => {
       amount,
       { from: depositor },
     ),
-    'Validator is not active.');
+      'Validator is not active.');
   });
 
   it('should fail for slashed validator', async () => {
@@ -168,7 +168,7 @@ contract('Reputation::depositEarnings', (accounts) => {
       amount,
       { from: depositor },
     ),
-    'Validator is not active.');
+      'Validator is not active.');
   });
 
   it('should fail for logged out validator', async () => {
@@ -181,7 +181,7 @@ contract('Reputation::depositEarnings', (accounts) => {
       amount,
       { from: depositor },
     ),
-    'Validator is not active.');
+      'Validator is not active.');
   });
 
   it('should fail for withdrawn validator', async () => {
@@ -201,6 +201,6 @@ contract('Reputation::depositEarnings', (accounts) => {
       amount,
       { from: depositor },
     ),
-    'Validator is not active.');
+      'Validator is not active.');
   });
 });

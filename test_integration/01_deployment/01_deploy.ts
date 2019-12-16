@@ -54,12 +54,12 @@ describe('Deployment', async () => {
 
     const { funder } = shared.origin;
 
-    const mOST = await MockToken.new(18, { from: funder });
+    const most = await MockToken.new(18, { from: funder });
     const wETH = await MockToken.new(18, { from: funder });
 
     const web3 = shared.origin.web3;
-    shared.origin.contracts.MOST.instance = Interacts.getERC20I(web3, mOST.address);
-    shared.origin.contracts.MOST.address = mOST.address;
+    shared.origin.contracts.MOST.instance = Interacts.getERC20I(web3, most.address);
+    shared.origin.contracts.MOST.address = most.address;
     shared.origin.contracts.WETH.instance = Interacts.getERC20I(web3, wETH.address);
     shared.origin.contracts.WETH.address = wETH.address;
     const erc20FundingPromises = [];
@@ -67,7 +67,7 @@ describe('Deployment', async () => {
 
     shared.origin.keys.validators.forEach((validator) => {
       erc20FundingPromises.push(
-        mOST.transfer(
+        most.transfer(
           validator.address,
           fundingAmount,
           { from: funder },
