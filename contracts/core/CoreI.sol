@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity >=0.5.0 <0.6.0;
 
 // Copyright 2019 OpenST Ltd.
 //
@@ -60,4 +60,3 @@ interface CoreI {
     function getOpenKernel() external returns (bytes32, uint256);
 
 }
-

@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity >=0.5.0 <0.6.0;
 
 // Copyright 2019 OpenST Ltd.
 //
@@ -13,9 +13,9 @@ pragma solidity ^0.5.0;
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // ----------------------------------------------------------------------------
-// Contracts: MockTokenConfig 
+// Contracts: MockTokenConfig
 //
 // http://www.simpletoken.org/
 //
