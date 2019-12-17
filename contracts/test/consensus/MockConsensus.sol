@@ -152,11 +152,12 @@ contract MockConsensus is ConsensusI, ReputationI {
 
     function precommitMetablock(
         bytes32 /* _metachainId */,
-        bytes32 _precommit
+        uint256 /* _metablockHeight */,
+        bytes32 _metablockHashPrecommit
     )
         external
     {
-        precommitts[msg.sender] = _precommit;
+        precommitts[msg.sender] = _metablockHashPrecommit;
     }
 
     function registerCommitteeDecision(bytes32, bytes32)

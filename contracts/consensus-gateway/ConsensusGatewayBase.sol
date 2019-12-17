@@ -47,6 +47,7 @@ contract ConsensusGatewayBase {
         bytes32 _kernelHash
     )
         public
+        pure
         returns(bytes32 kernelIntentHash_)
     {
         kernelIntentHash_ = keccak256(

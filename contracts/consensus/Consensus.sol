@@ -393,9 +393,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             "Assigned core must have precommitted a metablock to form a committee."
         );
 
-        currentMetablock.round = MetablockRound.CommitteeFormed;
-        currentMetablock.roundBlockNumber = block.number;
-
         uint256 committeeFormationBlockHeight = currentMetablock.roundBlockNumber.add(
             COMMITTEE_FORMATION_LENGTH
         );
@@ -409,6 +406,9 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             currentMetablock.roundBlockNumber,
             committeeFormationBlockHeight
         );
+
+        currentMetablock.round = MetablockRound.CommitteeFormed;
+        currentMetablock.roundBlockNumber = block.number;
 
         startCommittee(_metachainId, seed, currentMetablock.metablockHash);
     }
@@ -516,9 +516,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         currentMetablock.round = MetablockRound.CommitteeDecided;
         currentMetablock.roundBlockNumber = block.number;
 
-        address committee = address(committees[currentMetablock.metablockHash]);
         require(
-            committee == msg.sender,
+            msg.sender == address(committees[currentMetablock.metablockHash]),
             "Wrong committee calls."
         );
 
@@ -581,16 +580,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             "Block header does not match with vote message source."
         );
 
-        uint256 currentHeight = metablockTips[_metachainId];
-        Metablock storage currentMetablock = metablockchains[_metachainId][currentHeight];
-
-        require(
-            currentMetablock.round == MetablockRound.CommitteeDecided,
-            "Committee has not decided on a proposal yet."
-        );
-
-        currentMetablock.round = MetablockRound.Committed;
-        currentMetablock.roundBlockNumber = block.number;
+        bytes32 metablockHash = goToCommittedRound(_metachainId);
 
         CoreI core = assignments[_metachainId];
         require(
@@ -600,7 +590,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
         assertCommit(
             core,
-            currentMetablock.metablockHash,
+            metablockHash,
             _kernelHash,
             _originObservation,
             _dynasty,
@@ -985,6 +975,24 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
 
     /* Private functions */
+
+    function goToCommittedRound(bytes32 _metachainId)
+        private
+        returns (bytes32 metablockHash_)
+    {
+        uint256 currentHeight = metablockTips[_metachainId];
+        Metablock storage currentMetablock = metablockchains[_metachainId][currentHeight];
+
+        require(
+            currentMetablock.round == MetablockRound.CommitteeDecided,
+            "Committee has not decided on a proposal yet."
+        );
+
+        currentMetablock.round = MetablockRound.Committed;
+        currentMetablock.roundBlockNumber = block.number;
+
+        metablockHash_ = currentMetablock.metablockHash;
+    }
 
     function assertCommit(
         CoreI _core,
