@@ -37,12 +37,14 @@ interface ConsensusI {
     /**
      * @notice Precommits metablock from a core.
      *
-     * @param _metachainId Metachain id to precommit a proposal.
-     * @param _proposal Precommit proposal.
+     * @param _metachainId Metachain id.
+     * @param _metablockHeight Metablock height to precommit.
+     * @param _metablockHashPrecommit Metablock hash to precommit.
      */
     function precommitMetablock(
         bytes32 _metachainId,
-        bytes32 _proposal
+        uint256 _metablockHeight,
+        bytes32 _metablockHashPrecommit
     )
         external;
 

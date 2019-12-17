@@ -57,7 +57,8 @@ contract CommitteeMockConsensus is ConsensusI {
 
     function precommitMetablock(
         bytes32 /* _metachainId */,
-        bytes32 /* _proposal */
+        uint256 /* _metablockHeight */,
+        bytes32 /* _metablockHashPrecommit */
     )
         external
     {

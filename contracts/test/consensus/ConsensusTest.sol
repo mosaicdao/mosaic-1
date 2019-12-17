@@ -54,7 +54,7 @@ contract ConsensusTest is Consensus {
     )
         external
     {
-        committees[_metachainId] = _committeeAddress;
+        committees[_metachainId] = CommitteeI(_committeeAddress);
     }
 
     function setReputation(address _reputation) external {
@@ -63,7 +63,7 @@ contract ConsensusTest is Consensus {
 
     function setAssignment(
         bytes32 _metachainId,
-        address _core
+        CoreI _core
     )
         external
     {
@@ -71,7 +71,7 @@ contract ConsensusTest is Consensus {
     }
 
     function setCommitteeProposal(
-        address _committeeAddress,
+        CommitteeI _committeeAddress,
         bytes32 _proposal
     )
         external
@@ -81,7 +81,7 @@ contract ConsensusTest is Consensus {
 
     function setAnchor(
         bytes32 _metachainId,
-        address _anchor
+        AnchorI _anchor
     )
         external
     {

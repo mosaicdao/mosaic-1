@@ -283,7 +283,6 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
 
         proposal = _proposal;
 
-        // @qn (pro): In case of 7 quorum should be 4 or 5.
         quorum = _committeeSize * COMMITTEE_SUPER_MAJORITY_NUMERATOR /
         COMMITTEE_SUPER_MAJORITY_DENOMINATOR;
     }
