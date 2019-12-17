@@ -171,8 +171,8 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
      * @param _joinLimit Maximum number of validators that can join in a core.
      * @param _gasTargetDelta Gas target delta to open new metablock.
      * @param _coinbaseSplitPerMille Coinbase split per mille.
-     * @param _mOST mOST token address.
-     * @param _stakeMOSTAmount Amount of mOST that will be staked by validators.
+     * @param _most MOST token address.
+     * @param _stakeMOSTAmount Amount of MOST that will be staked by validators.
      * @param _wETH wEth token address.
      * @param _stakeWETHAmount Amount of wEth that will be staked by validators.
      * @param _cashableEarningsPerMille Fraction of the total amount that can
@@ -188,7 +188,7 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
         uint256 _joinLimit,
         uint256 _gasTargetDelta,
         uint256 _coinbaseSplitPerMille,
-        address _mOST,
+        address _most,
         uint256 _stakeMOSTAmount,
         address _wETH,
         uint256 _stakeWETHAmount,
@@ -214,7 +214,7 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
         bytes memory reputationSetupData = abi.encodeWithSelector(
             REPUTATION_SETUP_CALLPREFIX,
             consensus,
-            _mOST,
+            _most,
             _stakeMOSTAmount,
             _wETH,
             _stakeWETHAmount,

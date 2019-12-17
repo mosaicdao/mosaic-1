@@ -61,7 +61,7 @@ contract('Axiom::setupConsensus', (accounts) => {
       joinLimit: new BN(10),
       gasTargetDelta: new BN(1000000000000000),
       coinbaseSplitPermille: new BN(50),
-      mOST: accountProvider.get(),
+      most: accountProvider.get(),
       stakeMOSTAmount: new BN(300000),
       wETH: accountProvider.get(),
       stakeWETHAmount: new BN(300000),
@@ -217,18 +217,18 @@ contract('Axiom::setupConsensus', (accounts) => {
         'Consensus contract address is not set in the contract.',
       );
 
-      const mOST = await reputationProxyContract.mOST.call();
+      const most = await reputationProxyContract.most.call();
       assert.strictEqual(
-        mOST,
-        config.mOST,
-        'mOST contract address is not set in the contract.',
+        most,
+        config.most,
+        'MOST contract address is not set in the contract.',
       );
 
       const stakeMOSTAmount = await reputationProxyContract.stakeMOSTAmount.call();
       assert.strictEqual(
         stakeMOSTAmount.eq(config.stakeMOSTAmount),
         true,
-        'Stake mOST amount is not set in the contract.',
+        'Stake MOST amount is not set in the contract.',
       );
 
       const wETH = await reputationProxyContract.wETH.call();
