@@ -41,7 +41,7 @@ async function proposeMetaBlock(
     proposalArgs.targetBlockHeight,
   );
 
-  await core.proposeMetablock(
+  const txResponse = await core.proposeMetablock(
     proposalArgs.kernelHash,
     proposalArgs.originObservation,
     proposalArgs.dynasty,
@@ -53,7 +53,10 @@ async function proposeMetaBlock(
     proposalArgs.targetBlockHeight,
   );
 
-  return proposalHash;
+  return {
+    proposalHash,
+    txResponse,
+  };
 }
 
 contract('Core::proposeMetablock', async (accounts) => {
@@ -151,7 +154,7 @@ contract('Core::proposeMetablock', async (accounts) => {
     });
 
     it('should revert if a accumulated gas is not strictly greater '
-    + 'from the committed one', async () => {
+      + 'from the committed one', async () => {
       proposal.accumulatedGas = config.accumulatedGas;
       await Utils.expectRevert(
         proposeMetaBlock(
@@ -196,7 +199,7 @@ contract('Core::proposeMetablock', async (accounts) => {
     });
 
     it('should revert if a source block height is not strictly greater from'
-    + 'the committed source block height', async () => {
+      + 'the committed source block height', async () => {
       proposal.sourceBlockHeight = config.sourceBlockHeight;
       await Utils.expectRevert(
         proposeMetaBlock(
@@ -219,7 +222,7 @@ contract('Core::proposeMetablock', async (accounts) => {
     });
 
     it('should revert if a target block height is not +1 epoch of '
-    + 'a source block height', async () => {
+      + 'a source block height', async () => {
       proposal.targetBlockHeight = proposal.sourceBlockHeight
         .add(config.epochLength.mul(new BN(2)));
       await Utils.expectRevert(
@@ -249,7 +252,10 @@ contract('Core::proposeMetablock', async (accounts) => {
 
   contract('Positive Tests', () => {
     it('should accept proposals', async () => {
-      const proposalHash = await proposeMetaBlock(
+      const {
+        proposalHash,
+        txResponse,
+      } = await proposeMetaBlock(
         config.core,
         proposal,
       );
@@ -263,6 +269,19 @@ contract('Core::proposeMetablock', async (accounts) => {
       );
       assert.isOk(
         voteCount.count.eq(new BN(0)),
+      );
+
+      const eventObject = txResponse.receipt.logs[0];
+      assert.strictEqual(
+        eventObject.event,
+        'MetablockProposed',
+        'Must emit MetablockProposed event',
+      );
+
+      assert.strictEqual(
+        eventObject.args.proposal,
+        proposalHash,
+        'Must emit correct proposal value',
       );
     });
   });

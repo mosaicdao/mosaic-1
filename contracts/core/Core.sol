@@ -25,7 +25,15 @@ import "../proxies/MasterCopyNonUpgradable.sol";
 
 contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreStatusEnum, CoreI {
 
+    /* Usings */
+
     using SafeMath for uint256;
+
+
+    /* Events */
+
+    /** Emitted when new metablock is proposed */
+    event MetablockProposed(bytes32 proposal);
 
     /* Structs */
 
@@ -473,6 +481,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
         // insert proposal, reverts if proposal already inserted
         insertProposal(_dynasty, proposal_);
+
+        emit MetablockProposed(proposal_);
     }
 
     /**
