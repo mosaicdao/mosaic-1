@@ -14,14 +14,19 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../message-bus/MessageBox.sol";
 import "../message-bus/MessageBus.sol";
 import "./ConsensusGatewayBase.sol";
 
 contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase {
+    /* Usings */
 
-    /** Constants */
+    using SafeMath for uint256;
+
+    /* Constants */
 
     /* Storage offset of message outbox. */
     uint8 constant public OUTBOX_OFFSET = uint8(1);
@@ -73,4 +78,57 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
             address(this)
         );
     }
+
+    /**
+     * @notice Deposit funds to mint on auxiliary chain. Depositor needs to
+     *         approve this contract with the deposit amount.
+     *
+     * @param _amount MOST token deposit amount in wei.
+     * @param _beneficiary Address of beneficiary on auxiliary chain.
+     * @param _feeGasPrice Fee gas price at which rewards will be calculated.
+     * @param _feeGasLimit Fee gas limit at which rewards will be calculated.
+     *
+     */
+    function deposit(
+        uint256 _amount,
+        address _beneficiary,
+        uint256 _feeGasPrice,
+        uint256 _feeGasLimit
+    )
+        external
+        returns(bytes32 messageHash_)
+    {
+
+        require(
+            _amount != 0,
+            "Deposit amount should be greater than 0"
+        );
+        require(
+            _beneficiary != address(0),
+            "Beneficiary address must not be 0."
+        );
+        require(
+            _amount > _feeGasPrice.mul(_feeGasLimit),
+            "Deposit amount should be greater than maximum reward."
+        );
+        require(
+            ERC20I(most).transferFrom(msg.sender, address(this), _amount),
+            "MOST token transfer must succeeded"
+        );
+
+        bytes32 depositIntentHash = hashDepositIntent(_amount, _beneficiary);
+
+        uint256 nonce = nonces[msg.sender];
+        nonces[msg.sender].add(1);
+
+        messageHash_ = MessageOutbox.declareMessage(
+            depositIntentHash,
+            nonce,
+            _feeGasPrice,
+            _feeGasLimit,
+            msg.sender
+        );
+
+    }
+
 }

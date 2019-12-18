@@ -27,6 +27,12 @@ contract ConsensusGatewayBase {
         )
     );
 
+    bytes32 public constant DEPOSIT_INTENT_TYPEHASH = keccak256(
+        abi.encode(
+            "DepositIntent(uint256 amount,address beneficiary)"
+        )
+    );
+
 
     /* Storage */
 
@@ -42,11 +48,20 @@ contract ConsensusGatewayBase {
 
     /* Public function */
 
+    /**
+     * @notice Creates kernel intent hash.
+     *
+     * @param _height Height of meta-block.
+     * @param _kernelHash Hash of kernel at given height.
+     *
+     * @return kernelIntentHash_ Kernel intent hash.
+     */
     function hashKernelIntent(
         uint256 _height,
         bytes32 _kernelHash
     )
         public
+        pure
         returns(bytes32 kernelIntentHash_)
     {
         kernelIntentHash_ = keccak256(
@@ -54,6 +69,31 @@ contract ConsensusGatewayBase {
                 KERNEL_INTENT_TYPEHASH,
                 _height,
                 _kernelHash
+            )
+        );
+    }
+
+    /**
+     * @notice Creates deposit intent hash.
+     *
+     * @param _amount Amount of most token in wei.
+     * @param _beneficiary Address of beneficiary.
+     *
+     * @return depositIntentHash_ Deposit intent hash.
+     */
+    function hashDepositIntent(
+        uint256 _amount,
+        address _beneficiary
+    )
+        public
+        pure
+        returns(bytes32 depositIntentHash_)
+    {
+        depositIntentHash_ = keccak256(
+            abi.encode(
+                DEPOSIT_INTENT_TYPEHASH,
+                _amount,
+                _beneficiary
             )
         );
     }
