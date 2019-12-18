@@ -32,7 +32,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
     /* Events */
 
-    /* Emitted when new metablock is proposed */
+    /** Emitted when new metablock is proposed */
     event MetablockProposed(bytes32 proposal);
 
     /* Structs */
