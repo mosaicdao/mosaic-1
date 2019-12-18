@@ -18,8 +18,8 @@ const BN = require('bn.js');
 
 const ERC20GatewayBase = artifacts.require('ERC20GatewayBase');
 const ConsensusGatewayUtils = require('./utils');
-const Utils = require('../test_lib/utils.js');
-const { AccountProvider } = require('../test_lib/utils.js');
+const Utils = require('../../test_lib/utils.js');
+const { AccountProvider } = require('../../test_lib/utils.js');
 
 contract('ERC20GatewayBase::hashDepositIntent', (accounts) => {
   const accountProvider = new AccountProvider(accounts);

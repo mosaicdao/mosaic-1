@@ -14,7 +14,7 @@
 
 'use strict';
 
-const web3 = require('../test_lib/web3.js');
+const web3 = require('../../test_lib/web3.js');
 
 const DEPOSIT_INTENT_TYPEHASH = web3.utils.soliditySha3('DepositIntent(uint256 amount,address beneficiary)');
 
