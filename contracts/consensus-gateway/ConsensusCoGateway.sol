@@ -22,7 +22,7 @@ import "../consensus-gateway/ConsensusGatewayBase.sol";
 import "../consensus-gateway/ERC20GatewayBase.sol";
 import "../consensus/CoConsensusI.sol";
 
-contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, CoConsensusModule {
+contract ConsensusCoGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, CoConsensusModule {
 
     /* Constants */
 
