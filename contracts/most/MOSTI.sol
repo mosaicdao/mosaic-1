@@ -34,9 +34,9 @@ interface MOSTI {
         returns(bool);
 
     /**
-     * Burns the given amount(in wei) by msg.sender.
+     * Burns the given amount(in atto) by msg.sender.
      *
-     * @param _amount Amount in wei.
+     * @param _amount Amount in atto.
      *
      * @return bool `true` if success else `false`.
      */
@@ -45,14 +45,14 @@ interface MOSTI {
         returns(bool);
 
     /**
-     * Burns the given amount(in wei) of the given account.
+     * Burns the given amount(in atto) of the given account.
      *
      * @param _account Address of account for which the tokens will be burned.
-     * @param _amount Amount in wei.
+     * @param _amount Amount in atto.
      *
      * @return bool `true` if success else `false`.
      */
-    function burnFrom(address _account,uint256 _amount)
+    function burnFrom(address _account, uint256 _amount)
         external
         returns(bool);
 
