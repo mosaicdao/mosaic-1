@@ -15,6 +15,7 @@
 'use strict';
 
 const web3 = require('../test_lib/web3.js');
+const Utils = require('../test_lib/utils.js');
 
 const SentinelCommittee = '0x0000000000000000000000000000000000000001';
 const CommitteeFormationDelay = 14;
@@ -23,6 +24,9 @@ const BlockSegmentLength = 256;
 const MinimumRequiredValidators = 5;
 const MaximumCoinbaseSplitPerMille = 1000;
 const METACHAIN_ID_TYPEHASH = web3.utils.keccak256('MetachainId(address anchor)');
+const DOMAIN_SEPARATOR_TYPEHASH = web3.utils.keccak256('EIP712Domain(string name,string version,bytes32 metachainId,address verifyingContract)');
+const DOMAIN_SEPARATOR_VERSION = '0';
+const MESSAGE_BUS_DOMAIN_SEPARATOR_NAME = 'Message-Bus';
 
 async function setup(consensus, setupConfig) {
   return consensus.setup(
@@ -114,6 +118,44 @@ function getMetachainIdHash(anchor, metachainIdTypeHash) {
   );
 }
 
+function getMessageInboxIdentifier(metachainId, verifyingAddress) {
+  return web3.utils.sha3(Utils.encodeParameters(
+    [
+      'bytes32',
+      'string',
+      'string',
+      'bytes32',
+      'address',
+    ],
+    [
+      DOMAIN_SEPARATOR_TYPEHASH,
+      MESSAGE_BUS_DOMAIN_SEPARATOR_NAME,
+      DOMAIN_SEPARATOR_VERSION,
+      metachainId,
+      verifyingAddress,
+    ],
+  ));
+}
+
+function getMessageOutboxIdentifier(metachainId, verifyingAddress) {
+  return web3.utils.sha3(Utils.encodeParameters(
+    [
+      'bytes32',
+      'string',
+      'string',
+      'bytes32',
+      'address',
+    ],
+    [
+      DOMAIN_SEPARATOR_TYPEHASH,
+      MESSAGE_BUS_DOMAIN_SEPARATOR_NAME,
+      DOMAIN_SEPARATOR_VERSION,
+      metachainId,
+      verifyingAddress,
+    ],
+  ));
+}
+
 module.exports = {
   SentinelCommittee,
   CommitteeFormationDelay,
@@ -139,4 +181,6 @@ module.exports = {
     genesis: 4,
     active: 5,
   },
+  getMessageInboxIdentifier,
+  getMessageOutboxIdentifier,
 };

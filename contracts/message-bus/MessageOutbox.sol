@@ -89,6 +89,7 @@ contract MessageOutbox is MessageBox {
     )
         internal
     {
+        // It is used to ensure that ConsensusCoGateway can only be setup once.
         require(
             outboundMessageIdentifier == bytes32(0),
             "Message outbox is already setup."

@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity >=0.5.0 <0.6.0;
 
 // Copyright 2019 OpenST Ltd.
 //
@@ -15,5 +15,7 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 
 interface CoConsensusI {
+
+    function getAnchor(bytes32 _metachainId) external returns(address);
 
 }
