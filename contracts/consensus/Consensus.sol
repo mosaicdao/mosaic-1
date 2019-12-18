@@ -394,7 +394,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         );
 
         uint256 committeeFormationBlockHeight = currentMetablock.roundBlockNumber.add(
-            COMMITTEE_FORMATION_LENGTH
+            COMMITTEE_FORMATION_DELAY
         );
 
         require(
@@ -403,8 +403,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         );
 
         bytes32 seed = hashBlockSegment(
-            currentMetablock.roundBlockNumber,
-            committeeFormationBlockHeight
+            committeeFormationBlockHeight,
+            COMMITTEE_FORMATION_LENGTH
         );
 
         currentMetablock.round = MetablockRound.CommitteeFormed;
@@ -1178,32 +1178,33 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
     /**
      * @notice hashBlockSegment() function calculates a seed based on the
-     *         given sengment (start, end].
+     *         specified blocksengment.
      *
-     * @param start Start block number (not included in the segment).
-     * @param end End block number (included in the segment).
+     * @param end The ending block number of the blocksegment (included).
+     * @param length Length of the blocksegment.
      *
      * @return Returns a seed based on the blockhashes of the given blocksegment.
      */
     function hashBlockSegment(
-        uint256 start,
-        uint256 end
+        uint256 end,
+        uint256 length
     )
         private
         view
         returns (bytes32 seed_)
     {
+        assert(length > 0);
+
+        uint256 begin = end.add(uint256(1)).sub(length);
+
         require(
-            block.number >= end && block.number < start.add(uint256(256)),
+            block.number >= end && block.number < begin.add(uint256(256)),
             "Blocksegment is not in the most recent 256 blocks."
         );
 
-        uint256 length = end.sub(start);
-
         bytes32[] memory seedGenerator = new bytes32[](length);
-
         for (uint256 i = 0; i < length; i = i.add(1)) {
-            seedGenerator[i] = blockhash(start + i + 1);
+            seedGenerator[i] = blockhash(begin.add(i));
         }
 
         seed_ = keccak256(
