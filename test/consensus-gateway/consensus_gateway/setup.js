@@ -20,6 +20,7 @@ const ConsensusGateway = artifacts.require('ConsensusGateway');
 
 const { AccountProvider } = require('../../test_lib/utils.js');
 const Utils = require('../../test_lib/utils.js');
+const ConsensusGatewayUtils = require('../utils.js');
 
 contract('ConsensusGateway::setup', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
@@ -89,7 +90,24 @@ contract('ConsensusGateway::setup', (accounts) => {
       `Outbox offset position must be 1 but found ${outboxOffsetFromContract.toString(10)}`,
     );
 
-    console.log('outboundMessageIdentifierFromContract  ', outboundMessageIdentifierFromContract);
-    console.log('inboundMessageIdentifierFromContract  ', inboundMessageIdentifierFromContract);
+    const expectedOutboundMessageIdentifier = ConsensusGatewayUtils.getMessageOutboxIdentifier(
+      metachainId,
+      consensusGateway.address,
+    );
+    const expectedInboundMessageIdentifier = ConsensusGatewayUtils.getMessageInboxIdentifier(
+      metachainId,
+      consensusGateway.address,
+    );
+
+    assert.strictEqual(
+      expectedInboundMessageIdentifier,
+      inboundMessageIdentifierFromContract,
+      'Inbound message identifier must match',
+    );
+    assert.strictEqual(
+      expectedOutboundMessageIdentifier,
+      outboundMessageIdentifierFromContract,
+      'Outbound message identifier must match',
+    );
   });
 });
