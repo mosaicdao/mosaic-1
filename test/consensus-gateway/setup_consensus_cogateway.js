@@ -68,7 +68,7 @@ contract('CoConsensusGateway::setup', (accounts) => {
 
       const fromContractOutBoundMessageIdentifier = await consensusCoGateway
         .outboundMessageIdentifier.call();
-      const expectedOutBoundMessageIdentifier = ConsensusGatewayUtils.getMessageOutboxIdentifier(
+      const expectedOutBoundMessageIdentifier = ConsensusGatewayUtils.getOutboundMessageIdentifier(
         setupParams.metachainId,
         consensusCoGateway.address,
       );
@@ -94,7 +94,7 @@ contract('CoConsensusGateway::setup', (accounts) => {
 
       const fromContractInBoundMessageIdentifier = await consensusCoGateway
         .inboundMessageIdentifier.call();
-      const expectedInBoundMessageIdentifier = ConsensusGatewayUtils.getMessageInboxIdentifier(
+      const expectedInBoundMessageIdentifier = ConsensusGatewayUtils.getInboundMessageIdentifier(
         setupParams.metachainId,
         consensusCoGateway.address,
       );

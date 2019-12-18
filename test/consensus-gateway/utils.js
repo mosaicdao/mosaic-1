@@ -32,7 +32,7 @@ function getDepositIntentHash(amount, beneficiary) {
   );
 }
 
-function getMessageOutboxIdentifier(metachainId, verifyingAddress) {
+function getOutboundMessageIdentifier(metachainId, verifyingAddress) {
   return web3.utils.sha3(Utils.encodeParameters(
     [
       'bytes32',
@@ -51,7 +51,7 @@ function getMessageOutboxIdentifier(metachainId, verifyingAddress) {
   ));
 }
 
-function getMessageInboxIdentifier(metachainId, verifyingAddress) {
+function getInboundMessageIdentifier(metachainId, verifyingAddress) {
   return web3.utils.sha3(Utils.encodeParameters(
     [
       'bytes32',
@@ -73,6 +73,6 @@ function getMessageInboxIdentifier(metachainId, verifyingAddress) {
 module.exports = {
   DEPOSIT_INTENT_TYPEHASH,
   getDepositIntentHash,
-  getMessageOutboxIdentifier,
-  getMessageInboxIdentifier,
+  getOutboundMessageIdentifier,
+  getInboundMessageIdentifier,
 };

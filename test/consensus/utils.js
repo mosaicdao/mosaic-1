@@ -23,9 +23,6 @@ const BlockSegmentLength = 256;
 const MinimumRequiredValidators = 5;
 const MaximumCoinbaseSplitPerMille = 1000;
 const METACHAIN_ID_TYPEHASH = web3.utils.keccak256('MetachainId(address anchor)');
-const DOMAIN_SEPARATOR_TYPEHASH = web3.utils.keccak256('EIP712Domain(string name,string version,bytes32 metachainId,address verifyingContract)');
-const DOMAIN_SEPARATOR_VERSION = '0';
-const MESSAGE_BUS_DOMAIN_SEPARATOR_NAME = 'Message-Bus';
 
 async function setup(consensus, setupConfig) {
   return consensus.setup(
@@ -142,6 +139,4 @@ module.exports = {
     genesis: 4,
     active: 5,
   },
-  getMessageInboxIdentifier,
-  getMessageOutboxIdentifier,
 };
