@@ -14,13 +14,13 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "./CoConsensusModule.sol";
+import "../consensus/CoConsensusModule.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../message-bus/MessageBus.sol";
 import "../message-bus/StateRootI.sol";
 import "../consensus-gateway/ConsensusGatewayBase.sol";
 import "../consensus-gateway/ERC20GatewayBase.sol";
-import "./CoConsensusI.sol";
+import "../consensus/CoConsensusI.sol";
 
 contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, CoConsensusModule {
 

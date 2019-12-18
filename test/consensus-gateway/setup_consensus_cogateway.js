@@ -14,10 +14,10 @@
 
 'use strict';
 
-const BN = require('bn.js');
+const BN = require('../../node_modules/bn.js/lib/bn');
 const { AccountProvider } = require('../test_lib/utils.js');
 const Utils = require('../test_lib/utils.js');
-const ConsensusUtils = require('./utils');
+const ConsensusGatewayUtils = require('./utils');
 
 const SpyCoConsensus = artifacts.require('SpyCoConsensus');
 const ConsensusCoGateway = artifacts.require('ConsensusCoGateway');
@@ -68,7 +68,7 @@ contract('CoConsensusGateway::setup', (accounts) => {
 
       const fromContractOutBoundMessageIdentifier = await consensusCoGateway
         .outboundMessageIdentifier.call();
-      const expectedOutBoundMessageIdentifier = ConsensusUtils.getMessageOutboxIdentifier(
+      const expectedOutBoundMessageIdentifier = ConsensusGatewayUtils.getMessageOutboxIdentifier(
         setupParams.metachainId,
         consensusCoGateway.address,
       );
@@ -94,7 +94,7 @@ contract('CoConsensusGateway::setup', (accounts) => {
 
       const fromContractInBoundMessageIdentifier = await consensusCoGateway
         .inboundMessageIdentifier.call();
-      const expectedInBoundMessageIdentifier = ConsensusUtils.getMessageInboxIdentifier(
+      const expectedInBoundMessageIdentifier = ConsensusGatewayUtils.getMessageInboxIdentifier(
         setupParams.metachainId,
         consensusCoGateway.address,
       );
