@@ -226,6 +226,7 @@ contract('Consensus::formCommittee', (accounts) => {
       const expectedDislocation = await consensusUtil.getDislocation(committeeFormationBlockHeight);
       // testInputs.proposal
       const expectedCallData = await axiomUtil.encodeNewCommitteeParams({
+        metachainId: Utils.generateRandomMetachainId(),
         consensus: consensus.address,
         committeeSize: testInputs.committeeSize,
         dislocation: expectedDislocation,

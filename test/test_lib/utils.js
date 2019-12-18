@@ -67,7 +67,7 @@ const receipts = [];
 function Utils() {}
 
 Utils.prototype = {
-  generateRandomMetachainId: () => getRandomHash().substr(0, 20),
+  generateRandomMetachainId: () => getRandomHash(),
 
   /** Log receipt. */
   logReceipt: (receipt, description) => {
