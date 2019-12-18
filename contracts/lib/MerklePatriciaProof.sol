@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity >=0.5.0 <0.6.0;
 /**
  * @title MerklePatriciaVerifier
  * @author Sam Mayo (sammayo888@gmail.com)
