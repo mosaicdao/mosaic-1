@@ -1195,7 +1195,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         uint256 begin = _end.add(uint256(1)).sub(COMMITTEE_FORMATION_LENGTH);
 
         require(
-            block.number >= _end && block.number < begin.add(uint256(256)),
+            block.number > _end && block.number < begin.add(uint256(256)),
             "Blocksegment is not in the most recent 256 blocks."
         );
 
