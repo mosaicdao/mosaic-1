@@ -34,9 +34,11 @@ contract('ConsensusGateway::setup', (accounts) => {
     const stateRootProvider = accountProvider.get();
     const maxStorageRootItems = new BN(100);
     const coGatewayOutboxIndex = new BN(1);
+    const consensus = accountProvider.get();
 
     await consensusGateway.setup(
       metachainId,
+      consensus,
       most,
       consensusCogateway,
       stateRootProvider,
@@ -118,6 +120,14 @@ contract('ConsensusGateway::setup', (accounts) => {
     assert.isOk(
       outboxStorageIndexFromInbox.eq(coGatewayOutboxIndex),
       `Expected outbox index is ${coGatewayOutboxIndex.toString(10)} but found ${outboxStorageIndexFromInbox.toString(10)}`,
+    );
+
+    const consensusAddressFromContract = await consensusGateway.consensus.call();
+
+    assert.strictEqual(
+      consensus,
+      consensusAddressFromContract,
+      'Consensus address must match',
     );
   });
 });

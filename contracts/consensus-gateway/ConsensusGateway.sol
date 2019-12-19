@@ -16,14 +16,19 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
-import "../proxies/MasterCopyNonUpgradable.sol";
 import "./ConsensusGatewayBase.sol";
+import "./ERC20GatewayBase.sol";
+import "../proxies/MasterCopyNonUpgradable.sol";
 import "../message-bus/MessageBus.sol";
+import "../consensus/ConsensusModule.sol";
+import "../consensus/ConsensusI.sol";
 
-contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase {
+contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, ConsensusModule {
+
     /* Usings */
 
     using SafeMath for uint256;
+
 
     /* Constants */
 
@@ -49,10 +54,11 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
      * @param _stateRootProvider Address of contract which implements
      *                           state-root provider interface.
      * @param _maxStorageRootItems Maximum number of storage roots stored.
-     * @param _outboxStorageIndex Outbox storage index of consensus co-gateway.
+     * @param _outboxStorageIndex Outbox storage index of consensus cogateway.
      */
     function setup(
         bytes32 _metachainId,
+        address _consensus,
         ERC20I _most,
         address _consensusCogateway,
         StateRootI _stateRootProvider,
@@ -61,6 +67,10 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
     )
         external
     {
+        ConsensusModule.setupConsensus(
+            ConsensusI(_consensus)
+        );
+
         ConsensusGatewayBase.setup(
             _most,
             uint256(0) // Current meta-block height
@@ -86,7 +96,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
      * @notice Deposit funds to mint on auxiliary chain. Depositor needs to
      *         approve this contract with the deposit amount.
      *
-     * @param _amount MOST token deposit amount in wei.
+     * @param _amount MOST token deposit amount in atto.
      * @param _beneficiary Address of beneficiary on auxiliary chain.
      * @param _feeGasPrice Fee gas price at which rewards will be calculated.
      * @param _feeGasLimit Fee gas limit at which rewards will be calculated.
@@ -118,7 +128,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
         bytes32 depositIntentHash = hashDepositIntent(_amount, _beneficiary);
 
         uint256 nonce = nonces[msg.sender];
-        nonces[msg.sender].add(1);
+        nonces[msg.sender] = nonce.add(1);
 
         messageHash_ = MessageOutbox.declareMessage(
             depositIntentHash,

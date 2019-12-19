@@ -81,7 +81,7 @@ contract('ConsensusGateway::setup', (accounts) => {
 
     const messageStatus = await consensusGateway.outbox.call(messageHash);
 
-    assert.isOk(messageStatus, 'Message status must be true');
+    assert.isOk(messageStatus === true, 'Message status must be true');
 
     assert.isOk(
       afterMOSTBalanceConsensusGateway.eq(beforeMOSTBalanceConsensusGateway.add(param.amount)),
