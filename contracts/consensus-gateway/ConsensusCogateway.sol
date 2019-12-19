@@ -26,8 +26,10 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
 
     /* Constants */
 
+    /* Storage offset of message outbox. */
     uint8 constant public OUTBOX_OFFSET = uint8(1);
 
+    /* Storage offset of message inbox. */
     uint8 constant public INBOX_OFFSET = uint8(4);
 
 
