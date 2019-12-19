@@ -54,12 +54,12 @@ interface CoreI {
 
     function getOpenKernel() external returns (bytes32, uint256);
 
-    /**
-     * @notice Validator is active if open kernel height is
-     *           - greater or equal than validator's begin height
-     *           - and, less or equal than validator's end height
-     */
-    function isValidator(address _account)
+    function isActiveValidator(address _account)
+        external
+        view
+        returns (bool);
+
+    function isValidator(address _account, uint256 _metablockHeight)
         external
         view
         returns (bool);

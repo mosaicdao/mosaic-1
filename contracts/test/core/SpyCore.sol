@@ -129,7 +129,7 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
     // be done.
     function isValidator(address)
         external
-        view
+        pure
         returns (bool)
     {
         require(false, "This should not be called for unit tests.");
@@ -137,7 +137,8 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
 
     function getOpenKernel()
         external
-        returns (bytes32, uint256) {
+        returns (bytes32, uint256)
+    {
         require(false, "This should not be called for unit tests.");
     }
 }

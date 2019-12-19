@@ -418,37 +418,58 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      * @notice Enters a validator into a committee.
      *
      * @dev Function requires:
-     *          - the given metachain id is not 0
-     *          - the given core's address is not 0
+     *          - the given committee's metachain id is not 0
+     *          - the given validator's  metachain id is not 0
      *          - the given validator's address is not 0
      *          - the given 'further' validator's address is not 0
-     *          - the given core is running
-     *          - valid validator is given
-     *              - is active in the given core
-     *              - has not been slashed
-     *          - the corresponding metablock's round is 'CommitteeFormed'
+     *          - metablockchain specified by the committee's metachain id
+     *            is in "committee formed" round
+     *          - metablock specified by the validator's metachain id and
+     *            metablock height is committed
+     *          - core specified by the validator's metachain id (assigned core)
+     *            is running
+     *          - metablock specified by the validator's metachain id and
+     *            metablock height should include committee's formation height.
+     *            If the metablock's commit height is higher or
+     *            equal to the committee's formation height, than committe's
+     *            formation height is included in the metablock's parent's
+     *            commit height and metablock's commit height.
+     *            If the metablock's commit height is less than committee's
+     *            formation height, than its child metablock is not committed
+     *            and is the tip of metablockchain and committee's formation
+     *            height is included in the metablock's commit height
+     *            and its child current round block number.
+     *          - the given validator is an active validator in the
+     *            corresponding core at the given validator's metablock height
+     *            or at the child's metablock height if the the metablock
+     *            specified by the validator's metablock height is less
+     *            than committee's formation height.
      *
-     * @param _metachainId Metachain id for the committee to enter.
-     * @param _validator Validator address to enter.
-     * @param _furtherMember Validator address that is further member
-     *                       compared to the `_validator` address
+     * @param _committeeMetachainId Committee's metachain id to enter.
+     * @param _validatorMetachainId Metachain id of a metachain the validator
+     *                              belongs to.
+     * @param _validatorMetablockHeight Metablock height the validator is active.
+     * @param _validator Validator's address to enter.
+     * @param _furtherMember Validator's address that is further member
+     *                       compared to the `_validator`.
      */
     function enterCommittee(
-        bytes32 _metachainId,
-        CoreI _core,
+        bytes32 _committeeMetachainId,
+        bytes32 _validatorMetachainId,
+        uint256 _validatorMetablockHeight,
         address _validator,
         address _furtherMember
     )
         external
     {
         require(
-            _metachainId != bytes32(0),
-            "Metachain id is 0."
+            _committeeMetachainId != bytes32(0),
+            "Committee's metachain id is 0."
         );
 
         require(
-            _core != CoreI(0),
-            "Core's address is 0."
+            _validatorMetachainId != bytes32(0),
+            "Validator's metachain id is 0."
         );
 
         require(
@@ -461,25 +482,66 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             "Further validator's address is 0."
         );
 
-        require(
-            isCoreRunning(_core),
-            "The given core is not running."
-        );
+        uint256 committeeMetablockHeight = metablockTips[_committeeMetachainId];
+        Metablock storage committeeMetablock = metablockchains[_committeeMetachainId][committeeMetablockHeight];
 
         require(
-            isValidator(_core, _validator),
-            "Invalid validator was given."
-        );
-
-        uint256 currentHeight = metablockTips[_metachainId];
-        Metablock storage currentMetablock = metablockchains[_metachainId][currentHeight];
-
-        require(
-            currentMetablock.round == MetablockRound.CommitteeFormed,
+            committeeMetablock.round == MetablockRound.CommitteeFormed,
             "Committee must have been formed to enter a validator."
         );
 
-        CommitteeI committee = committees[currentMetablock.metablockHash];
+        Metablock storage validatorMetablock = metablockchains[_validatorMetachainId][_validatorMetablockHeight];
+
+        require(
+            validatorMetablock.round == MetablockRound.Committed,
+            "Provided metablock for validator must be committed."
+        );
+
+        uint256 formationHeight = committeeMetablock.roundBlockNumber;
+        uint256 checkValidatorForHeight = 0;
+        if (validatorMetablock.roundBlockNumber >= formationHeight) {
+            Metablock storage validatorParentMetablock = metablockchains[_validatorMetachainId][_validatorMetablockHeight.sub(1)];
+            require(
+                validatorParentMetablock.roundBlockNumber < formationHeight,
+                "Provided metablock must include the committee formation height."
+            );
+            checkValidatorForHeight = _validatorMetablockHeight;
+        } else {
+            uint256 childMetablockHeight = _validatorMetablockHeight.add(1);
+            Metablock storage validatorChildMetablock = metablockchains[_validatorMetachainId][childMetablockHeight];
+            require(
+                childMetablockHeight == metablockTips[_validatorMetachainId],
+                "Provided metablock's child must be tip."
+            );
+            require(
+                validatorChildMetablock.round < MetablockRound.Committed,
+                "Provided metablock's child is committed."
+            );
+            require(
+                validatorChildMetablock.roundBlockNumber >= formationHeight,
+                "Provided metablock must include the committee formation height."
+            );
+            checkValidatorForHeight = childMetablockHeight;
+        }
+
+        CoreI core = assignments[_validatorMetachainId];
+        require(
+            isCoreRunning(core),
+            "The given core is not running."
+        );
+
+        // @qn (pro): should we also check that validator is currently active?
+        // require(
+        //     core.isActiveValidator(_validator),
+        //     "Validator must be an active validator."
+        // );
+
+        require(
+            core.isValidator(_validator, checkValidatorForHeight),
+            "Validator must be a validator when committee formed."
+        );
+
+        CommitteeI committee = committees[committeeMetablock.metablockHash];
         assert(committee != CommitteeI(0));
 
         committee.enterCommittee(_validator, _furtherMember);
@@ -833,8 +895,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         );
 
         require(
-            isValidator(core, msg.sender),
-            "Invalid validator was given."
+            core.isActiveValidator(msg.sender),
+            "Validator must be an active validator."
         );
 
         emit EndpointPublished(
@@ -951,27 +1013,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             _dislocation,
             _metablockHash
         );
-    }
-
-    /**
-     * @notice isValidator() function checks if the given validator is an
-     *         active validator in the given core and has not been slashed.
-     *
-     * @param _core Core to check the validator against.
-     * @param _validator Validator's address to check.
-     *
-     * @return Returns true, if the given validator is an active validator
-     *         in the given core and has not been slashed.
-     */
-    function isValidator(CoreI _core, address _validator)
-        internal
-        view
-        returns (bool isValidator_)
-    {
-        assert(_core != CoreI(0));
-
-        isValidator_ = _core.isValidator(_validator)
-            && !reputation.isSlashed(_validator);
     }
 
 

@@ -529,12 +529,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         address validator = ecrecover(_proposal, _v, _r, _s);
         // check validator is registered to this core
         require(
-            isValidator(validator),
+            isActiveValidator(validator),
             "Validator must be active in this core."
-        );
-        require(
-            !reputation.isSlashed(validator),
-            "Validator is slashed."
         );
 
         bytes32 castVote = votes[validator];
@@ -851,8 +847,9 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      * @notice Validator is active if open kernel height is
      *           - greater or equal than validator's begin height
      *           - and, less or equal than validator's end height
+     *           - was not slashed
      */
-    function isValidator(address _account)
+    function isActiveValidator(address _account)
         public
         view
         returns (bool)
@@ -862,7 +859,25 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         // Validator must be registered to this core.
         return (validatorBeginHeight[_account] <= openKernelHeight) &&
             (validatorEndHeight[_account] >= openKernelHeight) &&
-            (validatorEndHeight[_account] > uint256(0));
+            (validatorEndHeight[_account] > uint256(0)) &&
+            !reputation.isSlashed(_account);
+    }
+
+    /**
+     * @notice Validator is active if the given metablock's height is:
+     *           - greater or equal than validator's begin height
+     *           - and, less or equal than validator's end height
+     *           - was not slashed
+     */
+    function isValidator(address _account, uint256 _metablockHeight)
+        public
+        view
+        returns (bool)
+    {
+        return (validatorBeginHeight[_account] <= _metablockHeight) &&
+            (validatorEndHeight[_account] >= _metablockHeight) &&
+            (validatorEndHeight[_account] > uint256(0)) &&
+            !reputation.isSlashed(_account);
     }
 
     function calculateQuorum(uint256 _count)
