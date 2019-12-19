@@ -22,7 +22,7 @@ const ConsensusGateway = artifacts.require('ConsensusGateway');
 const { AccountProvider } = require('../../test_lib/utils.js');
 const Utils = require('../../test_lib/utils.js');
 
-contract('ConsensusGateway::setup', (accounts) => {
+contract('ConsensusGateway::deposit', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
   let param;
   let most;
@@ -46,12 +46,15 @@ contract('ConsensusGateway::setup', (accounts) => {
     };
     await consensusGateway.setup(
       param.metachainId,
+      accountProvider.get(),
       param.mostAddress,
       param.consensusCogateway,
       param.stateRootProvider,
       param.maxStorageRootItems,
+      new BN(1),
     );
   });
+``
   it('should successfully deposit', async () => {
     const beforeMOSTBalanceConsensusGateway = await most.balanceOf(consensusGateway.address);
     const beforeMOSTBalanceDepositor = await most.balanceOf(param.owner);

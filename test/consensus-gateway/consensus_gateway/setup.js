@@ -44,7 +44,6 @@ contract('ConsensusGateway::setup', (accounts) => {
       stateRootProvider,
       maxStorageRootItems,
       coGatewayOutboxIndex,
-      new BN(1),
     );
 
     const mostFromContract = await consensusGateway.most.call();
