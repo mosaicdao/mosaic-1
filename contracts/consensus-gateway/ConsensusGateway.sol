@@ -44,13 +44,15 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
      * @param _stateRootProvider Address of contract which implements
      *                           state-root provider interface.
      * @param _maxStorageRootItems Maximum number of storage roots stored.
+     * @param _outboxStorageIndex Outbox storage index of consensus co-gateway.
      */
     function setup(
         bytes32 _metachainId,
         ERC20I _most,
         address _consensusCogateway,
         StateRootI _stateRootProvider,
-        uint256 _maxStorageRootItems
+        uint256 _maxStorageRootItems,
+        uint8 _outboxStorageIndex
     )
         external
     {
@@ -68,7 +70,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
         MessageInbox.setupMessageInbox(
             _metachainId,
             _consensusCogateway,
-            OUTBOX_OFFSET,
+            _outboxStorageIndex,
             _stateRootProvider,
             _maxStorageRootItems,
             address(this)
