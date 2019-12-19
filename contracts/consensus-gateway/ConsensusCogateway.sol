@@ -36,7 +36,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
     /* External functions */
 
     /**
-     * @notice It sets up consensus co-gateway. It can only be called once.
+     * @notice It sets up consensus cogateway. It can only be called once.
      *
      * @param _metachainId Metachain id of a metablock.
      * @param _coConsensus Address of coConsensus contract.
