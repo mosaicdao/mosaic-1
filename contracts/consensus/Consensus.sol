@@ -1199,14 +1199,16 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             "Blocksegment is not in the most recent 256 blocks."
         );
 
-        bytes32[] memory seedGenerator = new bytes32[](COMMITTEE_FORMATION_LENGTH.add(1));
+        bytes32[] memory seedGenerator = new bytes32[](COMMITTEE_FORMATION_LENGTH);
         for (uint256 i = 0; i < COMMITTEE_FORMATION_LENGTH; i = i.add(1)) {
             seedGenerator[i] = blockhash(begin.add(i));
         }
-        seedGenerator[COMMITTEE_FORMATION_LENGTH] = _metablockHash;
 
         seed_ = keccak256(
-            abi.encodePacked(seedGenerator)
+            abi.encodePacked(
+                _metablockHash,
+                seedGenerator
+            )
         );
     }
 }
