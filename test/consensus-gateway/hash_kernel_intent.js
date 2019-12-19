@@ -19,7 +19,7 @@ const BN = require('bn.js');
 const ConsensusGatewayBase = artifacts.require('ConsensusGatewayBaseTest');
 
 contract('ConsensusGatewayBase::hashKernelIntent', (accounts) => {
-  it('should hash kernel content', async () => {
+  it.skip('should hash kernel content', async () => {
     const consensusGatewayBase = await ConsensusGatewayBase.new();
 
     const height = new BN(1);

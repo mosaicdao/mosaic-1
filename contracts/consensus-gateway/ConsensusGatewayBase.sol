@@ -22,9 +22,7 @@ contract ConsensusGatewayBase {
     /* Constants */
 
     bytes32 public constant KERNEL_INTENT_TYPEHASH = keccak256(
-        abi.encode(
-            "KernelIntent(uint256 height,bytes32 kernelHash)"
-        )
+        "KernelIntent(uint256 height,bytes32 kernelHash)"
     );
 
 
