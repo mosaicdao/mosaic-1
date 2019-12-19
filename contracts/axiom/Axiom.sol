@@ -278,7 +278,7 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
     }
 
     /**
-     * @notice Setup a new meta chain. Only technical governance address can
+     * @notice Setup a new metachain. Only technical governance address can
      *         call this function.
      */
     function newMetaChain()

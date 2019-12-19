@@ -27,9 +27,12 @@ function remove0x(str) {
   return str;
 }
 
-async function createCommittee(consensus, committeeSize, dislocation, proposal, txOptions = {}) {
+async function createCommittee(
+  metachainId, consensus, committeeSize, dislocation, proposal, txOptions = {},
+) {
   const committee = await Committee.new();
   await committee.setup(
+    metachainId,
     consensus,
     committeeSize,
     dislocation,

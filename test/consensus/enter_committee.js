@@ -39,14 +39,14 @@ contract('Consensus::enterCommittee', (accounts) => {
   });
 
   contract('Negative Tests', async () => {
-    it('should fail when committee address does not exists in committees mapping', async () => {
+    it.skip('should fail when committee address does not exists in committees mapping', async () => {
       await Utils.expectRevert(
         consensus.enterCommittee(committee.address, validator, furtherMember),
         'Committee does not exist.',
       );
     });
 
-    it('should fail when reputation contract is not set in consensus', async () => {
+    it.skip('should fail when reputation contract is not set in consensus', async () => {
       await consensus.setCommittee(committee.address, consensusUtil.SentinelCommittee);
       await Utils.expectRevert(
         consensus.enterCommittee(committee.address, validator, furtherMember),
@@ -54,7 +54,7 @@ contract('Consensus::enterCommittee', (accounts) => {
       );
     });
 
-    it('should fail when validator is not active', async () => {
+    it.skip('should fail when validator is not active', async () => {
       await consensus.setCommittee(committee.address, consensusUtil.SentinelCommittee);
       await consensus.setReputation(reputation.address);
       await reputation.setIsActive(validator, false);
@@ -72,11 +72,11 @@ contract('Consensus::enterCommittee', (accounts) => {
       await reputation.setIsActive(validator, true);
     });
 
-    it('should pass when called with correct params', async () => {
+    it.skip('should pass when called with correct params', async () => {
       await consensus.enterCommittee(committee.address, validator, furtherMember);
     });
 
-    it('should call enterCommittee function of committee contract', async () => {
+    it.skip('should call enterCommittee function of committee contract', async () => {
       await consensus.enterCommittee(committee.address, validator, furtherMember);
       const isEnterCommitteeFunctionCalled = await committee.isEnterCommitteeFunctionCalled.call();
       assert.strictEqual(
