@@ -88,6 +88,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
      * @param _feeGasPrice Fee gas price at which rewards will be calculated.
      * @param _feeGasLimit Fee gas limit at which rewards will be calculated.
      *
+     * @return messageHash_ Message hash.
      */
     function deposit(
         uint256 _amount,
@@ -98,7 +99,6 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
         external
         returns(bytes32 messageHash_)
     {
-
         require(
             _amount != 0,
             "Deposit amount should be greater than 0"
@@ -109,11 +109,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
         );
         require(
             _amount > _feeGasPrice.mul(_feeGasLimit),
-            "Deposit amount should be greater than maximum reward."
-        );
-        require(
-            ERC20I(most).transferFrom(msg.sender, address(this), _amount),
-            "MOST token transfer must succeeded"
+            "Deposit amount should be greater than max reward."
         );
 
         bytes32 depositIntentHash = hashDepositIntent(_amount, _beneficiary);
@@ -129,6 +125,9 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
             msg.sender
         );
 
+        require(
+            ERC20I(most).transferFrom(msg.sender, address(this), _amount),
+            "MOST transferFrom must succeed."
+        );
     }
-
 }
