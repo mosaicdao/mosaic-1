@@ -14,8 +14,6 @@
 
 'use strict';
 
-import { CONSENSUS_GATEWAY_INBOX_OFFSET, CONSENSUS_GATEWAY_OUTBOX_OFFSET } from '../utils';
-
 const BN = require('bn.js');
 
 const ConsensusGateway = artifacts.require('ConsensusGateway');
@@ -23,6 +21,7 @@ const ConsensusGateway = artifacts.require('ConsensusGateway');
 const { AccountProvider } = require('../../test_lib/utils.js');
 const Utils = require('../../test_lib/utils.js');
 const ConsensusGatewayUtils = require('../utils.js');
+const { CONSENSUS_GATEWAY_INBOX_OFFSET, CONSENSUS_GATEWAY_OUTBOX_OFFSET } = require('../utils');
 
 contract('ConsensusGateway::setup', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
