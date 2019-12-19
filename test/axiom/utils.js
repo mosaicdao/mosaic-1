@@ -21,7 +21,7 @@ const ConsensusSetupParamTypes = 'uint256,uint256,uint256,uint256,uint256,addres
 const ReputationSetupParamTypes = 'address,address,uint256,address,uint256,uint256,uint256,uint256';
 const AnchorSetupParamTypes = 'uint256,address';
 const CoreSetupParamTypes = 'address,bytes32,uint256,uint256,uint256,address,uint256,bytes32,uint256,uint256,uint256,uint256';
-const CommitteeSetupParamTypes = 'address,uint256,bytes32,bytes32';
+const CommitteeSetupParamTypes = 'bytes32,address,uint256,bytes32,bytes32';
 
 const ConsensusSetupFunctionSignature = `setup(${ConsensusSetupParamTypes})`;
 const ReputationSetupFunctionSignature = `setup(${ReputationSetupParamTypes})`;
@@ -123,10 +123,13 @@ async function encodeNewCoreParams(coreParams) {
 }
 
 async function encodeNewCommitteeParams(committeeParams) {
+  console.log(JSON.stringify(committeeParams));
+
   const callPrefix = await Utils.encodeFunctionSignature(CommitteeSetupFunctionSignature);
   const callData = await Utils.encodeParameters(
     CommitteeSetupParamTypes.split(','),
     [
+      committeeParams.metachainId,
       committeeParams.consensus,
       committeeParams.committeeSize.toString(10),
       committeeParams.dislocation,

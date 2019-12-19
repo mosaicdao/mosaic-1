@@ -112,7 +112,8 @@ contract('Consensus::publishEndPoint', (accounts) => {
       assert.strictEqual(
         eventData.core,
         core.address,
-        'Invalid core address');
+        'Invalid core address',
+      );
 
       assert.strictEqual(
         eventData.validator,
@@ -145,7 +146,7 @@ contract('Consensus::publishEndPoint', (accounts) => {
           from: nonValidator,
         },
       ),
-      'Validator is not active.');
+      'Invalid validator was given.');
     });
   });
 });

@@ -21,6 +21,7 @@ contract SpyCommittee is MasterCopyNonUpgradable, CommitteeI{
 
     bytes32 public mockedCommitteeDecision;
 
+    bytes32 public spyMetachainId;
     address public spyConsensus;
     uint256 public spyCommitteeSize;
     bytes32 public spyDislocation;
@@ -57,6 +58,7 @@ contract SpyCommittee is MasterCopyNonUpgradable, CommitteeI{
     }
 
     function setup(
+        bytes32 _metachainId,
         address _consensus,
         uint256 _committeeSize,
         bytes32 _dislocation,
@@ -64,6 +66,7 @@ contract SpyCommittee is MasterCopyNonUpgradable, CommitteeI{
     )
         external
     {
+        spyMetachainId = _metachainId;
         spyConsensus = _consensus;
         spyCommitteeSize = _committeeSize;
         spyDislocation = _dislocation;
