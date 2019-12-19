@@ -33,6 +33,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
     /* Usings */
 
     using SafeMath for uint256;
+    using SafeMath for uint8;
 
 
     /* Events */
@@ -403,6 +404,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         );
 
         bytes32 seed = hashBlockSegment(
+            currentMetablock.metablockHash,
             committeeFormationBlockHeight
         );
 
@@ -1175,24 +1177,33 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         committee_ = CommitteeI(axiom.newCommittee(committeeSetupData));
     }
 
+    /**
+     * @notice Hashes the blocksegment [end - COMMITTEE_FORMATION_LENGTH + 1, end]
+     *         and the given metablock hash to generate a seed for committee.
+     *
+     * @param _metablockHash Metablock hash to be included in hash generation.
+     * @param _end Ending block number of the blocksegment.
+     */
     function hashBlockSegment(
-        uint256 end
+        bytes32 _metablockHash,
+        uint256 _end
     )
         private
         view
         returns (bytes32 seed_)
     {
-        uint256 begin = end.add(uint256(1)).sub(COMMITTEE_FORMATION_LENGTH);
+        uint256 begin = _end.add(uint256(1)).sub(COMMITTEE_FORMATION_LENGTH);
 
         require(
-            block.number >= end && block.number < begin.add(uint256(256)),
+            block.number >= _end && block.number < begin.add(uint256(256)),
             "Blocksegment is not in the most recent 256 blocks."
         );
 
-        bytes32[] memory seedGenerator = new bytes32[](COMMITTEE_FORMATION_LENGTH);
+        bytes32[] memory seedGenerator = new bytes32[](COMMITTEE_FORMATION_LENGTH.add(1));
         for (uint256 i = 0; i < COMMITTEE_FORMATION_LENGTH; i = i.add(1)) {
             seedGenerator[i] = blockhash(begin.add(i));
         }
+        seedGenerator[COMMITTEE_FORMATION_LENGTH] = _metablockHash;
 
         seed_ = keccak256(
             abi.encodePacked(seedGenerator)
