@@ -37,22 +37,31 @@ interface ConsensusI {
     /**
      * @notice Precommits metablock from a core.
      *
-     * @param _proposal Precommit proposal.
+     * @param _metachainId Metachain id.
+     * @param _metablockHeight Metablock height to precommit.
+     * @param _metablockHashPrecommit Metablock hash to precommit.
      */
     function precommitMetablock(
-        bytes32 _proposal
+        bytes32 _metachainId,
+        uint256 _metablockHeight,
+        bytes32 _metablockHashPrecommit
     )
         external;
 
     /**
      * @notice Registers a committee's decision.
      *
+     * @param _metachainId Metachain id to register committee decision.
      * @param _decision Committee's decision.
      */
-    function registerCommitteeDecision(bytes32 _decision) external;
+    function registerCommitteeDecision(
+        bytes32 _metachainId,
+        bytes32 _decision
+    )
+        external;
 
     /**
-     * @notice Creates a new meta chain.
+     * @notice Creates a new metachain.
      *
      */
     function newMetaChain() external returns(bytes32 metachainId_);

@@ -86,6 +86,7 @@ contract('Axiom::newCommittee', (accounts) => {
     mockedConsensus = await SpyConsensus.at(mockedConsensusAddress);
 
     newCommitteeParams = {
+      metachainId: Utils.generateRandomMetachainId(),
       consensus: accountProvider.get(),
       committeeSize: new BN(Utils.getRandomNumber(1000)),
       dislocation: Utils.getRandomHash(),
