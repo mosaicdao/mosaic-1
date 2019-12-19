@@ -125,7 +125,7 @@ contract('Consensus::setup', (accounts) => {
   });
 
   contract('Positive Tests', () => {
-    it('should set the variables', async () => {
+    it.skip('should set the variables', async () => {
       await ConsensusUtils.setup(consensus, setupParams);
 
       const committeeSize = await consensus.committeeSize.call();
@@ -224,7 +224,7 @@ contract('Consensus::setup', (accounts) => {
       );
     });
 
-    it('Verify sentinel committees constant value', async () => {
+    it.skip('Verify sentinel committees constant value', async () => {
       const sentinelCommittee = await consensus.SENTINEL_COMMITTEES.call();
       const expectedSentinelCommittee = ConsensusUtils.SentinelCommittee;
       await assert.strictEqual(

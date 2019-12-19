@@ -15,7 +15,6 @@
 'use strict';
 
 const Utils = require('../test_lib/utils.js');
-const CoreStatusUtils = require('../test_lib/core_status_utils');
 const consensusUtil = require('./utils.js');
 
 const Consensus = artifacts.require('ConsensusTest');
@@ -60,11 +59,11 @@ contract('Consensus::logout', (accounts) => {
     it('should fail when core address is 0', async () => {
       await Utils.expectRevert(
         contracts.consensus.logout(metachainId, Utils.NULL_ADDRESS, { from: validator }),
-        'Core address is 0.',
+        'Core is 0.',
       );
     });
 
-    it('should fail when core is not assigned for the specified chain id', async () => {
+    it('should fail when core is not assigned for the specified metachain id', async () => {
       await Utils.expectRevert(
         contracts.consensus.logout(metachainId, accountProvider.get(), { from: validator }),
         'Core is not assigned for the specified metachain id.',

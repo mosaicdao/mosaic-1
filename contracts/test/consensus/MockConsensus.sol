@@ -150,13 +150,17 @@ contract MockConsensus is ConsensusI, ReputationI {
         joinLimit_ = validatorJoinLimit;
     }
 
-    function precommitMetablock(bytes32 _precommit)
+    function precommitMetablock(
+        bytes32 /* _metachainId */,
+        uint256 /* _metablockHeight */,
+        bytes32 _metablockHashPrecommit
+    )
         external
     {
-        precommitts[msg.sender] = _precommit;
+        precommitts[msg.sender] = _metablockHashPrecommit;
     }
 
-    function registerCommitteeDecision(bytes32)
+    function registerCommitteeDecision(bytes32, bytes32)
         external
     {
         // do nothing for now

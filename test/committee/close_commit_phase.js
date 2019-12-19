@@ -30,6 +30,7 @@ contract('Committee::closeCommitPhase', async (accounts) => {
   beforeEach(async () => {
     config = {
       committee: {
+        metachainId: Utils.generateRandomMetachainId(),
         size: 3,
         dislocation: web3.utils.sha3('dislocation'),
         proposal: web3.utils.sha3('proposal'),
@@ -38,6 +39,7 @@ contract('Committee::closeCommitPhase', async (accounts) => {
     };
 
     config.committee.contract = await CommitteeUtils.createCommittee(
+      config.committee.metachainId,
       config.committee.consensus,
       config.committee.size,
       config.committee.dislocation,
@@ -82,6 +84,7 @@ contract('Committee::closeCommitPhase', async (accounts) => {
   contract('Negative Tests', async () => {
     it('should fail if committee is not in commit phase status', async () => {
       const committee = await CommitteeUtils.createCommittee(
+        Utils.generateRandomMetachainId(),
         config.committee.consensus,
         3,
         web3.utils.sha3('dislocation'),
