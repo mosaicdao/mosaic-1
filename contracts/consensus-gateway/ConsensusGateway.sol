@@ -17,9 +17,8 @@ pragma solidity >=0.5.0 <0.6.0;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "../proxies/MasterCopyNonUpgradable.sol";
-import "../message-bus/MessageBox.sol";
-import "../message-bus/MessageBus.sol";
 import "./ConsensusGatewayBase.sol";
+import "../message-bus/MessageBus.sol";
 
 contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase {
     /* Usings */
@@ -35,6 +34,8 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
     uint8 constant public INBOX_OFFSET = uint8(4);
 
 
+    /* External Functions */
+
     /**
      * @notice Setup function for consensus gateway.
      *
@@ -42,19 +43,21 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
      *        message box.
      *      - Validations for input parameters are done in message box setup method.
      *
-     * @param _metachainId Meta-chain Id
-     * @param _most Address of most contract.
+     * @param _metachainId Metachain Id
+     * @param _most Address of MOST contract.
      * @param _consensusCogateway Address of consensus cogateway contract.
      * @param _stateRootProvider Address of contract which implements
      *                           state-root provider interface.
      * @param _maxStorageRootItems Maximum number of storage roots stored.
+     * @param _outboxStorageIndex Outbox storage index of consensus co-gateway.
      */
     function setup(
         bytes32 _metachainId,
         ERC20I _most,
         address _consensusCogateway,
         StateRootI _stateRootProvider,
-        uint256 _maxStorageRootItems
+        uint256 _maxStorageRootItems,
+        uint8 _outboxStorageIndex
     )
         external
     {
@@ -72,7 +75,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
         MessageInbox.setupMessageInbox(
             _metachainId,
             _consensusCogateway,
-            OUTBOX_OFFSET,
+            _outboxStorageIndex,
             _stateRootProvider,
             _maxStorageRootItems,
             address(this)

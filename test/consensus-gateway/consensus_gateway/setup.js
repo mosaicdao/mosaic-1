@@ -21,6 +21,7 @@ const ConsensusGateway = artifacts.require('ConsensusGateway');
 const { AccountProvider } = require('../../test_lib/utils.js');
 const Utils = require('../../test_lib/utils.js');
 const ConsensusGatewayUtils = require('../utils.js');
+const { CONSENSUS_GATEWAY_INBOX_OFFSET, CONSENSUS_GATEWAY_OUTBOX_OFFSET } = require('../utils');
 
 contract('ConsensusGateway::setup', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
@@ -32,6 +33,7 @@ contract('ConsensusGateway::setup', (accounts) => {
     const consensusCogateway = accountProvider.get();
     const stateRootProvider = accountProvider.get();
     const maxStorageRootItems = new BN(100);
+    const coGatewayOutboxIndex = new BN(1);
 
     await consensusGateway.setup(
       metachainId,
@@ -39,6 +41,7 @@ contract('ConsensusGateway::setup', (accounts) => {
       consensusCogateway,
       stateRootProvider,
       maxStorageRootItems,
+      coGatewayOutboxIndex,
     );
 
     const mostFromContract = await consensusGateway.most.call();
@@ -60,7 +63,7 @@ contract('ConsensusGateway::setup', (accounts) => {
     assert.strictEqual(
       most,
       mostFromContract,
-      'Most address must match',
+      'MOST address must match',
     );
 
     assert.isTrue(
@@ -81,12 +84,12 @@ contract('ConsensusGateway::setup', (accounts) => {
     );
 
     assert.isTrue(
-      inboxOffsetFromContract.eqn(4),
+      inboxOffsetFromContract.eqn(CONSENSUS_GATEWAY_INBOX_OFFSET),
       `Inbox offset position must be 4 but found ${inboxOffsetFromContract.toString(10)}`,
     );
 
     assert.isTrue(
-      outboxOffsetFromContract.eqn(1),
+      outboxOffsetFromContract.eqn(CONSENSUS_GATEWAY_OUTBOX_OFFSET),
       `Outbox offset position must be 1 but found ${outboxOffsetFromContract.toString(10)}`,
     );
 
@@ -108,6 +111,12 @@ contract('ConsensusGateway::setup', (accounts) => {
       expectedOutboundMessageIdentifier,
       outboundMessageIdentifierFromContract,
       'Outbound message identifier must match',
+    );
+
+    const outboxStorageIndexFromInbox = await consensusGateway.outboxStorageIndex.call();
+    assert.isOk(
+      outboxStorageIndexFromInbox.eq(coGatewayOutboxIndex),
+      `Expected outbox index is ${coGatewayOutboxIndex.toString(10)} but found ${outboxStorageIndexFromInbox.toString(10)}`,
     );
   });
 });
