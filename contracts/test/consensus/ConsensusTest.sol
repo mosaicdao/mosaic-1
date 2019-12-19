@@ -34,26 +34,27 @@ contract ConsensusTest is Consensus {
         coreLifetimes[_core] = _status;
     }
 
-    function setPreCommit(
-        address _core,
-        bytes32 _proposal,
-        uint256 _committeeFormationBlockheight
+    function setPrecommit(
+        bytes32 _metachainId,
+        bytes32 _precommit
     )
         external
     {
-        precommits[_core] = Precommit(
-            _proposal,
-            _committeeFormationBlockheight
-        );
+        uint256 metablockTip = metablockTips[_metachainId];
+        Metablock storage metablock = metablockchains[_metachainId][metablockTip];
+
+        metablock.metablockHash = _precommit;
+        metablock.round = MetablockRound.Precommitted;
+        metablock.roundBlockNumber = block.number;
     }
 
     function setCommittee(
-        address _committeeAddress,
-        address _value
+        bytes32 _metachainId,
+        address _committeeAddress
     )
         external
     {
-        committees[_committeeAddress] = _value;
+        committees[_metachainId] = CommitteeI(_committeeAddress);
     }
 
     function setReputation(address _reputation) external {
@@ -62,7 +63,7 @@ contract ConsensusTest is Consensus {
 
     function setAssignment(
         bytes32 _metachainId,
-        address _core
+        CoreI _core
     )
         external
     {
@@ -70,17 +71,17 @@ contract ConsensusTest is Consensus {
     }
 
     function setCommitteeProposal(
-        address _committeeAddress,
+        CommitteeI _committeeAddress,
         bytes32 _proposal
     )
         external
     {
-        proposals[_proposal] = CommitteeI(_committeeAddress);
+        committees[_proposal] = _committeeAddress;
     }
 
     function setAnchor(
         bytes32 _metachainId,
-        address _anchor
+        AnchorI _anchor
     )
         external
     {
