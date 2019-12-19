@@ -15,13 +15,12 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 import "../proxies/MasterCopyNonUpgradable.sol";
-import "../message-bus/MessageBox.sol";
-import "../message-bus/MessageBus.sol";
 import "./ConsensusGatewayBase.sol";
+import "../message-bus/MessageBus.sol";
 
 contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase {
 
-    /** Constants */
+    /* Constants */
 
     /* Storage offset of message outbox. */
     uint8 constant public OUTBOX_OFFSET = uint8(1);
@@ -30,6 +29,8 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
     uint8 constant public INBOX_OFFSET = uint8(4);
 
 
+    /* External Functions */
+
     /**
      * @notice Setup function for consensus gateway.
      *
@@ -37,8 +38,8 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
      *        message box.
      *      - Validations for input parameters are done in message box setup method.
      *
-     * @param _metachainId Meta-chain Id
-     * @param _most Address of most contract.
+     * @param _metachainId Metachain Id
+     * @param _most Address of MOST contract.
      * @param _consensusCogateway Address of consensus cogateway contract.
      * @param _stateRootProvider Address of contract which implements
      *                           state-root provider interface.

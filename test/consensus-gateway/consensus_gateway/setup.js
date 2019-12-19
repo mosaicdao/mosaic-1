@@ -14,6 +14,8 @@
 
 'use strict';
 
+import { CONSENSUS_GATEWAY_INBOX_OFFSET, CONSENSUS_GATEWAY_OUTBOX_OFFSET } from '../utils';
+
 const BN = require('bn.js');
 
 const ConsensusGateway = artifacts.require('ConsensusGateway');
@@ -60,7 +62,7 @@ contract('ConsensusGateway::setup', (accounts) => {
     assert.strictEqual(
       most,
       mostFromContract,
-      'Most address must match',
+      'MOST address must match',
     );
 
     assert.isTrue(
@@ -81,12 +83,12 @@ contract('ConsensusGateway::setup', (accounts) => {
     );
 
     assert.isTrue(
-      inboxOffsetFromContract.eqn(4),
+      inboxOffsetFromContract.eqn(CONSENSUS_GATEWAY_INBOX_OFFSET),
       `Inbox offset position must be 4 but found ${inboxOffsetFromContract.toString(10)}`,
     );
 
     assert.isTrue(
-      outboxOffsetFromContract.eqn(1),
+      outboxOffsetFromContract.eqn(CONSENSUS_GATEWAY_OUTBOX_OFFSET),
       `Outbox offset position must be 1 but found ${outboxOffsetFromContract.toString(10)}`,
     );
 
