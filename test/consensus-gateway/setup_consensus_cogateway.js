@@ -20,11 +20,11 @@ const Utils = require('../test_lib/utils.js');
 const ConsensusGatewayUtils = require('./utils');
 
 const SpyCoConsensus = artifacts.require('SpyCoConsensus');
-const ConsensusCoGateway = artifacts.require('ConsensusCoGateway');
+const ConsensusCogateway = artifacts.require('ConsensusCogateway');
 
 contract('CoConsensusGateway::setup', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
-  let consensusCoGateway;
+  let consensusCogateway;
   const anchor = accountProvider.get();
   const setupParams = {
     metachainId: Utils.getRandomHash(),
@@ -37,14 +37,14 @@ contract('CoConsensusGateway::setup', (accounts) => {
 
   beforeEach(async () => {
     setupParams.coConsensus = await SpyCoConsensus.new();
-    consensusCoGateway = await ConsensusCoGateway.new();
+    consensusCogateway = await ConsensusCogateway.new();
 
     await setupParams.coConsensus.setAnchorAddress(setupParams.metachainId, anchor);
   });
 
   contract('Positive Tests', () => {
     it('should setup successfully', async () => {
-      await consensusCoGateway.setup(
+      await consensusCogateway.setup(
         setupParams.metachainId,
         setupParams.coConsensus.address,
         setupParams.utMOST,
@@ -55,22 +55,22 @@ contract('CoConsensusGateway::setup', (accounts) => {
       );
 
       assert.strictEqual(
-        await consensusCoGateway.messageInbox.call(),
+        await consensusCogateway.messageInbox.call(),
         setupParams.consensusGateway,
         'Invalid message inbox address',
       );
 
       assert.strictEqual(
-        await setupParams.coConsensus.called.call(),
-        true,
-        'getAnchor of CoConsensus contract is not called',
+        await setupParams.coConsensus.spyMetachainId.call(),
+        setupParams.metachainId,
+        'Invalid spy metachain id',
       );
 
-      const fromContractOutBoundMessageIdentifier = await consensusCoGateway
+      const fromContractOutBoundMessageIdentifier = await consensusCogateway
         .outboundMessageIdentifier.call();
       const expectedOutBoundMessageIdentifier = ConsensusGatewayUtils.getOutboundMessageIdentifier(
         setupParams.metachainId,
-        consensusCoGateway.address,
+        consensusCogateway.address,
       );
       assert.strictEqual(
         fromContractOutBoundMessageIdentifier,
@@ -78,7 +78,7 @@ contract('CoConsensusGateway::setup', (accounts) => {
         'Invalid outbound message identifier',
       );
 
-      const outboxStorageIndexInContract = await consensusCoGateway.outboxStorageIndex.call();
+      const outboxStorageIndexInContract = await consensusCogateway.outboxStorageIndex.call();
       assert.strictEqual(
         setupParams.outboxStorageIndex.eq(outboxStorageIndexInContract),
         true,
@@ -87,16 +87,16 @@ contract('CoConsensusGateway::setup', (accounts) => {
       );
 
       assert.strictEqual(
-        await consensusCoGateway.messageOutbox.call(),
+        await consensusCogateway.messageOutbox.call(),
         setupParams.consensusGateway,
         'Invalid message outbox address',
       );
 
-      const fromContractInBoundMessageIdentifier = await consensusCoGateway
+      const fromContractInBoundMessageIdentifier = await consensusCogateway
         .inboundMessageIdentifier.call();
       const expectedInBoundMessageIdentifier = ConsensusGatewayUtils.getInboundMessageIdentifier(
         setupParams.metachainId,
-        consensusCoGateway.address,
+        consensusCogateway.address,
       );
       assert.strictEqual(
         fromContractInBoundMessageIdentifier,
@@ -104,7 +104,7 @@ contract('CoConsensusGateway::setup', (accounts) => {
         'Invalid inbound message identifier',
       );
 
-      const fromContractCurrentMetablockHeight = await consensusCoGateway
+      const fromContractCurrentMetablockHeight = await consensusCogateway
         .currentMetablockHeight.call();
       assert.strictEqual(
         setupParams.metablockHeight.eq(fromContractCurrentMetablockHeight),
@@ -115,11 +115,11 @@ contract('CoConsensusGateway::setup', (accounts) => {
 
       assert.strictEqual(
         setupParams.utMOST,
-        await consensusCoGateway.most.call(),
+        await consensusCogateway.most.call(),
         'Invalid most address at auxiliary chain',
       );
 
-      const anchorAddress = await consensusCoGateway.stateRootProvider.call();
+      const anchorAddress = await consensusCogateway.stateRootProvider.call();
       assert.strictEqual(
         anchorAddress,
         anchor,

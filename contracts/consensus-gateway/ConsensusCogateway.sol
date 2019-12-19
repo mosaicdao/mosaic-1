@@ -22,13 +22,13 @@ import "../consensus-gateway/ConsensusGatewayBase.sol";
 import "../consensus-gateway/ERC20GatewayBase.sol";
 import "../consensus/CoConsensusI.sol";
 
-contract ConsensusCoGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, CoConsensusModule {
+contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, CoConsensusModule {
 
     /* Constants */
 
-    uint8 constant public OUTBOX_OFFSET = 1;
+    uint8 constant public OUTBOX_OFFSET = uint8(1);
 
-    uint8 constant public INBOX_OFFSET = 4;
+    uint8 constant public INBOX_OFFSET = uint8(4);
 
 
     /* External functions */
@@ -67,11 +67,12 @@ contract ConsensusCoGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
             address(this)
         );
 
-        // If `setup` is called by CoConsensus then anchor can be passed.
-        // Hence, below call to fetch anchor can be removed.
         address anchor = CoConsensusI(_coConsensus).getAnchor(_metachainId);
 
-        assert(anchor != address(0));
+        require(
+            anchor != address(0),
+            "Anchor address must not be 0."
+        );
 
         MessageInbox.setupMessageInbox(
             _metachainId,
