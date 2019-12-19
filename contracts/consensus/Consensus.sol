@@ -403,8 +403,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         );
 
         bytes32 seed = hashBlockSegment(
-            committeeFormationBlockHeight,
-            COMMITTEE_FORMATION_LENGTH
+            committeeFormationBlockHeight
         );
 
         currentMetablock.round = MetablockRound.CommitteeFormed;
@@ -1176,34 +1175,22 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         committee_ = CommitteeI(axiom.newCommittee(committeeSetupData));
     }
 
-    /**
-     * @notice hashBlockSegment() function calculates a seed based on the
-     *         specified blocksengment.
-     *
-     * @param end The ending block number of the blocksegment (included).
-     * @param length Length of the blocksegment.
-     *
-     * @return Returns a seed based on the blockhashes of the given blocksegment.
-     */
     function hashBlockSegment(
-        uint256 end,
-        uint256 length
+        uint256 end
     )
         private
         view
         returns (bytes32 seed_)
     {
-        assert(length > 0);
-
-        uint256 begin = end.add(uint256(1)).sub(length);
+        uint256 begin = end.add(uint256(1)).sub(COMMITTEE_FORMATION_LENGTH);
 
         require(
             block.number >= end && block.number < begin.add(uint256(256)),
             "Blocksegment is not in the most recent 256 blocks."
         );
 
-        bytes32[] memory seedGenerator = new bytes32[](length);
-        for (uint256 i = 0; i < length; i = i.add(1)) {
+        bytes32[] memory seedGenerator = new bytes32[](COMMITTEE_FORMATION_LENGTH);
+        for (uint256 i = 0; i < COMMITTEE_FORMATION_LENGTH; i = i.add(1)) {
             seedGenerator[i] = blockhash(begin.add(i));
         }
 
