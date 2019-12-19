@@ -57,9 +57,11 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
     )
         external
     {
-        // Setup method can only be called once because of the check for
-        // outboundMessageIdentifier in setupMessageOutbox method of
-        // MessageOutbox contract.
+        /*
+         * Setup method can only be called once because of the check for
+         * outboundMessageIdentifier in setupMessageOutbox method of
+         * MessageOutbox contract.
+         */
 
         ConsensusGatewayBase.setup(_utMOST, _metablockHeight);
 
