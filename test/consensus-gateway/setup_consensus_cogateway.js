@@ -128,3 +128,4 @@ contract('CoConsensusGateway::setup', (accounts) => {
     });
   });
 });
+

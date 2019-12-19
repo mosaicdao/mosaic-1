@@ -28,5 +28,5 @@ contract SpyCoConsensus {
         spyMetachainId = _metachainId;
         return anchors[_metachainId];
     }
-
 }
+

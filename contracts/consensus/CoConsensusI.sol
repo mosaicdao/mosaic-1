@@ -29,3 +29,4 @@ interface CoConsensusI {
     function getAnchor(bytes32 _metachainId) external returns(address);
 
 }
+

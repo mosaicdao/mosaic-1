@@ -84,3 +84,4 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
         );
     }
 }
+
