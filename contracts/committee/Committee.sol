@@ -284,7 +284,7 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
         proposal = _proposal;
 
         quorum = _committeeSize * COMMITTEE_SUPER_MAJORITY_NUMERATOR /
-        COMMITTEE_SUPER_MAJORITY_DENOMINATOR;
+            COMMITTEE_SUPER_MAJORITY_DENOMINATOR;
     }
 
     /**
