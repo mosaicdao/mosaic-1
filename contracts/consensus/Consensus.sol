@@ -741,9 +741,9 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             "Core lifetime status must be genesis or active."
         );
 
-        _core.logout(msg.sender);
-
         reputation.deregister(msg.sender);
+
+        _core.logout(msg.sender);
     }
 
     /** @notice Creates a new meta chain.
