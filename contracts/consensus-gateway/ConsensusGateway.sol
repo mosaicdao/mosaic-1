@@ -19,8 +19,9 @@ import "./ConsensusGatewayBase.sol";
 import "../message-bus/MessageBus.sol";
 import "../consensus/ConsensusModule.sol";
 import "../consensus/ConsensusI.sol";
+import "./ERC20GatewayBase.sol";
 
-contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ConsensusModule {
+contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, ConsensusModule {
 
     /* Constants */
 
