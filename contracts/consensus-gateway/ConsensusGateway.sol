@@ -17,8 +17,10 @@ pragma solidity >=0.5.0 <0.6.0;
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "./ConsensusGatewayBase.sol";
 import "../message-bus/MessageBus.sol";
+import "../consensus/ConsensusModule.sol";
+import "../consensus/ConsensusI.sol";
 
-contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase {
+contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ConsensusModule {
 
     /* Constants */
 
@@ -44,10 +46,11 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
      * @param _stateRootProvider Address of contract which implements
      *                           state-root provider interface.
      * @param _maxStorageRootItems Maximum number of storage roots stored.
-     * @param _outboxStorageIndex Outbox storage index of consensus co-gateway.
+     * @param _outboxStorageIndex Outbox storage index of consensus cogateway.
      */
     function setup(
         bytes32 _metachainId,
+        address _consensus,
         ERC20I _most,
         address _consensusCogateway,
         StateRootI _stateRootProvider,
@@ -56,6 +59,10 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
     )
         external
     {
+        ConsensusModule.setupConsensus(
+            ConsensusI(_consensus)
+        );
+
         ConsensusGatewayBase.setup(
             _most,
             uint256(0) // Current meta-block height
