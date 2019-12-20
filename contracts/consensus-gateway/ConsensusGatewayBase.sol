@@ -42,6 +42,14 @@ contract ConsensusGatewayBase {
 
     /* Public function */
 
+    /**
+     * @notice Creates kernel intent hash.
+     *
+     * @param _height Height of metablock.
+     * @param _kernelHash Hash of kernel at given height.
+     *
+     * @return kernelIntentHash_ Kernel intent hash.
+     */
     function hashKernelIntent(
         uint256 _height,
         bytes32 _kernelHash
@@ -58,7 +66,6 @@ contract ConsensusGatewayBase {
             )
         );
     }
-
 
     /* Internal functions. */
 

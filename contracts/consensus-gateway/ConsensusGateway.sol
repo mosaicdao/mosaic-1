@@ -16,12 +16,12 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
-import "../proxies/MasterCopyNonUpgradable.sol";
-
 import "./ConsensusGatewayBase.sol";
+import "./ERC20GatewayBase.sol";
+import "../proxies/MasterCopyNonUpgradable.sol";
 import "../message-bus/MessageBus.sol";
 import "../consensus/ConsensusModule.sol";
-import "./ERC20GatewayBase.sol";
+import "../consensus/ConsensusI.sol";
 import "../core/CoreI.sol";
 import "./ConsensusGatewayI.sol";
 
@@ -96,6 +96,58 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
     }
 
     /**
+     * @notice Deposit funds to mint on auxiliary chain. Depositor needs to
+     *         approve this contract with the deposit amount.
+     *
+     * @param _amount MOST token deposit amount in atto.
+     * @param _beneficiary Address of beneficiary on auxiliary chain.
+     * @param _feeGasPrice Fee gas price at which rewards will be calculated.
+     * @param _feeGasLimit Fee gas limit at which rewards will be calculated.
+     *
+     * @return messageHash_ Message hash.
+     */
+    function deposit(
+        uint256 _amount,
+        address _beneficiary,
+        uint256 _feeGasPrice,
+        uint256 _feeGasLimit
+    )
+        external
+        returns(bytes32 messageHash_)
+    {
+        require(
+            _amount != 0,
+            "Deposit amount should be greater than 0"
+        );
+        require(
+            _beneficiary != address(0),
+            "Beneficiary address must not be 0."
+        );
+        require(
+            _amount > _feeGasPrice.mul(_feeGasLimit),
+            "Deposit amount should be greater than max reward."
+        );
+
+        bytes32 depositIntentHash = hashDepositIntent(_amount, _beneficiary);
+
+        uint256 nonce = nonces[msg.sender];
+        nonces[msg.sender] = nonce.add(1);
+
+        messageHash_ = MessageOutbox.declareMessage(
+            depositIntentHash,
+            nonce,
+            _feeGasPrice,
+            _feeGasLimit,
+            msg.sender
+        );
+
+        require(
+            ERC20I(most).transferFrom(msg.sender, address(this), _amount),
+            "MOST transferFrom must succeed."
+        );
+    }
+
+    /**
      * @notice Function to declare open kernel in consensus gateway.
      *
      * @dev In case of chain halting when new Core is created, then new kernel
@@ -112,6 +164,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
      * @param _core Core contract address.
      * @param _feeGasPrice Fee gas price.
      * @param _feeGasLimit Fee gas limit.
+     *
      * @return messageHash_ Message hash.
      */
     function declareOpenKernel(
@@ -133,7 +186,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
         require(
             (openKernelHeight == currentMetablockHeight.add(1)) ||
             (openKernelHeight == currentMetablockHeight),
-            "Either kernel height equal currentMetablockHeight+1 or kernel can be opened at same height in case of chain halting."
+            "Kernel can be opened at same height or currentMetablockHeight+1."
         );
 
         currentMetablockHeight = openKernelHeight;
