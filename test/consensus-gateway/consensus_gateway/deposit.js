@@ -18,6 +18,7 @@ const BN = require('bn.js');
 
 const MockToken = artifacts.require('MockToken');
 const ConsensusGateway = artifacts.require('ConsensusGateway');
+const MockConsensus = artifacts.require('MockConsensus');
 
 const { AccountProvider } = require('../../test_lib/utils.js');
 const Utils = require('../../test_lib/utils.js');
@@ -44,17 +45,42 @@ contract('ConsensusGateway::deposit', (accounts) => {
       feeGasPrice: new BN(1),
       feeGasLimit: new BN(1),
     };
+
+    const consensusConfig = {
+      metachainId: param.metachainId,
+      epochLength: new BN(100),
+      minValidatorCount: new BN(5),
+      validatorJoinLimit: new BN(20),
+      height: new BN(0),
+      parent: Utils.ZERO_BYTES32,
+      gasTarget: new BN(10),
+      dynasty: new BN(0),
+      accumulatedGas: new BN(1),
+      sourceBlockHeight: new BN(0),
+    };
+
+    const consensus = await MockConsensus.new(
+      consensusConfig.metachainId,
+      consensusConfig.epochLength,
+      consensusConfig.minValidatorCount,
+      consensusConfig.validatorJoinLimit,
+      consensusConfig.height,
+      consensusConfig.parent,
+      consensusConfig.gasTarget,
+      consensusConfig.dynasty,
+      consensusConfig.accumulatedGas,
+      consensusConfig.sourceBlockHeight,
+    );
     await consensusGateway.setup(
       param.metachainId,
-      accountProvider.get(),
+      consensus.address,
       param.mostAddress,
       param.consensusCogateway,
-      param.stateRootProvider,
       param.maxStorageRootItems,
       new BN(1),
     );
   });
-``
+
   it('should successfully deposit', async () => {
     const beforeMOSTBalanceConsensusGateway = await most.balanceOf(consensusGateway.address);
     const beforeMOSTBalanceDepositor = await most.balanceOf(param.owner);
