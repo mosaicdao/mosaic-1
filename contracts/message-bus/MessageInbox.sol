@@ -234,3 +234,4 @@ contract MessageInbox is MessageBox, Proof {
         );
     }
 }
+

@@ -30,12 +30,12 @@ async function advanceBlock() {
         return reject(err);
       }
 
-      const newBlockHash = web3.eth.getBlock('latest').hash;
-
-      return resolve(newBlockHash);
+      return resolve();
     });
   });
 }
+
+function getRandomHash() { return web3.utils.sha3(`${Date.now()}`); }
 
 const ResultType = {
   FAIL: 0,
@@ -67,6 +67,8 @@ const receipts = [];
 function Utils() {}
 
 Utils.prototype = {
+  generateRandomMetachainId: () => getRandomHash(),
+
   /** Log receipt. */
   logReceipt: (receipt, description) => {
     receipts.push({
@@ -296,7 +298,7 @@ Utils.prototype = {
     return hash.substring(0, 10);
   },
 
-  getRandomHash: () => web3.utils.sha3(`${Date.now()}`),
+  getRandomHash,
 
   getRandomNumber: max => Math.floor(Math.random() * Math.floor(max)),
 

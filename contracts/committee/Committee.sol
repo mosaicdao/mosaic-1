@@ -113,6 +113,9 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
 
     /* Storage */
 
+    /** Metachain id of the meta-blockchain */
+    bytes32 public metachainId;
+
     /** Committee size */
     uint256 public committeeSize;
 
@@ -232,6 +235,7 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
     /* External functions */
 
     function setup(
+        bytes32 _metachainId,
         ConsensusI _consensus,
         uint256 _committeeSize,
         bytes32 _dislocation,
@@ -240,8 +244,13 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
         external
     {
         require(
-            committeeSize == 0 && proposal == bytes32(0),
+            metachainId == bytes32(0),
             "Committee is already setup."
+        );
+
+        require(
+            _metachainId != bytes32(0),
+            "Metachain id is 0."
         );
 
         require(
@@ -261,6 +270,8 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
 
         setupConsensus(_consensus);
 
+        metachainId = _metachainId;
+
         committeeStatus = CommitteeStatus.Open;
 
         // Initialize the members linked-list as the empty set.
@@ -272,9 +283,8 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
 
         proposal = _proposal;
 
-        // @qn (pro): In case of 7 quorum should be 4 or 5.
         quorum = _committeeSize * COMMITTEE_SUPER_MAJORITY_NUMERATOR /
-        COMMITTEE_SUPER_MAJORITY_DENOMINATOR;
+            COMMITTEE_SUPER_MAJORITY_DENOMINATOR;
     }
 
     /**
@@ -572,7 +582,10 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
 
             if (committeeDecision == bytes32(0)) {
                 committeeDecision = _position;
-                consensus.registerCommitteeDecision(committeeDecision);
+                consensus.registerCommitteeDecision(
+                    metachainId,
+                    committeeDecision
+                );
             }
         }
 

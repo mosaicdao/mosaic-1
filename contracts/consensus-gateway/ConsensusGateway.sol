@@ -17,21 +17,17 @@ pragma solidity >=0.5.0 <0.6.0;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "../proxies/MasterCopyNonUpgradable.sol";
-import "../message-bus/MessageBox.sol";
-import "../message-bus/MessageBus.sol";
-import "./ConsensusGatewayI.sol";
+
 import "./ConsensusGatewayBase.sol";
+import "../message-bus/MessageBus.sol";
 import "../consensus/ConsensusModule.sol";
+import "./ERC20GatewayBase.sol";
 import "../core/CoreI.sol";
+import "./ConsensusGatewayI.sol";
 
-contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ConsensusModule, ConsensusGatewayI {
+contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, ConsensusModule, ConsensusGatewayI {
 
-    /* Usings */
-
-    using SafeMath for uint256;
-
-
-    /** Constants */
+    /* Constants */
 
     /* Storage offset of message outbox. */
     uint8 constant public OUTBOX_OFFSET = uint8(1);
@@ -40,6 +36,8 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
     uint8 constant public INBOX_OFFSET = uint8(4);
 
 
+    /* External Functions */
+
     /**
      * @notice Setup function for consensus gateway.
      *
@@ -47,24 +45,30 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
      *        message box.
      *      - Validations for input parameters are done in message box setup method.
      *
-     * @param _metachainId Meta-chain Id
-     * @param _most Address of most contract.
-     * @param _consensus A consensus address.
+     * @param _metachainId Metachain Id
+     * @param _consensus Address of consensus contract.
+     * @param _most Address of MOST contract.
      * @param _consensusCogateway Address of consensus cogateway contract.
      * @param _stateRootProvider Address of contract which implements
      *                           state-root provider interface.
      * @param _maxStorageRootItems Maximum number of storage roots stored.
+     * @param _outboxStorageIndex Outbox storage index of consensus cogateway.
      */
     function setup(
         bytes32 _metachainId,
+        address _consensus,
         ERC20I _most,
-        ConsensusI _consensus,
         address _consensusCogateway,
         StateRootI _stateRootProvider,
-        uint256 _maxStorageRootItems
+        uint256 _maxStorageRootItems,
+        uint8 _outboxStorageIndex
     )
         external
     {
+        ConsensusModule.setupConsensus(
+            ConsensusI(_consensus)
+        );
+
         ConsensusGatewayBase.setup(
             _most,
             uint256(0) // Current meta-block height
@@ -79,7 +83,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
         MessageInbox.setupMessageInbox(
             _metachainId,
             _consensusCogateway,
-            OUTBOX_OFFSET,
+            _outboxStorageIndex,
             _stateRootProvider,
             _maxStorageRootItems,
             address(this)
