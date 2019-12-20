@@ -82,4 +82,17 @@ contract CommitteeMockConsensus is ConsensusI {
             _furtherMember
         );
     }
+
+    /**
+     * @notice Get anchor address for metachain id.
+     *
+     * @return anchor_ Anchor address.
+     */
+    function getAnchor(bytes32)
+        external
+        returns (address anchor_)
+    {
+        anchor_ = address(1);
+    }
+
 }
