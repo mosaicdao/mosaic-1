@@ -64,7 +64,7 @@ contract Proof is CircularBufferUint {
     {
         // Check if this is called only once.
         require(
-            address(_stateRootProvider) == address(0),
+            address(stateRootProvider) == address(0),
             "Setup is already done."
         );
 
