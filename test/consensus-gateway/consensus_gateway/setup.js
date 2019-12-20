@@ -17,6 +17,7 @@
 const BN = require('bn.js');
 
 const ConsensusGateway = artifacts.require('ConsensusGateway');
+const MockConsensus = artifacts.require('MockConsensus');
 
 const { AccountProvider } = require('../../test_lib/utils.js');
 const Utils = require('../../test_lib/utils.js');
@@ -26,22 +27,44 @@ const { CONSENSUS_GATEWAY_INBOX_OFFSET, CONSENSUS_GATEWAY_OUTBOX_OFFSET } = requ
 contract('ConsensusGateway::setup', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
 
-  it('should setup consensus gateway base', async () => {
+  it('should setup consensus gateway', async () => {
     const consensusGateway = await ConsensusGateway.new();
     const metachainId = Utils.getRandomHash();
     const most = accountProvider.get();
     const consensusCogateway = accountProvider.get();
-    const stateRootProvider = accountProvider.get();
     const maxStorageRootItems = new BN(100);
     const coGatewayOutboxIndex = new BN(1);
-    const consensus = accountProvider.get();
 
+    const consensusConfig = {
+      metachainId,
+      epochLength: new BN(100),
+      minValidatorCount: new BN(5),
+      validatorJoinLimit: new BN(20),
+      height: new BN(0),
+      parent: Utils.ZERO_BYTES32,
+      gasTarget: new BN(10),
+      dynasty: new BN(0),
+      accumulatedGas: new BN(1),
+      sourceBlockHeight: new BN(0),
+    };
+
+    const consensus = await MockConsensus.new(
+      consensusConfig.metachainId,
+      consensusConfig.epochLength,
+      consensusConfig.minValidatorCount,
+      consensusConfig.validatorJoinLimit,
+      consensusConfig.height,
+      consensusConfig.parent,
+      consensusConfig.gasTarget,
+      consensusConfig.dynasty,
+      consensusConfig.accumulatedGas,
+      consensusConfig.sourceBlockHeight,
+    );
     await consensusGateway.setup(
       metachainId,
-      consensus,
+      consensus.address,
       most,
       consensusCogateway,
-      stateRootProvider,
       maxStorageRootItems,
       coGatewayOutboxIndex,
     );
@@ -124,7 +147,7 @@ contract('ConsensusGateway::setup', (accounts) => {
     const consensusAddressFromContract = await consensusGateway.consensus.call();
 
     assert.strictEqual(
-      consensus,
+      consensus.address,
       consensusAddressFromContract,
       'Consensus address must match',
     );
