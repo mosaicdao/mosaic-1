@@ -68,7 +68,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
         external
     {
         ConsensusModule.setupConsensus(
-            ConsensusI(_consensus)
+            _consensus
         );
 
         ConsensusGatewayBase.setup(
@@ -76,7 +76,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
             uint256(0) // Current meta-block height
         );
 
-        address stateRootProvider = ConsensusI(_consensus).getAnchor(_metachainId);
+        address stateRootProvider = _consensus.getAnchor(_metachainId);
 
         MessageOutbox.setupMessageOutbox(
             _metachainId,
