@@ -14,19 +14,19 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/**
- * @title CoConsensusI.
- *
- * @notice Interface for CoConsensus contract.
- */
-interface CoConsensusI {
+contract SpyCoConsensus {
 
-    /**
-     * @notice Gets the anchor address for an metachain id.
-     *
-     * @return Anchor contract address.
-     */
-    function getAnchor(bytes32 _metachainId) external returns(address);
+    mapping(bytes32 => address) public anchors;
 
+    bytes32 public spyMetachainId;
+
+    function setAnchorAddress(bytes32 _metachainId, address anchor) public {
+        anchors[_metachainId] = anchor;
+    }
+
+    function getAnchor(bytes32 _metachainId) public returns(address) {
+        spyMetachainId = _metachainId;
+        return anchors[_metachainId];
+    }
 }
 
