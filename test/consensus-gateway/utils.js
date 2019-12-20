@@ -15,8 +15,13 @@
 'use strict';
 
 const web3 = require('../test_lib/web3.js');
+const Utils = require('../test_lib/utils.js');
 
 const DEPOSIT_INTENT_TYPEHASH = web3.utils.soliditySha3('DepositIntent(uint256 amount,address beneficiary)');
+const DOMAIN_SEPARATOR_TYPEHASH = web3.utils.keccak256('EIP712Domain(string name,string version,bytes32 metachainId,address verifyingContract)');
+const DOMAIN_SEPARATOR_VERSION = '0';
+const MESSAGE_BUS_DOMAIN_SEPARATOR_NAME = 'Message-Bus';
+
 
 function getDepositIntentHash(amount, beneficiary) {
   return web3.utils.sha3(
@@ -27,7 +32,48 @@ function getDepositIntentHash(amount, beneficiary) {
   );
 }
 
+function getOutboundMessageIdentifier(metachainId, verifyingAddress) {
+  return web3.utils.sha3(Utils.encodeParameters(
+    [
+      'bytes32',
+      'string',
+      'string',
+      'bytes32',
+      'address',
+    ],
+    [
+      DOMAIN_SEPARATOR_TYPEHASH,
+      MESSAGE_BUS_DOMAIN_SEPARATOR_NAME,
+      DOMAIN_SEPARATOR_VERSION,
+      metachainId,
+      verifyingAddress,
+    ],
+  ));
+}
+
+function getInboundMessageIdentifier(metachainId, verifyingAddress) {
+  return web3.utils.sha3(Utils.encodeParameters(
+    [
+      'bytes32',
+      'string',
+      'string',
+      'bytes32',
+      'address',
+    ],
+    [
+      DOMAIN_SEPARATOR_TYPEHASH,
+      MESSAGE_BUS_DOMAIN_SEPARATOR_NAME,
+      DOMAIN_SEPARATOR_VERSION,
+      metachainId,
+      verifyingAddress,
+    ],
+  ));
+}
+
 module.exports = {
   DEPOSIT_INTENT_TYPEHASH,
   getDepositIntentHash,
+  getOutboundMessageIdentifier,
+  getInboundMessageIdentifier,
 };
+
