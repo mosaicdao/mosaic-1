@@ -27,6 +27,11 @@ import "./ConsensusGatewayI.sol";
 
 contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, ConsensusModule, ConsensusGatewayI {
 
+     /* Usings */
+
+    using SafeMath for uint256;
+
+
     /* Constants */
 
     /* Storage offset of message outbox. */
@@ -56,7 +61,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
      */
     function setup(
         bytes32 _metachainId,
-        address _consensus,
+        ConsensusI _consensus,
         ERC20I _most,
         address _consensusCogateway,
         StateRootI _stateRootProvider,
@@ -88,8 +93,6 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
             _maxStorageRootItems,
             address(this)
         );
-
-        setupConsensus(_consensus);
     }
 
     /**
@@ -101,10 +104,10 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
      *      trust that same height will not be passed.
      *
      * @dev Function requires:
-     *     - only consensus can call
+     *     - Only consensus can call
      *     - Core address should not be 0
-     *     - Kernel height should equal currentMetablockHeight plus one
-     *     - New kernel can be opened at same height in case of chain halting
+     *     - Either Kernel height should equal currentMetablockHeight plus one
+             or kernel can be opened at same height in case of chain halting
      *
      * @param _core Core contract address.
      * @param _feeGasPrice Fee gas price.
@@ -112,7 +115,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
      * @return messageHash_ Message hash.
      */
     function declareOpenKernel(
-        address _core,
+        address _core, // TODO Core interface
         uint256 _feeGasPrice,
         uint256 _feeGasLimit
     )
@@ -126,13 +129,11 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
         );
 
         (bytes32 openKernelHash, uint256 openKernelHeight) = CoreI(_core).getOpenKernel();
+
         require(
-            openKernelHeight == currentMetablockHeight.add(1),
-            "Kernel height should equal currentMetablockHeight plus one."
-        );
-        require(
-            openKernelHeight == currentMetablockHeight,
-            "New kernel can be opened at same height in case of chain halting."
+            (openKernelHeight == currentMetablockHeight.add(1)) ||
+            (openKernelHeight == currentMetablockHeight),
+            "Either kernel height equal currentMetablockHeight+1 or kernel can be opened at same height in case of chain halting."
         );
 
         currentMetablockHeight = openKernelHeight;
@@ -145,7 +146,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
         uint256 nonce = nonces[msg.sender];
         nonces[msg.sender] = nonce.add(1);
 
-        bytes32 messageHash_ = MessageOutbox.declareMessage(
+        messageHash_ = MessageOutbox.declareMessage(
             kernelIntentHash,
             nonce,
             _feeGasPrice,
