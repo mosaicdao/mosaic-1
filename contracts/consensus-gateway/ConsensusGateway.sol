@@ -14,6 +14,8 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../message-bus/MessageBox.sol";
 import "../message-bus/MessageBus.sol";
@@ -23,6 +25,11 @@ import "../consensus/ConsensusModule.sol";
 import "../core/CoreI.sol";
 
 contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ConsensusModule, ConsensusGatewayI {
+
+    /* Usings */
+
+    using SafeMath for uint256;
+
 
     /** Constants */
 
@@ -81,6 +88,25 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
         setupConsensus(_consensus);
     }
 
+    /**
+     * @notice Function to declare open kernel in consensus gateway.
+     *
+     * @dev In case of chain halting when new Core is created, then new kernel
+     *      can be opened at the same height.
+     *      In normal cases, since this function is called by consensus, we can
+     *      trust that same height will not be passed.
+     *
+     * @dev Function requires:
+     *     - only consensus can call
+     *     - Core address should not be 0
+     *     - Kernel height should equal currentMetablockHeight plus one
+     *     - New kernel can be opened at same height in case of chain halting
+     *
+     * @param _core Core contract address.
+     * @param _feeGasPrice Fee gas price.
+     * @param _feeGasLimit Fee gas limit.
+     * @return messageHash_ Message hash.
+     */
     function declareOpenKernel(
         address _core,
         uint256 _feeGasPrice,
@@ -96,5 +122,31 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
         );
 
         (bytes32 openKernelHash, uint256 openKernelHeight) = CoreI(_core).getOpenKernel();
+        require(
+            openKernelHeight == currentMetablockHeight.add(1),
+            "Kernel height should equal currentMetablockHeight plus one."
+        );
+        require(
+            openKernelHeight == currentMetablockHeight,
+            "New kernel can be opened at same height in case of chain halting."
+        );
+
+        currentMetablockHeight = openKernelHeight;
+
+        bytes32 kernelIntentHash = hashKernelIntent(
+            openKernelHeight,
+            openKernelHash
+        );
+
+        uint256 nonce = nonces[msg.sender];
+        nonces[msg.sender] = nonce.add(1);
+
+        bytes32 messageHash_ = MessageOutbox.declareMessage(
+            kernelIntentHash,
+            nonce,
+            _feeGasPrice,
+            _feeGasLimit,
+            msg.sender
+        );
     }
 }
