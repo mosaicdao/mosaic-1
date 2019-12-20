@@ -51,8 +51,6 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
      * @param _metachainId Metachain Id
      * @param _most Address of MOST contract.
      * @param _consensusCogateway Address of consensus cogateway contract.
-     * @param _stateRootProvider Address of contract which implements
-     *                           state-root provider interface.
      * @param _maxStorageRootItems Maximum number of storage roots stored.
      * @param _outboxStorageIndex Outbox storage index of consensus cogateway.
      */
@@ -61,7 +59,6 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
         address _consensus,
         ERC20I _most,
         address _consensusCogateway,
-        StateRootI _stateRootProvider,
         uint256 _maxStorageRootItems,
         uint8 _outboxStorageIndex
     )
@@ -76,6 +73,8 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
             uint256(0) // Current meta-block height
         );
 
+        address stateRootProvider = ConsensusI(_consensus).getAnchor(_metachainId);
+
         MessageOutbox.setupMessageOutbox(
             _metachainId,
             _consensusCogateway,
@@ -86,7 +85,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
             _metachainId,
             _consensusCogateway,
             _outboxStorageIndex,
-            _stateRootProvider,
+            StateRootI(stateRootProvider),
             _maxStorageRootItems,
             address(this)
         );

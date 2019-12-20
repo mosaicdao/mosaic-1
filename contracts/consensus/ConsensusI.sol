@@ -65,4 +65,13 @@ interface ConsensusI {
      *
      */
     function newMetaChain() external returns(bytes32 metachainId_);
+
+    /**
+     * @notice Get anchor address for metachain id.
+     *
+     * @param _metachainId Metachain Id.
+     *
+     * @return Anchor contract address.
+     */
+    function getAnchor(bytes32 _metachainId) external returns(address anchor_);
 }
