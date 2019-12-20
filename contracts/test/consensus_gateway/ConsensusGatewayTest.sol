@@ -14,13 +14,17 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-interface ConsensusGatewayI {
+import "../../consensus-gateway/ConsensusGateway.sol";
 
-    function declareOpenKernel(
-        address _core,
-        uint256 _feeGasPrice,
-        uint256 _feeGasLimit
+contract ConsensusGatewayTest is ConsensusGateway {
+
+    function setConsensus(
+        ConsensusI _consensus
     )
         external
-        returns (bytes32);
+    {
+        ConsensusModule.setupConsensus(
+            ConsensusI(_consensus)
+        );
+    }
 }

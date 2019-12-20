@@ -16,11 +16,10 @@
 
 const BN = require('bn.js');
 
-const ConsensusGateway = artifacts.require('ConsensusGateway');
+const ConsensusGateway = artifacts.require('ConsensusGatewayTest');
 const SpyCore = artifacts.require('SpyCore');
 
 const { AccountProvider } = require('../../test_lib/utils.js');
-const Utils = require('../../test_lib/utils.js');
 
 contract('ConsensusGateway::declareOpenKernel', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
@@ -32,22 +31,7 @@ contract('ConsensusGateway::declareOpenKernel', (accounts) => {
     consensusGateway = await ConsensusGateway.new();
     spyCore = await SpyCore.new();
     consensus = accountProvider.get();
-    const metachainId = Utils.getRandomHash();
-    const most = accountProvider.get();
-    const consensusCogateway = accountProvider.get();
-    const stateRootProvider = accountProvider.get();
-    const maxStorageRootItems = new BN(100);
-    const coGatewayOutboxIndex = new BN(1);
-
-    await consensusGateway.setup(
-      metachainId,
-      consensus,
-      most,
-      consensusCogateway,
-      stateRootProvider,
-      maxStorageRootItems,
-      coGatewayOutboxIndex,
-    );
+    await consensusGateway.setConsensus(consensus);
   });
 
   it('should declare open kernel', async () => {
@@ -62,6 +46,7 @@ contract('ConsensusGateway::declareOpenKernel', (accounts) => {
       feeGasLimit,
       txOptions,
     );
+
     await consensusGateway.declareOpenKernel(
       spyCore.address,
       feeGasPrice,

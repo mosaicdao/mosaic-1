@@ -27,7 +27,7 @@ import "./ConsensusGatewayI.sol";
 
 contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, ConsensusModule, ConsensusGatewayI {
 
-     /* Usings */
+    /* Usings */
 
     using SafeMath for uint256;
 
@@ -54,8 +54,6 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
      * @param _consensus Address of consensus contract.
      * @param _most Address of MOST contract.
      * @param _consensusCogateway Address of consensus cogateway contract.
-     * @param _stateRootProvider Address of contract which implements
-     *                           state-root provider interface.
      * @param _maxStorageRootItems Maximum number of storage roots stored.
      * @param _outboxStorageIndex Outbox storage index of consensus cogateway.
      */
@@ -64,7 +62,6 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
         ConsensusI _consensus,
         ERC20I _most,
         address _consensusCogateway,
-        StateRootI _stateRootProvider,
         uint256 _maxStorageRootItems,
         uint8 _outboxStorageIndex
     )
@@ -79,6 +76,8 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
             uint256(0) // Current meta-block height
         );
 
+        address stateRootProvider = ConsensusI(_consensus).getAnchor(_metachainId);
+
         MessageOutbox.setupMessageOutbox(
             _metachainId,
             _consensusCogateway,
@@ -89,7 +88,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
             _metachainId,
             _consensusCogateway,
             _outboxStorageIndex,
-            _stateRootProvider,
+            StateRootI(stateRootProvider),
             _maxStorageRootItems,
             address(this)
         );
