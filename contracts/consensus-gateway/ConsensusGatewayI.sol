@@ -19,7 +19,7 @@ import "../core/CoreI.sol";
 interface ConsensusGatewayI {
 
     function declareOpenKernel(
-        CoreI _core,
+        address _core,
         uint256 _feeGasPrice,
         uint256 _feeGasLimit
     )

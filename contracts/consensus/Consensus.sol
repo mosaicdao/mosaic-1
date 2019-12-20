@@ -696,7 +696,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             ConsensusGatewayI consensusGateway = consensusGateways[_metachainId];
             assert(address(consensusGateway) != address(0));
             consensusGateway.declareOpenKernel(
-                core,
+                address(core),
                 feeGasPrice,
                 feeGasLimit
             );

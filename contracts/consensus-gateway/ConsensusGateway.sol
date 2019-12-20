@@ -168,7 +168,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
      * @return messageHash_ Message hash.
      */
     function declareOpenKernel(
-        CoreI _core,
+        address _core,
         uint256 _feeGasPrice,
         uint256 _feeGasLimit
     )
@@ -181,7 +181,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
             "Core address is 0."
         );
 
-        (bytes32 openKernelHash, uint256 openKernelHeight) = _core.getOpenKernel();
+        (bytes32 openKernelHash, uint256 openKernelHeight) = CoreI(_core).getOpenKernel();
 
         require(
             (openKernelHeight == currentMetablockHeight.add(1)) ||
