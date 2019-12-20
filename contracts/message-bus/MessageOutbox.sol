@@ -163,3 +163,4 @@ contract MessageOutbox is MessageBox {
         outbox[messageHash_] = true;
     }
 }
+
