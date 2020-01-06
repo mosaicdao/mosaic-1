@@ -33,9 +33,7 @@ contract MessageBox is MosaicVersion {
 
     /** Message type hash */
     bytes32 public constant MESSAGE_TYPEHASH = keccak256(
-        abi.encode(
-            "Message(bytes32 intentHash,uint256 nonce,uint256 feeGasPrice,uint256 feeGasLimit,address sender)"
-        )
+        "Message(bytes32 intentHash,uint256 nonce,uint256 feeGasPrice,uint256 feeGasLimit,address sender)"
     );
 
 
