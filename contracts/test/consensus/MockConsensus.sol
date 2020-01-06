@@ -205,4 +205,16 @@ contract MockConsensus is ConsensusI, ReputationI {
     {
         return precommitts[_core] != bytes32(0);
     }
+
+    /**
+     * @notice Get anchor address for metachain id.
+     *
+     * @return anchor_ Anchor address.
+     */
+    function getAnchor(bytes32)
+        external
+        returns (address anchor_)
+    {
+        anchor_ = address(1);
+    }
 }

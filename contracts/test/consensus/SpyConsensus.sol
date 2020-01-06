@@ -100,4 +100,16 @@ contract SpyConsensus is MasterCopyNonUpgradable, ConsensusI {
     {
         reputation_ = ReputationI(reputationAddress);
     }
+
+    /**
+     * @notice Get anchor address.
+     *
+     * @return anchor_ Anchor address.
+     */
+    function getAnchor(bytes32)
+        external
+        returns (address anchor_)
+    {
+        anchor_ = address(1);
+    }
 }

@@ -22,9 +22,7 @@ contract ConsensusGatewayBase {
     /* Constants */
 
     bytes32 public constant KERNEL_INTENT_TYPEHASH = keccak256(
-        abi.encode(
-            "KernelIntent(uint256 height,bytes32 kernelHash)"
-        )
+        "KernelIntent(uint256 height,bytes32 kernelHash)"
     );
 
 
@@ -42,6 +40,14 @@ contract ConsensusGatewayBase {
 
     /* Public function */
 
+    /**
+     * @notice Creates kernel intent hash.
+     *
+     * @param _height Height of metablock.
+     * @param _kernelHash Hash of kernel at given height.
+     *
+     * @return kernelIntentHash_ Kernel intent hash.
+     */
     function hashKernelIntent(
         uint256 _height,
         bytes32 _kernelHash
@@ -58,7 +64,6 @@ contract ConsensusGatewayBase {
             )
         );
     }
-
 
     /* Internal functions. */
 

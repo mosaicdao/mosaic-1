@@ -18,7 +18,7 @@ const BN = require('bn.js');
 
 const ConsensusGatewayBase = artifacts.require('ConsensusGatewayBaseTest');
 
-const { AccountProvider } = require('../test_lib/utils.js');
+const { AccountProvider } = require('../../test_lib/utils.js');
 
 contract('ConsensusGatewayBase::setup', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
