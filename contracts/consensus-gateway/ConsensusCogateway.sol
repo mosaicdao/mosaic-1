@@ -136,7 +136,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
             _depositor != address(0),
             "Depositor address must not be 0."
         );
-        
+
         uint256 initialGas = gasleft();
 
         bytes32 depositIntentHash = ERC20GatewayBase.hashDepositIntent(
