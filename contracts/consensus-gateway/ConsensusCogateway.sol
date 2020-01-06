@@ -14,6 +14,8 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
 import "../consensus/CoConsensusModule.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../message-bus/MessageBus.sol";
@@ -24,6 +26,11 @@ import "../consensus/CoConsensusI.sol";
 
 contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, CoConsensusModule {
 
+    /* Usings */
+
+    using SafeMath for uint256;
+
+
     /* Constants */
 
     /* Storage offset of message outbox. */
@@ -31,6 +38,12 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
 
     /* Storage offset of message inbox. */
     uint8 constant public INBOX_OFFSET = uint8(4);
+
+
+    /* Storage */
+
+    /** Mapping of kernel height and kernel hash. */
+    mapping(uint256 /* Kernel Height */ => bytes32 /* Kernel Hash */) public  kernelHashes;
 
 
     /* External functions */
@@ -87,5 +100,84 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
             address(this)
         );
     }
-}
 
+    /**
+     * @notice This method will be called by anyone to verify merkle proof of
+     *          gateway contract address.
+     *
+     *  @param _blockHeight Block height at which Gateway is to be proven.
+     *  @param _rlpAccount RLP encoded account node object.
+     *  @param _rlpParentNodes RLP encoded value of account proof's nodes. // todo: correct the documentation.
+     */
+    function proveConsensusGateway(
+        uint256 _blockHeight,
+        bytes calldata _rlpAccount,
+        bytes calldata _rlpParentNodes
+    )
+        external
+    {
+        MessageInbox.proveStorageAccount(
+            _blockHeight,
+            _rlpAccount,
+            _rlpParentNodes
+        );
+    }
+
+    /**
+     * @notice Confirms the initiation of opening a kernel at auxiliary chain.
+     *
+     * @param _kernelHeight Height of the kernel.
+     * @param _kernelHash Hash of the kernel.
+     * @param _feeGasPrice Gas price which the sender is willing to pay.
+     * @param _feeGasLimit Gas limit which the sender is willing to pay.
+     * @param _sender Sender address.
+     * @param _blockHeight Block height for which the proof is valid.
+     * @param _rlpParentNodes RLP encoded parent node data to prove
+     *                        Declared in outbox of Gateway.
+     *
+     * @return messageHash_ Message hash.
+     */
+    function confirmOpenKernel(
+        uint256 _kernelHeight,
+        bytes32 _kernelHash,
+        uint256 _feeGasPrice,
+        uint256 _feeGasLimit,
+        address _sender,
+        uint256 _blockHeight,
+        bytes calldata _rlpParentNodes
+    )
+        external
+        returns (bytes32 messageHash_)
+    {
+        require(
+            _kernelHeight.sub(currentMetablockHeight) == 1,
+            "Invalid kernel height"
+        );
+
+        currentMetablockHeight = _kernelHeight;
+
+        uint256 nonce = nonces[_sender];
+
+        nonces[_sender] = nonce.add(1);
+
+        bytes32 kernelIntentHash = keccak256(
+            abi.encode(
+                KERNEL_INTENT_TYPEHASH,
+                _kernelHeight,
+                _kernelHash
+            )
+        );
+
+        messageHash_ = MessageInbox.confirmMessage(
+            kernelIntentHash,
+            nonce,
+            _feeGasPrice,
+            _feeGasLimit,
+            _sender,
+            _blockHeight,
+            _rlpParentNodes
+        );
+
+        kernelHashes[_kernelHeight] = _kernelHash;
+    }
+}
