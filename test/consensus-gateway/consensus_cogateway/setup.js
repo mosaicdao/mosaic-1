@@ -14,15 +14,15 @@
 
 'use strict';
 
-const BN = require('../../node_modules/bn.js/lib/bn');
-const { AccountProvider } = require('../test_lib/utils.js');
-const Utils = require('../test_lib/utils.js');
-const ConsensusGatewayUtils = require('./utils');
+const BN = require('bn.js');
+const { AccountProvider } = require('../../test_lib/utils.js');
+const Utils = require('../../test_lib/utils.js');
+const ConsensusGatewayUtils = require('../utils');
 
 const SpyCoConsensus = artifacts.require('SpyCoConsensus');
 const ConsensusCogateway = artifacts.require('ConsensusCogateway');
 
-contract('CoConsensusgateway::setup', (accounts) => {
+contract('ConsensusCoGateway::setup', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
   let consensusCogateway;
   const anchor = accountProvider.get();
@@ -128,4 +128,3 @@ contract('CoConsensusgateway::setup', (accounts) => {
     });
   });
 });
-
