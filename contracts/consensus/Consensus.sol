@@ -908,6 +908,19 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         );
     }
 
+    /**
+     * @notice Get anchor address for metachain id.
+     *
+     * @param _metachainId Metachain Id
+     *
+     * @return anchor_ Anchor address.
+     */
+    function getAnchor(bytes32 _metachainId)
+        external
+        returns (address anchor_)
+    {
+        return address(anchors[_metachainId]);
+    }
 
     /* Public functions */
 
