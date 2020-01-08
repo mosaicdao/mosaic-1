@@ -73,13 +73,13 @@ contract('ConsensusGateway::setup', (accounts) => {
     const currentMetablockHeightFromContract = await consensusGateway
       .currentMetablockHeight.call();
     const messageInboxFromContract = await consensusGateway.messageInbox.call();
-    const outboundMessageIdentifierFromContract = await consensusGateway
-      .outboundMessageIdentifier.call();
+    const outboundChannelIdentifierFromContract = await consensusGateway
+      .outboundChannelIdentifier.call();
 
 
     const messageOutboxFromContract = await consensusGateway.messageOutbox.call();
-    const inboundMessageIdentifierFromContract = await consensusGateway
-      .inboundMessageIdentifier.call();
+    const inboundChannelIdentifierFromContract = await consensusGateway
+      .inboundChannelIdentifier.call();
 
     const inboxOffsetFromContract = await consensusGateway.INBOX_OFFSET.call();
     const outboxOffsetFromContract = await consensusGateway.OUTBOX_OFFSET.call();
@@ -118,24 +118,26 @@ contract('ConsensusGateway::setup', (accounts) => {
       `Outbox offset position must be 1 but found ${outboxOffsetFromContract.toString(10)}`,
     );
 
-    const expectedOutboundMessageIdentifier = ConsensusGatewayUtils.getMessageOutboxIdentifier(
+    const expectedOutboundChannelIdentifier = ConsensusGatewayUtils.getChannelIdentifier(
       metachainId,
       consensusGateway.address,
+      consensusCogateway,
     );
-    const expectedInboundMessageIdentifier = ConsensusGatewayUtils.getMessageInboxIdentifier(
-      metachainId,
-      consensusGateway.address,
+    assert.strictEqual(
+      expectedOutboundChannelIdentifier,
+      outboundChannelIdentifierFromContract,
+      'Outbound message identifier must match',
     );
 
-    assert.strictEqual(
-      expectedInboundMessageIdentifier,
-      inboundMessageIdentifierFromContract,
-      'Inbound message identifier must match',
+    const expectedInboundChannelIdentifier = ConsensusGatewayUtils.getChannelIdentifier(
+      metachainId,
+      consensusCogateway,
+      consensusGateway.address,
     );
     assert.strictEqual(
-      expectedOutboundMessageIdentifier,
-      outboundMessageIdentifierFromContract,
-      'Outbound message identifier must match',
+      expectedInboundChannelIdentifier,
+      inboundChannelIdentifierFromContract,
+      'Inbound message identifier must match',
     );
 
     const outboxStorageIndexFromInbox = await consensusGateway.outboxStorageIndex.call();

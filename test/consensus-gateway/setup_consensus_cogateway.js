@@ -67,16 +67,17 @@ contract('CoConsensusgateway::setup', (accounts) => {
         'Invalid spy metachain id',
       );
 
-      const fromContractOutBoundMessageIdentifier = await consensusCogateway
-        .outboundMessageIdentifier.call();
-      const expectedOutBoundMessageIdentifier = ConsensusGatewayUtils.getOutboundMessageIdentifier(
+      const fromContractOutBoundChannelIdentifier = await consensusCogateway
+        .outboundChannelIdentifier.call();
+      const expectedOutBoundChannelIdentifier = ConsensusGatewayUtils.getChannelIdentifier(
         setupParams.metachainId,
         consensusCogateway.address,
+        setupParams.consensusGateway,
       );
       assert.strictEqual(
-        fromContractOutBoundMessageIdentifier,
-        expectedOutBoundMessageIdentifier,
-        'Invalid outbound message identifier',
+        fromContractOutBoundChannelIdentifier,
+        expectedOutBoundChannelIdentifier,
+        'Invalid outbound channel identifier',
       );
 
       const outboxStorageIndexInContract = await consensusCogateway.outboxStorageIndex.call();
@@ -93,16 +94,17 @@ contract('CoConsensusgateway::setup', (accounts) => {
         'Invalid message outbox address',
       );
 
-      const fromContractInBoundMessageIdentifier = await consensusCogateway
-        .inboundMessageIdentifier.call();
-      const expectedInBoundMessageIdentifier = ConsensusGatewayUtils.getInboundMessageIdentifier(
+      const fromContractInBoundChannelIdentifier = await consensusCogateway
+        .inboundChannelIdentifier.call();
+      const expectedInBoundChannelIdentifier = ConsensusGatewayUtils.getChannelIdentifier(
         setupParams.metachainId,
+        setupParams.consensusGateway,
         consensusCogateway.address,
       );
       assert.strictEqual(
-        fromContractInBoundMessageIdentifier,
-        expectedInBoundMessageIdentifier,
-        'Invalid inbound message identifier',
+        fromContractInBoundChannelIdentifier,
+        expectedInBoundChannelIdentifier,
+        'Invalid inbound channel identifier',
       );
 
       const fromContractCurrentMetablockHeight = await consensusCogateway
