@@ -18,6 +18,10 @@ import "../../most/UTMOSTI.sol";
 
 contract SpyUTMOST is UTMOSTI {
 
+
+    address[] public beneficiaries;
+    uint256 [] public amounts;
+
     /**
      * Used for unit testing
      *
@@ -33,6 +37,8 @@ contract SpyUTMOST is UTMOSTI {
         external
         returns(bool)
     {
+        beneficiaries.push(_beneficiary);
+        amounts.push(_amount);
         return true;
     }
 

@@ -27,11 +27,12 @@ contract('ConsensusCoGateway::confirmDeposit', (accounts) => {
   let consensusCogateway;
   const anchor = accountProvider.get();
   let setupParams;
+  let utMOST;
 
   beforeEach(async () => {
     consensusCogateway = await ConsensusCogateway.new();
 
-    const utMOST = await SpyUTMOST.new();
+    utMOST = await SpyUTMOST.new();
     setupParams = {
       metachainId: TestData.metachainId,
       utMOST: utMOST.address,
@@ -54,6 +55,10 @@ contract('ConsensusCoGateway::confirmDeposit', (accounts) => {
       setupParams.metablockHeight,
     );
 
+    await consensusCogateway.setInboundChannelIdentifier(
+      TestData.outboundChannelIdentifier,
+    );
+
     await consensusCogateway.setStorageRoot(
       TestData.blockNumber,
       TestData.rawProofResult.storageHash,
@@ -62,6 +67,7 @@ contract('ConsensusCoGateway::confirmDeposit', (accounts) => {
 
   contract('Positive Tests', () => {
     it('should confirm deposit', async () => {
+      const sender = accounts[2];
       await consensusCogateway.confirmDeposit(
         TestData.depositParam.amount,
         TestData.depositParam.beneficiary,
@@ -70,8 +76,32 @@ contract('ConsensusCoGateway::confirmDeposit', (accounts) => {
         TestData.depositParam.beneficiary,
         TestData.blockNumber,
         TestData.storageProof,
+        { from: sender },
       );
 
+      const beneficiary1 = await utMOST.beneficiaries.call(0);
+      const beneficiary2 = await utMOST.beneficiaries.call(1);
+      const amount1 = await utMOST.amounts.call(0);
+      const amount2 = await utMOST.amounts.call(1);
+
+      assert.strictEqual(
+        beneficiary1,
+        sender,
+        'Reward should be minted for message sender',
+      );
+      assert.strictEqual(
+        beneficiary2,
+        TestData.depositParam.beneficiary,
+        'Amount should be minted to beneficiary',
+      );
+
+      assert.isOk(
+        new BN(TestData.depositParam.amount)
+          .eq(
+            new BN(amount1).add(new BN(amount2)),
+          ),
+        'Reward plus minted amount should be equal to deposit amount',
+      );
     });
   });
 });

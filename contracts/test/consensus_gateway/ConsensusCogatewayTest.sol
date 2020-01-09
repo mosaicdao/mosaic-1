@@ -26,5 +26,11 @@ contract ConsensusCogatewayTest is ConsensusCogateway {
     {
          storageRoots[_blockHeight] = _storageRoot;
     }
+
+    function setInboundChannelIdentifier(bytes32 _inboundChannelIdentifier)
+        public
+    {
+        inboundChannelIdentifier = _inboundChannelIdentifier;
+    }
 }
 
