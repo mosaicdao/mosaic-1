@@ -111,10 +111,10 @@ contract('Core::registerVote', (accounts) => {
     assert(validators.length >= 2);
     [config.validator0, config.validator1] = validators;
 
-    const isValidator0 = await config.core.isValidator(config.validator0.address);
+    const isValidator0 = await config.core.isActiveValidator(config.validator0.address);
     assert(isValidator0);
 
-    const isValidator1 = await config.core.isValidator(config.validator1.address);
+    const isValidator1 = await config.core.isActiveValidator(config.validator1.address);
     assert(isValidator1);
 
     config.proposalArgs = {
@@ -252,7 +252,7 @@ contract('Core::registerVote', (accounts) => {
           config.validator0.proposalSignature.s,
           config.validator0.proposalSignature.v,
         ),
-        'Validator is slashed.',
+        'Validator must be active in this core.',
       );
     });
 

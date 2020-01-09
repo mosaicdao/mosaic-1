@@ -127,9 +127,17 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
     // Note: Implementation will be done once it is required. As the method is
     // in ICore interface, we would need it, otherwise SpyCore deployment cannot
     // be done.
-    function isValidator(address)
+    function isActiveValidator(address)
         external
-        pure
+        view
+        returns (bool)
+    {
+        require(false, "This should not be called for unit tests.");
+    }
+
+    function isValidator(address, uint256)
+        external
+        view
         returns (bool)
     {
         require(false, "This should not be called for unit tests.");

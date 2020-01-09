@@ -98,7 +98,7 @@ contract('Core::removeVote', (accounts) => {
     assert(validators.length >= 1);
     [config.validator0] = validators;
 
-    const isValidator0 = await config.core.isValidator(config.validator0.address);
+    const isValidator0 = await config.core.isActiveValidator(config.validator0.address);
     assert(isValidator0);
 
     config.proposalArgs = {
