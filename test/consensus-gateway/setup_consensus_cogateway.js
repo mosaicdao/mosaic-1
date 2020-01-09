@@ -18,7 +18,6 @@ const BN = require('../../node_modules/bn.js/lib/bn');
 const { AccountProvider } = require('../test_lib/utils.js');
 const Utils = require('../test_lib/utils.js');
 const ConsensusGatewayUtils = require('./utils');
-const ProveConsensusGatewayProof = require('./prove_consensus_gateway_proof.json');
 
 const SpyCoConsensus = artifacts.require('SpyCoConsensus');
 const ConsensusCogateway = artifacts.require('ConsensusCogateway');

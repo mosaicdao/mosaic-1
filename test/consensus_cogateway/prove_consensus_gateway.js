@@ -12,27 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-'use strict';
-
-const BN = require('../../node_modules/bn.js/lib/bn');
+const BN = require('bn.js');
 const { AccountProvider } = require('../test_lib/utils.js');
 const Utils = require('../test_lib/utils.js');
-// const ConsensusGatewayUtils = require('./utils');
 const ProveConsensusGatewayProof = require('./prove_consensus_gateway_proof.json');
 
-// const SpyCoConsensus = artifacts.require('SpyCoConsensus');
-const ConsensusCoGateway = artifacts.require('MockConsensusCoGateway');
+const SpyCoConsensus = artifacts.require('SpyCoConsensus');
+
+const ConsensusCoGateway = artifacts.require('TestConsensusCogateway');
 const SpyStateRootProvider = artifacts.require('SpyStateRootProvider');
 
 contract('CoConsensusGateway::proveConsensusGateway', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
 
   let consensusCoGateway;
-  // const anchor = accountProvider.get();
+
   const setupParams = {
     metachainId: Utils.getRandomHash(),
     utMOST: accountProvider.get(),
-    coConsensus: accountProvider.get(),
     consensusGateway: accountProvider.get(),
     outboxStorageIndex: new BN(1),
     maxStorageRootItems: new BN(100),
@@ -41,36 +38,29 @@ contract('CoConsensusGateway::proveConsensusGateway', (accounts) => {
 
   beforeEach(async () => {
     const stateRootProvider = await SpyStateRootProvider.new();
-    // setupParams.coConsensus = await SpyCoConsensus.new();
-    consensusCoGateway = await ConsensusCoGateway.new();
-    await consensusCoGateway.setupInitialData(
-      ProveConsensusGatewayProof.address,
+    setupParams.coConsensus = await SpyCoConsensus.new();
+    await setupParams.coConsensus.setAnchorAddress(
+      setupParams.metachainId,
       stateRootProvider.address,
-      '100',
     );
-    // await setupParams.coConsensus.setAnchorAddress(setupParams.metachainId, anchor);
+
+    consensusCoGateway = await ConsensusCoGateway.new();
 
     // set stateroot
     await stateRootProvider.setStateRoot(
       ProveConsensusGatewayProof.stateRoot,
       ProveConsensusGatewayProof.blockNumber,
     );
-    // bytes32 _metachainId,
-    //         address _coConsensus,
-    //         ERC20I _utMOST,
-    //         address _consensusGateway,
-    //         uint8 _outboxStorageIndex,
-    //         uint256 _maxStorageRootItems,
-    //         uint256 _metablockHeight
-    // await consensusCoGateway.setup(
-    //   setupParams.metachainId,
-    //   setupParams.coConsensus,
-    //   setupParams.utMOST,
-    //   setupParams.consensusGateway,
-    //   setupParams.outboxStorageIndex,
-    //   setupParams.maxStorageRootItems,
-    //   setupParams.metablockHeight,
-    // );
+
+    await consensusCoGateway.setup(
+      setupParams.metachainId,
+      setupParams.coConsensus.address,
+      setupParams.utMOST,
+      ProveConsensusGatewayProof.address,
+      setupParams.outboxStorageIndex,
+      setupParams.maxStorageRootItems,
+      setupParams.metablockHeight,
+    );
   });
 
   contract('Positive Tests', () => {

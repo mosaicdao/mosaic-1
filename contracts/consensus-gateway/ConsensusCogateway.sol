@@ -105,7 +105,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
      *
      *  @param _blockHeight Block height at which Gateway is to be proven.
      *  @param _rlpAccount RLP encoded account node object.
-     *  @param _rlpParentNodes RLP encoded value of account proof's nodes. // todo: correct the documentation.
+     *  @param _rlpParentNodes RLP encoded value of account proof node array.
      */
     function proveConsensusGateway(
         uint256 _blockHeight,
@@ -130,8 +130,8 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
      * @param _feeGasLimit Gas limit which the sender is willing to pay.
      * @param _sender Sender address.
      * @param _blockHeight Block height for which the proof is valid.
-     * @param _rlpParentNodes RLP encoded parent node data to prove
-     *                        Declared in outbox of Gateway.
+     * @param _rlpParentNodes RLP encoded parent node data to prove message
+     *                        exists in outbox of ConsensusGateway.
      *
      * @return messageHash_ Message hash.
      */
@@ -158,12 +158,9 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
 
         nonces[_sender] = nonce.add(1);
 
-        bytes32 kernelIntentHash = keccak256(
-            abi.encode(
-                KERNEL_INTENT_TYPEHASH,
-                _kernelHeight,
-                _kernelHash
-            )
+        bytes32 kernelIntentHash = hashKernelIntent(
+            _kernelHeight,
+            _kernelHash
         );
 
         messageHash_ = MessageInbox.confirmMessage(
