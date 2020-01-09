@@ -96,7 +96,6 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
     /**
      * @notice Confirm deposit in order to mint tokens.
      *
-     *
      * @param _amount MOST token deposit amount in atto.
      * @param _beneficiary Address of beneficiary on auxiliary chain.
      * @param _feeGasPrice Fee gas price at which rewards will be calculated.

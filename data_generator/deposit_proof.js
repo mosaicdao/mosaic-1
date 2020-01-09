@@ -6,9 +6,8 @@ const MockToken = artifacts.require('MockToken');
 const MockConsensus = artifacts.require('MockConsensus');
 const ConsensusGateway = artifacts.require('ConsensusGateway');
 
-const Utils = require('../test_lib/utils.js');
-const web3 = require('../test_lib/web3');
-
+const Utils = require('../test/test_lib/utils.js');
+const web3 = require('../test/test_lib/web3');
 
 /**
  * Steps to run the script
