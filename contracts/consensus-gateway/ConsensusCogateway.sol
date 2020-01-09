@@ -74,8 +74,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
 
         MessageOutbox.setupMessageOutbox(
             _metachainId,
-            _consensusGateway,
-            address(this)
+            _consensusGateway
         );
 
         address anchor = CoConsensusI(_coConsensus).getAnchor(_metachainId);
@@ -90,8 +89,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
             _consensusGateway,
             _outboxStorageIndex,
             StateRootI(anchor),
-            _maxStorageRootItems,
-            address(this)
+            _maxStorageRootItems
         );
     }
 
@@ -233,4 +231,3 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
         );
     }
 }
-

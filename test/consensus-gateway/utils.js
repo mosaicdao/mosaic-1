@@ -4,9 +4,10 @@ const Utils = require('../test_lib/utils.js');
 const CONSENSUS_GATEWAY_INBOX_OFFSET = 4;
 const CONSENSUS_GATEWAY_OUTBOX_OFFSET = 1;
 const DEPOSIT_INTENT_TYPEHASH = web3.utils.soliditySha3('DepositIntent(uint256 amount,address beneficiary)');
-const DOMAIN_SEPARATOR_TYPEHASH = web3.utils.keccak256('EIP712Domain(string name,string version,bytes32 metachainId,address verifyingContract)');
+const CHANNEL_TYPEHASH = web3.utils.keccak256('MosaicMessageBusChannel(address outbox, address inbox)');
+const DOMAIN_SEPARATOR_TYPEHASH = web3.utils.keccak256('MosaicMessageBus(string name,string version,bytes32 metachainId,bytes32 channelSeparator)');
 const DOMAIN_SEPARATOR_VERSION = '0';
-const MESSAGE_BUS_DOMAIN_SEPARATOR_NAME = 'Message-Bus';
+const MESSAGE_BUS_DOMAIN_SEPARATOR_NAME = 'Mosaic-Bus';
 
 function getDepositIntentHash(amount, beneficiary) {
   return web3.utils.sha3(
@@ -17,78 +18,33 @@ function getDepositIntentHash(amount, beneficiary) {
   );
 }
 
-function getMessageInboxIdentifier(metachainId, verifyingAddress) {
-  return web3.utils.sha3(Utils.encodeParameters(
+function getChannelIdentifier(metachainId, outbox, inbox) {
+  const channelSeparator = web3.utils.sha3(Utils.encodeParameters(
     [
       'bytes32',
-      'string',
-      'string',
-      'bytes32',
+      'address',
       'address',
     ],
     [
-      DOMAIN_SEPARATOR_TYPEHASH,
-      MESSAGE_BUS_DOMAIN_SEPARATOR_NAME,
-      DOMAIN_SEPARATOR_VERSION,
-      metachainId,
-      verifyingAddress,
+      CHANNEL_TYPEHASH,
+      outbox,
+      inbox,
     ],
   ));
-}
-
-function getMessageOutboxIdentifier(metachainId, verifyingAddress) {
   return web3.utils.sha3(Utils.encodeParameters(
     [
       'bytes32',
       'string',
       'string',
       'bytes32',
-      'address',
+      'bytes32',
     ],
     [
       DOMAIN_SEPARATOR_TYPEHASH,
       MESSAGE_BUS_DOMAIN_SEPARATOR_NAME,
       DOMAIN_SEPARATOR_VERSION,
       metachainId,
-      verifyingAddress,
-    ],
-  ));
-}
-
-function getOutboundMessageIdentifier(metachainId, verifyingAddress) {
-  return web3.utils.sha3(Utils.encodeParameters(
-    [
-      'bytes32',
-      'string',
-      'string',
-      'bytes32',
-      'address',
-    ],
-    [
-      DOMAIN_SEPARATOR_TYPEHASH,
-      MESSAGE_BUS_DOMAIN_SEPARATOR_NAME,
-      DOMAIN_SEPARATOR_VERSION,
-      metachainId,
-      verifyingAddress,
-    ],
-  ));
-}
-
-function getInboundMessageIdentifier(metachainId, verifyingAddress) {
-  return web3.utils.sha3(Utils.encodeParameters(
-    [
-      'bytes32',
-      'string',
-      'string',
-      'bytes32',
-      'address',
-    ],
-    [
-      DOMAIN_SEPARATOR_TYPEHASH,
-      MESSAGE_BUS_DOMAIN_SEPARATOR_NAME,
-      DOMAIN_SEPARATOR_VERSION,
-      metachainId,
-      verifyingAddress,
+      channelSeparator,
     ],
   ));
 }
@@ -96,10 +52,7 @@ function getInboundMessageIdentifier(metachainId, verifyingAddress) {
 module.exports = {
   DEPOSIT_INTENT_TYPEHASH,
   getDepositIntentHash,
-  getOutboundMessageIdentifier,
-  getInboundMessageIdentifier,
-  getMessageInboxIdentifier,
-  getMessageOutboxIdentifier,
+  getChannelIdentifier,
   CONSENSUS_GATEWAY_INBOX_OFFSET,
   CONSENSUS_GATEWAY_OUTBOX_OFFSET,
 };

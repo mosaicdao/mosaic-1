@@ -27,8 +27,8 @@ contract MessageInbox is MessageBox, Proof {
     /** Mapping to indicate that message hash exists in inbox. */
     mapping(bytes32 => bool) public inbox;
 
-    /** Inbound message identifier */
-    bytes32 public inboundMessageIdentifier;
+    /** Inbound channel identifier */
+    bytes32 public inboundChannelIdentifier;
 
     /** Message outbox address */
     address public messageOutbox;
@@ -59,13 +59,13 @@ contract MessageInbox is MessageBox, Proof {
         view
         returns (bytes32 messageHash_)
     {
-        messageHash_ = MessageBox.messageHash(
+        messageHash_ = MessageBox.hashMessage(
             _intentHash,
             _nonce,
             _feeGasPrice,
             _feeGasLimit,
             _sender,
-            inboundMessageIdentifier
+            inboundChannelIdentifier
         );
     }
 
@@ -76,7 +76,7 @@ contract MessageInbox is MessageBox, Proof {
      * @notice Setup message inbox.
      *
      * @dev Function requires:
-     *          - inboundMessageIdentifier must be zero
+     *          - inboundChannelIdentifier must be zero
      *          - metachainId must not be zero
      *          - messageOutbox address must not be zero
      *          - verifyingAddress must not be zero
@@ -89,20 +89,18 @@ contract MessageInbox is MessageBox, Proof {
      * @param _stateRootProvider State root provider contract address.
      * @param _maxStorageRootItems Defines how many storage roots should be
      *                             stored in circular buffer.
-     * @param _verifyingAddress Address of verifying contract.
      */
     function setupMessageInbox(
         bytes32 _metachainId,
         address _messageOutbox,
         uint8 _outboxStorageIndex,
         StateRootI _stateRootProvider,
-        uint256 _maxStorageRootItems,
-        address _verifyingAddress
+        uint256 _maxStorageRootItems
     )
         internal
     {
         require(
-            inboundMessageIdentifier == bytes32(0),
+            inboundChannelIdentifier == bytes32(0),
             "Message inbox is already setup."
         );
 
@@ -121,23 +119,15 @@ contract MessageInbox is MessageBox, Proof {
             "State root provider address is 0."
         );
 
-        require(
-            _verifyingAddress != address(0),
-            "Verifying address is 0."
-        );
-
         messageOutbox = _messageOutbox;
         outboxStorageIndex = _outboxStorageIndex;
 
-        inboundMessageIdentifier = keccak256(
-            abi.encode(
-                DOMAIN_SEPARATOR_TYPEHASH,
-                DOMAIN_SEPARATOR_NAME,
-                DOMAIN_SEPARATOR_VERSION,
-                _metachainId,
-                _verifyingAddress
-            )
+        inboundChannelIdentifier = MessageBox.hashChannelIdentifier(
+            _metachainId,
+            messageOutbox,
+            address(this)
         );
+
 
         /*
          * @dev: Please note that no validations are done here. Proof::setup
@@ -204,13 +194,13 @@ contract MessageInbox is MessageBox, Proof {
         internal
         returns (bytes32 messageHash_)
     {
-        messageHash_ = MessageBox.messageHash(
+        messageHash_ = MessageBox.hashMessage(
             _intentHash,
             _nonce,
             _feeGasPrice,
             _feeGasLimit,
             _sender,
-            inboundMessageIdentifier
+            inboundChannelIdentifier
         );
 
         require(
@@ -234,4 +224,3 @@ contract MessageInbox is MessageBox, Proof {
         );
     }
 }
-
