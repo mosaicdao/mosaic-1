@@ -80,8 +80,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
 
         MessageOutbox.setupMessageOutbox(
             _metachainId,
-            _consensusCogateway,
-            address(this)
+            _consensusCogateway
         );
 
         MessageInbox.setupMessageInbox(
@@ -89,8 +88,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
             _consensusCogateway,
             _outboxStorageIndex,
             StateRootI(stateRootProvider),
-            _maxStorageRootItems,
-            address(this)
+            _maxStorageRootItems
         );
     }
 

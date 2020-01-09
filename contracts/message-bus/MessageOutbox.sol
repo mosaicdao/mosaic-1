@@ -27,8 +27,8 @@ contract MessageOutbox is MessageBox {
     /** Mapping to indicate that message hash exists in outbox. */
     mapping(bytes32 => bool) public outbox;
 
-    /** Outbound message identifier */
-    bytes32 public outboundMessageIdentifier;
+    /** Outbound channel identifier */
+    bytes32 public outboundChannelIdentifier;
 
     /** Message inbox address */
     address public messageInbox;
@@ -56,13 +56,13 @@ contract MessageOutbox is MessageBox {
         view
         returns (bytes32 messageHash_)
     {
-        messageHash_ = MessageBox.messageHash(
+        messageHash_ = MessageBox.hashMessage(
             _intentHash,
             _nonce,
             _feeGasPrice,
             _feeGasLimit,
             _sender,
-            outboundMessageIdentifier
+            outboundChannelIdentifier
         );
     }
 
@@ -73,24 +73,21 @@ contract MessageOutbox is MessageBox {
      * @notice Setup message outbox.
      *
      * @dev Function requires:
-     *          - outboundMessageIdentifier must be zero
+     *          - outboundChannelIdentifier must be zero
      *          - metachainId must not be zero
      *          - messageInbox address must not be zero
-     *          - verifyingAddress must not be zero
      *
      * @param _metachainId Metachain identifier.
      * @param _messageInbox MessageInbox contract address.
-     * @param _verifyingAddress Address of verifying contract.
      */
     function setupMessageOutbox(
         bytes32 _metachainId,
-        address _messageInbox,
-        address _verifyingAddress
+        address _messageInbox
     )
         internal
     {
         require(
-            outboundMessageIdentifier == bytes32(0),
+            outboundChannelIdentifier == bytes32(0),
             "Message outbox is already setup."
         );
 
@@ -104,21 +101,12 @@ contract MessageOutbox is MessageBox {
             "Message inbox address is 0."
         );
 
-        require(
-            _verifyingAddress != address(0),
-            "Verifying address is 0."
-        );
-
         messageInbox = _messageInbox;
 
-        outboundMessageIdentifier = keccak256(
-            abi.encode(
-                DOMAIN_SEPARATOR_TYPEHASH,
-                DOMAIN_SEPARATOR_NAME,
-                DOMAIN_SEPARATOR_VERSION,
-                _metachainId,
-                _verifyingAddress
-            )
+        outboundChannelIdentifier = MessageBox.hashChannelIdentifier(
+            _metachainId,
+            address(this),
+            messageInbox
         );
     }
 
@@ -146,13 +134,13 @@ contract MessageOutbox is MessageBox {
         internal
         returns (bytes32 messageHash_)
     {
-        messageHash_ = MessageBox.messageHash(
+        messageHash_ = MessageBox.hashMessage(
             _intentHash,
             _nonce,
             _feeGasPrice,
             _feeGasLimit,
             _sender,
-            outboundMessageIdentifier
+            outboundChannelIdentifier
         );
 
         require(
@@ -163,4 +151,3 @@ contract MessageOutbox is MessageBox {
         outbox[messageHash_] = true;
     }
 }
-
