@@ -72,7 +72,7 @@ function Utils() {}
 
 Utils.prototype = {
 
-  deployMockToken: async (initialAccount, initialBalance='800000000') => ERC20Mock.new(initialAccount, initialBalance),
+  deployMockToken: async (initialAccount, initialBalance = '8000000000000000000000') => ERC20Mock.new(initialAccount, initialBalance),
 
   generateRandomMetachainId: () => getRandomHash(),
 
