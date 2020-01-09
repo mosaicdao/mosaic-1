@@ -14,8 +14,12 @@
 
 'use strict';
 
+
 const Assert = require('assert');
 const BN = require('bn.js');
+
+const ERC20Mock = artifacts.require('ERC20Mock');
+
 const web3 = require('./web3.js');
 
 async function advanceBlock() {
@@ -67,6 +71,9 @@ const receipts = [];
 function Utils() {}
 
 Utils.prototype = {
+
+  deployMockToken: async (initialAccount, initialBalance='800000000') => ERC20Mock.new(initialAccount, initialBalance),
+
   generateRandomMetachainId: () => getRandomHash(),
 
   /** Log receipt. */

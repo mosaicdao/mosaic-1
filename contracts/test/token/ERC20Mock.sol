@@ -13,17 +13,14 @@ pragma solidity >=0.5.0 <0.6.0;
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
-// ----------------------------------------------------------------------------
-// Contracts: MockTokenConfig
-//
-// http://www.simpletoken.org/
-//
-// ----------------------------------------------------------------------------
 
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 
-contract MockTokenConfig {
+contract ERC20Mock is ERC20 {
 
-    string  public constant TOKEN_SYMBOL   = "MOCK";
-    string  public constant TOKEN_NAME     = "Mock Token";
+    /* Special Functions */
+
+    constructor(address _initialAccount, uint256 _initialBalance) public {
+        _mint(_initialAccount, _initialBalance);
+    }
 }

@@ -16,7 +16,6 @@
 
 const BN = require('bn.js');
 
-const MockToken = artifacts.require('MockToken');
 const ConsensusGateway = artifacts.require('ConsensusGateway');
 const MockConsensus = artifacts.require('MockConsensus');
 
@@ -32,7 +31,7 @@ contract('ConsensusGateway::deposit', (accounts) => {
   beforeEach(async () => {
     consensusGateway = await ConsensusGateway.new();
     const owner = accountProvider.get();
-    most = await MockToken.new(18, { from: owner });
+    most = await Utils.deployMockToken(owner);
     param = {
       metachainId: Utils.getRandomHash(),
       mostAddress: most.address,
