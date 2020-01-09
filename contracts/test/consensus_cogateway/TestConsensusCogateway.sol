@@ -8,7 +8,6 @@ import "../../consensus-gateway/ConsensusCoGateway.sol";
  */
 contract TestConsensusCogateway is ConsensusCogateway {
 
-
     /* Special function */
 
     constructor()
@@ -29,7 +28,7 @@ contract TestConsensusCogateway is ConsensusCogateway {
     }
 
     /**
-     * It sets storageroots for a blockheight.
+     * @notice It sets storageroots for a blockheight.
      *
      * @param _blockHeight Block height.
      * @param _storageRoot Storage root at block height.
@@ -39,7 +38,7 @@ contract TestConsensusCogateway is ConsensusCogateway {
     }
 
     /**
-     * It sets inbound channel indentifier.
+     * @notice It sets inbound channel identifier.
      *
      * @param _inboundChannelIdentifier Inboundchannel identifier.
      */
