@@ -22,8 +22,10 @@ import "../proxies/MasterCopyNonUpgradable.sol";
 import "../message-bus/MessageBus.sol";
 import "../consensus/ConsensusModule.sol";
 import "../consensus/ConsensusI.sol";
+import "../core/CoreI.sol";
+import "./ConsensusGatewayI.sol";
 
-contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, ConsensusModule {
+contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, ConsensusModule, ConsensusGatewayI {
 
     /* Usings */
 
@@ -49,6 +51,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
      *      - Validations for input parameters are done in message box setup method.
      *
      * @param _metachainId Metachain Id
+     * @param _consensus Address of consensus contract.
      * @param _most Address of MOST contract.
      * @param _consensusCogateway Address of consensus cogateway contract.
      * @param _maxStorageRootItems Maximum number of storage roots stored.
@@ -56,7 +59,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
      */
     function setup(
         bytes32 _metachainId,
-        address _consensus,
+        ConsensusI _consensus,
         ERC20I _most,
         address _consensusCogateway,
         uint256 _maxStorageRootItems,
@@ -65,7 +68,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
         external
     {
         ConsensusModule.setupConsensus(
-            ConsensusI(_consensus)
+            _consensus
         );
 
         ConsensusGatewayBase.setup(
@@ -73,7 +76,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
             uint256(0) // Current meta-block height
         );
 
-        address stateRootProvider = ConsensusI(_consensus).getAnchor(_metachainId);
+        address stateRootProvider = _consensus.getAnchor(_metachainId);
 
         MessageOutbox.setupMessageOutbox(
             _metachainId,
@@ -138,6 +141,67 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
         require(
             ERC20I(most).transferFrom(msg.sender, address(this), _amount),
             "MOST transferFrom must succeed."
+        );
+    }
+
+    /**
+     * @notice Function to declare open kernel in consensus gateway.
+     *
+     * @dev In case of chain halting when new Core is created, then new kernel
+     *      can be opened at the same height.
+     *      In normal cases, since this function is called by consensus, we can
+     *      trust that same height will not be passed.
+     *
+     * @dev Function requires:
+     *     - Only consensus can call
+     *     - Core address should not be 0
+     *     - Either Kernel height should equal currentMetablockHeight plus one
+             or kernel can be opened at same height in case of chain halting
+     *
+     * @param _core Core contract address.
+     * @param _feeGasPrice Fee gas price.
+     * @param _feeGasLimit Fee gas limit.
+     *
+     * @return messageHash_ Message hash.
+     */
+    function declareOpenKernel(
+        address _core,
+        uint256 _feeGasPrice,
+        uint256 _feeGasLimit
+    )
+        external
+        onlyConsensus
+        returns (bytes32 messageHash_)
+    {
+        require(
+            address(_core) != address(0),
+            "Core address is 0."
+        );
+
+        (bytes32 openKernelHash, uint256 openKernelHeight) = CoreI(_core).getOpenKernel();
+
+        require(
+            (openKernelHeight == currentMetablockHeight.add(1)) ||
+            (openKernelHeight == currentMetablockHeight),
+            "Kernel can be opened at same height or currentMetablockHeight+1."
+        );
+
+        currentMetablockHeight = openKernelHeight;
+
+        bytes32 kernelIntentHash = hashKernelIntent(
+            openKernelHeight,
+            openKernelHash
+        );
+
+        uint256 nonce = nonces[msg.sender];
+        nonces[msg.sender] = nonce.add(1);
+
+        messageHash_ = MessageOutbox.declareMessage(
+            kernelIntentHash,
+            nonce,
+            _feeGasPrice,
+            _feeGasLimit,
+            msg.sender
         );
     }
 }
