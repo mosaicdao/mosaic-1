@@ -15,6 +15,7 @@
 'use strict';
 
 const { AccountProvider } = require('../test_lib/utils.js');
+const Utils = require('../test_lib/utils.js');
 const web3 = require('../test_lib/web3.js');
 
 const CommitteeUtils = require('./utils.js');
@@ -26,17 +27,20 @@ contract('Committee::distanceToProposal', (accounts) => {
 
   beforeEach(async () => {
     config = {
+      metachainId: Utils.generateRandomMetachainId(),
       committeeSize: 50,
       dislocation: web3.utils.sha3('dislocation'),
       proposal: web3.utils.sha3('proposal'),
       consensus: accountProvider.get(),
     };
     config.committee = await CommitteeUtils.createCommittee(
+      config.metachainId,
+      config.consensus,
       config.committeeSize,
       config.dislocation,
       config.proposal,
       {
-        from: config.consensus,
+        from: accountProvider.get(),
       },
     );
     Object.freeze(config);

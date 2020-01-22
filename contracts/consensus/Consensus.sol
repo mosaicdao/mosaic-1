@@ -16,18 +16,47 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
+import "./ConsensusI.sol";
+import "./CoreLifetime.sol";
 import "../anchor/AnchorI.sol";
+import "../axiom/AxiomI.sol";
 import "../block/Block.sol";
-import "../committee/Committee.sol";
-import "../core/Core.sol";
-import "../ERC20I.sol";
+import "../committee/CommitteeI.sol";
+import "../core/CoreI.sol";
 import "../reputation/ReputationI.sol";
+import "../proxies/MasterCopyNonUpgradable.sol";
+import "../version/MosaicVersion.sol";
+import "../consensus-gateway/ConsensusGatewayI.sol";
 
-contract Consensus {
+contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, ConsensusI {
 
     /* Usings */
 
     using SafeMath for uint256;
+    using SafeMath for uint8;
+
+
+    /* Events */
+
+    event EndpointPublished(
+        bytes32 metachainId,
+        address core,
+        address validator,
+        string service,
+        string endpoint
+    );
+
+
+    /* Enums */
+
+    /** Used to define the current round of a metablock. */
+    enum MetablockRound {
+        Undefined,
+        Precommitted,
+        CommitteeFormed,
+        CommitteeDecided,
+        Committed
+    }
 
 
     /* Constants */
@@ -38,22 +67,70 @@ contract Consensus {
     /** Committee formation mixing length */
     uint256 public constant COMMITTEE_FORMATION_LENGTH = uint8(7);
 
-    /** Core status Halted */
-    bytes20 public constant CORE_STATUS_HALTED = bytes20(keccak256("CORE_STATUS_HALTED"));
+    /** Minimum required validators */
+    uint256 public constant MIN_REQUIRED_VALIDATORS = uint8(5);
 
-    /** Core status Corrupted */
-    bytes20 public constant CORE_STATUS_CORRUPTED = bytes20(keccak256("CORE_STATUS_CORRUPTED"));
+    /** Maximum coinbase split per mille */
+    uint256 public constant MAX_COINBASE_SPLIT_PER_MILLE = uint16(1000);
 
-    /** Sentinel pointer for marking end of linked-list of committees */
-    address public constant SENTINEL_COMMITTEES = address(0x1);
+    /** The callprefix of the Core::setup function. */
+    bytes4 public constant CORE_SETUP_CALLPREFIX = bytes4(
+        keccak256(
+            "setup(address,bytes32,uint256,uint256,uint256,address,uint256,bytes32,uint256,uint256,uint256,uint256)"
+        )
+    );
+
+    string public constant MOSAIC_DOMAIN_SEPARATOR_NAME = "Mosaic-Consensus";
+
+    /** It is domain separator typehash used to calculate metachain id. */
+    bytes32 public constant MOSAIC_DOMAIN_SEPARATOR_TYPEHASH = keccak256(
+        "MosaicDomain(string name,string version,uint256 originChainId,address consensus)"
+    );
+
+    /** It is metachain id typehash used to calculate metachain id. */
+    bytes32 public constant METACHAIN_ID_TYPEHASH = keccak256(
+        "MetachainId(address anchor)"
+    );
+
+    /** The callprefix of the Committee::setup function. */
+    bytes4 public constant COMMITTEE_SETUP_CALLPREFIX = bytes4(
+        keccak256(
+            "setup(bytes32,address,uint256,bytes32,bytes32)"
+        )
+    );
+
+    //todo fix this when consensus gateway is implemented.
+    /** The callprefix of the ConsensusGateway::setup function. */
+    bytes4 public constant CONSENSUS_GATEWAY_SETUP_CALL_PREFIX = bytes4(
+        keccak256(
+            "setup()"
+        )
+    );
+
+    /** The callprefix of the Anchor::setup function.
+     *
+     *  uint256 - maxStateRoots Max number of state root stored in anchor contract.
+     *  address - address of consensus contract.
+     */
+    bytes4 public constant ANCHOR_SETUP_CALLPREFIX = bytes4(
+        keccak256(
+            "setup(uint256,address)"
+        )
+    );
+
+    /* Max number of state roots anchor stores. */
+    uint256 public constant ANCHOR_MAX_STATE_ROOTS = 100;
+
+    /** Epoch length */
+    uint256 public constant EPOCH_LENGTH = uint256(100);
 
 
     /* Structs */
 
-    /** Precommit from core for a next metablock */
-    struct Precommit {
-        bytes32 proposal;
-        uint256 committeeFormationBlockHeight;
+    struct Metablock {
+        bytes32 metablockHash;
+        MetablockRound round;
+        uint256 roundBlockNumber;
     }
 
 
@@ -63,160 +140,429 @@ contract Consensus {
     uint256 public committeeSize;
 
     /** Minimum number of validators that must join a created core to open */
-    uint256 public minCoreSize;
+    uint256 public minValidators;
 
-    /** Maximum number of validatirs that can join in a core */
-    uint256 public maxCoreSize;
+    /** Maximum number of validators that can join in a core */
+    uint256 public joinLimit;
 
     /** Gas target delta to open new metablock */
     uint256 public gasTargetDelta;
 
-    /** Coinbase split percentage */
-    uint256 public coinbaseSplitPercentage;
+    /** Coinbase split per mille */
+    uint256 public coinbaseSplitPerMille;
 
-    /** Block hash of heads of Metablockchains */
-    mapping(bytes20 /* chainId */ => bytes32 /* MetablockHash */) public metablockHeaderTips;
+    /** Gas price to calculate reward */
+    uint256 public feeGasPrice;
 
-    /** Core statuses */
-    mapping(address /* core */ => bytes20 /* coreStatus */) public coreStatuses;
+    /** Gas limit to calculate reward */
+    uint256 public feeGasLimit;
 
-    /** Assigned core for a given chainId */
-    mapping(bytes20 /* chainId */ => address /* core */) public assignments;
+    /** Mapping of a metablock number to a metablock (per metachain).  */
+    mapping(bytes32 /* metachain id */ => mapping(uint256 /* metablock height */ => Metablock)) public metablockchains;
 
-    /** Precommitted proposals from core for a metablockchain */
-    mapping(address /* core */ => Precommit) public precommits;
+    /** Metablocks' tips per metachain. */
+    mapping(bytes32 /* metachain id */ => uint256 /* metablock tip */) public metablockTips;
 
-    /** Proposals under consideration of a committee */
-    mapping(bytes32 /* proposal */ => Committee /* committee */) public proposals;
+    /** Assigned core for a given metachain id */
+    mapping(bytes32 /* metachain id */ => CoreI) public assignments;
 
-    /** Linked-list of committees */
-    mapping(address => address) public committees;
+    /** Committees per metablock. */
+    mapping(bytes32 /* metablock hash */ => CommitteeI) public committees;
 
-    /** Assigned anchor for a given chainId */
-    mapping(bytes20 => address) public anchors;
+    /** Committees' decisions per metablock. */
+    mapping(bytes32 /* metablock hash */ => bytes32 /* decision */) public decisions;
+
+    /** Assigned anchor per metachain. */
+    mapping(bytes32 /* metachain id */ => AnchorI) public anchors;
+
+    /** Core lifetimes. */
+    mapping(address /* core */ => CoreLifetime /* coreLifetime */) public coreLifetimes;
+
+    /** Assigned consensus gateways for a given metachain id */
+    mapping(bytes32 => ConsensusGatewayI) public consensusGateways;
 
     /** Reputation contract for validators */
     ReputationI public reputation;
 
+    /** Axiom contract address */
+    AxiomI public axiom;
+
+    /** Mosaic domain separator */
+    bytes32 public mosaicDomainSeparator;
+
 
     /* Modifiers */
 
-    modifier onlyValidator()
+    modifier onlyAxiom()
     {
         require(
-            reputation.isActive(msg.sender),
-            "Validator must be active in the reputation contract."
+            address(axiom) == msg.sender,
+            "Caller must be axiom address."
         );
 
         _;
-    }
-
-    modifier onlyCore()
-    {
-        require(
-            isCore(msg.sender),
-            "Caller must be an active core."
-        );
-
-        _;
-    }
-
-
-    /* Special Member Functions */
-
-    constructor(
-        uint256 _committeeSize
-    )
-        public
-    {
-        require(
-            _committeeSize > 0,
-            "Committee size is 0."
-        );
-
-        committeeSize = _committeeSize;
-
-        committees[SENTINEL_COMMITTEES] = SENTINEL_COMMITTEES;
     }
 
 
     /* External functions */
 
-    /** Core register precommit */
-    function registerPrecommit(bytes32 _proposal)
+    /**
+     * @notice Setup consensus contract. Setup method can be called only once.
+     *
+     * @dev Function requires:
+     *          - Consensus contract should not be already setup.
+     *          - Committee size should be greater than 0.
+     *          - Minimum validator size must be greater or equal to 5.
+     *          - Maximum validator size should be greater or equal to minimum
+     *            validator size.
+     *          - Gas target delta should be greater than 0.
+     *          - Coin base split per mille should be in range: 0..1000.
+     *          - Reputation contract address should be 0.
+     *
+     * @param _committeeSize Max committee size that can be formed.
+     * @param _minValidators Minimum number of validators that must join a
+     *                       created core to open.
+     * @param _joinLimit Maximum number of validators that can join a core.
+     * @param _gasTargetDelta Gas target delta to open new metablock.
+     * @param _coinbaseSplitPerMille Coinbase split per mille.
+     * @param _reputation Reputation contract address.
+     */
+    function setup(
+        uint256 _committeeSize,
+        uint256 _minValidators,
+        uint256 _joinLimit,
+        uint256 _gasTargetDelta,
+        uint256 _coinbaseSplitPerMille,
+        address _reputation
+    )
         external
-        onlyCore
     {
-        // onlyCore asserts msg.sender is active core
-        Precommit storage precommit = precommits[msg.sender];
+        // This function must be called only once.
         require(
-            precommit.proposal == bytes32(0),
-            "There already exists a precommit of the core."
+            address(axiom) == address(0),
+            "Consensus is already setup."
         );
-        precommit.proposal = _proposal;
-        precommit.committeeFormationBlockHeight = block.number.add(uint256(COMMITTEE_FORMATION_DELAY));
+
+        require(
+            _committeeSize > 0,
+            "Committee size is 0."
+        );
+
+        require(
+            _minValidators >= uint256(MIN_REQUIRED_VALIDATORS),
+            "Min validator size must be greater or equal to 5."
+        );
+
+        require(
+            _joinLimit >= _minValidators,
+            "Max validator size is less than minimum validator size."
+        );
+
+        require(
+            _gasTargetDelta > 0,
+            "Gas target delta is 0."
+        );
+
+        require(
+            _coinbaseSplitPerMille <= MAX_COINBASE_SPLIT_PER_MILLE,
+            "Coin base split per mille should be in range: 0..1000."
+        );
+
+        require(
+            _reputation != address(0),
+            "Reputation contract address is 0."
+        );
+
+        committeeSize = _committeeSize;
+        minValidators = _minValidators;
+        joinLimit = _joinLimit;
+        gasTargetDelta = _gasTargetDelta;
+        coinbaseSplitPerMille = _coinbaseSplitPerMille;
+        reputation = ReputationI(_reputation);
+
+        axiom = AxiomI(msg.sender);
+
+        uint256 chainId = getChainId();
+
+        mosaicDomainSeparator = keccak256(
+            abi.encode(
+                MOSAIC_DOMAIN_SEPARATOR_TYPEHASH,
+                MOSAIC_DOMAIN_SEPARATOR_NAME,
+                DOMAIN_SEPARATOR_VERSION,
+                chainId,
+                address(this)
+            )
+        );
+
+        feeGasPrice = uint256(0);
+        feeGasLimit = uint256(0);
     }
 
-    /**  */
-    function formCommittee(address _core)
+    /**
+     * @notice Precommits a metablock.
+     *
+     * @dev Function requires:
+     *          - the given metachain id is not 0
+     *          - the given metablock's hash is not 0
+     *          - the given metablock's height is +1 of the current
+     *            height of the metablockchain
+     *          - the caller is the assigned core of the metablockchain
+     *          - the caller (core) is running
+     *          - the current (tip) metablock of the metablockchain is committed
+     */
+    function precommitMetablock(
+        bytes32 _metachainId,
+        uint256 _metablockHeight,
+        bytes32 _metablockHashPrecommit
+    )
         external
-        returns (bool)
     {
-        Precommit storage precommit = precommits[_core];
-        // note it should suffice to check only one property for existance, in PoC asserting both
         require(
-            precommit.proposal != bytes32(0) &&
-            precommit.committeeFormationBlockHeight != uint256(0),
-            "There does not exist a precommitment of the core to a proposal"
+            _metachainId != bytes32(0),
+            "Metachain id is 0."
         );
+
         require(
-            block.number > precommit.committeeFormationBlockHeight,
-            "Block height must be higher than set committee formation height."
+            _metablockHashPrecommit != bytes32(0),
+            "Metablock hash is 0."
         );
+
+        CoreI core = assignments[_metachainId];
+
         require(
-            block.number
-                .sub(uint256(COMMITTEE_FORMATION_LENGTH))
-                .sub(uint256(256)) < precommit.committeeFormationBlockHeight,
-            "Committee formation blocksegment length must be in 256 most recent blocks."
+            msg.sender == address(core),
+            "Caller is not an assigned core for the given metablockchain."
         );
-        uint256 segmentHeight = precommit.committeeFormationBlockHeight;
-        bytes32[] memory seedGenerator = new bytes32[](uint256(COMMITTEE_FORMATION_LENGTH));
-        for (uint8 i = 0; i < COMMITTEE_FORMATION_LENGTH; i++) {
-            seedGenerator[i] = blockhash(segmentHeight);
-            segmentHeight = segmentHeight.sub(1);
+
+        require(
+            isCoreRunning(core),
+            "Core (caller) is not running."
+        );
+
+        uint256 currentHeight = metablockTips[_metachainId];
+        Metablock storage currentMetablock = metablockchains[_metachainId][currentHeight];
+
+        require(
+            currentHeight.add(1) == _metablockHeight,
+            "A precommit must append to the metablockchain."
+        );
+
+        require(
+            currentMetablock.round == MetablockRound.Committed,
+            "Current metablock must be committed."
+        );
+
+        Metablock storage nextMetablock = metablockchains[_metachainId][_metablockHeight];
+
+        assert(nextMetablock.round == MetablockRound.Undefined);
+
+        nextMetablock.metablockHash = _metablockHashPrecommit;
+        nextMetablock.round = MetablockRound.Precommitted;
+        nextMetablock.roundBlockNumber = block.number;
+
+        metablockTips[_metachainId] = _metablockHeight;
+
+        // On first precommit by a core, CoreLifetime state will change to active.
+        if (coreLifetimes[address(core)] == CoreLifetime.genesis) {
+            coreLifetimes[address(core)] = CoreLifetime.active;
         }
-        bytes32 seed = keccak256(
-            abi.encodePacked(seedGenerator)
-        );
-
-        startCommittee(seed, precommit.proposal);
     }
 
-    /** enter a validator into the committee */
+    /**
+     * @notice Forms a new committee to verify the precommit.
+     *
+     * @dev Function requires:
+     *          - the given metachain id is not 0
+     *          - assigned core has precommitted a metablock
+     *          - committee formation height passed
+     *          - committee formation blocksegment must be in the most
+     *            recent 256 blocks.
+     */
+    function formCommittee(bytes32 _metachainId)
+        external
+    {
+        require(
+            _metachainId != bytes32(0),
+            "Metachain id is 0."
+        );
+
+        uint256 currentHeight = metablockTips[_metachainId];
+        Metablock storage currentMetablock = metablockchains[_metachainId][currentHeight];
+
+        require(
+            currentMetablock.round == MetablockRound.Precommitted,
+            "Assigned core must have precommitted a metablock to form a committee."
+        );
+
+        uint256 committeeFormationBlockHeight = currentMetablock.roundBlockNumber.add(
+            COMMITTEE_FORMATION_DELAY
+        );
+
+        require(
+            block.number > committeeFormationBlockHeight,
+            "Committee formation height has not yet come to pass."
+        );
+
+        bytes32 seed = hashBlockSegment(
+            currentMetablock.metablockHash,
+            committeeFormationBlockHeight
+        );
+
+        currentMetablock.round = MetablockRound.CommitteeFormed;
+        currentMetablock.roundBlockNumber = block.number;
+
+        startCommittee(_metachainId, seed, currentMetablock.metablockHash);
+    }
+
+    /**
+     * @notice Enters a validator into a committee.
+     *
+     * @dev Function requires:
+     *          - the given metachain id is not 0
+     *          - the given core's address is not 0
+     *          - the given validator's address is not 0
+     *          - the given 'further' validator's address is not 0
+     *          - the given core is running
+     *          - valid validator is given
+     *              - is active in the given core
+     *              - has not been slashed
+     *          - the corresponding metablock's round is 'CommitteeFormed'
+     *
+     * @param _metachainId Metachain id for the committee to enter.
+     * @param _validator Validator address to enter.
+     * @param _furtherMember Validator address that is further member
+     *                       compared to the `_validator` address
+     */
     function enterCommittee(
-        address _committeeAddress,
+        bytes32 _metachainId,
+        CoreI _core,
         address _validator,
         address _furtherMember
     )
         external
     {
         require(
-            committees[_committeeAddress] != address(0),
-            "Committee does not exist."
+            _metachainId != bytes32(0),
+            "Metachain id is 0."
         );
+
         require(
-            reputation.isActive(_validator),
-            "Validator is not active."
+            _core != CoreI(0),
+            "Core's address is 0."
         );
-        Committee committee = Committee(_committeeAddress);
+
         require(
-            committee.enterCommittee(_validator, _furtherMember),
-            "Pro is happy."
+            _validator != address(0),
+            "Validator's address is 0."
         );
+
+        require(
+            _furtherMember != address(0),
+            "Further validator's address is 0."
+        );
+
+        require(
+            isCoreRunning(_core),
+            "The given core is not running."
+        );
+
+        require(
+            isValidator(_core, _validator),
+            "Invalid validator was given."
+        );
+
+        uint256 currentHeight = metablockTips[_metachainId];
+        Metablock storage currentMetablock = metablockchains[_metachainId][currentHeight];
+
+        require(
+            currentMetablock.round == MetablockRound.CommitteeFormed,
+            "Committee must have been formed to enter a validator."
+        );
+
+        CommitteeI committee = committees[currentMetablock.metablockHash];
+        assert(committee != CommitteeI(0));
+
+        committee.enterCommittee(_validator, _furtherMember);
     }
 
-    function commit(
-        bytes20 _chainId,
+    /**
+     * @notice Registers committee decision.
+     *
+     * @param _committeeDecision Decision of a caller committee.
+     */
+    function registerCommitteeDecision(
+        bytes32 _metachainId,
+        bytes32 _committeeDecision
+    )
+        external
+    {
+        require(
+            _metachainId != bytes32(0),
+            "Metachain id is 0."
+        );
+
+        require(
+            _committeeDecision != bytes32(0),
+            "Committee decision is 0."
+        );
+
+        uint256 currentHeight = metablockTips[_metachainId];
+        Metablock storage currentMetablock = metablockchains[_metachainId][currentHeight];
+
+        require(
+            currentMetablock.round == MetablockRound.CommitteeFormed,
+            "Committee must have been formed to register a decision."
+        );
+
+        currentMetablock.round = MetablockRound.CommitteeDecided;
+        currentMetablock.roundBlockNumber = block.number;
+
+        require(
+            msg.sender == address(committees[currentMetablock.metablockHash]),
+            "Wrong committee calls."
+        );
+
+        require(
+            decisions[currentMetablock.metablockHash] == bytes32(0),
+            "Committee's decision has been already registered."
+        );
+
+        decisions[currentMetablock.metablockHash] = _committeeDecision;
+    }
+
+    /**
+     * @notice Commits a metablock.
+     *
+     * @dev Function requires:
+     *          - block header should match with source blockhash
+     *          - metachain id should not be 0
+     *          - a core for the specified metachain id should exist
+     *          - precommit for the corresponding core should exist
+     *          - committee should have been formed for the precommit
+     *          - committee decision should match with the specified
+     *            committee lock
+     *          - committee decision should match with the core's precommit
+     *          - the given metablock parameters should match with the
+     *            core's precommit.
+     *          - anchor contract for the given metachain id should exist
+     *
+     * @param _metachainId Metachain id.
+     * @param _rlpBlockHeader RLP ecoded block header.
+     * @param _kernelHash Kernel hash
+     * @param _originObservation Observation of the origin chain.
+     * @param _dynasty The dynasty number where the meta-block closes
+     *                 on the auxiliary chain.
+     * @param _accumulatedGas The total consumed gas on auxiliary within this
+     *                        meta-block.
+     * @param _committeeLock The committee lock that hashes the transaction
+     *                       root on the auxiliary chain.
+     * @param _source Source block hash.
+     * @param _target Target block hash.
+     * @param _sourceBlockHeight Source block height.
+     * @param _targetBlockHeight Target block height.
+     */
+    function commitMetablock(
+        bytes32 _metachainId,
         bytes calldata _rlpBlockHeader,
         bytes32 _kernelHash,
         bytes32 _originObservation,
@@ -230,14 +576,22 @@ contract Consensus {
     )
         external
     {
-        bytes32 blockHash = keccak256(_rlpBlockHeader);
         require(
-            blockHash == _source,
+            _source == keccak256(_rlpBlockHeader),
             "Block header does not match with vote message source."
         );
 
-        verifyCommitteeLock(
-            _chainId,
+        bytes32 metablockHash = goToCommittedRound(_metachainId);
+
+        CoreI core = assignments[_metachainId];
+        require(
+            isCoreActive(core),
+            "Core is not active."
+        );
+
+        assertCommit(
+            core,
+            metablockHash,
             _kernelHash,
             _originObservation,
             _dynasty,
@@ -249,74 +603,414 @@ contract Consensus {
             _targetBlockHeight
         );
 
-        address anchorAddress = anchors[_chainId];
-        require(
-            anchorAddress != address(0),
-            "There is no anchor for the specified chain id."
-        );
+        // Anchor state root.
+        anchorStateRoot(_metachainId, _rlpBlockHeader);
 
-        Block.Header memory blockHeader = Block.decodeHeader(_rlpBlockHeader);
-
-        AnchorI(anchorAddress).anchorStateRoot(
-            blockHeader.height,
-            blockHeader.stateRoot
+        // Open a new metablock.
+        core.openMetablock(
+            _dynasty,
+            _accumulatedGas,
+            _sourceBlockHeight,
+            gasTargetDelta
         );
     }
 
-    /** Validator joins */
+    /**
+     * @notice Validator joins the core, when core lifetime status is genesis
+     *         or active. This is called by validator address.
+     *
+     * @dev Function requires:
+     *          - Core should exist for given metachain
+     *          - core lifetime status must be genesis or active
+     *
+     * @param _metachainId Metachain id that validator wants to join.
+     * @param _withdrawalAddress A withdrawal address of newly joined validator.
+     */
     function join(
+        bytes32 _metachainId,
         address _withdrawalAddress
     )
         external
-        returns (bool)
     {
+        CoreI core = assignments[_metachainId];
+
+        require(
+            core != CoreI(0),
+            "Core does not exist for given metachain."
+        );
+
+        require(
+            isCoreRunning(core),
+            "Core lifetime status must be genesis or active."
+        );
+
+        // Stake in reputation contract.
+        reputation.stake(msg.sender, _withdrawalAddress);
+
+        // Join in core contract.
+        core.join(msg.sender);
     }
 
-    function joinDuringCreation(address _withdrawalAddress)
+    /**
+     * @notice Validator joins the core, when core lifetime status is creation.
+     *         This is called by validator address.
+     *
+     * @dev Function requires:
+     *          - core should exist for given metachain
+     *          - core life time should be in creation state
+     *
+     * @param _metachainId Metachain id that validator wants to join.
+     * @param _withdrawalAddress A withdrawal address of newly joined validator.
+     */
+
+    function joinDuringCreation(
+        bytes32 _metachainId,
+        address _withdrawalAddress
+    )
         external
     {
+        CoreI core = assignments[_metachainId];
+
+        require(
+            core != CoreI(0),
+            "Core does not exist for given metachain."
+        );
+
+        // Specified core must have creation lifetime status.
+        require(
+            coreLifetimes[address(core)] == CoreLifetime.creation,
+            "Core lifetime status must be creation."
+        );
+
+        // Stake in reputation contract.
+        reputation.stake(msg.sender, _withdrawalAddress);
+
+        // Join in core contract.
+        (
+            uint256 validatorCount,
+            uint256 minValidatorCount
+        ) = core.joinBeforeOpen(msg.sender);
+
+        if (validatorCount >= minValidatorCount) {
+            coreLifetimes[address(core)] = CoreLifetime.genesis;
+            ConsensusGatewayI consensusGateway = consensusGateways[_metachainId];
+            assert(address(consensusGateway) != address(0));
+            consensusGateway.declareOpenKernel(
+                address(core),
+                feeGasPrice,
+                feeGasLimit
+            );
+        }
     }
 
-    /** Validator logs out */
-    function logout()
+    /**
+     * @notice Validator logs out. This is called by validator address.
+     *
+     * @dev Function requires:
+     *          - metachain id should not be 0.
+     *          - core address should not be 0.
+     *          - core should be assigned for the specified metachain id.
+     *          - core for the specified metachain id should exist.
+     *
+     * @param _metachainId Metachain id that validator wants to logout.
+     * @param _core Core address that validator wants to logout.
+     */
+    function logout(
+        bytes32 _metachainId,
+        CoreI _core
+    )
         external
-        returns (bool)
     {
+        require(
+            _metachainId != bytes32(0),
+            "Metachain id is 0."
+        );
+
+        require(
+            _core != CoreI(0),
+            "Core is 0."
+        );
+
+        require(
+            assignments[_metachainId] == _core,
+            "Core is not assigned for the specified metachain id."
+        );
+
+        require(
+            isCoreRunning(_core),
+            "Core lifetime status must be genesis or active."
+        );
+
+        reputation.deregister(msg.sender);
+
+        _core.logout(msg.sender);
+    }
+
+    /** @notice Creates a new meta chain.
+     *         This can be called only by axiom.
+     *
+     * @dev Function requires:
+     *          - msg.sender should be axiom contract.
+     *          - core is not assigned to metachain.
+     */
+    function newMetaChain()
+        external
+        onlyAxiom
+        returns(bytes32 metachainId_)
+    {
+
+        bytes memory anchorSetupCallData = anchorSetupData(
+            ANCHOR_MAX_STATE_ROOTS,
+            address(this)
+        );
+
+        AnchorI anchor = AnchorI(axiom.deployAnchor(anchorSetupCallData));
+        metachainId_ = hashMetachainId(address(anchor));
+
+        bytes memory coreSetupCallData = coreSetupData(
+            metachainId_,
+            EPOCH_LENGTH,
+            uint256(0), // metablock height
+            bytes32(0), // parent hash
+            gasTargetDelta, // gas target
+            uint256(0), // dynasty
+            uint256(0), // accumulated gas
+            0 // source block height
+        );
+
+        bytes memory consensusGatewaySetupCallData = consensusGatewaySetupData();
+
+        (
+            address core,
+            address consensusGateway
+        ) = axiom.deployMetachainProxies(
+                coreSetupCallData,
+                consensusGatewaySetupCallData
+            );
+
+        assignments[metachainId_] = CoreI(core);
+        anchors[metachainId_] = anchor;
+        consensusGateways[metachainId_] = ConsensusGatewayI(consensusGateway);
+
+        coreLifetimes[core] = CoreLifetime.creation;
+    }
+
+    /** Get minimum validator and join limit count. */
+    function coreValidatorThresholds()
+        external
+        view
+        returns (uint256 minimumValidatorCount_, uint256 joinLimit_)
+    {
+        minimumValidatorCount_ = minValidators;
+        joinLimit_ = joinLimit;
+    }
+    // Task: Pending functions related to halting and corrupting of core.
+
+    /**
+     * @notice It publishes the endpoint.
+     *
+     * @dev Function requires:
+     *          - only validator can call.
+     *          - validator is not slashed.
+     *          - metachain id should be valid.
+     *
+     * @param _metachainId Metachain id.
+     * @param _service Service can be ipfs, enode, etc.
+     * @param _endpoint Url for the service.
+     */
+    function publishEndpoint(
+        bytes32 _metachainId,
+        string calldata _service,
+        string calldata _endpoint
+    )
+        external
+    {
+        CoreI core = assignments[_metachainId];
+
+        require(
+            core != CoreI(0),
+            "No core exists for the metachain id."
+        );
+
+        require(
+            isValidator(core, msg.sender),
+            "Invalid validator was given."
+        );
+
+        emit EndpointPublished(
+            _metachainId,
+            address(core),
+            msg.sender,
+            _service,
+            _endpoint
+        );
+    }
+
+    /**
+     * @notice Get anchor address for metachain id.
+     *
+     * @param _metachainId Metachain Id
+     *
+     * @return anchor_ Anchor address.
+     */
+    function getAnchor(bytes32 _metachainId)
+        external
+        returns (address anchor_)
+    {
+        return address(anchors[_metachainId]);
+    }
+
+    /* Public functions */
+
+    /**
+     * @notice Gets metachain id.
+     *         Metachain id format :
+     *         `0x19 0x4d <mosaic-domain-separator> <metachainid-typehash>` where
+     *         0x19 signed data as per EIP-191.
+     *         0x4d is version byte for Mosaic.
+     *         <mosaic-domain-separator> format is `MosaicDomain(string name,
+     *                            string version,uint256 originChainId,
+     *                            address consensus)`.
+     *         <metachainid-typehash> format is MetachainId(address anchor).
+     *
+     *         <mosaic-domain-separator> and <metachainid-typehash> is EIP-712
+     *         complaint.
+     * @param _anchor Anchor address of the new metachain.
+     *
+     * @return metachainId_ Metachain id.
+     */
+    function hashMetachainId(address _anchor)
+        public
+        view
+        returns(bytes32 metachainId_)
+    {
+        require(
+            address(_anchor) != address(0),
+            "Anchor address must not be 0."
+        );
+
+        bytes32 metachainIdHash = keccak256(
+            abi.encode(
+                METACHAIN_ID_TYPEHASH,
+                _anchor
+            )
+        );
+
+        metachainId_ = keccak256(
+            abi.encodePacked(
+                byte(0x19), // Standard ethereum prefix as per EIP-191.
+                byte(0x4d), // 'M' for Mosaic.
+                mosaicDomainSeparator,
+                metachainIdHash
+            )
+        );
     }
 
 
     /* Internal functions */
 
-    /** Returns true if the specified address is a core. */
-    function isCore(address _core)
+    /**
+     * @notice Check if the core lifetime state is genesis or active.
+     * @param _core Core contract address.
+     * Returns true if the specified address is a core.
+     */
+    function isCoreRunning(CoreI _core)
         internal
         view
         returns (bool)
     {
-        bytes20 status = coreStatuses[_core];
-        return status != bytes20(0) &&
-            status != CORE_STATUS_HALTED &&
-            status != CORE_STATUS_CORRUPTED;
+        CoreLifetime lifeTimeStatus = coreLifetimes[address(_core)];
+        return lifeTimeStatus == CoreLifetime.genesis ||
+            lifeTimeStatus == CoreLifetime.active;
     }
 
-    /** insert new Committee */
-    function startCommittee(bytes32 _dislocation, bytes32 _proposal)
+    function isCoreActive(CoreI _core)
+        internal
+        view
+        returns (bool isActive_)
+    {
+        isActive_ = coreLifetimes[address(_core)] == CoreLifetime.active;
+    }
+
+    function getChainId()
+        internal
+        pure
+        returns(uint256 chainId_)
+    {
+        assembly {
+            chainId_ := chainid()
+        }
+    }
+
+    /**
+     * @notice Starts a new committee.
+     *
+     * @param _metachainId Metachain id of a proposed metablock.
+     * @param _dislocation Hash to shuffle validators.
+     * @param _metablockHash Proposal under consideration for committee.
+     */
+    function startCommittee(
+        bytes32 _metachainId,
+        bytes32 _dislocation,
+        bytes32 _metablockHash
+    )
         internal
     {
-        require(
-            proposals[_proposal] != Committee(0),
-            "There already exists a committee for the proposal."
-        );
-        // TODO: implement proxy pattern
-        Committee committee_ = new Committee(committeeSize, _dislocation, _proposal);
-        committees[address(committee_)] = committees[SENTINEL_COMMITTEES];
-        committees[SENTINEL_COMMITTEES] = address(committee_);
+        assert(committees[_metablockHash] == CommitteeI(0));
 
-        proposals[_proposal] = committee_;
+        committees[_metablockHash] = newCommittee(
+            _metachainId,
+            committeeSize,
+            _dislocation,
+            _metablockHash
+        );
     }
 
-    function verifyCommitteeLock(
-        bytes20 _chainId,
+    /**
+     * @notice isValidator() function checks if the given validator is an
+     *         active validator in the given core and has not been slashed.
+     *
+     * @param _core Core to check the validator against.
+     * @param _validator Validator's address to check.
+     *
+     * @return Returns true, if the given validator is an active validator
+     *         in the given core and has not been slashed.
+     */
+    function isValidator(CoreI _core, address _validator)
+        internal
+        view
+        returns (bool isValidator_)
+    {
+        assert(_core != CoreI(0));
+
+        isValidator_ = _core.isValidator(_validator)
+            && !reputation.isSlashed(_validator);
+    }
+
+
+    /* Private functions */
+
+    function goToCommittedRound(bytes32 _metachainId)
+        private
+        returns (bytes32 metablockHash_)
+    {
+        uint256 currentHeight = metablockTips[_metachainId];
+        Metablock storage currentMetablock = metablockchains[_metachainId][currentHeight];
+
+        require(
+            currentMetablock.round == MetablockRound.CommitteeDecided,
+            "Committee has not decided on a proposal yet."
+        );
+
+        currentMetablock.round = MetablockRound.Committed;
+        currentMetablock.roundBlockNumber = block.number;
+
+        metablockHash_ = currentMetablock.metablockHash;
+    }
+
+    function assertCommit(
+        CoreI _core,
+        bytes32 _precommit,
         bytes32 _kernelHash,
         bytes32 _originObservation,
         uint256 _dynasty,
@@ -330,13 +1024,14 @@ contract Consensus {
         private
         view
     {
-        address coreAddress = assignments[_chainId];
+        bytes32 decision = decisions[_precommit];
+
         require(
-            isCore(coreAddress),
-            "There is no core for the specified chain id"
+            _committeeLock == keccak256(abi.encode(decision)),
+            "Committee decision does not match with committee lock."
         );
 
-        bytes32 proposal = Core(coreAddress).assertPrecommit(
+        bytes32 metablockHash = CoreI(_core).hashMetablock(
             _kernelHash,
             _originObservation,
             _dynasty,
@@ -348,23 +1043,185 @@ contract Consensus {
             _targetBlockHeight
         );
 
-        Committee committee = proposals[proposal];
+        require(
+            metablockHash == _precommit,
+            "Input parameters do not hash to the core's precommit."
+        );
+    }
+
+    /**
+     * @notice Anchor a new state root for specified metachain id.
+
+     * @dev Function requires:
+     *          - anchor for specified metachain id should exist.
+     *
+     * @param _metachainId Metachain id.
+     * @param _rlpBlockHeader RLP encoded block header
+     */
+    function anchorStateRoot(
+        bytes32 _metachainId,
+        bytes memory _rlpBlockHeader
+    )
+        private
+    {
+        AnchorI anchor = anchors[_metachainId];
 
         require(
-            committee != Committee(0),
-            "There is no committee matching to the specified vote message."
+            anchor != AnchorI(0),
+            "There is no anchor for the specified metachain id."
         );
 
-        require(
-            committee.committeeDecision() != bytes32(0),
-            "Committee has not decide on the proposal."
+        Block.Header memory blockHeader = Block.decodeHeader(_rlpBlockHeader);
+
+        // Anchor state root.
+        anchor.anchorStateRoot(
+            blockHeader.height,
+            blockHeader.stateRoot
+        );
+    }
+
+    /**
+     * @notice Deploys a new core contract.
+     * @param _metachainId Metachain id for which the core should be deployed.
+     * @param _epochLength Epoch length for new core.
+     * @param _height Kernel height.
+     * @param _parent Kernel parent hash.
+     * @param _gasTarget Gas target to close the meta block.
+     * @param _dynasty Committed dynasty number.
+     * @param _accumulatedGas Accumulated gas.
+     * @param _sourceBlockHeight Source block height.
+     *
+     * returns Deployed core contract address.
+     */
+    function coreSetupData(
+        bytes32 _metachainId,
+        uint256 _epochLength,
+        uint256 _height,
+        bytes32 _parent,
+        uint256 _gasTarget,
+        uint256 _dynasty,
+        uint256 _accumulatedGas,
+        uint256 _sourceBlockHeight
+    )
+        private
+        view
+        returns (bytes memory coreSetupCallData_)
+    {
+        coreSetupCallData_ = abi.encodeWithSelector(
+            CORE_SETUP_CALLPREFIX,
+            address(this),
+            _metachainId,
+            _epochLength,
+            minValidators,
+            joinLimit,
+            address(reputation),
+            _height,
+            _parent,
+            _gasTarget,
+            _dynasty,
+            _accumulatedGas,
+            _sourceBlockHeight
+        );
+    }
+
+    /**
+     * Creates anchor setup data.
+     *
+     * @param _maxStateRoots Maximum stateroots core can store.
+     * @param _consensus Address of consensus contract.
+     */
+    function anchorSetupData(
+        uint256 _maxStateRoots,
+        address _consensus
+    )
+        private
+        pure
+        returns (bytes memory anchorSetupCallData_)
+    {
+        anchorSetupCallData_ = abi.encodeWithSelector(
+            ANCHOR_SETUP_CALLPREFIX,
+            _maxStateRoots,
+            _consensus
+        );
+    }
+
+    /**
+     * Creates consensus gateway setup data.
+     */
+    function consensusGatewaySetupData()
+        private
+        pure
+        returns(bytes memory consensusGatewaySetupCallData_)
+    {
+        // todo implement this after consensus gateway implementation.
+        consensusGatewaySetupCallData_ = abi.encodeWithSelector(
+            CONSENSUS_GATEWAY_SETUP_CALL_PREFIX
+        );
+    }
+
+    /**
+     * @notice Deploys a new committee contract.
+     *
+     * @param _metachainId Metachain id of the proposed metablock.
+     * @param _committeeSize Committee size.
+     * @param _dislocation Hash to shuffle validators.
+     * @param _proposal Proposal under consideration for committee.
+     *
+     * @return Contract address of new deployed committee contract.
+     */
+    function newCommittee(
+        bytes32 _metachainId,
+        uint256 _committeeSize,
+        bytes32 _dislocation,
+        bytes32 _proposal
+    )
+        private
+        returns (CommitteeI committee_)
+    {
+        bytes memory committeeSetupData = abi.encodeWithSelector(
+            COMMITTEE_SETUP_CALLPREFIX,
+            _metachainId,
+            address(this),
+            _committeeSize,
+            _dislocation,
+            _proposal
         );
 
+        committee_ = CommitteeI(axiom.newCommittee(committeeSetupData));
+    }
+
+    /**
+     * @notice Hashes the blocksegment [end - COMMITTEE_FORMATION_LENGTH + 1, end]
+     *         and the given metablock hash to generate a seed for committee.
+     *
+     * @param _metablockHash Metablock hash to be included in hash generation.
+     * @param _end Ending block number of the blocksegment.
+     */
+    function hashBlockSegment(
+        bytes32 _metablockHash,
+        uint256 _end
+    )
+        private
+        view
+        returns (bytes32 seed_)
+    {
+        uint256 begin = _end.add(uint256(1)).sub(COMMITTEE_FORMATION_LENGTH);
+
         require(
-            _committeeLock == keccak256(
-                abi.encode(committee.committeeDecision())
-            ),
-            "Committee decision does not match with committee lock."
+            block.number > _end && block.number < begin.add(uint256(256)),
+            "Blocksegment is not in the most recent 256 blocks."
+        );
+
+        bytes32[] memory seedGenerator = new bytes32[](COMMITTEE_FORMATION_LENGTH);
+        for (uint256 i = 0; i < COMMITTEE_FORMATION_LENGTH; i = i.add(1)) {
+            seedGenerator[i] = blockhash(begin.add(i));
+        }
+
+        seed_ = keccak256(
+            abi.encodePacked(
+                _metablockHash,
+                seedGenerator
+            )
         );
     }
 }

@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity >=0.5.0 <0.6.0;
 
 // Copyright 2019 OpenST Ltd.
 //
@@ -21,6 +21,22 @@ contract ConsensusModule {
     /** Consensus contract for which this committee was formed. */
     ConsensusI public consensus;
 
+    /**
+     * @notice It sets address for consensus contract.
+     * @param _consensus Address of consensus contract.
+     */
+    function setupConsensus(ConsensusI _consensus) internal {
+        require(
+            address(consensus) == address(0),
+            "Consensus address is already present."
+        );
+        require(
+            address(_consensus) != address(0),
+            "Consensus address must not be null."
+        );
+        consensus = _consensus;
+    }
+
     modifier onlyConsensus()
     {
         require(
@@ -29,11 +45,5 @@ contract ConsensusModule {
         );
 
         _;
-    }
-
-    constructor(address _consensus)
-        public
-    {
-        consensus = ConsensusI(_consensus);
     }
 }

@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity >=0.5.0 <0.6.0;
 
 // Copyright 2019 OpenST Ltd.
 //
@@ -16,6 +16,15 @@ pragma solidity ^0.5.0;
 
 interface ReputationI {
 
-    function isActive(address _validator) external view returns (bool);
+    function isSlashed(address _validator) external view returns (bool);
+
+    function stake(
+        address _validator,
+        address _withdrawalAddress
+    )
+        external;
+
+    function deregister(address _validator) external;
+
     function getReputation(address _validator) external view returns (uint256);
 }

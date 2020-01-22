@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity >=0.5.0 <0.6.0;
 
 // Copyright 2019 OpenST Ltd.
 //
@@ -15,21 +15,52 @@ pragma solidity ^0.5.0;
 // limitations under the License.
 
 interface CoreI {
-    function joinDuringCreation(address _validator) external;
+    function precommit() external returns (bytes32);
+
+    function openKernelHash() external returns (bytes32);
+
+    function minimumValidatorCount() external returns (uint256);
+
+    function joinBeforeOpen(address _validator)
+        external
+        returns(uint256 validatorCount_, uint256 minValidatorCount_);
 
     function join(address _validator) external;
 
     function logout(address _validator) external;
 
     function openMetablock(
-        bytes32 _committedOriginObservation,
         uint256 _committedDynasty,
         uint256 _committedAccumulatedGas,
-        bytes32 _committedCommitteeLock,
-        bytes32 _committedSource,
-        bytes32 _committedTarget,
         uint256 _committedSourceBlockHeight,
-        uint256 _committedTargetBlockHeight,
         uint256 _deltaGasTarget
-    ) external;
+    )
+        external;
+
+    function hashMetablock(
+        bytes32 _kernelHash,
+        bytes32 _originObservation,
+        uint256 _dynasty,
+        uint256 _accumulatedGas,
+        bytes32 _committeeLock,
+        bytes32 _source,
+        bytes32 _target,
+        uint256 _sourceBlockHeight,
+        uint256 _targetBlockHeight
+    )
+        external
+        view
+        returns (bytes32 metablockHash_);
+
+    function getOpenKernel() external returns (bytes32, uint256);
+
+    /**
+     * @notice Validator is active if open kernel height is
+     *           - greater or equal than validator's begin height
+     *           - and, less or equal than validator's end height
+     */
+    function isValidator(address _account)
+        external
+        view
+        returns (bool);
 }

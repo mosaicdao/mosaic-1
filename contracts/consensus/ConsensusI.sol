@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity >=0.5.0 <0.6.0;
 
 // Copyright 2019 OpenST Ltd.
 //
@@ -17,9 +17,61 @@ pragma solidity ^0.5.0;
 import "../reputation/ReputationI.sol";
 
 interface ConsensusI {
-    function reputation() external view returns (ReputationI reputation_);
 
-    function coreValidatorThresholds() external view returns (uint256 minimumValidatorCount_, uint256 joinLimit_);
+    /**
+     * @notice Gets the reputation contract address.
+     *
+     * @return Reputation contract address.
+     */
+    function reputation()
+        external
+        view
+        returns (ReputationI reputation_);
 
-    function registerPrecommit(bytes32 _precommitment) external;
+    /** @notice Gets cores' validators minimum count and join limit. */
+    function coreValidatorThresholds()
+        external
+        view
+        returns (uint256 minimumValidatorCount_, uint256 joinLimit_);
+
+    /**
+     * @notice Precommits metablock from a core.
+     *
+     * @param _metachainId Metachain id.
+     * @param _metablockHeight Metablock height to precommit.
+     * @param _metablockHashPrecommit Metablock hash to precommit.
+     */
+    function precommitMetablock(
+        bytes32 _metachainId,
+        uint256 _metablockHeight,
+        bytes32 _metablockHashPrecommit
+    )
+        external;
+
+    /**
+     * @notice Registers a committee's decision.
+     *
+     * @param _metachainId Metachain id to register committee decision.
+     * @param _decision Committee's decision.
+     */
+    function registerCommitteeDecision(
+        bytes32 _metachainId,
+        bytes32 _decision
+    )
+        external;
+
+    /**
+     * @notice Creates a new metachain.
+     *
+     */
+    function newMetaChain() external returns(bytes32 metachainId_);
+
+    /**
+     * @notice Get anchor address for metachain id.
+     *
+     * @param _metachainId Metachain Id.
+     *
+     * @return Anchor contract address.
+     */
+    function getAnchor(bytes32 _metachainId) external returns(address anchor_);
 }

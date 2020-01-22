@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity >=0.5.0 <0.6.0;
 
 // Copyright 2019 OpenST Ltd.
 //
@@ -16,81 +16,107 @@ pragma solidity ^0.5.0;
 
 import "../../consensus/ConsensusI.sol";
 import "../../reputation/ReputationI.sol";
-import "../../core/CoreI.sol";
-import "../../core/Core.sol";
+import "../core/MockCore.sol";
 
 contract MockConsensus is ConsensusI, ReputationI {
 
-    /** Storage */
+    /* Storage */
 
-    uint256 public constant MIN_VALIDATOR = uint256(10);
+    uint256 minValidatorCount;
 
-    uint256 public constant JOIN_LIMIT = uint256(15);
+    uint256 validatorJoinLimit;
 
-    CoreI public core;
+    MockCore public mockCore;
 
     mapping(address => uint256) public rep;
 
-    /** Constructor of Mock consensus */
+    mapping(address => bytes32) public precommitts;
+
+
+    /* Special Functions */
 
     constructor(
-        bytes20 _chainId,
+        bytes32 _metachainId,
         uint256 _epochLength,
+        uint256 _minValidatorCount,
+        uint256 _validatorJoinLimit,
         uint256 _height,
         bytes32 _parent,
         uint256 _gasTarget,
         uint256 _dynasty,
         uint256 _accumulatedGas,
-        bytes32 _source,
         uint256 _sourceBlockHeight
     )
         public
     {
-        core = new Core(
-            _chainId,
+        minValidatorCount = _minValidatorCount;
+        validatorJoinLimit = _validatorJoinLimit;
+
+        mockCore = new MockCore();
+        mockCore.setup(
+			ConsensusI(address(this)),
+            _metachainId,
             _epochLength,
-            MIN_VALIDATOR,
-            JOIN_LIMIT,
+            minValidatorCount,
+            validatorJoinLimit,
             ReputationI(this),
             _height,
             _parent,
             _gasTarget,
             _dynasty,
             _accumulatedGas,
-            _source,
             _sourceBlockHeight
         );
     }
 
-    /** External functions */
+
+    /* External Functions */
 
     function joinDuringCreation(address _validator)
         external
     {
         rep[_validator] = uint256(1);
-        core.joinDuringCreation(_validator);
+        mockCore.joinBeforeOpen(_validator);
     }
 
     function join(address _validator)
         external
     {
         rep[_validator] = uint256(1);
-        core.join(_validator);
+        mockCore.join(_validator);
     }
 
     function logout(address _validator)
         external
     {
         rep[_validator] = uint256(0);
-        core.logout(_validator);
+        mockCore.logout(_validator);
     }
 
-    function isActive(address _validator)
+    function stake(address _validator, address _withdrawalAddress)
         external
+    {
+        // do nothing for now
+    }
+
+    function deregister(address _validator)
+        external
+    {
+        // do nothing for now
+    }
+
+    function removeVote(address _validator)
+        external
+    {
+        mockCore.removeVote(_validator);
+    }
+
+    function isSlashed(address _validator)
+        public
         view
         returns (bool)
     {
-        return (rep[_validator] > 0);
+        return (rep[_validator] == 0);
     }
 
     function getReputation(address _validator)
@@ -101,10 +127,16 @@ contract MockConsensus is ConsensusI, ReputationI {
         return rep[_validator];
     }
 
+    function setReputation(address _validator, uint256 _newReputation)
+        external
+    {
+        rep[_validator] = _newReputation;
+    }
+
     function reputation()
         external
         view
-        returns (ReputationI reputation_)
+        returns (ReputationI)
     {
         return this;
     }
@@ -114,13 +146,75 @@ contract MockConsensus is ConsensusI, ReputationI {
         view
         returns (uint256 minimumValidatorCount_, uint256 joinLimit_)
     {
-        minimumValidatorCount_ = MIN_VALIDATOR;
-        joinLimit_ = JOIN_LIMIT;
+        minimumValidatorCount_ = minValidatorCount;
+        joinLimit_ = validatorJoinLimit;
     }
 
-    function registerPrecommit(bytes32 _precommitment)
+    function precommitMetablock(
+        bytes32 /* _metachainId */,
+        uint256 /* _metablockHeight */,
+        bytes32 _metablockHashPrecommit
+    )
+        external
+    {
+        precommitts[msg.sender] = _metablockHashPrecommit;
+    }
+
+    function registerCommitteeDecision(bytes32, bytes32)
         external
     {
         // do nothing for now
+    }
+
+    function newMetaChain()
+        external
+        returns(bytes32 metachainId_)
+    {
+        // do nothing for now
+    }
+
+    function join(
+        address _validator,
+        address _withdrawalAddress
+    )
+        external
+    {
+        // do nothing for now
+    }
+
+    function openMetablock(
+        uint256 _committedDynasty,
+        uint256 _committedAccumulatedGas,
+        uint256 _committedSourceBlockHeight,
+        uint256 _deltaGasTarget
+    )
+        external
+    {
+        mockCore.openMetablock(
+            _committedDynasty,
+            _committedAccumulatedGas,
+            _committedSourceBlockHeight,
+            _deltaGasTarget
+        );
+    }
+
+    function isPrecommitted(address _core)
+        external
+        view
+        returns (bool)
+    {
+        return precommitts[_core] != bytes32(0);
+    }
+
+    /**
+     * @notice Get anchor address for metachain id.
+     *
+     * @return anchor_ Anchor address.
+     */
+    function getAnchor(bytes32)
+        external
+        returns (address anchor_)
+    {
+        anchor_ = address(1);
     }
 }

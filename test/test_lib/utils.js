@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+'use strict';
+
 const Assert = require('assert');
 const BN = require('bn.js');
 const web3 = require('./web3.js');
@@ -28,12 +30,12 @@ async function advanceBlock() {
         return reject(err);
       }
 
-      const newBlockHash = web3.eth.getBlock('latest').hash;
-
-      return resolve(newBlockHash);
+      return resolve();
     });
   });
 }
+
+function getRandomHash() { return web3.utils.sha3(`${Date.now()}`); }
 
 const ResultType = {
   FAIL: 0,
@@ -65,6 +67,8 @@ const receipts = [];
 function Utils() {}
 
 Utils.prototype = {
+  generateRandomMetachainId: () => getRandomHash(),
+
   /** Log receipt. */
   logReceipt: (receipt, description) => {
     receipts.push({
@@ -191,6 +195,22 @@ Utils.prototype = {
     assert(false, 'Did not fail assert as expected.');
   },
 
+  /** Get block number. */
+  getBlockNumber: () => new Promise((resolve, reject) => {
+    web3.eth.getBlockNumber((error, result) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(new BN(result));
+      }
+    });
+  }),
+
+  /** Get block hash */
+  getBlockHash: blockNumber => new Promise((resolve) => {
+    web3.eth.getBlock(blockNumber).then(block => resolve(block.hash));
+  }),
+
   /** Get account balance. */
   getBalance: address => new Promise((resolve, reject) => {
     web3.eth.getBalance(address, (error, result) => {
@@ -202,6 +222,11 @@ Utils.prototype = {
     });
   }),
 
+  getStorageAt: (address, index) => new Promise(
+    resolve => web3.eth.getStorageAt(address, index)
+      .then(result => resolve(result)),
+  ),
+
   /** Get gas price. */
   getGasPrice: () => new Promise((resolve, reject) => {
     web3.eth.getGasPrice((error, result) => {
@@ -211,6 +236,13 @@ Utils.prototype = {
         resolve(result);
       }
     });
+  }),
+
+  getCode: address => new Promise((resolve) => {
+    web3.eth.getCode(address)
+      .then((code) => {
+        resolve(code);
+      });
   }),
 
   validateEvents: (eventLogs, expectedData) => {
@@ -261,6 +293,15 @@ Utils.prototype = {
     web3.eth.abi.encodeParameter('string', structDescriptor),
   ),
 
+  getCallPrefix: (structDescriptor) => {
+    const hash = web3.utils.sha3(structDescriptor);
+    return hash.substring(0, 10);
+  },
+
+  getRandomHash,
+
+  getRandomNumber: max => Math.floor(Math.random() * Math.floor(max)),
+
   /** Receives accounts list and gives away each time one. */
   AccountProvider: class AccountProvider {
     constructor(accounts) {
@@ -276,10 +317,23 @@ Utils.prototype = {
     }
   },
 
+  encodeFunctionSignature: signature => web3.eth.abi.encodeFunctionSignature(signature),
+  encodeParameters: (types, params) => web3.eth.abi.encodeParameters(types, params),
+
+  isAddress: address => web3.utils.isAddress(address),
+
+  isNonNullAddress: address => web3.utils.isAddress(address) && address !== this.NULL_ADDRESS,
+
+  toChecksumAddress: address => web3.utils.toChecksumAddress(address),
+
   ResultType,
 
   ZERO_BYTES32:
     '0x0000000000000000000000000000000000000000000000000000000000000000',
+
+  ZERO_BYTES20:
+    '0x0000000000000000000000000000000000000000',
+
   NULL_ADDRESS: '0x0000000000000000000000000000000000000000',
 };
 

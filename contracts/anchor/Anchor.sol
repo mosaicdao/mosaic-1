@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity >=0.5.0 <0.6.0;
 
 // Copyright 2019 OpenST Ltd.
 //
@@ -22,6 +22,7 @@ import "../consensus/ConsensusModule.sol";
 import "../lib/CircularBufferUint.sol";
 import "../lib/MerklePatriciaProof.sol";
 import "../lib/RLP.sol";
+import "../proxies/MasterCopyNonUpgradable.sol";
 
 /**
  * @title Anchor contract which implements StateRootInterface.
@@ -31,7 +32,7 @@ import "../lib/RLP.sol";
  *         roots are exchanged bidirectionally between the anchor and the
  *         co-anchor by the consensus.
  */
-contract Anchor is AnchorI, ConsensusModule, CircularBufferUint {
+contract Anchor is MasterCopyNonUpgradable, AnchorI, ConsensusModule, CircularBufferUint {
 
     /* Usings */
 
@@ -48,76 +49,24 @@ contract Anchor is AnchorI, ConsensusModule, CircularBufferUint {
     /** Maps block heights to their respective state root. */
     mapping (uint256 => bytes32) private stateRoots;
 
-    /**
-     * The remote chain ID is the remote chain id where anchor contract is
-     * deployed.
-     */
-    uint256 private remoteChainId;
-
-    /** Address of the anchor on the auxiliary chain. Can be zero. */
-    address public coAnchor;
-
-
-    /*  Constructor */
-
-    /**
-     * @notice Contract constructor.
-     *
-     * @param _remoteChainId The chain id of the chain that is tracked by this
-     *                       anchor.
-     * @param _blockHeight Block height at which _stateRoot needs to store.
-     * @param _stateRoot State root hash of given _blockHeight.
-     * @param _maxStateRoots The max number of state roots to store in the
-     *                       circular buffer.
-     * @param _consensus A consensus address.
-     */
-    constructor(
-        uint256 _remoteChainId,
-        uint256 _blockHeight,
-        bytes32 _stateRoot,
-        uint256 _maxStateRoots,
-        address _consensus
-    )
-        ConsensusModule(_consensus)
-        CircularBufferUint(_maxStateRoots)
-        public
-    {
-        require(
-            _remoteChainId != 0,
-            "Remote chain Id must not be 0."
-        );
-
-        remoteChainId = _remoteChainId;
-
-        stateRoots[_blockHeight] = _stateRoot;
-        CircularBufferUint.store(_blockHeight);
-    }
-
 
     /* External functions */
 
-    /**
-     *  @notice The Co-Anchor address is the address of the anchor that is
-     *          deployed on the other (origin/auxiliary) chain.
-     *
-     *  @param _coAnchor Address of the Co-Anchor on auxiliary.
-     */
-    function setCoAnchorAddress(address _coAnchor)
+   /**
+    * @notice Setup function for anchor.
+    *
+    * @param _maxStateRoots The max number of state roots to store in the
+    *                       circular buffer.
+    * @param _consensus A consensus address.
+    */
+    function setup(
+        uint256 _maxStateRoots,
+        ConsensusI _consensus
+    )
         external
-        onlyConsensus
     {
-
-        require(
-            _coAnchor != address(0),
-            "Co-Anchor address must not be 0."
-        );
-
-        require(
-            coAnchor == address(0),
-            "Co-Anchor has already been set and cannot be updated."
-        );
-
-        coAnchor = _coAnchor;
+        setupCircularBuffer(_maxStateRoots);
+        setupConsensus(_consensus);
     }
 
     /**
@@ -184,18 +133,5 @@ contract Anchor is AnchorI, ConsensusModule, CircularBufferUint {
         delete stateRoots[oldestStoredBlockHeight];
 
         emit StateRootAvailable(_blockHeight, _stateRoot);
-    }
-
-    /**
-     *  @notice Get the remote chain id of this anchor.
-     *
-     *  @return remoteChainId_ The remote chain id.
-     */
-    function getRemoteChainId()
-        external
-        view
-        returns (uint256 remoteChainId_)
-    {
-        remoteChainId_ = remoteChainId;
     }
 }

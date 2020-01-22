@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity >=0.5.0 <0.6.0;
 
 // Copyright 2019 OpenST Ltd.
 //
@@ -17,34 +17,29 @@ pragma solidity ^0.5.0;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "./CoreI.sol";
+import "./CoreStatusEnum.sol";
 import "../consensus/ConsensusModule.sol";
 import "../reputation/ReputationI.sol";
 import "../version/MosaicVersion.sol";
+import "../proxies/MasterCopyNonUpgradable.sol";
 
-contract Core is ConsensusModule, MosaicVersion, CoreI {
+contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreStatusEnum, CoreI {
+
+    /* Usings */
 
     using SafeMath for uint256;
 
 
-    /* Enum and structs */
+    /* Events */
 
-    /** Enum of Core state machine */
-    enum Status {
-        // core accepts initial set of validators
-        creation,
-        // core has an open kernel without precommitment to a proposal
-        opened,
-        // core has precommitted to to a proposal for the open kernel
-        precommitted,
-        // core has failed to get a proposal committed when challenged for being halted
-        halted,
-        // precommitted proposal is rejected by consensus committee
-        corrupted
-    }
+    /** Emitted when new metablock is proposed */
+    event MetablockProposed(bytes32 proposal);
+
+    /* Structs */
 
     /** The kernel of a meta-block header */
     struct Kernel {
-        // Note the height of the metablock in the chain is omitted in the struct
+        // Note the height of the metablock in the metachain is omitted in the struct
 
         /** Hash of the metablock's parent */
         bytes32 parent;
@@ -99,7 +94,7 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
 
     /** EIP-712 domain separator for Core */
     bytes32 public constant DOMAIN_SEPARATOR_TYPEHASH = keccak256(
-        "EIP712Domain(string name,string version,bytes20 chainId,address verifyingContract)"
+        "EIP712Domain(string name,string version,bytes32 metachainId,address verifyingContract)"
     );
 
     /** EIP-712 type hash for Kernel. */
@@ -144,11 +139,11 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     /** Domain separator */
     bytes32 public domainSeparator;
 
-    /** Chain Id of the meta-blockchain */
-    bytes20 public chainId;
+    /** Metachain Id of the meta-blockchain */
+    bytes32 public metachainId;
 
     /** Core status */
-    Status public coreStatus;
+    CoreStatus public coreStatus;
 
     /** Epoch length */
     uint256 public epochLength;
@@ -205,9 +200,6 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     /** Committed dynasty number */
     uint256 public committedDynasty;
 
-    /** Committed source block hash */
-    bytes32 public committedSource;
-
     /** Committed sourceBlockHeight */
     uint256 public committedSourceBlockHeight;
 
@@ -232,49 +224,67 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     /** Precommitment closure block height */
     uint256 public precommitClosureBlockHeight;
 
+    /**
+     * Block number at which core status is changed to creation.
+     * It will be used by validators to create GenesisFile.
+     */
+    uint256 public rootOriginObservationBlockHeight;
+
 
     /* Modifiers */
 
-    modifier duringCreation()
+    modifier beforeOpen()
     {
-        require(coreStatus == Status.creation,
-            "The core must be under creation.");
+        require(
+            coreStatus == CoreStatus.created,
+            "The core must be created."
+        );
         _;
     }
 
     modifier whileRunning()
     {
-        require(coreStatus == Status.opened ||
-            coreStatus == Status.precommitted,
-            "The core must be running.");
+        require(
+            coreStatus == CoreStatus.opened ||
+            coreStatus == CoreStatus.precommitted,
+            "The core must be running."
+        );
         _;
     }
 
     modifier whileMetablockOpen()
     {
-        require(coreStatus == Status.opened,
-            "The core must have an open metablock kernel.");
+        require(
+            coreStatus == CoreStatus.opened,
+            "The core must have an open metablock kernel."
+        );
         _;
     }
 
     modifier whileMetablockPrecommitted()
     {
-        require(coreStatus == Status.precommitted,
-            "The core must be precommitted.");
+        require(
+            coreStatus == CoreStatus.precommitted,
+            "The core must be precommitted."
+        );
         _;
     }
 
     modifier duringPrecommitmentWindow()
     {
-        require(block.number <= precommitClosureBlockHeight,
-            "The precommitment window must be open.");
+        require(
+            block.number <= precommitClosureBlockHeight,
+            "The precommitment window must be open."
+        );
         _;
     }
 
-    /* External and public functions */
 
-    constructor(
-        bytes20 _chainId,
+    /* Special Functions */
+
+    function setup(
+        ConsensusI _consensus,
+        bytes32 _metachainId,
         uint256 _epochLength,
         uint256 _minValidators,
         uint256 _joinLimit,
@@ -284,24 +294,59 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         uint256 _gasTarget,
         uint256 _dynasty,
         uint256 _accumulatedGas,
-        bytes32 _source,
         uint256 _sourceBlockHeight
     )
-        ConsensusModule(msg.sender) // Core is constructed by Consenus
-        public
+        external
     {
-        // note: consider adding requirement checks
+        require(
+            metachainId == bytes32(0),
+            "Core is already setup."
+        );
+
+        require(
+            _metachainId != bytes32(0),
+            "Metachain id is 0."
+        );
+
+        require(
+            _epochLength != uint256(0),
+            "Epoch length is 0."
+        );
+
+        require(
+            _minValidators != uint256(0),
+            "Min validators count is 0."
+        );
+
+        require(
+            _joinLimit != uint256(0),
+            "Validator's join limit is 0."
+        );
+
+        require(
+            _reputation != ReputationI(0),
+            "Reputation contract's address is null."
+        );
+
+        require(
+            (_height == uint256(0) && _parent == bytes32(0))
+            || (_height != uint256(0) && _parent != bytes32(0)),
+            "Height and parent can be 0 only together."
+        );
+
         domainSeparator = keccak256(
             abi.encode(
                 DOMAIN_SEPARATOR_TYPEHASH,
                 DOMAIN_SEPARATOR_NAME,
                 DOMAIN_SEPARATOR_VERSION,
-                _chainId,
+                _metachainId,
                 address(this)
             )
         );
 
-        coreStatus = Status.creation;
+        setupConsensus(_consensus);
+
+        coreStatus = CoreStatus.created;
 
         epochLength = _epochLength;
 
@@ -311,6 +356,7 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         joinLimit = _joinLimit;
 
         creationKernelHeight = _height;
+        openKernelHeight = _height;
 
         Kernel storage creationKernel = kernels[_height];
         creationKernel.parent = _parent;
@@ -319,15 +365,47 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
 
         committedDynasty = _dynasty;
         committedAccumulatedGas = _accumulatedGas;
-        committedSource = _source;
         committedSourceBlockHeight = _sourceBlockHeight;
-
-        newProposalSet();
     }
 
+
+    /* External and public functions */
+
     /**
-     * Propose transition object and vote message from seal
-     * for the open kernel.
+     * @notice Propose transition object and vote message from seal
+     *         for the open kernel.
+     *
+     * @dev Function requires:
+     *          - core is opened
+     *          - the given kernel hash matches to the opened kernel hash in core
+     *          - origin observation is not 0
+     *          - dynasty is strictly greater than committed dynasty
+     *          - accumulated gas is strictly greater than committed
+     *            accumulated gas
+     *          - committee lock (transition root hash) is not 0
+     *          - source blockhash is not 0
+     *          - target blockhash is not 0
+     *          - source block height is strictly greater than committed
+     *            block height
+     *          - source block height is a checkpoint
+     *          - target block height is +1 epoch of the source block height
+     *          - a proposal matching with the input parameters does
+     *            not exist in the core
+     *
+     * @param _kernelHash Kernel hash of a proposed metablock.
+     * @param _originObservation Origin observation of a proposed metablock.
+     * @param _dynasty Dynasty of a proposed metablock.
+     * @param _accumulatedGas Accumulated gas in a proposed metablock.
+     * @param _committeeLock Committe lock (transition root hash) of a proposed
+     *                       metablock.
+     * @param _source Source blockhash of a vote message for a proposed metablock.
+     * @param _target Target blockhash of a vote message for a proposed metablock.
+     * @param _sourceBlockHeight Source block height of a vote message for a
+     *                           proposed metablock.
+     * @param _targetBlockHeight Target block height of a vote message for a
+     *                           proposed metablock.
+     *
+     * @return proposal_ Returns a proposal based on input parameters.
      */
     function proposeMetablock(
         bytes32 _kernelHash,
@@ -344,26 +422,46 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         whileMetablockOpen
         returns (bytes32 proposal_)
     {
-        require(_kernelHash == openKernelHash,
-            "A metablock can only be proposed for the open Kernel in this core.");
-        require(_originObservation != bytes32(0),
-            "Origin observation cannot be null.");
-        require(_dynasty > committedDynasty,
-            "Dynasty must strictly increase.");
-        require(_accumulatedGas > committedAccumulatedGas,
-            "Accumulated gas must strictly increase.");
-        require(_committeeLock != bytes32(0),
-            "Committee lock cannot be null.");
-        require(_source != bytes32(0),
-            "Source blockhash must not be null.");
-        require(_source != committedSource,
-            "Source blockhash cannot equal sealed source blockhash.");
-        require(_sourceBlockHeight > committedSourceBlockHeight,
-            "Source block height must strictly increase.");
-        require((_sourceBlockHeight % epochLength) == 0,
-            "Source block height must be a checkpoint.");
-        require(_targetBlockHeight == _sourceBlockHeight.add(epochLength),
-            "Target block height must equal source block height plus one.");
+        require(
+            _kernelHash == openKernelHash,
+            "A metablock can only be proposed for the open Kernel in this core."
+        );
+        require(
+            _originObservation != bytes32(0),
+            "Origin observation cannot be null."
+        );
+        require(
+            _dynasty > committedDynasty,
+            "Dynasty must strictly increase."
+        );
+        require(
+            _accumulatedGas > committedAccumulatedGas,
+            "Accumulated gas must strictly increase."
+        );
+        require(
+            _committeeLock != bytes32(0),
+            "Committee lock cannot be null."
+        );
+        require(
+            _source != bytes32(0),
+            "Source blockhash must not be null."
+        );
+        require(
+            _target != bytes32(0),
+            "Target blockhash must not be null."
+        );
+        require(
+            _sourceBlockHeight > committedSourceBlockHeight,
+            "Source block height must strictly increase."
+        );
+        require(
+            (_sourceBlockHeight % epochLength) == 0,
+            "Source block height must be a checkpoint."
+        );
+        require(
+            _targetBlockHeight == _sourceBlockHeight.add(epochLength),
+            "Target block height must equal source block height plus one."
+        );
 
         bytes32 transitionHash = hashTransition(
             _kernelHash,
@@ -383,8 +481,26 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
 
         // insert proposal, reverts if proposal already inserted
         insertProposal(_dynasty, proposal_);
+
+        emit MetablockProposed(proposal_);
     }
 
+    /**
+     * @notice Registers a validator's vote for the given proposal.
+     *         If the validator has already registered a vote for currently
+     *         opened kernel height, it gets updated (only if dynasty number
+     *         of the new vote is higher then the previous one).
+     *
+     * @dev Function requires:
+     *          - core is in precommitment window
+     *          - proposal is not 0
+     *          - if core has precommitted, the given proposal matches with it
+     *          - proposal exists at open kernel height
+     *          - validator active in this core
+     *          - validator should not be slashed in reputation contract
+     *          - validator has not already cast the same vote
+     *          - vote gets updated only if the new vote is at higher dynsaty
+     */
     function registerVote(
         bytes32 _proposal,
         bytes32 _r,
@@ -394,29 +510,46 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         external
         duringPrecommitmentWindow
     {
-        require(_proposal != bytes32(0),
-            "Proposal can not be null.");
+        require(
+            _proposal != bytes32(0),
+            "Proposal can not be null."
+        );
         if (precommit != bytes32(0)) {
-            require(_proposal == precommit,
-                "Core has precommitted, only votes for precommitment are relevant.");
+            require(
+                _proposal == precommit,
+                "Core has precommitted, only votes for precommitment are relevant."
+            );
         }
 
-        require(proposals[openKernelHeight][_proposal] != bytes32(0),
-            "Proposal must be registered at open metablock height.");
+        require(
+            proposals[openKernelHeight][_proposal] != bytes32(0),
+            "Proposal must be registered at open metablock height."
+        );
+
         address validator = ecrecover(_proposal, _v, _r, _s);
         // check validator is registered to this core
-        require(isValidator(validator),
-            "Validator ,ust be active in this core.");
-        require(reputation.isActive(validator),
-             "Validator must be active.");
+        require(
+            isValidator(validator),
+            "Validator must be active in this core."
+        );
+        require(
+            !reputation.isSlashed(validator),
+            "Validator is slashed."
+        );
+
         bytes32 castVote = votes[validator];
-        require(castVote != _proposal,
-            "Vote has already been cast.");
+        require(
+            castVote != _proposal,
+            "Vote has already been cast."
+        );
+
         VoteCount storage castVoteCount = voteCounts[castVote];
         VoteCount storage registerVoteCount = voteCounts[_proposal];
-        if (castVoteCount.height == openKernelHeight) {
-            require(castVoteCount.dynasty < registerVoteCount.dynasty,
-                "Vote can only be recast for higher dynasty numbers.");
+        if (castVoteCount.count != 0 && castVoteCount.height == openKernelHeight) {
+            require(
+                castVoteCount.dynasty < registerVoteCount.dynasty,
+                "Vote can only be recast for higher dynasty numbers."
+            );
             castVoteCount.count = castVoteCount.count.sub(1);
         }
         votes[validator] = _proposal;
@@ -427,8 +560,26 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     }
 
     /**
+     * @notice Hashes given parameters of a metablock.
+     *
+     * @param _kernelHash Kernel hash of a provided metablock.
+     * @param _originObservation Origin observation of a provided metablock.
+     * @param _dynasty Dynasty of a provided metablock.
+     * @param _accumulatedGas Accumulated gas in a provided metablock.
+     * @param _committeeLock Committe lock (transition root hash) of a provided
+     *                       metablock.
+     * @param _source Source blockhash of a vote message for a
+     *                provided metablock.
+     * @param _target Target blockhash of a vote message for a
+     *                provided metablock.
+     * @param _sourceBlockHeight Source block height of a vote message for a
+     *                           provided metablock.
+     * @param _targetBlockHeight Target block height of a vote message for a
+     *                           provided metablock.
+     *
+     * @return The precommit's hash.
      */
-    function assertPrecommit(
+    function hashMetablock(
         bytes32 _kernelHash,
         bytes32 _originObservation,
         uint256 _dynasty,
@@ -439,15 +590,10 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         uint256 _sourceBlockHeight,
         uint256 _targetBlockHeight
     )
-        external
+        public
         view
-        returns (bytes32 proposal_)
+        returns (bytes32 metablockHash_)
     {
-        require(precommit != bytes32(0),
-            "Core is has not precommitted to a proposal.");
-        require(_kernelHash == openKernelHash,
-            "KernelHash must be the open kernel");
-
         bytes32 transitionHash = hashTransition(
             _kernelHash,
             _originObservation,
@@ -456,27 +602,33 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
             _committeeLock
         );
 
-        proposal_ = hashVoteMessage(
+        metablockHash_ = hashVoteMessage(
             transitionHash,
             _source,
             _target,
             _sourceBlockHeight,
             _targetBlockHeight
         );
-
-        require(proposal_ == precommit,
-            "Provided metablock does not match precommit.");
     }
 
+    /**
+     * @notice Opens a new metablock if a proposal is precommitted.
+     *
+     * @dev Function requires:
+     *          - core has precommitted
+     *          - only consensus can call
+     *          - input parameters match to an open metablock
+     *
+     * @param _committedDynasty Dynasty of an open metablock.
+     * @param _committedAccumulatedGas Accumulated gas in an open metablock.
+     * @param _committedSourceBlockHeight Source block height of a vote message
+     *                                    for an open metablock.
+     * @param _deltaGasTarget Gas target delta for a new metablock.
+     */
     function openMetablock(
-        bytes32 _committedOriginObservation,
         uint256 _committedDynasty,
         uint256 _committedAccumulatedGas,
-        bytes32 _committedCommitteeLock,
-        bytes32 _committedSource,
-        bytes32 _committedTarget,
         uint256 _committedSourceBlockHeight,
-        uint256 _committedTargetBlockHeight,
         uint256 _deltaGasTarget
     )
         external
@@ -485,28 +637,8 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     {
         assert(precommit != bytes32(0));
 
-        bytes32 transitionHash = hashTransition(
-            openKernelHash,
-            _committedOriginObservation,
-            _committedDynasty,
-            _committedAccumulatedGas,
-            _committedCommitteeLock
-        );
-
-        bytes32 committedProposal = hashVoteMessage(
-            transitionHash,
-            _committedSource,
-            _committedTarget,
-            _committedSourceBlockHeight,
-            _committedTargetBlockHeight
-        );
-
-        require(precommit == committedProposal,
-            "Precommit does not equal committed metablock.");
-
         committedDynasty = _committedDynasty;
         committedAccumulatedGas = _committedAccumulatedGas;
-        committedSource = _committedSource;
         committedSourceBlockHeight = _committedSourceBlockHeight;
 
         uint256 nextKernelHeight = openKernelHeight.add(1);
@@ -537,8 +669,15 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     }
 
     /**
-     * remove vote can be called by consensus when a validator
-     * is slashed, to retro-actively remove the vote from the current open metablock
+     * @notice Remove vote can be called by consensus when a validator
+     *         is slashed, to retro-actively remove the vote from the
+     *         current open metablock.
+     *
+     * @dev Function requires:
+     *          - only consensus can call
+     *          - core is in running state
+     *
+     * @param _validator Address of a validator to remove a vote.
      */
     function removeVote(
         address _validator
@@ -555,12 +694,28 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         }
     }
 
-    function joinDuringCreation(address _validator)
+    /**
+     * @notice Joins a validator before core is opened.
+     *         Once the minimum number of validators has joined, core is opened,
+     *         with the metablock parameters specified in the constructor.
+     *
+     * @dev Function requires:
+     *          - only consensus can call
+     *          - core is created state and not open
+     *          - a validator's address is not null
+     *          - a validator has not already joined
+     *
+     * @param _validator A validator's address to join.
+     *
+     * @return The total count of joined validators.
+     */
+    function joinBeforeOpen(address _validator)
         external
         onlyConsensus
-        duringCreation
+        beforeOpen
+        returns(uint256 validatorCount_, uint256 minValidatorCount_)
     {
-        // during creation join at creation kernel height
+        // during created state, validators join at creation kernel height
         insertValidator(_validator, creationKernelHeight);
 
         Kernel storage creationKernel = kernels[creationKernelHeight];
@@ -570,7 +725,6 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         if (countValidators >= minimumValidatorCount) {
             quorum = calculateQuorum(countValidators);
             precommitClosureBlockHeight = CORE_OPEN_VOTES_WINDOW;
-            openKernelHeight = creationKernelHeight;
             openKernelHash = hashKernel(
                 creationKernelHeight,
                 creationKernel.parent,
@@ -578,56 +732,125 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
                 creationKernel.updatedReputation,
                 creationKernel.gasTarget
             );
-            coreStatus = Status.opened;
+            coreStatus = CoreStatus.opened;
+            // Core status would be changed to `opened`.
+            // So `rootOriginObservationBlockHeight` would be set once.
+            rootOriginObservationBlockHeight = block.number;
+
+            newProposalSet();
         }
+
+        validatorCount_ = countValidators;
+        minValidatorCount_ = minimumValidatorCount;
     }
 
+    /**
+     * @notice Joins a validator.
+     *
+     * @dev Function requires:
+     *          - only consensus can call
+     *          - core is in a running state
+     *          - validators' join limit for the core has not been reached
+     *          - maximum number of validators to join in a single metablock
+     *            has not been reached
+     *          - given validator address is not 0
+     *          - validator has not joined
+     *
+     * @param _validator Address of a validator to join.
+     */
     function join(address _validator)
         external
         onlyConsensus
         whileRunning
     {
-        require(countValidators
+        require(
+            countValidators
             .add(countJoinMessages)
             .sub(countLogOutMessages) < joinLimit,
-            "Join limit is reached for this core.");
-        require(countJoinMessages < MAX_DELTA_VALIDATORS,
-            "Maximum number of validators that can join in one metablock is reached.");
+            "Join limit is reached for this core."
+        );
+        require(
+            countJoinMessages < MAX_DELTA_VALIDATORS,
+            "Maximum number of validators that can join in one metablock is reached."
+        );
+
+        countJoinMessages = countJoinMessages.add(1);
+
         uint256 nextKernelHeight = openKernelHeight.add(1);
+
         // insertValidator requires validator cannot join twice
         // insert validator starting from next metablock height
         insertValidator(_validator, nextKernelHeight);
+
         Kernel storage nextKernel = kernels[nextKernelHeight];
         nextKernel.updatedValidators.push(_validator);
-        // TASK: reputation can be uint64, and initial rep set properly
+        // TASK: reputation can be uint64, and initial rep set properly.
         nextKernel.updatedReputation.push(uint256(1));
-        countJoinMessages = countJoinMessages.add(1);
     }
 
+    /**
+     * @notice Logs out the validator.
+     *
+     * @dev Function requires:
+     *          - only consensus can call
+     *          - core is in a running state
+     *          - validators' minimum limit has not been reached
+     *          - maximum number of validators to logout in a single metablock
+     *            has not been reached
+     *          - given validator address is not 0
+     *          - validator has joined
+     *
+     * @param _validator An address of the validator to logout.
+     */
     function logout(address _validator)
         external
         onlyConsensus
         whileRunning
     {
-        require(countValidators
+        require(
+            countValidators
             .add(countJoinMessages)
             .sub(countLogOutMessages) > minimumValidatorCount,
-            "Validator minimum limit reached.");
-        require(countLogOutMessages < MAX_DELTA_VALIDATORS,
-            "Maximum number of validators that can log out in one metablock is reached.");
+            "Validator minimum limit reached."
+        );
+        require(
+            countLogOutMessages < MAX_DELTA_VALIDATORS,
+            "Maximum number of validators that can log out in one metablock is reached."
+        );
+
         uint256 nextKernelHeight = openKernelHeight.add(1);
+
         // removeValidator performs necessary requirements
         // remove validator from next metablock height
         removeValidator(_validator, nextKernelHeight);
+
         Kernel storage nextKernel = kernels[nextKernelHeight];
         nextKernel.updatedValidators.push(_validator);
         nextKernel.updatedReputation.push(uint256(0));
+
         countLogOutMessages = countLogOutMessages.add(1);
     }
 
-    /** Validator is active if open kernel height is
-     * - greater or equal than validator's begin height
-     * - and, less or equal than validator's end height
+    /**
+     * It returns open kernel hash and height.
+     *
+     * @return Metablock's openKernelHash and openKernelHeight.
+     */
+    function getOpenKernel()
+        external
+        returns(bytes32 openKernelHash_, uint256 openKernelHeight_)
+    {
+        openKernelHash_ = openKernelHash;
+        openKernelHeight_ = openKernelHeight;
+    }
+
+
+    /* Public functions */
+
+    /**
+     * @notice Validator is active if open kernel height is
+     *           - greater or equal than validator's begin height
+     *           - and, less or equal than validator's end height
      */
     function isValidator(address _account)
         public
@@ -656,36 +879,45 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     /* Internal and private functions */
 
     /**
-     * precommit to a given proposal and lock core validators
-     * to associated responsability
+     * @notice Precommits to a given proposal and lock core validators
+     *         to associated responsability.
      */
     function registerPrecommit(bytes32 _proposal)
         internal
     {
-        require(precommit == bytes32(0) ||
-            precommit == _proposal,
-            "Once locked, precommit cannot be changed.");
-        if (coreStatus == Status.opened) {
-            coreStatus = Status.precommitted;
+        require(
+            precommit == bytes32(0) || precommit == _proposal,
+            "Once locked, precommit cannot be changed."
+        );
+
+        if (coreStatus == CoreStatus.opened) {
+            coreStatus = CoreStatus.precommitted;
             precommit = _proposal;
             precommitClosureBlockHeight = block.number.add(CORE_LAST_VOTES_WINDOW);
-            consensus.registerPrecommit(_proposal);
+            consensus.precommitMetablock(metachainId, openKernelHeight, _proposal);
         }
     }
 
     /**
-     * start new linked list for proposals
+     * @notice Starts new linked list for proposals at open kernel height.
      */
     function newProposalSet()
         internal
     {
-        require(proposals[openKernelHeight][SENTINEL_PROPOSALS] == bytes32(0),
-            "Proposal set has already been initialised at this height.");
+        assert(proposals[openKernelHeight][SENTINEL_PROPOSALS] == bytes32(0));
         proposals[openKernelHeight][SENTINEL_PROPOSALS] = SENTINEL_PROPOSALS;
     }
 
     /**
-     * insert proposal
+     * @notice Inserts a proposal.
+     *
+     * @dev Function requires:
+     *          - proposal hash is not 0
+     *          - proposal does not exist
+     *          - proposal is not a sentinel proposal
+     *
+     * @param _dynasty Dynasty of a metablock of a proposal.
+     * @param _proposal Proposal hash.
      */
     function insertProposal(
         uint256 _dynasty,
@@ -693,15 +925,21 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     )
         internal
     {
-        VoteCount storage voteCount = voteCounts[_proposal];
-
         // note: redundant because we always calculate the proposal hash
-        require(_proposal != bytes32(0),
-            "Proposal must not be null.");
-        require(proposals[openKernelHeight][_proposal] == bytes32(0),
-            "Proposal can only be inserted once.");
-        require(_proposal != SENTINEL_PROPOSALS,
-            "Proposal must not be sentinel for proposals.");
+        require(
+            _proposal != bytes32(0),
+            "Proposal must not be null."
+        );
+        require(
+            _proposal != SENTINEL_PROPOSALS,
+            "Proposal must not be sentinel for proposals."
+        );
+        require(
+            proposals[openKernelHeight][_proposal] == bytes32(0),
+            "Proposal can only be inserted once."
+        );
+
+        VoteCount storage voteCount = voteCounts[_proposal];
 
         // vote registered for open kernel
         voteCount.height = openKernelHeight;
@@ -715,19 +953,24 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     }
 
     /**
-     * clean proposals
+     * @notice Clean proposals.
+     *
      * note: improve logic, to be done partially in case too much gas needed
-     *       double-check if logic is correct
+     *       double-check if logic is correct.
      */
     function cleanProposals(uint256 _height)
         internal
     {
-        require(_height < openKernelHeight,
-            "Only proposals of older kernels can be cleaned out.");
+        require(
+            _height < openKernelHeight,
+            "Only proposals of older kernels can be cleaned out."
+        );
         bytes32 currentProposal = proposals[_height][SENTINEL_PROPOSALS];
         bytes32 deleteProposal = SENTINEL_PROPOSALS;
-        require(currentProposal != bytes32(0),
-            "There are no proposals to clear out.");
+        require(
+            currentProposal != bytes32(0),
+            "There are no proposals to clear out."
+        );
         while (currentProposal != SENTINEL_PROPOSALS) {
             delete proposals[_height][deleteProposal];
             delete voteCounts[deleteProposal];
@@ -739,36 +982,61 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
     }
 
     /**
-     * insert validator in the core
-     * sets begin height and end height of validator
+     * @notice Inserts a validator in the core and sets begin and end heights
+     *         of validator.
+     *
+     * @dev Function requires:
+     *          - validator's address is not null
+     *          - begin height is greater or equal than open kernel height
+     *          - validator is not part of the core
      */
     function insertValidator(address _validator, uint256 _beginHeight)
         internal
     {
-        require(_validator != address(0),
-            "Validator must not be null address.");
-        require(_beginHeight >= openKernelHeight,
-            "Begin height cannot be less than kernel height.");
-        require(validatorEndHeight[_validator] == 0,
-            "Validator must not already be part of this core.");
-        require(validatorBeginHeight[_validator] == 0,
-            "Validator must not have a non-zero begin height");
+        require(
+            _validator != address(0),
+            "Validator must not be null address."
+        );
+        assert(_beginHeight >= openKernelHeight);
+        require(
+            validatorEndHeight[_validator] == 0,
+            "Validator must not already be part of this core."
+        );
+        assert(validatorBeginHeight[_validator] == 0);
         validatorBeginHeight[_validator] = _beginHeight;
         validatorEndHeight[_validator] = MAX_FUTURE_END_HEIGHT;
         // update validator count upon new metablock opening
     }
 
+    /**
+     * @notice Removes a validator.
+     *
+     * @dev Function requires:
+     *          - address of a validator is not 0
+     *          - the given end height of a validator is bigger than open
+     *            kernel height
+     *          - validator must have begun
+     *          - validatvalidator must be active
+     */
     function removeValidator(address _validator, uint256 _endHeight)
         internal
     {
-        require(_validator != address(0),
-            "Validator must not be null address.");
-        require(_endHeight > openKernelHeight,
-            "End height cannot be less or equal than kernel height.");
-        require(validatorBeginHeight[_validator] <= openKernelHeight,
-            "Validator must have begun.");
-        require(validatorEndHeight[_validator] == MAX_FUTURE_END_HEIGHT,
-            "Validator must be active.");
+        require(
+            _validator != address(0),
+            "Validator must not be null address."
+        );
+        require(
+            _endHeight > openKernelHeight,
+            "End height cannot be less or equal than kernel height."
+        );
+        require(
+            validatorBeginHeight[_validator] <= openKernelHeight,
+            "Validator must have begun."
+        );
+        require(
+            validatorEndHeight[_validator] == MAX_FUTURE_END_HEIGHT,
+            "Validator must be active."
+        );
         validatorEndHeight[_validator] = _endHeight;
         // update validator count upon new metablock opening
     }
@@ -793,7 +1061,7 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         uint256[] memory _updatedReputation,
         uint256 _gasTarget
     )
-        internal
+        public
         view
         returns (bytes32 hash_)
     {
@@ -864,8 +1132,9 @@ contract Core is ConsensusModule, MosaicVersion, CoreI {
         );
     }
 
-    /** @notice takes the VoteMessage parameters and returns
-     *          the typed VoteMessage hash
+    /**
+    * @notice Takes the VoteMessage parameters and returns
+     *        the typed VoteMessage hash.
      */
     function hashVoteMessage(
         bytes32 _transitionHash,

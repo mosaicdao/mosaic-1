@@ -32,12 +32,14 @@ contract('Committee:enterCommittee', async (accounts) => {
   beforeEach(async () => {
     config = {
       committee: {
+        metachainId: Utils.generateRandomMetachainId(),
         size: 50,
         dislocation: web3.utils.sha3('dislocation'),
         proposal: web3.utils.sha3('proposal'),
         consensus: accountProvider.get(),
       },
       committee3: {
+        metachainId: Utils.generateRandomMetachainId(),
         size: 3,
         dislocation: web3.utils.sha3('dislocation'),
         proposal: web3.utils.sha3('proposal'),
@@ -46,21 +48,25 @@ contract('Committee:enterCommittee', async (accounts) => {
     };
 
     config.committee.contract = await CommitteeUtils.createCommittee(
+      config.committee.metachainId,
+      config.committee.consensus,
       config.committee.size,
       config.committee.dislocation,
       config.committee.proposal,
       {
-        from: config.committee.consensus,
+        from: accountProvider.get(),
       },
     );
     config.committee.sentinelMembers = await config.committee.contract.SENTINEL_MEMBERS.call();
 
     config.committee3.contract = await CommitteeUtils.createCommittee(
+      config.committee3.metachainId,
+      config.committee3.consensus,
       config.committee3.size,
       config.committee3.dislocation,
       config.committee3.proposal,
       {
-        from: config.committee3.consensus,
+        from: accountProvider.get(),
       },
     );
     config.committee3.sentinelMembers = await config.committee3.contract.SENTINEL_MEMBERS.call();
@@ -233,6 +239,7 @@ contract('Committee:enterCommittee', async (accounts) => {
 
   contract('Positive Tests', async () => {
     it('should enter only correct validators in the correct order', async () => {
+      const metachainId = Utils.generateRandomMetachainId();
       const committeeSize = 50;
       const consensus = accountProvider.get();
       const dislocation = web3.utils.sha3('dislocation1');
@@ -240,11 +247,13 @@ contract('Committee:enterCommittee', async (accounts) => {
       const numberOfValidators = 299;
 
       const committee = await CommitteeUtils.createCommittee(
+        metachainId,
+        consensus,
         committeeSize,
         dislocation,
         proposal,
         {
-          from: consensus,
+          from: accountProvider.get(),
         },
       );
 
@@ -287,6 +296,7 @@ contract('Committee:enterCommittee', async (accounts) => {
     });
 
     it('should enter corrects validators in reverse order', async () => {
+      const metachainId = Utils.generateRandomMetachainId();
       const committeeSize = 50;
       const consensus = accountProvider.get();
       const dislocation = web3.utils.sha3('dislocation2');
@@ -294,11 +304,13 @@ contract('Committee:enterCommittee', async (accounts) => {
       const numberOfValidators = 299;
 
       const committee = await CommitteeUtils.createCommittee(
+        metachainId,
+        consensus,
         committeeSize,
         dislocation,
         proposal,
         {
-          from: consensus,
+          from: accountProvider.get(),
         },
       );
 
@@ -340,6 +352,7 @@ contract('Committee:enterCommittee', async (accounts) => {
     });
 
     it('should enter any validator in random order', async () => {
+      const metachainId = Utils.generateRandomMetachainId();
       const committeeSize = 50;
       const consensus = accountProvider.get();
       const dislocation = web3.utils.sha3('dislocation3');
@@ -347,11 +360,13 @@ contract('Committee:enterCommittee', async (accounts) => {
       const numberOfValidators = 299;
 
       const committee = await CommitteeUtils.createCommittee(
+        metachainId,
+        consensus,
         committeeSize,
         dislocation,
         proposal,
         {
-          from: consensus,
+          from: accountProvider.get(),
         },
       );
 

@@ -32,7 +32,7 @@ function createCommitteeMember(account, proposal) {
   };
 
   member.sealedCommit = CommitteeUtils.sealCommit(
-    proposal, member.salt,
+    proposal, member.salt, account,
   );
 
   return member;
@@ -44,6 +44,7 @@ contract('Committee::submitSealedCommit', async (accounts) => {
   beforeEach(async () => {
     config = {
       committee: {
+        metachainId: Utils.generateRandomMetachainId(),
         size: 3,
         dislocation: web3.utils.sha3('dislocation'),
         proposal: web3.utils.sha3('proposal'),
@@ -52,11 +53,13 @@ contract('Committee::submitSealedCommit', async (accounts) => {
     };
 
     config.committee.contract = await CommitteeUtils.createCommittee(
+      config.committee.metachainId,
+      config.committee.consensus,
       config.committee.size,
       config.committee.dislocation,
       config.committee.proposal,
       {
-        from: config.committee.consensus,
+        from: accountProvider.get(),
       },
     );
 
@@ -120,11 +123,13 @@ contract('Committee::submitSealedCommit', async (accounts) => {
     it('should fail if committee is not in commit phase status', async () => {
       const consensus = accountProvider.get();
       const committee = await CommitteeUtils.createCommittee(
+        Utils.generateRandomMetachainId(),
+        consensus,
         3,
         web3.utils.sha3('dislocation'),
         web3.utils.sha3('proposal'),
         {
-          from: consensus,
+          from: accountProvider.get(),
         },
       );
 

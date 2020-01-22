@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity >=0.5.0 <0.6.0;
 
 // Copyright 2019 OpenST Ltd.
 //
@@ -16,13 +16,15 @@ pragma solidity ^0.5.0;
 
 import "../consensus/ConsensusModule.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "../proxies/MasterCopyNonUpgradable.sol";
+import "./CommitteeI.sol";
 
 
 /**
  * @title Committee
  * @author Benjamin Bollen - <ben@ost.com>
  */
-contract Committee is ConsensusModule {
+contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
 
     /* Usings */
 
@@ -110,6 +112,9 @@ contract Committee is ConsensusModule {
 
 
     /* Storage */
+
+    /** Metachain id of the meta-blockchain */
+    bytes32 public metachainId;
 
     /** Committee size */
     uint256 public committeeSize;
@@ -227,29 +232,27 @@ contract Committee is ConsensusModule {
     }
 
 
-    /* Special Functions */
+    /* External functions */
 
-    /**
-     * @notice Setups a new committee.
-     *
-     * @param _committeeSize Size of the committee. A minimum size is 3.
-     * @param _dislocation Used to dislocate a validator location in a hashed
-     *                     space before calculating a distance from a proposal.
-     *                     A non-zero value is required.
-     * @param _proposal A proposal for committee to evaluate. A non-zero value
-     *                  is required.
-     *
-     * @dev Functions requires:
-     *          -
-     */
-    constructor(
+    function setup(
+        bytes32 _metachainId,
+        ConsensusI _consensus,
         uint256 _committeeSize,
         bytes32 _dislocation,
         bytes32 _proposal
     )
-        ConsensusModule(msg.sender)
-        public
+        external
     {
+        require(
+            metachainId == bytes32(0),
+            "Committee is already setup."
+        );
+
+        require(
+            _metachainId != bytes32(0),
+            "Metachain id is 0."
+        );
+
         require(
             _committeeSize >= 3,
             "Committee size must not be smaller than three."
@@ -265,6 +268,10 @@ contract Committee is ConsensusModule {
             "Proposal must not be zero."
         );
 
+        setupConsensus(_consensus);
+
+        metachainId = _metachainId;
+
         committeeStatus = CommitteeStatus.Open;
 
         // Initialize the members linked-list as the empty set.
@@ -276,13 +283,9 @@ contract Committee is ConsensusModule {
 
         proposal = _proposal;
 
-        // @qn (pro): In case of 7 quorum should be 4 or 5.
         quorum = _committeeSize * COMMITTEE_SUPER_MAJORITY_NUMERATOR /
             COMMITTEE_SUPER_MAJORITY_DENOMINATOR;
     }
-
-
-    /* External functions */
 
     /**
      * @notice Enters a `_validator` into the committee.
@@ -309,7 +312,6 @@ contract Committee is ConsensusModule {
         external
         onlyConsensus
         isOpen
-        returns (bool)
     {
         require(
             _validator != SENTINEL_MEMBERS,
@@ -364,13 +366,11 @@ contract Committee is ConsensusModule {
                 // Validator has found its correct nearer and further member
                 // insertMember will pop members beyond committee size.
                 insertMember(_validator, nearerMember, furtherMember);
-                return true;
+                return;
             }
         }
 
         insertMember(_validator, SENTINEL_MEMBERS, furtherMember);
-
-        return true;
     }
 
     /**
@@ -579,21 +579,17 @@ contract Committee is ConsensusModule {
                 committeeDecision == bytes32(0) ||
                 committeeDecision == _position
             );
-            committeeDecision = _position;
+
+            if (committeeDecision == bytes32(0)) {
+                committeeDecision = _position;
+                consensus.registerCommitteeDecision(
+                    metachainId,
+                    committeeDecision
+                );
+            }
         }
 
         totalPositionsCount = totalPositionsCount.add(1);
-    }
-
-    // note: this is old and superceded by the committee decision.
-    // TASK : remove
-    /** @notice Returns true if the proposal reached the quorum. */
-    function proposalAccepted()
-        external
-        view
-        returns (bool)
-    {
-        return positionCounts[proposal] >= quorum;
     }
 
     /** @notice Returns an array of committee members. */
@@ -767,16 +763,15 @@ contract Committee is ConsensusModule {
     /** Uses the salt to seal the position. */
     function sealPosition(bytes32 _position, bytes32 _salt)
         private
-        pure
+        view
         returns (bytes32)
     {
         // Returns the sealed position.
         return keccak256(
-            // TODO: note abi.encodePacked seems unneccesary,
-            // is there an overhead?
             abi.encodePacked(
                 _position,
-                _salt
+                _salt,
+                msg.sender
             )
         );
     }

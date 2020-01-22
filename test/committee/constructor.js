@@ -27,6 +27,7 @@ contract('Committee::constructor', (accounts) => {
 
   beforeEach(async () => {
     config = {
+      metachainId: Utils.generateRandomMetachainId(),
       committeeSize: 50,
       dislocation: web3.utils.sha3('dislocation'),
       proposal: web3.utils.sha3('proposal'),
@@ -39,11 +40,13 @@ contract('Committee::constructor', (accounts) => {
     it('should fail if committee size is less than 3', async () => {
       await Utils.expectRevert(
         CommitteeUtils.createCommittee(
+          config.metachainId,
+          config.consensus,
           2, // committee size,
           config.dislocation,
           config.proposal,
           {
-            from: config.consensus,
+            from: accountProvider.get(),
           },
         ),
         'Committee size must not be smaller than three.',
@@ -53,11 +56,13 @@ contract('Committee::constructor', (accounts) => {
     it('should fail if a dislocation is 0', async () => {
       await Utils.expectRevert(
         CommitteeUtils.createCommittee(
+          config.metachainId,
+          config.consensus,
           config.committeeSize,
           '0x', // dislocation,
           config.proposal,
           {
-            from: config.consensus,
+            from: accountProvider.get(),
           },
         ),
         'Dislocation must not be zero.',
@@ -67,11 +72,13 @@ contract('Committee::constructor', (accounts) => {
     it('should fail if a proposal is 0', async () => {
       await Utils.expectRevert(
         CommitteeUtils.createCommittee(
+          config.metachainId,
+          config.consensus,
           config.committeeSize,
           config.dislocation,
           '0x', // proposal
           {
-            from: config.consensus,
+            from: accountProvider.get(),
           },
         ),
         'Proposal must not be zero.',
@@ -82,11 +89,13 @@ contract('Committee::constructor', (accounts) => {
   contract('Assure constants', () => {
     it('should fail if super majority constants are inconsistent', async () => {
       const committee = await CommitteeUtils.createCommittee(
+        config.metachainId,
+        config.consensus,
         config.committeeSize,
         config.dislocation,
         config.proposal,
         {
-          from: config.consensus,
+          from: accountProvider.get(),
         },
       );
 
@@ -102,11 +111,13 @@ contract('Committee::constructor', (accounts) => {
   contract('Positive Tests', () => {
     it('should construct given sensible parameters', async () => {
       const committee = await CommitteeUtils.createCommittee(
+        config.metachainId,
+        config.consensus,
         config.committeeSize,
         config.dislocation,
         config.proposal,
         {
-          from: config.consensus,
+          from: accountProvider.get(),
         },
       );
 

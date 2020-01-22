@@ -27,13 +27,19 @@ function remove0x(str) {
   return str;
 }
 
-async function createCommittee(committeeSize, dislocation, proposal, txOptions = {}) {
-  return Committee.new(
+async function createCommittee(
+  metachainId, consensus, committeeSize, dislocation, proposal, txOptions = {},
+) {
+  const committee = await Committee.new();
+  await committee.setup(
+    metachainId,
+    consensus,
     committeeSize,
     dislocation,
     proposal,
     txOptions,
   );
+  return committee;
 }
 
 async function enterMembers(committeeContract, members, consensus) {
@@ -48,6 +54,22 @@ async function enterMembers(committeeContract, members, consensus) {
         {
           from: consensus,
         },
+      ),
+    );
+  }
+  await Promise.all(enterPromises);
+}
+
+async function enterMembersThruConsensus(consensusContract, committeeContract, members) {
+  const sentinelMembers = await committeeContract.SENTINEL_MEMBERS.call();
+
+  const enterPromises = [];
+  for (let i = 0; i < members.length; i += 1) {
+    enterPromises.push(
+      consensusContract.enterCommittee(
+        committeeContract.address,
+        members[i],
+        sentinelMembers,
       ),
     );
   }
@@ -116,10 +138,11 @@ function shuffleAccount(dislocation, account) {
   );
 }
 
-function sealCommit(position, seal) {
+function sealCommit(position, seal, address) {
   return web3.utils.soliditySha3(
     { t: 'bytes32', v: position },
     { t: 'bytes32', v: seal },
+    { t: 'address', v: address },
   );
 }
 
@@ -206,6 +229,7 @@ async function assertCommitteeMembers(committee, dist) {
 module.exports = {
   createCommittee,
   enterMembers,
+  enterMembersThruConsensus,
   submitSealedCommits,
   revealCommits,
   distance,
