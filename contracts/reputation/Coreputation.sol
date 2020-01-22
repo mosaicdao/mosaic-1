@@ -1,6 +1,6 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-// Copyright 2019 OpenST Ltd.
+// Copyright 2020 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,12 @@ pragma solidity >=0.5.0 <0.6.0;
 import "../consensus/CoConsensusModule.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 
+/**
+ * @title Coreputation contract.
+ *
+ * @notice Coreputation contract stores validator status and reputation value
+ *         for validators.
+ */
 contract Coreputation is MasterCopyNonUpgradable, CoConsensusModule {
 
     /** Validator status enum */
@@ -31,7 +37,7 @@ contract Coreputation is MasterCopyNonUpgradable, CoConsensusModule {
         /** Validator has put up stake and participates in consensus */
         Staked,
 
-        /** Validator has deregistered and no longer participates in consensus */
+        /** Validator has been deregistered and no longer participates in consensus */
         Deregistered
     }
 
@@ -53,7 +59,7 @@ contract Coreputation is MasterCopyNonUpgradable, CoConsensusModule {
     /* External functions */
 
     /**
-     * @notice It sets up coreputation contract. It can only be called once.
+     * @notice It sets up Coreputation contract. It can only be called once.
      *
      * @dev TODO Remove setup method after coConsensus storage variable is made
      *      constant value in CoConsensusModule.
