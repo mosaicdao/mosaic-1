@@ -19,119 +19,53 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./AnchorI.sol";
 
 import "../consensus/ConsensusModule.sol";
-import "../lib/CircularBufferUint.sol";
-import "../lib/MerklePatriciaProof.sol";
-import "../lib/RLP.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
+import "../anchor/StateRootProvider.sol";
 
 /**
- * @title Anchor contract which implements StateRootInterface.
+ * @title Anchor contract to store the state roots.
  *
- * @notice Anchor stores another chain's state roots. It stores the address of
- *         the co-anchor, which will be the anchor on the other chain. State
- *         roots are exchanged bidirectionally between the anchor and the
- *         co-anchor by the consensus.
+ * @notice Anchor stores auxiliary chain's state roots. This contract is a consensus module
+ *         and the anchoring of the state root can only be done be consensus contract.
  */
-contract Anchor is MasterCopyNonUpgradable, AnchorI, ConsensusModule, CircularBufferUint {
-
-    /* Usings */
-
-    using SafeMath for uint256;
-
-
-    /* Events */
-
-    event StateRootAvailable(uint256 _blockHeight, bytes32 _stateRoot);
-
-
-    /* Storage */
-
-    /** Maps block heights to their respective state root. */
-    mapping (uint256 => bytes32) private stateRoots;
-
+contract Anchor is MasterCopyNonUpgradable, ConsensusModule, StateRootProvider {
 
     /* External functions */
 
-   /**
-    * @notice Setup function for anchor.
-    *
-    * @param _maxStateRoots The max number of state roots to store in the
-    *                       circular buffer.
-    * @param _consensus A consensus address.
-    */
+    /**
+     * @notice Setup function for anchor.
+     *
+     * @param _maxStateRoots The max number of state roots to store in the
+     *                       circular buffer.
+     * @param _consensus A consensus contract  address.
+     */
     function setup(
         uint256 _maxStateRoots,
         ConsensusI _consensus
     )
         external
     {
-        setupCircularBuffer(_maxStateRoots);
-        setupConsensus(_consensus);
+        StateRootProvider.setup(_maxStateRoots);
+        ConsensusModule.setupConsensus(_consensus);
     }
 
     /**
-     * @notice Get the state root for the given block height.
+     * @notice Anchor the state root for an (increasing) block number.
      *
-     * @param _blockHeight The block height for which the state root is needed.
+     * @dev  Function requires:
+     *          - Only consensus contract address can call this function.
      *
-     * @return bytes32 State root of the given height.
-     */
-    function getStateRoot(
-        uint256 _blockHeight
-    )
-        external
-        view
-        returns (bytes32 stateRoot_)
-    {
-        stateRoot_ = stateRoots[_blockHeight];
-    }
-
-    /**
-     * @notice Gets the block height of latest anchored state root.
-     *
-     * @return uint256 Block height of the latest anchored state root.
-     */
-    function getLatestStateRootBlockHeight()
-        external
-        view
-        returns (uint256 height_)
-    {
-        height_ = CircularBufferUint.head();
-    }
-
-    /**
-     *  @notice External function anchorStateRoot.
-     *
-     *  @dev anchorStateRoot Called from game process.
-     *       Anchor new state root for a block height.
-     *
-     *  @param _blockHeight Block height for which stateRoots mapping needs to
+     * @param _blockNumber Block number for which state root needs to
      *                      update.
-     *  @param _stateRoot State root of input block height.
+     * @param _stateRoot State root of input block number.
      */
     function anchorStateRoot(
-        uint256 _blockHeight,
+        uint256 _blockNumber,
         bytes32 _stateRoot
     )
         external
         onlyConsensus
     {
-        // State root should be valid
-        require(
-            _stateRoot != bytes32(0),
-            "State root must not be zero."
-        );
-
-        // Input block height should be valid.
-        require(
-            _blockHeight > CircularBufferUint.head(),
-            "Given block height is lower or equal to highest anchored state root block height."
-        );
-
-        stateRoots[_blockHeight] = _stateRoot;
-        uint256 oldestStoredBlockHeight = CircularBufferUint.store(_blockHeight);
-        delete stateRoots[oldestStoredBlockHeight];
-
-        emit StateRootAvailable(_blockHeight, _stateRoot);
+        StateRootProvider.anchorStateRootInternal(_blockNumber, _stateRoot);
     }
 }

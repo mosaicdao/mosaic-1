@@ -96,7 +96,7 @@ contract StateRootProvider is CircularBufferUint {
      *                      update.
      * @param _stateRoot State root of input block number.
      */
-    function anchorStateRoot(
+    function anchorStateRootInternal(
         uint256 _blockNumber,
         bytes32 _stateRoot
     )
