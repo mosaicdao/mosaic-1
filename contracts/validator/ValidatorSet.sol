@@ -1,6 +1,6 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-// Copyright 2019 OpenST Ltd.
+// Copyright 2020 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ contract ValidatorSet {
     /* Storage */
 
     /** Linked list of validators. */
-    mapping(address => address) validators;
+    mapping(address => address) public validators;
 
     /**
      * Validator begin height assigned to this set:
@@ -50,4 +50,74 @@ contract ValidatorSet {
      *   - less than MAX_FUTURE_END_HEIGHT: for logged out validators.
      */
     mapping(address => uint256) public validatorEndHeight;
+
+
+    /* Internal functions  */
+
+    /**
+     * @notice It is for inserting validators into the validator set.
+     *
+     *      Function requires :
+     *          - Validator address must not be 0.
+     *          - Validator must not be not part of this core.
+     *          - Validator must have non-zero begin height.
+     *
+     * @param _validator Validator address.
+     * @param _beginHeight Begin height for the validator.
+     */
+    function insertValidator(address _validator, uint256 _beginHeight) internal {
+        require(
+            _validator != address(0),
+            "Validator must not be null address."
+        );
+        require(
+            validatorEndHeight[_validator] == 0,
+            "Validator must not already be part of this core."
+        );
+        require(
+            validatorBeginHeight[_validator] == 0,
+            "Validator must not have a non-zero begin height"
+        );
+
+        // First validator is being added.
+        if(validators[SENTINEL_VALIDATORS] == address(0)) {
+            validators[SENTINEL_VALIDATORS] = _validator;
+            validators[_validator] = SENTINEL_VALIDATORS;
+        }
+        else {
+            address currentValidator = validators[SENTINEL_VALIDATORS];
+            validators[_validator] = currentValidator;
+            validators[SENTINEL_VALIDATORS] = _validator;
+        }
+
+        validatorBeginHeight[_validator] = _beginHeight;
+        validatorEndHeight[_validator] = MAX_FUTURE_END_HEIGHT;
+    }
+
+    /**
+     * @notice It is for removing validators from the validator set.
+     *
+     * @dev Function requires :
+     *          - Validator address must not be 0.
+     *          - Validator begin height must be less than end height.
+     *          - Validator end height must be equal to MAX_FUTURE_END_HEIGHT.
+     *
+     * @param _validator Validator address.
+     * @param _endHeight End height for the validator.
+     */
+    function removeValidator(address _validator, uint256 _endHeight) internal {
+        require(
+            _validator != address(0),
+            "Validator must not be null address."
+        );
+        require(
+            validatorBeginHeight[_validator] < _endHeight,
+            "Validator must not have a non-zero begin height"
+        );
+        require(
+            validatorEndHeight[_validator] == MAX_FUTURE_END_HEIGHT,
+            "Validator must be active."
+        );
+        validatorEndHeight[_validator] = _endHeight;
+    }
 }

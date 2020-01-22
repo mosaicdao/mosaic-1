@@ -335,6 +335,11 @@ Utils.prototype = {
     '0x0000000000000000000000000000000000000000',
 
   NULL_ADDRESS: '0x0000000000000000000000000000000000000000',
+
+  SENTINEL_ADDRESS: '0x0000000000000000000000000000000000000001',
+
+  MAX_FUTURE_END_HEIGHT:
+    'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
 };
 
 module.exports = new Utils();
