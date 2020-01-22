@@ -161,17 +161,6 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
         _;
     }
 
-    modifier hasNotSlashed(address _validator)
-    {
-        require(
-            validators[_validator].status != ValidatorStatus.Slashed,
-            "Validator has slashed."
-        );
-
-        _;
-    }
-
-
     /* Special Member Functions */
 
     /**
