@@ -24,6 +24,12 @@ import "../consensus-gateway/ConsensusGatewayBase.sol";
 import "../consensus-gateway/ERC20GatewayBase.sol";
 import "../consensus/CoConsensusI.sol";
 
+/**
+ * @title ConsensusCogateway contract.
+ *
+ * @notice ConsensusCogateway contract is on the auxiliary chain. It currently
+ *         supports confirmation for opening a kernel.
+ */
 contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, CoConsensusModule {
 
     /* Usings */
@@ -103,7 +109,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
      * @notice This method will be called by anyone to verify merkle proof of
      *          gateway contract address.
      *
-     *  @param _blockHeight Block height at which Gateway is to be proven.
+     *  @param _blockHeight Block height at which gateway is to be proven.
      *  @param _rlpAccount RLP encoded account node object.
      *  @param _rlpParentNodes RLP encoded value of account proof node array.
      */
@@ -123,6 +129,12 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
 
     /**
      * @notice Confirms the initiation of opening a kernel at auxiliary chain.
+     *
+     *      Function requires:
+     *          - Sender address must not be 0.
+     *          - Kernel hash must not be 0.
+     *          - Difference between kernelheight and currentMetablockHeight
+     *            must not be greater than 0.
      *
      * @param _kernelHeight Height of the kernel.
      * @param _kernelHash Hash of the kernel.
@@ -148,8 +160,18 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
         returns (bytes32 messageHash_)
     {
         require(
+            _sender != address(0),
+            "Sender address must not be 0."
+        );
+
+        require(
+            _kernelHash != bytes32(0),
+            "Kernel hash must not be 0."
+        );
+
+        require(
             _kernelHeight.sub(currentMetablockHeight) == 1,
-            "Invalid kernel height"
+            "Invalid kernel height."
         );
 
         currentMetablockHeight = _kernelHeight;

@@ -20,7 +20,7 @@ const ProveConsensusGatewayProof = require('./prove_consensus_gateway_proof.json
 const SpyCoConsensus = artifacts.require('SpyCoConsensus');
 
 const ConsensusCoGateway = artifacts.require('TestConsensusCogateway');
-const SpyStateRootProvider = artifacts.require('SpyStateRootProvider');
+const SpyAnchor = artifacts.require('SpyAnchor');
 
 contract('CoConsensusGateway::proveConsensusGateway', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
@@ -37,19 +37,19 @@ contract('CoConsensusGateway::proveConsensusGateway', (accounts) => {
   };
 
   beforeEach(async () => {
-    const stateRootProvider = await SpyStateRootProvider.new();
+    const spyAnchor = await SpyAnchor.new();
     setupParams.coConsensus = await SpyCoConsensus.new();
     await setupParams.coConsensus.setAnchorAddress(
       setupParams.metachainId,
-      stateRootProvider.address,
+      spyAnchor.address,
     );
 
     consensusCoGateway = await ConsensusCoGateway.new();
 
-    // set stateroot
-    await stateRootProvider.setStateRoot(
-      ProveConsensusGatewayProof.stateRoot,
+    // Set stateroot.
+    await spyAnchor.anchorStateRoot(
       ProveConsensusGatewayProof.blockNumber,
+      ProveConsensusGatewayProof.stateRoot,
     );
 
     await consensusCoGateway.setup(

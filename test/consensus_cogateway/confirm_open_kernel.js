@@ -19,7 +19,7 @@ const DeclareOpenKernel = require('./declare_open_kernel.json');
 const SpyCoConsensus = artifacts.require('SpyCoConsensus');
 
 const ConsensusCoGateway = artifacts.require('TestConsensusCogateway');
-const SpyStateRootProvider = artifacts.require('SpyStateRootProvider');
+const SpyAnchor = artifacts.require('SpyAnchor');
 
 contract('CoConsensusGateway::confirmOpenKernel', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
@@ -46,19 +46,19 @@ contract('CoConsensusGateway::confirmOpenKernel', (accounts) => {
   };
 
   beforeEach(async () => {
-    const stateRootProvider = await SpyStateRootProvider.new();
+    const spyAnchor = await SpyAnchor.new();
     setupParams.coConsensus = await SpyCoConsensus.new();
     await setupParams.coConsensus.setAnchorAddress(
       setupParams.metachainId,
-      stateRootProvider.address,
+      spyAnchor.address,
     );
 
     consensusCoGateway = await ConsensusCoGateway.new();
 
-    // set stateroot
-    await stateRootProvider.setStateRoot(
-      DeclareOpenKernel.stateRoot,
+    // Set stateroot.
+    await spyAnchor.anchorStateRoot(
       DeclareOpenKernel.blockNumber,
+      DeclareOpenKernel.stateRoot,
     );
 
     await consensusCoGateway.setup(
