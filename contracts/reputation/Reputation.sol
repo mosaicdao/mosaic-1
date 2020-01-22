@@ -459,37 +459,6 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
     }
 
     /**
-     * @notice Slashes validator.
-     *
-     * @dev Function requires:
-     *          - only consensus can call
-     *          - a validator has staked
-     *          - a validator has not withdrawn
-     *
-     * @param _validator A validator address to slash.
-     */
-    function slash(address _validator)
-        external
-        onlyConsensus
-        hasStaked(_validator)
-        hasNotWithdrawn(_validator)
-        hasNotSlashed(_validator)
-    {
-        ValidatorInfo storage v = validators[_validator];
-
-        v.status = ValidatorStatus.Slashed;
-        uint256 totalMOSTAmountToBurn = v.lockedEarnings
-            .add(v.cashableEarnings)
-            .add(stakeMOSTAmount);
-
-        v.lockedEarnings = 0;
-        v.cashableEarnings = 0;
-
-        assert(most.transfer(burner, totalMOSTAmountToBurn));
-        assert(wETH.transfer(burner, stakeWETHAmount));
-    }
-
-    /**
      * @notice Deregisters a validator.
      *
      * @dev Function requires:
