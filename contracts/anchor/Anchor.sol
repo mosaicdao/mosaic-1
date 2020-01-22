@@ -35,6 +35,9 @@ contract Anchor is MasterCopyNonUpgradable, ConsensusModule, StateRootProvider {
     /**
      * @notice Setup function for anchor.
      *
+     * @dev This function must be called only once. This check is done in setupConsensus
+     *      function of ConsensusModule.
+     * 
      * @param _maxStateRoots The max number of state roots to store in the
      *                       circular buffer.
      * @param _consensus A consensus contract  address.
@@ -45,8 +48,8 @@ contract Anchor is MasterCopyNonUpgradable, ConsensusModule, StateRootProvider {
     )
         external
     {
-        StateRootProvider.setup(_maxStateRoots);
         ConsensusModule.setupConsensus(_consensus);
+        StateRootProvider.setup(_maxStateRoots);        
     }
 
     /**
