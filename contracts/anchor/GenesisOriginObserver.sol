@@ -29,4 +29,7 @@ contract GenesisOriginObserver {
 
     /** Initial state root */
     bytes32 public genesisStateRoot;
+
+    /** Maximum number of state roots to be stored in circular buffer */
+    uint256 public genesisMaxStateRootLimitCount;
 }

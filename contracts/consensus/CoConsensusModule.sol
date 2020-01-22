@@ -18,32 +18,33 @@ import "./CoConsensusI.sol";
 
 contract CoConsensusModule {
 
-    /** Address of CoConsensus contract on auxiliary chain. */
-    CoConsensusI public coConsensus;
+    /* Constants */
 
-    /**
-     * @notice It sets address for coConsensus contract.
-     * @param _coConsensus Address of coConsensus contract.
-     */
-    function setupCoConsensus(CoConsensusI _coConsensus) internal {
-        require(
-            address(coConsensus) == address(0),
-            "CoConsensus address is already present."
-        );
-        require(
-            address(_coConsensus) != address(0),
-            "CoConsensus address must not be null."
-        );
-        coConsensus = _coConsensus;
-    }
+    /** Address of CoConsensus contract on auxiliary chain. */
+    CoConsensusI private constant coConsensusAddress = CoConsensusI(address(0x0000000000000000000000000000000000004D00));
+
+
+    /* Modifiers */
 
     modifier onlyCoConsensus()
     {
         require(
-            msg.sender == address(coConsensus),
+            msg.sender == address(coConsensus()),
             "Only the CoConsensus contract can call this function."
         );
 
         _;
+    }
+
+
+    /* Public functions */
+
+    /**
+     * @notice Gets the coconsensus contract address.
+     *
+     * @return Coconsensus contract address.
+     */
+    function coConsensus() public pure returns (CoConsensusI) {
+        return coConsensusAddress;
     }
 }
