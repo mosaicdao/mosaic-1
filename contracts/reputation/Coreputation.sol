@@ -73,4 +73,35 @@ contract Coreputation is MasterCopyNonUpgradable, CoConsensusModule {
     {
         CoConsensusModule.setupCoConsensus(_coConsensus);
     }
+
+    /**
+     * @notice Returns reputation of a validator.
+     *
+     * @param _validator An address of a validator.
+     * Returns validator reputation.
+     */
+    function getReputation(address _validator)
+        external
+        view
+        returns (uint256)
+    {
+        return validators[_validator].reputation;
+    }
+
+
+    /* Public Functions */
+
+    /**
+     * @notice Check if the validator address is slashed or not.
+     *
+     * @param _validator An address of a validator.
+     * Returns true if the specified address is slashed.
+     */
+    function isSlashed(address _validator)
+        public
+        view
+        returns(bool)
+    {
+        return validators[_validator].status == ValidatorStatus.Slashed;
+    }
 }
