@@ -27,45 +27,45 @@ contract StateRootProvider is CircularBufferUint {
 
     /* Events */
 
-    event StateRootAvailable(uint256 _blockHeight, bytes32 _stateRoot);
+    event StateRootAvailable(uint256 _blockNumber, bytes32 _stateRoot);
 
 
     /* Storage */
 
-    /** Maps block heights to their respective state root. */
+    /** Maps block numbers to their respective state root. */
     mapping (uint256 => bytes32) private stateRoots;
 
 
     /* External functions */
 
     /**
-     * @notice Get the state root for the given block height.
+     * @notice Get the state root for the given block number.
      *
-     * @param _blockHeight The block height for which the state root is needed.
+     * @param _blockNumber The block number for which the state root is needed.
      *
-     * @return bytes32 State root of the given height.
+     * @return bytes32 State root of the given number.
      */
     function getStateRoot(
-        uint256 _blockHeight
+        uint256 _blockNumber
     )
         external
         view
         returns (bytes32 stateRoot_)
     {
-        stateRoot_ = stateRoots[_blockHeight];
+        stateRoot_ = stateRoots[_blockNumber];
     }
 
     /**
-     * @notice Gets the block height of latest anchored state root.
+     * @notice Gets the block number of latest anchored state root.
      *
-     * @return uint256 Block height of the latest anchored state root.
+     * @return uint256 Block number of the latest anchored state root.
      */
-    function getLatestStateRootBlockHeight()
+    function getLatestStateRootBlockNumber()
         external
         view
-        returns (uint256 height_)
+        returns (uint256 blockNumber_)
     {
-        height_ = CircularBufferUint.head();
+        blockNumber_ = CircularBufferUint.head();
     }
 
 
@@ -86,18 +86,18 @@ contract StateRootProvider is CircularBufferUint {
     }
 
     /**
-     * @notice Anchor the state root for an (increasing) block height.
+     * @notice Anchor the state root for an (increasing) block number.
      *
      * @dev  Function requires:
      *          - stateRoot must not be zero
-     *          - blockHeight value must be greater than latestStateRootBlockHeight
+     *          - blockNumber value must be greater than latestStateRootBlockNumber
      *
-     * @param _blockHeight Block height for which state root needs to
+     * @param _blockNumber Block number for which state root needs to
      *                      update.
-     * @param _stateRoot State root of input block height.
+     * @param _stateRoot State root of input block number.
      */
     function anchorStateRoot(
-        uint256 _blockHeight,
+        uint256 _blockNumber,
         bytes32 _stateRoot
     )
         internal
@@ -108,16 +108,16 @@ contract StateRootProvider is CircularBufferUint {
             "State root must not be zero."
         );
 
-        // Input block height should be valid.
+        // Input block number should be valid.
         require(
-            _blockHeight > CircularBufferUint.head(),
-            "Given block height is lower or equal to highest anchored state root block height."
+            _blockNumber > CircularBufferUint.head(),
+            "Given block number is lower or equal to highest anchored state root block number."
         );
 
-        stateRoots[_blockHeight] = _stateRoot;
-        uint256 oldestStoredBlockHeight = CircularBufferUint.store(_blockHeight);
-        delete stateRoots[oldestStoredBlockHeight];
+        stateRoots[_blockNumber] = _stateRoot;
+        uint256 oldestStoredBlockNumber = CircularBufferUint.store(_blockNumber);
+        delete stateRoots[oldestStoredBlockNumber];
 
-        emit StateRootAvailable(_blockHeight, _stateRoot);
+        emit StateRootAvailable(_blockNumber, _stateRoot);
     }
 }
