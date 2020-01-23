@@ -52,6 +52,17 @@ contract ValidatorSet {
     mapping(address => uint256) public validatorEndHeight;
 
 
+    /* Public Functions */
+
+    /**
+     * @notice It initializes validators set.
+     */
+    function setup()
+        public
+    {
+        validators[SENTINEL_VALIDATORS] = SENTINEL_VALIDATORS;
+    }
+
     /* Internal Functions  */
 
     /**
