@@ -522,6 +522,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
      * @notice Returns reputation of a validator.
      *
      * @param _validator An address of a validator.
+     * Returns validator reputation.
      */
     function getReputation(address _validator)
         external
@@ -530,6 +531,9 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
     {
         return validators[_validator].reputation;
     }
+
+
+    /* Public Functions */
 
     /**
      * @notice Check if the validator address is slashed or not.
