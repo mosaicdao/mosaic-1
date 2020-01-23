@@ -229,4 +229,18 @@ contract ERC20Token is ERC20Interface {
         balances[_account] = balances[_account].add(_value);
         emit Transfer(address(0), _account, _value);
     }
+
+    /**
+     * @dev Internal function that burns an amount of the token of a given
+     *      account.
+     * @param _account The account whose tokens will be burnt.
+     * @param _value The amount that will be burnt.
+     */
+    function _burn(address _account, uint256 _value) internal {
+        require(_account != address(0), "ERC20: burn from the zero address");
+
+        totalTokenSupply = totalTokenSupply.sub(_value);
+        balances[_account] = balances[_account].sub(_value);
+        emit Transfer(_account, address(0), _value);
+    }
 }
