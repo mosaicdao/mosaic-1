@@ -101,4 +101,19 @@ contract UtilityToken is ERC20Token {
 
         success_ = true;
     }
+
+    /**
+     * @dev Burns an amount of the token of a given
+     *      account. Calls the internal burn function.
+     * @param _account The account whose tokens will be burnt.
+     * @param _value The amount that will be burnt.
+     */
+    function burn(address _account, uint256 _value)
+        external
+        returns (bool success_)
+    {
+        _burn(_account, _value);
+
+        success_ = true;
+    }
 }
