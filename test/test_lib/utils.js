@@ -35,7 +35,7 @@ async function advanceBlock() {
   });
 }
 
-function getRandomHash() { return web3.utils.sha3(`${Date.now()}`); }
+function getRandomHash() { return web3.utils.randomHex(32); }
 
 const ResultType = {
   FAIL: 0,
