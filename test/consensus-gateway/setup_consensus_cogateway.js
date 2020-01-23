@@ -19,10 +19,10 @@ const { AccountProvider } = require('../test_lib/utils.js');
 const Utils = require('../test_lib/utils.js');
 const ConsensusGatewayUtils = require('./utils');
 
-const SpyCoConsensus = artifacts.require('SpyCoConsensus');
+const SpyCoconsensus = artifacts.require('SpyCoconsensus');
 const ConsensusCogateway = artifacts.require('ConsensusCogateway');
 
-contract('CoConsensusgateway::setup', (accounts) => {
+contract('ConsensusCogateway::setup', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
   let consensusCogateway;
   const anchor = accountProvider.get();
@@ -36,17 +36,17 @@ contract('CoConsensusgateway::setup', (accounts) => {
   };
 
   beforeEach(async () => {
-    setupParams.coConsensus = await SpyCoConsensus.new();
+    setupParams.coconsensus = await SpyCoconsensus.new();
     consensusCogateway = await ConsensusCogateway.new();
 
-    await setupParams.coConsensus.setAnchorAddress(setupParams.metachainId, anchor);
+    await setupParams.coconsensus.setAnchorAddress(setupParams.metachainId, anchor);
   });
 
   contract('Positive Tests', () => {
     it('should setup successfully', async () => {
       await consensusCogateway.setup(
         setupParams.metachainId,
-        setupParams.coConsensus.address,
+        setupParams.coconsensus.address,
         setupParams.utMOST,
         setupParams.consensusGateway,
         setupParams.outboxStorageIndex,
@@ -61,7 +61,7 @@ contract('CoConsensusgateway::setup', (accounts) => {
       );
 
       assert.strictEqual(
-        await setupParams.coConsensus.spyMetachainId.call(),
+        await setupParams.coconsensus.spyMetachainId.call(),
         setupParams.metachainId,
         'Invalid spy metachain id',
       );

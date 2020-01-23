@@ -15,11 +15,11 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 /**
- * @title CoConsensusI.
+ * @title CoconsensusI.
  *
- * @notice Interface for CoConsensus contract.
+ * @notice Interface for Coconsensus contract.
  */
-interface CoConsensusI {
+interface CoconsensusI {
 
     /**
      * @notice Gets the anchor address for an metachain id.

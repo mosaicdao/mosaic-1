@@ -36,7 +36,7 @@ contract StateRootProvider is CircularBufferUint {
     mapping (uint256 => bytes32) private stateRoots;
 
 
-    /* External functions */
+    /* External Functions */
 
     /**
      * @notice Get the state root for the given block number.
@@ -69,7 +69,7 @@ contract StateRootProvider is CircularBufferUint {
     }
 
 
-    /* Internal functions */
+    /* Internal Functions */
 
     /**
      * @notice Setup function for state root provider contract.
@@ -96,7 +96,7 @@ contract StateRootProvider is CircularBufferUint {
      *                      update.
      * @param _stateRoot State root of input block number.
      */
-    function anchorStateRoot(
+    function anchorStateRootInternal(
         uint256 _blockNumber,
         bytes32 _stateRoot
     )
