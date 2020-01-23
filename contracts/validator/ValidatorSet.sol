@@ -63,6 +63,43 @@ contract ValidatorSet {
         validators[SENTINEL_VALIDATORS] = SENTINEL_VALIDATORS;
     }
 
+    /**
+     * @notice Checks if validator is in validator set or not.
+     *
+     * @param _validator Address of validator.
+     * @param _height Metablock height.
+     * Returns true if validator with given metablock height is in validator
+     * set.
+     */
+    function inValidatorSet(address _validator, uint256 _height)
+        public
+        view
+        returns (bool)
+    {
+        return validatorBeginHeight[_validator] <= _height &&
+            validatorEndHeight[_validator] >= _height &&
+            validatorEndHeight[_validator] > 0;
+    }
+
+    /**
+     * @notice Checks if validator is in forward validator set or not.
+     *
+     * @param _validator Address of validator.
+     * @param _height Metablock height.
+     * Returns true if validator with given metablock height is in forward
+     * validator set.
+     */
+    function inForwardValidatorSet(address _validator, uint256 _height)
+        public
+        view
+        returns (bool)
+    {
+        return validatorBeginHeight[_validator] <= _height &&
+            validatorEndHeight[_validator] > _height &&
+            validatorEndHeight[_validator] > 0;
+    }
+
+
     /* Internal Functions  */
 
     /**
