@@ -64,9 +64,28 @@ contract Protocore is MosaicVersion, ValidatorSet, CoConsensusModule {
     }
 
 
+    /* Constants */
+
+    /** EIP-712 domain separator name for ProtoCore. */
+    string public constant DOMAIN_SEPARATOR_NAME = "Mosaic-Core";
+
+    /** EIP-712 domain separator typehash for ProtoCore. */
+    bytes32 public constant DOMAIN_SEPARATOR_TYPEHASH = keccak256(
+        "EIP712Domain(string name,string version,bytes32 metachainId,address core)"
+    );
+
+    /** EIP-712 type hash for a Vote Message */
+    bytes32 public constant VOTE_MESSAGE_TYPEHASH = keccak256(
+        "VoteMessage(bytes32 transitionHash,bytes32 sourceBlockHash,bytes32 targetBlockHash,uint256 sourceBlockHeight,uint256 targetBlockHeight)"
+    );
+
+
     /* Storage */
 
     mapping(bytes32 /* vote message hash */ => Link) public links;
+
+    /** EIP-712 domain separator. */
+    bytes32 public domainSeparator;
 
     uint256 public openKernelHeight;
     bytes32 public openKernelHash;
@@ -75,19 +94,27 @@ contract Protocore is MosaicVersion, ValidatorSet, CoConsensusModule {
     /* Special Functions */
 
     /**
-     * @notice setup() function initializes the current contract.
-     *         The function will be called by inherited contracts.
+     * @notice Constructor for Protocore contract.
      *
-     * @param _coConsensus Address of the coconsensus contract.
+     * @param _metachainId Metachain Id.
+     * @param _core Core contract address.
      */
-    function setup(
-        CoConsensusI _coConsensus
+    constructor(
+        bytes32 _metachainId,
+        address _core
     )
-        internal
+        public
     {
-        CoConsensusModule.setupCoConsensus(_coConsensus);
+        domainSeparator = keccak256(
+            abi.encode(
+                DOMAIN_SEPARATOR_TYPEHASH,
+                DOMAIN_SEPARATOR_NAME,
+                DOMAIN_SEPARATOR_VERSION,
+                _metachainId,
+                _core
+            )
+        );
     }
-
 
     /* External Functions */
 
@@ -129,6 +156,44 @@ contract Protocore is MosaicVersion, ValidatorSet, CoConsensusModule {
         emit KernelOpened(
             openKernelHeight,
             openKernelHash
+        );
+    }
+
+
+    /* Internal Functions */
+
+    /**
+     * @notice It calculates vote message hash.
+     */
+    function hashVoteMessage(
+        bytes32 _transitionHash,
+        bytes32 _sourceBlockHash,
+        bytes32 _targetBlockHash,
+        uint256 _sourceBlockHeight,
+        uint256 _targetBlockHeight
+    )
+        internal
+        view
+        returns (bytes32 voteMessageHash_)
+    {
+        bytes32 typedVoteMessageHash = keccak256(
+            abi.encode(
+                VOTE_MESSAGE_TYPEHASH,
+                _transitionHash,
+                _sourceBlockHash,
+                _targetBlockHash,
+                _sourceBlockHeight,
+                _targetBlockHeight
+            )
+        );
+
+        voteMessageHash_ = keccak256(
+            abi.encodePacked(
+                byte(0x19),
+                byte(0x01),
+                domainSeparator,
+                typedVoteMessageHash
+            )
         );
     }
 }
