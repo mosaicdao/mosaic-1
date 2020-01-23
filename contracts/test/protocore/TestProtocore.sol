@@ -18,6 +18,11 @@ import "../../protocore/Protocore.sol";
 
 contract TestProtocore is Protocore {
 
+	/* Storage */
+
+    CoconsensusI public coconsensus;
+
+
     /* Special Functions */
 
     constructor(
@@ -63,14 +68,23 @@ contract TestProtocore is Protocore {
         link.proposedMetablockHeight = _genesisProposedMetablockHeight;
         link.targetFinalisation = CheckpointFinalisationStatus.Finalised;
 
+		coconsensus = _coconsensus;
+
         super.setup(
-            _coconsensus,
             _epochLength
         );
     }
 
 
     /* External Functions */
+
+    function getCoconsensus()
+		external
+		view
+		returns (CoconsensusI)
+	{
+        return coconsensus;
+    }
 
     function proposeLink(
         bytes32 _parentVoteMessageHash,

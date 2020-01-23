@@ -68,7 +68,7 @@ contract('Protocore::openKernel', (accounts) => {
           newKernelHash,
           { from: accountProvider.get() },
         ),
-        'Only the CoConsensus contract can call this function.',
+        'Only the Coconsensus contract can call this function.',
       );
     });
 

@@ -16,7 +16,7 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
-import "../consensus/CoConsensusModule.sol";
+import "../consensus/CoconsensusModule.sol";
 import "../validator/ValidatorSet.sol";
 import "../version/MosaicVersion.sol";
 
@@ -24,7 +24,7 @@ import "../version/MosaicVersion.sol";
  * @title Protocore abstract contract acting as a base contract for
  *        OriginProtocore and SelfProtocore contracts.
  */
-contract Protocore is MosaicVersion, ValidatorSet, CoConsensusModule {
+contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
 
     /* Usings */
 
@@ -74,6 +74,23 @@ contract Protocore is MosaicVersion, ValidatorSet, CoConsensusModule {
     /** Epoch length */
     uint256 public epochLength;
 
+    /* Special Functions */
+
+    /**
+     * @notice setup() function initializes the current contract.
+     *         The function will be called by inherited contracts.
+     *
+     * @param _coConsensus Address of the coconsensus contract.
+     */
+    function setup(
+        CoConsensusI _coConsensus
+    )
+        internal
+    {
+        CoConsensusModule.setupCoConsensus(_coConsensus);
+    }
+
+
 
     /* Special Functions */
 
@@ -82,13 +99,10 @@ contract Protocore is MosaicVersion, ValidatorSet, CoConsensusModule {
      *         The function will be called by inherited contracts.
      *
      * \pre `_epochLength` is not 0.
-     * \pre `_coconsensus` address is not 0.
      *
-     * \post Initializes CoconsensusModule with the given coconsensus address.
      * \post Sets epochLenght to the given value.
      */
     function setup(
-        CoConsensusI _coconsensus,
         uint256 _epochLength
     )
         internal
@@ -98,7 +112,6 @@ contract Protocore is MosaicVersion, ValidatorSet, CoConsensusModule {
             "Epoch length is 0."
         );
 
-        CoConsensusModule.setupCoConsensus(_coconsensus);
         epochLength = _epochLength;
     }
 
@@ -125,7 +138,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoConsensusModule {
         bytes32 _kernelHash
     )
         external
-        onlyCoConsensus
+        onlyCoconsensus
     {
         require(
             _kernelHeight == openKernelHeight.add(1),
