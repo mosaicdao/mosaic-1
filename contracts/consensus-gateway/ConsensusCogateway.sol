@@ -39,7 +39,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
      * @notice It sets up consensus cogateway. It can only be called once.
      *
      * @param _metachainId Metachain id of a metablock.
-     * @param _coconsensus Address of coconsensus contract.
+     * @param _coconsensus Address of Coconsensus contract.
      * @param _utMOST Address of most contract at auxiliary chain.
      * @param _consensusGateway Address of most contract at auxiliary chain.
      * @param _outboxStorageIndex Outbox Storage index of ConsensusGateway.

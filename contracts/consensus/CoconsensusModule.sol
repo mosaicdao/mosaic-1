@@ -18,8 +18,10 @@ import "./CoconsensusI.sol";
 
 contract CoconsensusModule {
 
+    /* Storage */
+
     /** Address of Coconsensus contract on auxiliary chain. */
-    address private  coconsensusAddress = address(0x0000000000000000000000000000000000004D00);
+    address private coconsensusAddress = address(0x0000000000000000000000000000000000004D00);
 
 
     /* Modifiers */
