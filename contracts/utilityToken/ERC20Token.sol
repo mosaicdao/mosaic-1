@@ -243,4 +243,20 @@ contract ERC20Token is ERC20Interface {
         balances[_account] = balances[_account].sub(_value);
         emit Transfer(_account, address(0), _value);
     }
+
+    /**
+     * @dev Internal function that burns an amount of the token of a given
+     *      account, deducting from the sender's allowance for said account. Uses the
+     *      internal burn function.
+     *      Emits an Approval event (reflecting the reduced allowance).
+     * @param _account The account whose tokens will be burnt.
+     * @param _value The amount that will be burnt.
+     */
+    function _burnFrom(address _account, uint256 _value) internal {
+        allowed[_account][msg.sender] = allowed[_account][msg.sender].sub(
+            _value
+        );
+        _burn(_account, _value);
+        emit Approval(_account, msg.sender, allowed[_account][msg.sender]);
+    }
 }
