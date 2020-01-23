@@ -1,6 +1,6 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-// Copyright 2019 OpenST Ltd.
+// Copyright 2020 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,37 +14,29 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "./CoconsensusI.sol";
+import "../../anchor/OriginObserver.sol";
 
-contract CoconsensusModule {
+contract OriginObserverTest is OriginObserver {
 
-    /* Constants */
+    address public testCoconsensus;
 
-    /** Address of Coconsensus contract on auxiliary chain. */
-    address private coconsensus = address(0x0000000000000000000000000000000000004D00);
-
-
-    /* Modifiers */
-
-    modifier onlyCoconsensus()
+    function setGenesisStorageVariables(
+        uint256 _genesisBlockNumber,
+        bytes32 _genesisStateRoot,
+        uint256 _genesisMaxStateRootLimitCount
+    )
+        public
     {
-        require(
-            msg.sender == address(getCoconsensus()),
-            "Only the Coconsensus contract can call this function."
-        );
-
-        _;
+        genesisBlockNumber = _genesisBlockNumber;
+        genesisStateRoot = _genesisStateRoot;
+        genesisMaxStateRootLimitCount = _genesisMaxStateRootLimitCount;
     }
 
+    function setCoconsensus(address _coconsensus) public {
+        testCoconsensus = _coconsensus;
+    }
 
-    /* Public functions */
-
-    /**
-     * @notice Gets the coconsensus contract address.
-     *
-     * @return Coconsensus contract address.
-     */
     function getCoconsensus() public view returns (CoconsensusI) {
-        return CoconsensusI(coconsensus);
+        return CoconsensusI(testCoconsensus);
     }
 }
