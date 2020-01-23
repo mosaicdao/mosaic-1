@@ -28,4 +28,7 @@ contract GenesisOriginProtocore {
 
     /** Source block number */
     uint256 public genesisBlockNumber;
+
+    /** Initial parent vote message hash */
+    bytes32 public genesisParentVoteMessageHash;
 }
