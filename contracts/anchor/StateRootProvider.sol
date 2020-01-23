@@ -36,7 +36,7 @@ contract StateRootProvider is CircularBufferUint {
     mapping (uint256 => bytes32) private stateRoots;
 
 
-    /* Public functions */
+    /* Public Functions */
 
     /**
      * @notice Get the state root for the given block number.
@@ -69,7 +69,7 @@ contract StateRootProvider is CircularBufferUint {
     }
 
 
-    /* Internal functions */
+    /* Internal Functions */
 
     /**
      * @notice Setup function for state root provider contract.
