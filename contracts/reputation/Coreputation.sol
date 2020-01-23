@@ -103,6 +103,7 @@ contract Coreputation is MasterCopyNonUpgradable, CoConsensusModule {
             if (_reputation == uint256(0)) {
                 return;
             }
+
             vInfo.status = ValidatorStatus.Staked;
             vInfo.reputation = _reputation;
         } else {
