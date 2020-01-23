@@ -61,6 +61,26 @@ contract('Coreputation::getReputation', (accounts) => {
     );
   });
 
+  it('should not add validator when reputation is zero', async () => {
+    await coReputation.upsertValidator(
+      inputValidatorInfo.validator,
+      new BN(0),
+      { from: coconsensus },
+    );
+    const insertedValidator = await coReputation.validators.call(inputValidatorInfo.validator);
+
+    assert.strictEqual(
+      ValidatorStatus.Undefined.toString(),
+      insertedValidator.status.toString(10),
+      `Expected validator status is ${ValidatorStatus.Undefined} but found ${insertedValidator.status} `,
+    );
+    assert.strictEqual(
+      (new BN(0)).toString(10),
+      insertedValidator.reputation.toString(10),
+      `Expected validator reputation is ${(new BN(0)).toString(10)} but found ${insertedValidator.reputation} `,
+    );
+  });
+
   it('should update validator status to Deregistered when reputation is zero', async () => {
     await coReputation.upsertValidator(
       inputValidatorInfo.validator,

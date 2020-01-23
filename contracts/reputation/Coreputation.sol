@@ -79,6 +79,7 @@ contract Coreputation is MasterCopyNonUpgradable, CoConsensusModule {
      *
      * @dev Validator status is marked Staked, if validator status is
      *      Undefined and he has non zero reputation value.
+     *      Validator is not inserted if his reputation value is zero.
      *      Validator status is marked to Deregistered when his current status
      *      is Staked and reputation value changes to zero.
      *
@@ -99,21 +100,18 @@ contract Coreputation is MasterCopyNonUpgradable, CoConsensusModule {
     {
         ValidatorInfo storage vInfo = validators[_validator];
         if (vInfo.status == ValidatorStatus.Undefined) {
-
-            require(
-                _reputation > uint256(0),
-                "Validator reputation is 0."
-            );
-
+            if (_reputation == uint256(0)) {
+                return;
+            }
             vInfo.status = ValidatorStatus.Staked;
+            vInfo.reputation = _reputation;
         } else {
             if(_reputation == uint256(0) &&
                 vInfo.status == ValidatorStatus.Staked) {
                 vInfo.status = ValidatorStatus.Deregistered;
+                vInfo.reputation = _reputation;
             }
         }
-
-        vInfo.reputation = _reputation;
     }
 
     /**
