@@ -18,6 +18,8 @@ import "../../protocore/Protocore.sol";
 
 contract TestProtocore is Protocore {
 
+    CoconsensusI public coconsensus;
+
     /* Special Functions */
 
     constructor(
@@ -31,7 +33,10 @@ contract TestProtocore is Protocore {
 
         openKernelHeight = genesisKernelHeight;
         openKernelHash = genesisKernelHash;
+        coconsensus = _coconsensus;
+    }
 
-        super.setup(_coconsensus);
+    function getCoconsensus() public view returns (CoconsensusI) {
+        return coconsensus;
     }
 }
