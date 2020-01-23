@@ -127,16 +127,9 @@ contract ValidatorSet {
             "Validator address is already used."
         );
 
-        // First validator is being added.
-        if(validators[SENTINEL_VALIDATORS] == address(0)) {
-            validators[SENTINEL_VALIDATORS] = _validator;
-            validators[_validator] = SENTINEL_VALIDATORS;
-        }
-        else {
-            address currentValidator = validators[SENTINEL_VALIDATORS];
-            validators[_validator] = currentValidator;
-            validators[SENTINEL_VALIDATORS] = _validator;
-        }
+        address currentValidator = validators[SENTINEL_VALIDATORS];
+        validators[_validator] = currentValidator;
+        validators[SENTINEL_VALIDATORS] = _validator;
 
         validatorBeginHeight[_validator] = _beginHeight;
         validatorEndHeight[_validator] = MAX_FUTURE_END_HEIGHT;
