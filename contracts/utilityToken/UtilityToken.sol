@@ -44,4 +44,42 @@ contract UtilityToken is ERC20Token {
 
         _;
     }
+
+    /* External functions */
+
+    /**
+     * @notice Sets up the symbol, name, decimals, totalSupply
+     *         and the consensusCogateway address
+     *
+     * @param _symbol Symbol of token.
+     * @param _name Name of token.
+     * @param _decimals Decimal of token.
+     * @param _totalTokenSupply Total token supply.
+     * @param _consensusCogateway ConsensusCogateway contract address.
+     */
+    function setup(
+        string calldata _symbol,
+        string calldata _name,
+        uint8 _decimals,
+        uint256 _totalTokenSupply,
+        address _consensusCogateway
+    ) external returns (bool success_) {
+        require(
+            consensusCogateway == address(0),
+            "ConsensusCogateway address is already set."
+        );
+
+        require(
+            _consensusCogateway != address(0),
+            "ConsensusCogateway address should not be zero."
+        );
+
+        tokenSymbol = _symbol;
+        tokenName = _name;
+        tokenDecimals = _decimals;
+        totalTokenSupply = _totalTokenSupply;
+        consensusCogateway = _consensusCogateway;
+
+        success_ = true;
+    }
 }
