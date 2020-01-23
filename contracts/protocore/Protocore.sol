@@ -81,14 +81,25 @@ contract Protocore is MosaicVersion, ValidatorSet, CoConsensusModule {
      * @notice setup() function initializes the current contract.
      *         The function will be called by inherited contracts.
      *
-     * @param _coConsensus Address of the coconsensus contract.
+     * \pre `_epochLength` is not 0.
+     * \pre `_coconsensus` address is not 0.
+     *
+     * \post Initializes CoconsensusModule with the given coconsensus address.
+     * \post Sets epochLenght to the given value.
      */
     function setup(
-        CoConsensusI _coConsensus
+        CoConsensusI _coconsensus,
+        uint256 _epochLength
     )
         internal
     {
-        CoConsensusModule.setupCoConsensus(_coConsensus);
+        require(
+            _epochLength != 0,
+            "Epoch length is 0."
+        );
+
+        CoConsensusModule.setupCoConsensus(_coconsensus);
+        epochLength = _epochLength;
     }
 
 

@@ -19,7 +19,7 @@ const BN = require('bn.js');
 const { AccountProvider } = require('../test_lib/utils.js');
 const Utils = require('../test_lib/utils.js');
 
-const ProtocoreTest = artifacts.require('TestProtocore');
+const TestProtocore = artifacts.require('TestProtocore');
 
 const config = {};
 
@@ -29,13 +29,31 @@ contract('Protocore::openKernel', (accounts) => {
   beforeEach(async () => {
     config.coconsensusAddress = accountProvider.get();
 
-    config.genesisKernelHeight = new BN(0);
+    config.epochLength = new BN(100);
+
+    config.genesisKernelHeight = new BN(1);
     config.genesisKernelHash = Utils.getRandomHash();
 
-    config.protocore = await ProtocoreTest.new(
+    config.genesisParentVoteMessageHash = Utils.getRandomHash();
+    config.genesisSourceTransitionHash = Utils.getRandomHash();
+    config.genesisSourceBlockHash = Utils.getRandomHash();
+    config.genesisTargetBlockHash = Utils.getRandomHash();
+    config.genesisSourceBlockNumber = new BN(0);
+    config.genesisTargetBlockNumber = new BN(config.epochLength);
+    config.genesisProposedMetablockHeight = new BN(1);
+
+    config.protocore = await TestProtocore.new(
       config.coconsensusAddress,
+      config.epochLength,
       config.genesisKernelHeight,
       config.genesisKernelHash,
+      config.genesisParentVoteMessageHash,
+      config.genesisSourceTransitionHash,
+      config.genesisSourceBlockHash,
+      config.genesisTargetBlockHash,
+      config.genesisSourceBlockNumber,
+      config.genesisTargetBlockNumber,
+      config.genesisProposedMetablockHeight,
     );
   });
 
