@@ -14,13 +14,9 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-
-import "./AnchorI.sol";
-
+import "../anchor/StateRootProvider.sol";
 import "../consensus/ConsensusModule.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
-import "../anchor/StateRootProvider.sol";
 
 /**
  * @title Anchor contract to store the state roots.
@@ -30,14 +26,14 @@ import "../anchor/StateRootProvider.sol";
  */
 contract Anchor is MasterCopyNonUpgradable, ConsensusModule, StateRootProvider {
 
-    /* External functions */
+    /* External Functions */
 
     /**
      * @notice Setup function for anchor.
      *
      * @dev This function must be called only once. This check is done in setupConsensus
      *      function of ConsensusModule.
-     * 
+     *
      * @param _maxStateRoots The max number of state roots to store in the
      *                       circular buffer.
      * @param _consensus A consensus contract  address.
@@ -49,7 +45,7 @@ contract Anchor is MasterCopyNonUpgradable, ConsensusModule, StateRootProvider {
         external
     {
         ConsensusModule.setupConsensus(_consensus);
-        StateRootProvider.setup(_maxStateRoots);        
+        StateRootProvider.setup(_maxStateRoots);
     }
 
     /**
