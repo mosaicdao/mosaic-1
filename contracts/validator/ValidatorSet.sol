@@ -57,26 +57,26 @@ contract ValidatorSet {
     /**
      * @notice It is for inserting validators into the validator set.
      *
-     *      Function requires :
+     * @dev Function requires :
      *          - Validator address must not be 0.
-     *          - Validator must not be not part of this core.
-     *          - Validator must have non-zero begin height.
+     *          - Validator address is already used.
      *
      * @param _validator Validator address.
      * @param _beginHeight Begin height for the validator.
      */
-    function insertValidator(address _validator, uint256 _beginHeight) internal {
+    function insertValidator(
+        address _validator,
+        uint256 _beginHeight
+    )
+        internal
+    {
         require(
             _validator != address(0),
             "Validator must not be null address."
         );
         require(
-            validatorEndHeight[_validator] == 0,
-            "Validator must not already be part of this core."
-        );
-        require(
             validatorBeginHeight[_validator] == 0,
-            "Validator must not have a non-zero begin height"
+            "Validator address is already used."
         );
 
         // First validator is being added.
@@ -105,19 +105,25 @@ contract ValidatorSet {
      * @param _validator Validator address.
      * @param _endHeight End height for the validator.
      */
-    function removeValidator(address _validator, uint256 _endHeight) internal {
+    function removeValidator(
+        address _validator,
+        uint256 _endHeight
+    )
+        internal
+    {
         require(
             _validator != address(0),
-            "Validator must not be null address."
+            "Validator must not be 0."
         );
         require(
             validatorBeginHeight[_validator] < _endHeight,
-            "Validator must not have a non-zero begin height"
+            "Validator begin height must be less than end height."
         );
         require(
             validatorEndHeight[_validator] == MAX_FUTURE_END_HEIGHT,
             "Validator must be active."
         );
+
         validatorEndHeight[_validator] = _endHeight;
     }
 }
