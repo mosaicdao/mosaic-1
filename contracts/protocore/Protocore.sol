@@ -91,15 +91,15 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
     bytes32 public openKernelHash;
 
 
-    /* Special Functions */
+    /* Public Functions */
 
     /**
-     * @notice Constructor for Protocore contract.
+     * @notice Sets up Protocore contract.
      *
      * @param _metachainId Metachain Id.
      * @param _core Core contract address.
      */
-    constructor(
+    function setup(
         bytes32 _metachainId,
         address _core
     )
