@@ -14,7 +14,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-contract SpyCoConsensus {
+contract SpyCoconsensus {
 
     mapping(bytes32 => address) public anchors;
 

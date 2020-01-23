@@ -14,23 +14,23 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "./CoConsensusI.sol";
+import "./CoconsensusI.sol";
 
-contract CoConsensusModule {
+contract CoconsensusModule {
 
     /* Constants */
 
-    /** Address of CoConsensus contract on auxiliary chain. */
-    CoConsensusI private constant coConsensusAddress = CoConsensusI(address(0x0000000000000000000000000000000000004D00));
+    /** Address of Coconsensus contract on auxiliary chain. */
+    address private constant COCONSENSUS = address(0x0000000000000000000000000000000000004D00);
 
 
     /* Modifiers */
 
-    modifier onlyCoConsensus()
+    modifier onlyCoconsensus()
     {
         require(
-            msg.sender == address(coConsensus()),
-            "Only the CoConsensus contract can call this function."
+            msg.sender == address(getCoconsensus()),
+            "Only the Coconsensus contract can call this function."
         );
 
         _;
@@ -44,7 +44,7 @@ contract CoConsensusModule {
      *
      * @return Coconsensus contract address.
      */
-    function coConsensus() public pure returns (CoConsensusI) {
-        return coConsensusAddress;
+    function getCoconsensus() public pure returns (CoconsensusI) {
+        return CoconsensusI(COCONSENSUS);
     }
 }
