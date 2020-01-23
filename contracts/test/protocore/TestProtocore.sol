@@ -16,7 +16,7 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "../../protocore/Protocore.sol";
 
-contract ProtocoreDouble is Protocore {
+contract TestProtocore is Protocore {
 
     /* Special Functions */
 

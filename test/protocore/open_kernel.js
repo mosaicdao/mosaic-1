@@ -19,7 +19,7 @@ const BN = require('bn.js');
 const { AccountProvider } = require('../test_lib/utils.js');
 const Utils = require('../test_lib/utils.js');
 
-const ProtocoreDouble = artifacts.require('ProtocoreDouble');
+const ProtocoreTest = artifacts.require('TestProtocore');
 
 const config = {};
 
@@ -32,7 +32,7 @@ contract('Protocore::openKernel', (accounts) => {
     config.genesisKernelHeight = new BN(0);
     config.genesisKernelHash = Utils.getRandomHash();
 
-    config.protocore = await ProtocoreDouble.new(
+    config.protocore = await ProtocoreTest.new(
       config.coconsensusAddress,
       config.genesisKernelHeight,
       config.genesisKernelHash,
