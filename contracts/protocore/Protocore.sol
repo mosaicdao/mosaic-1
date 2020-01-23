@@ -164,7 +164,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoConsensusModule {
      *
      * \post The link is saved in `links` mapping with currently
      *       open kernel/metablock height as `proposedMetablockHeight`.
-     * \post `targetFinalisation` is set to 'Undefined'.
+     * \post `targetFinalisation` is set to 'Registered'.
      * \post forwardVoteCount -s set to 0.
      */
     function proposeLinkInternal(

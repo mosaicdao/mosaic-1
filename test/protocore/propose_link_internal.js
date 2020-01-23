@@ -67,8 +67,95 @@ contract('Protocore::proposeLinkInternal', (accounts) => {
   });
 
   contract('Negative Tests', async () => {
-    it('', async () => {
-      assert(true);
+    it('should revert if parent vote message hash does not exist', async () => {
+      const sourceTransitionHash = Utils.getRandomHash();
+      const targetBlockHash = Utils.getRandomHash();
+      const targetBlockNumber = config.genesisTargetBlockNumber.add(config.epochLength.muln(2));
+
+      await Utils.expectRevert(
+        config.protocore.proposeLink(
+          Utils.getRandomHash(),
+          sourceTransitionHash,
+          targetBlockHash,
+          targetBlockNumber,
+        ),
+        'Parent link does not exist.',
+      );
+    });
+
+    it('should revert if the parent link target finalisation is not justified or finalised', async () => {
+      const sourceTransitionHash1 = Utils.getRandomHash();
+      const targetBlockHash1 = Utils.getRandomHash();
+      const targetBlockNumber1 = config.genesisTargetBlockNumber.add(config.epochLength.muln(2));
+
+      await config.protocore.proposeLink(
+        config.genesisVoteMessageHash,
+        sourceTransitionHash1,
+        targetBlockHash1,
+        targetBlockNumber1,
+      );
+
+      const voteMessageHash1 = ProtocoreUtils.hashVoteMessage(
+        sourceTransitionHash1,
+        config.genesisTargetBlockHash,
+        targetBlockHash1,
+        config.genesisTargetBlockNumber,
+        targetBlockNumber1,
+      );
+
+      const sourceTransitionHash2 = Utils.getRandomHash();
+      const targetBlockHash2 = Utils.getRandomHash();
+      const targetBlockNumber2 = targetBlockNumber1.add(config.epochLength.muln(2));
+
+      await Utils.expectRevert(
+        config.protocore.proposeLink(
+          voteMessageHash1,
+          sourceTransitionHash2,
+          targetBlockHash2,
+          targetBlockNumber2,
+        ),
+        'Parent link\'s target finalisation status should be at least justified.',
+      );
+    });
+
+    it('should revert if target block number is not a multiply of the epoch length', async () => {
+      const sourceTransitionHash = Utils.getRandomHash();
+      const targetBlockHash = Utils.getRandomHash();
+      const targetBlockNumber = config.genesisTargetBlockNumber.add(config.epochLength.muln(2).addn(1));
+
+      await Utils.expectRevert(
+        config.protocore.proposeLink(
+          config.genesisVoteMessageHash,
+          sourceTransitionHash,
+          targetBlockHash,
+          targetBlockNumber,
+        ),
+        'Target block number of the link should be multiple of the epoch length.',
+      );
+    });
+
+
+    it('should revert if link already exists', async () => {
+      const sourceTransitionHash = Utils.getRandomHash();
+      const targetBlockHash = Utils.getRandomHash();
+      const targetBlockNumber = config.genesisTargetBlockNumber.add(config.epochLength.muln(2));
+
+      await config.protocore.proposeLink(
+        config.genesisVoteMessageHash,
+        sourceTransitionHash,
+        targetBlockHash,
+        targetBlockNumber,
+      );
+
+      await Utils.expectRevert(
+        config.protocore.proposeLink(
+          config.genesisVoteMessageHash,
+          sourceTransitionHash,
+          targetBlockHash,
+          targetBlockNumber,
+        ),
+        'The proposed link already exists.',
+      );
     });
   });
 
