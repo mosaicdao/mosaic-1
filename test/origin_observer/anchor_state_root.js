@@ -27,7 +27,7 @@ let originObserver;
 let config = {};
 
 
-contract('OriginObserver::anchorStateRoot', (accounts) => { 
+contract('OriginObserver::anchorStateRoot', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
   beforeEach(async () => {
     config = {
