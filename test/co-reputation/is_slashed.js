@@ -23,17 +23,23 @@ contract('Coreputation::getReputation', (accounts) => {
   let accountProvider;
   let coReputation;
   let validatorInfo;
+  let coconsensus;
 
   beforeEach(async () => {
     accountProvider = new AccountProvider(accounts);
     coReputation = await CoReputation.new();
+    coconsensus = accountProvider.get();
     validatorInfo = {
       validator: accountProvider.get(),
       reputation: new BN('10'),
     };
+    await coReputation.setup(
+      coconsensus,
+    );
     await coReputation.upsertValidator(
       validatorInfo.validator,
       validatorInfo.reputation,
+      { from: coconsensus },
     );
     await coReputation.setValidatorSlashed(
       validatorInfo.validator,

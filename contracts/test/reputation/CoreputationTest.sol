@@ -17,22 +17,11 @@ pragma solidity >=0.5.0 <0.6.0;
 import "../../reputation/Coreputation.sol";
 
 /**
- * @title TestCoreputation contract.
+ * @title CoreputationTest contract.
  */
 contract CoreputationTest is Coreputation {
 
     /* External functions */
-
-    function upsertValidator(
-        address _validator,
-        uint256 _reputation
-    )
-        external
-    {
-        ValidatorInfo storage vInfo = validators[_validator];
-        vInfo.status = ValidatorStatus.Staked;
-        vInfo.reputation = _reputation;
-    }
 
     function setValidatorSlashed(
         address _validator
