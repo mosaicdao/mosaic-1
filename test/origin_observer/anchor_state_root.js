@@ -19,9 +19,8 @@ const BN = require('bn.js');
 
 const OriginObserver = artifacts.require('OriginObserverTest');
 
-const Utils = require('../test_lib/utils.js');
-
 const { AccountProvider } = require('../test_lib/utils.js');
+const Utils = require('../test_lib/utils.js');
 
 let originObserver;
 let config = {};
