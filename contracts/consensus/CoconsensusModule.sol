@@ -18,10 +18,8 @@ import "./CoconsensusI.sol";
 
 contract CoconsensusModule {
 
-    /* Constants */
-
     /** Address of Coconsensus contract on auxiliary chain. */
-    address private coconsensus = address(0x0000000000000000000000000000000000004D00);
+    address private  coconsensusAddress = address(0x0000000000000000000000000000000000004D00);
 
 
     /* Modifiers */
@@ -45,6 +43,6 @@ contract CoconsensusModule {
      * @return Coconsensus contract address.
      */
     function getCoconsensus() public view returns (CoconsensusI) {
-        return CoconsensusI(coconsensus);
+        return CoconsensusI(coconsensusAddress);
     }
 }
