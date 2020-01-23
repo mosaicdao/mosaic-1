@@ -14,15 +14,15 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../consensus/CoConsensusModule.sol";
+import "../consensus/CoconsensusModule.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../message-bus/MessageBus.sol";
 import "../message-bus/StateRootI.sol";
 import "../consensus-gateway/ConsensusGatewayBase.sol";
 import "../consensus-gateway/ERC20GatewayBase.sol";
-import "../consensus/CoConsensusI.sol";
+import "../consensus/CoconsensusI.sol";
 
-contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, CoConsensusModule {
+contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, CoconsensusModule {
 
     /* Constants */
 
@@ -39,7 +39,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
      * @notice It sets up consensus cogateway. It can only be called once.
      *
      * @param _metachainId Metachain id of a metablock.
-     * @param _coConsensus Address of coConsensus contract.
+     * @param _coconsensus Address of Coconsensus contract.
      * @param _utMOST Address of most contract at auxiliary chain.
      * @param _consensusGateway Address of most contract at auxiliary chain.
      * @param _outboxStorageIndex Outbox Storage index of ConsensusGateway.
@@ -48,7 +48,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
      */
     function setup(
         bytes32 _metachainId,
-        address _coConsensus,
+        address _coconsensus,
         ERC20I _utMOST,
         address _consensusGateway,
         uint8 _outboxStorageIndex,
@@ -70,7 +70,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
             _consensusGateway
         );
 
-        address anchor = CoConsensusI(_coConsensus).getAnchor(_metachainId);
+        address anchor = CoconsensusI(_coconsensus).getAnchor(_metachainId);
 
         require(
             anchor != address(0),

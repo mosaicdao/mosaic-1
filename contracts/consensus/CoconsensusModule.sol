@@ -14,29 +14,37 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../../protocore/Protocore.sol";
+import "./CoconsensusI.sol";
 
-contract TestProtocore is Protocore {
+contract CoconsensusModule {
 
-    CoconsensusI public coconsensus;
+    /* Storage */
 
-    /* Special Functions */
+    /** Address of Coconsensus contract on auxiliary chain. */
+    address private coconsensusAddress = address(0x0000000000000000000000000000000000004D00);
 
-    constructor(
-        CoconsensusI _coconsensus,
-        uint256 genesisKernelHeight,
-        bytes32 genesisKernelHash
-    )
-        public
+
+    /* Modifiers */
+
+    modifier onlyCoconsensus()
     {
-        assert(genesisKernelHash != bytes32(0));
+        require(
+            msg.sender == address(getCoconsensus()),
+            "Only the Coconsensus contract can call this function."
+        );
 
-        openKernelHeight = genesisKernelHeight;
-        openKernelHash = genesisKernelHash;
-        coconsensus = _coconsensus;
+        _;
     }
 
+
+    /* Public functions */
+
+    /**
+     * @notice Gets the coconsensus contract address.
+     *
+     * @return Coconsensus contract address.
+     */
     function getCoconsensus() public view returns (CoconsensusI) {
-        return coconsensus;
+        return CoconsensusI(coconsensusAddress);
     }
 }
