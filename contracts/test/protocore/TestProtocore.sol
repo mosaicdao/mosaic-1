@@ -21,7 +21,7 @@ contract TestProtocore is Protocore {
     /* Special Functions */
 
     constructor(
-        CoConsensusI _coConsensus,
+        CoconsensusI _coconsensus,
         uint256 genesisKernelHeight,
         bytes32 genesisKernelHash
     )
@@ -32,6 +32,6 @@ contract TestProtocore is Protocore {
         openKernelHeight = genesisKernelHeight;
         openKernelHash = genesisKernelHash;
 
-        super.setup(_coConsensus);
+        super.setup(_coconsensus);
     }
 }
