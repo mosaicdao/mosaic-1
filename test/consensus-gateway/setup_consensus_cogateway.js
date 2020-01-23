@@ -22,7 +22,7 @@ const ConsensusGatewayUtils = require('./utils');
 const SpyCoconsensus = artifacts.require('SpyCoconsensus');
 const ConsensusCogateway = artifacts.require('ConsensusCogateway');
 
-contract('Coconsensusgateway::setup', (accounts) => {
+contract('ConsensusCogateway::setup', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
   let consensusCogateway;
   const anchor = accountProvider.get();
