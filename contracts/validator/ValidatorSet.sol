@@ -75,7 +75,7 @@ contract ValidatorSet {
             "Validator must not be null address."
         );
         require(
-            validatorBeginHeight[_validator] == 0,
+            validatorBeginHeight[_validator] == 0 && validatorEndHeight[_validator] == 0,
             "Validator address is already used."
         );
 
