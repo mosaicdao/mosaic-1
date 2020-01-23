@@ -14,7 +14,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../consensus/CoConsensusModule.sol";
+import "../consensus/CoconsensusModule.sol";
 import "../anchor/GenesisOriginObserver.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../anchor/StateRootProvider.sol";
@@ -30,7 +30,7 @@ import "../anchor/StateRootProvider.sol";
 contract OriginObserver is
     MasterCopyNonUpgradable,
     GenesisOriginObserver,
-    CoConsensusModule,
+    CoconsensusModule,
     StateRootProvider
 {
     /* Constants */
@@ -57,7 +57,7 @@ contract OriginObserver is
      */
     function setup() external {
         StateRootProvider.setup(genesisMaxStateRootLimitCount);
-        StateRootProvider.anchorStateRoot(genesisBlockNumber, genesisStateRoot);
+        StateRootProvider.anchorStateRootInternal(genesisBlockNumber, genesisStateRoot);
     }
 
     /**
@@ -75,7 +75,7 @@ contract OriginObserver is
         bytes32 _stateRoot
     )
         external
-        onlyCoConsensus
+        onlyCoconsensus
     {
         StateRootProvider.anchorStateRootInternal(_blockNumber, _stateRoot);
     }
