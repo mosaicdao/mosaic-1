@@ -17,13 +17,13 @@ pragma solidity >=0.5.0 <0.6.0;
 import "../../validator/ValidatorSet.sol";
 
 /**
- * @title TestValidatorSet contract.
+ * @title ValidatorSetDouble contract.
  *
- * @notice It is used for testing ValidatorSet contract
+ * @notice It is used for testing ValidatorSet contract.
  */
-contract TestValidatorSet is ValidatorSet {
+contract ValidatorSetDouble is ValidatorSet {
 
-    /* External functions */
+    /* External Functions */
 
     /**
      * @notice It is used to insert validator.
@@ -31,8 +31,8 @@ contract TestValidatorSet is ValidatorSet {
      * @param _validator Validator address.
      * @param _beginHeight Begin height for the validator.
      */
-    function addValidator(address _validator, uint256 _beginHeight) external {
-        insertValidator(_validator, _beginHeight);
+    function insertValidator(address _validator, uint256 _beginHeight) external {
+        insertValidatorInternal(_validator, _beginHeight);
     }
 
    /**
@@ -41,7 +41,7 @@ contract TestValidatorSet is ValidatorSet {
      * @param _validator Validator address.
      * @param _endHeight End height for the validator.
      */
-    function pullOutValidator(address _validator, uint256 _endHeight) external {
-        removeValidator(_validator, _endHeight);
+    function removeValidator(address _validator, uint256 _endHeight) external {
+        removeValidatorInternal(_validator, _endHeight);
     }
 }

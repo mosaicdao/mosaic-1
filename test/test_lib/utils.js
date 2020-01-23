@@ -338,8 +338,9 @@ Utils.prototype = {
 
   SENTINEL_ADDRESS: '0x0000000000000000000000000000000000000001',
 
-  MAX_FUTURE_END_HEIGHT:
-    'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+  MAX_FUTURE_END_HEIGHT: new BN(
+    '115792089237316195423570985008687907853269984665640564039457584007913129639935'
+  ),
 };
 
 module.exports = new Utils();

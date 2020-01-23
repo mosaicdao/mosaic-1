@@ -52,19 +52,19 @@ contract ValidatorSet {
     mapping(address => uint256) public validatorEndHeight;
 
 
-    /* Internal functions  */
+    /* Internal Functions  */
 
     /**
      * @notice It is for inserting validators into the validator set.
      *
      * @dev Function requires :
      *          - Validator address must not be 0.
-     *          - Validator address is already used.
+     *          - Validator address is already not used.
      *
      * @param _validator Validator address.
      * @param _beginHeight Begin height for the validator.
      */
-    function insertValidator(
+    function insertValidatorInternal(
         address _validator,
         uint256 _beginHeight
     )
@@ -105,16 +105,12 @@ contract ValidatorSet {
      * @param _validator Validator address.
      * @param _endHeight End height for the validator.
      */
-    function removeValidator(
+    function removeValidatorInternal(
         address _validator,
         uint256 _endHeight
     )
         internal
     {
-        require(
-            _validator != address(0),
-            "Validator must not be 0."
-        );
         require(
             validatorBeginHeight[_validator] < _endHeight,
             "Validator begin height must be less than end height."

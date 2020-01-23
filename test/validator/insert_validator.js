@@ -18,7 +18,7 @@ const BN = require('bn.js');
 const { AccountProvider } = require('../test_lib/utils.js');
 const Utils = require('../test_lib/utils.js');
 
-const ValidatorSet = artifacts.require('TestValidatorSet');
+const ValidatorSet = artifacts.require('ValidatorSetDouble');
 
 contract('ValidatorSet::insertValidator', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
@@ -33,27 +33,27 @@ contract('ValidatorSet::insertValidator', (accounts) => {
       const account1 = accountProvider.get();
       const account2 = accountProvider.get();
 
-      await validatorSet.addValidator(account1, beginHeight);
+      await validatorSet.insertValidator(account1, beginHeight);
 
       const actualValidatorBeginHeight = await validatorSet.validatorBeginHeight.call(account1);
       const actualValidatorEndHeight = await validatorSet.validatorEndHeight.call(account1);
-      assert.strictEqual(
+      assert.isOk(
         beginHeight.eq(actualValidatorBeginHeight),
-        true,
         `Expected validator begin height is ${beginHeight} but got ${actualValidatorBeginHeight}`,
       );
 
-      assert.strictEqual(
-        actualValidatorEndHeight.toString(16),
-        Utils.MAX_FUTURE_END_HEIGHT,
+      assert.isOk(
+        actualValidatorEndHeight.eq(Utils.MAX_FUTURE_END_HEIGHT),
         `Expected validator end height is ${Utils.MAX_FUTURE_END_HEIGHT} `
          + `but got ${actualValidatorEndHeight}`,
       );
 
       // Inserting another validator.
-      await validatorSet.addValidator(account2, beginHeight);
+      await validatorSet.insertValidator(account2, beginHeight);
 
-      const actualValidatorAtSentinelAddress = await validatorSet.validators.call(Utils.SENTINEL_ADDRESS);
+      const actualValidatorAtSentinelAddress = await validatorSet.validators.call(
+        Utils.SENTINEL_ADDRESS,
+      );
 
       assert.strictEqual(
         actualValidatorAtSentinelAddress,

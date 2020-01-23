@@ -17,7 +17,7 @@
 const BN = require('bn.js');
 const { AccountProvider } = require('../test_lib/utils.js');
 
-const ValidatorSet = artifacts.require('TestValidatorSet');
+const ValidatorSet = artifacts.require('ValidatorSetDouble');
 
 contract('ValidatorSet::removeValidator', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
@@ -28,12 +28,12 @@ contract('ValidatorSet::removeValidator', (accounts) => {
   beforeEach(async () => {
     validatorSet = await ValidatorSet.new();
     account = accountProvider.get();
-    await validatorSet.addValidator(account, beginHeight);
+    await validatorSet.insertValidator(account, beginHeight);
   });
 
   contract('Positive Tests', () => {
     it('should remove validator', async () => {
-      await validatorSet.pullOutValidator(account, endHeight);
+      await validatorSet.removeValidator(account, endHeight);
 
       const actualValidatorBeginHeight = await validatorSet.validatorBeginHeight.call(account);
       const actualValidatorEndHeight = await validatorSet.validatorEndHeight.call(account);
