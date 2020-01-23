@@ -16,7 +16,7 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
-import "../consensus/CoConsensusModule.sol";
+import "../consensus/CoconsensusModule.sol";
 import "../validator/ValidatorSet.sol";
 import "../version/MosaicVersion.sol";
 
@@ -24,7 +24,7 @@ import "../version/MosaicVersion.sol";
  * @title Protocore abstract contract acting as a base contract for
  *        OriginProtocore and SelfProtocore contracts.
  */
-contract Protocore is MosaicVersion, ValidatorSet, CoConsensusModule {
+contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
 
     /* Usings */
 
@@ -138,7 +138,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoConsensusModule {
         bytes32 _kernelHash
     )
         external
-        onlyCoConsensus
+        onlyCoconsensus
     {
         require(
             _kernelHeight == openKernelHeight.add(1),
