@@ -14,6 +14,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import "../../consensus/CoconsensusI.sol";
 import "../../protocore/Protocore.sol";
 
 contract TestProtocore is Protocore {
@@ -26,7 +27,7 @@ contract TestProtocore is Protocore {
     /* Special Functions */
 
     constructor(
-        CoConsensusI _coconsensus,
+        CoconsensusI _coconsensus,
         uint256 _epochLength,
         uint256 _genesisKernelHeight,
         bytes32 _genesisKernelHash,
@@ -68,7 +69,7 @@ contract TestProtocore is Protocore {
         link.proposedMetablockHeight = _genesisProposedMetablockHeight;
         link.targetFinalisation = CheckpointFinalisationStatus.Finalised;
 
-		coconsensus = _coconsensus;
+        coconsensus = _coconsensus;
 
         super.setup(
             _epochLength
@@ -79,7 +80,7 @@ contract TestProtocore is Protocore {
     /* External Functions */
 
     function getCoconsensus()
-		external
+		public
 		view
 		returns (CoconsensusI)
 	{

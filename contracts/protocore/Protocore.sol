@@ -74,23 +74,6 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
     /** Epoch length */
     uint256 public epochLength;
 
-    /* Special Functions */
-
-    /**
-     * @notice setup() function initializes the current contract.
-     *         The function will be called by inherited contracts.
-     *
-     * @param _coConsensus Address of the coconsensus contract.
-     */
-    function setup(
-        CoConsensusI _coConsensus
-    )
-        internal
-    {
-        CoConsensusModule.setupCoConsensus(_coConsensus);
-    }
-
-
 
     /* Special Functions */
 
