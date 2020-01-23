@@ -14,36 +14,37 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "./CoConsensusI.sol";
+import "./CoconsensusI.sol";
 
-contract CoConsensusModule {
+contract CoconsensusModule {
 
-    /** Address of CoConsensus contract on auxiliary chain. */
-    CoConsensusI public coConsensus;
+    /* Constants */
 
-    /**
-     * @notice It sets address for coConsensus contract.
-     * @param _coConsensus Address of coConsensus contract.
-     */
-    function setupCoConsensus(CoConsensusI _coConsensus) internal {
-        require(
-            address(coConsensus) == address(0),
-            "CoConsensus address is already present."
-        );
-        require(
-            address(_coConsensus) != address(0),
-            "CoConsensus address must not be null."
-        );
-        coConsensus = _coConsensus;
-    }
+    /** Address of Coconsensus contract on auxiliary chain. */
+    address private constant COCONSENSUS = address(0x0000000000000000000000000000000000004D00);
 
-    modifier onlyCoConsensus()
+
+    /* Modifiers */
+
+    modifier onlyCoconsensus()
     {
         require(
-            msg.sender == address(coConsensus),
-            "Only the CoConsensus contract can call this function."
+            msg.sender == address(getCoconsensus()),
+            "Only the Coconsensus contract can call this function."
         );
 
         _;
+    }
+
+
+    /* Public functions */
+
+    /**
+     * @notice Gets the coconsensus contract address.
+     *
+     * @return Coconsensus contract address.
+     */
+    function getCoconsensus() public pure returns (CoconsensusI) {
+        return CoconsensusI(COCONSENSUS);
     }
 }
