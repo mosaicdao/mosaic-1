@@ -15,10 +15,7 @@
 const UtilityToken = artifacts.require('UtilityToken');
 const BN = require('bn.js');
 
-const Utils = require('../test_lib/utils');
-
 contract('UtilityToken::burnFrom', (accounts) => {
-
   const TOKEN_SYMBOL = 'UT';
   const TOKEN_NAME = 'Utility Token';
   const TOKEN_DECIMALS = 18;
@@ -39,7 +36,7 @@ contract('UtilityToken::burnFrom', (accounts) => {
       TOKEN_NAME,
       TOKEN_DECIMALS,
       TOTAL_TOKEN_SUPPLY,
-      consensusCogateway
+      consensusCogateway,
     );
 
     await utilityToken.mint(beneficiary, amount, {
@@ -47,7 +44,7 @@ contract('UtilityToken::burnFrom', (accounts) => {
     });
 
     await utilityToken.approve(spender, amount, {
-      from: beneficiary
+      from: beneficiary,
     });
   });
 
@@ -55,7 +52,7 @@ contract('UtilityToken::burnFrom', (accounts) => {
     const balanceBeforeBurnFrom = await utilityToken.balanceOf(beneficiary);
 
     await utilityToken.burnFrom(beneficiary, amount, {
-      from: spender
+      from: spender,
     });
 
     const balanceAfterBurnFrom = await utilityToken.balanceOf(beneficiary);

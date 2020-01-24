@@ -1,3 +1,5 @@
+/* global web3 */
+
 // Copyright 2020 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +18,6 @@ const UtilityToken = artifacts.require('UtilityToken');
 const BN = require('bn.js');
 
 contract('UtilityToken::setup', (accounts) => {
-
   const TOKEN_SYMBOL = 'UT';
   const TOKEN_NAME = 'Utility Token';
   const TOKEN_DECIMALS = 18;
@@ -35,7 +36,7 @@ contract('UtilityToken::setup', (accounts) => {
       TOKEN_NAME,
       TOKEN_DECIMALS,
       TOTAL_TOKEN_SUPPLY,
-      consensusCogateway
+      consensusCogateway,
     );
 
     assert.strictEqual(
