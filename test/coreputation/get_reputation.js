@@ -17,26 +17,26 @@
 const BN = require('bn.js');
 const { AccountProvider } = require('../test_lib/utils.js');
 
-const CoReputation = artifacts.require('CoreputationTest');
+const Coreputation = artifacts.require('CoreputationTest');
 
 contract('Coreputation::getReputation', (accounts) => {
   let accountProvider;
-  let coReputation;
+  let coreputationInstance;
   let validatorInfo;
   let coconsensus;
 
   beforeEach(async () => {
     accountProvider = new AccountProvider(accounts);
-    coReputation = await CoReputation.new();
+    coreputationInstance = await Coreputation.new();
     coconsensus = accountProvider.get();
     validatorInfo = {
       validator: accountProvider.get(),
       reputation: new BN('10'),
     };
-    await coReputation.setup(
+    await coreputationInstance.setup(
       coconsensus,
     );
-    await coReputation.upsertValidator(
+    await coreputationInstance.upsertValidator(
       validatorInfo.validator,
       validatorInfo.reputation,
       { from: coconsensus },
@@ -44,7 +44,7 @@ contract('Coreputation::getReputation', (accounts) => {
   });
 
   it('should return correct reputation for a known validator', async () => {
-    const reputationValue = await coReputation.getReputation.call(validatorInfo.validator);
+    const reputationValue = await coreputationInstance.getReputation.call(validatorInfo.validator);
     assert.strictEqual(
       reputationValue.toString(10),
       validatorInfo.reputation.toString(10),

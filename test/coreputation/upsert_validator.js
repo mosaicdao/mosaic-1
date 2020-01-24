@@ -17,11 +17,11 @@
 const BN = require('bn.js');
 const { AccountProvider } = require('../test_lib/utils.js');
 
-const CoReputation = artifacts.require('CoreputationTest');
+const Coreputation = artifacts.require('CoreputationTest');
 
 contract('Coreputation::getReputation', (accounts) => {
   let accountProvider;
-  let coReputation;
+  let coreputationInstance;
   let inputValidatorInfo;
   let coconsensus;
   const ValidatorStatus = {
@@ -33,22 +33,22 @@ contract('Coreputation::getReputation', (accounts) => {
 
   beforeEach(async () => {
     accountProvider = new AccountProvider(accounts);
-    coReputation = await CoReputation.new();
+    coreputationInstance = await Coreputation.new();
     coconsensus = accountProvider.get();
     inputValidatorInfo = {
       validator: accountProvider.get(),
       reputation: new BN('10'),
     };
-    await coReputation.setup(coconsensus);
+    await coreputationInstance.setup(coconsensus);
   });
 
-  it('should add validator in Staked state', async () => {
-    await coReputation.upsertValidator(
+  it('should add validator in Staked state when reputation is non-zero', async () => {
+    await coreputationInstance.upsertValidator(
       inputValidatorInfo.validator,
       inputValidatorInfo.reputation,
       { from: coconsensus },
     );
-    const insertedValidator = await coReputation.validators.call(inputValidatorInfo.validator);
+    const insertedValidator = await coreputationInstance.validators.call(inputValidatorInfo.validator);
     assert.strictEqual(
       ValidatorStatus.Staked.toString(),
       insertedValidator.status.toString(10),
@@ -61,18 +61,18 @@ contract('Coreputation::getReputation', (accounts) => {
     );
   });
 
-  it('should not add validator when reputation is zero', async () => {
-    await coReputation.upsertValidator(
+  it('should add validator in Deregistered state when his reputation is zero', async () => {
+    await coreputationInstance.upsertValidator(
       inputValidatorInfo.validator,
       new BN(0),
       { from: coconsensus },
     );
-    const insertedValidator = await coReputation.validators.call(inputValidatorInfo.validator);
+    const insertedValidator = await coreputationInstance.validators.call(inputValidatorInfo.validator);
 
     assert.strictEqual(
-      ValidatorStatus.Undefined.toString(),
+      ValidatorStatus.Deregistered.toString(),
       insertedValidator.status.toString(10),
-      `Expected validator status is ${ValidatorStatus.Undefined} but found ${insertedValidator.status} `,
+      `Expected validator status is ${ValidatorStatus.Deregistered} but found ${insertedValidator.status} `,
     );
     assert.strictEqual(
       (new BN(0)).toString(10),
@@ -82,15 +82,15 @@ contract('Coreputation::getReputation', (accounts) => {
   });
 
   it('should update validator status to Deregistered when reputation is zero', async () => {
-    await coReputation.upsertValidator(
+    await coreputationInstance.upsertValidator(
       inputValidatorInfo.validator,
       inputValidatorInfo.reputation,
     );
-    await coReputation.upsertValidator(
+    await coreputationInstance.upsertValidator(
       inputValidatorInfo.validator,
       new BN(0),
     );
-    const updatedValidator = await coReputation.validators.call(inputValidatorInfo.validator);
+    const updatedValidator = await coreputationInstance.validators.call(inputValidatorInfo.validator);
     assert.strictEqual(
       ValidatorStatus.Deregistered.toString(),
       updatedValidator.status.toString(10),
@@ -101,6 +101,33 @@ contract('Coreputation::getReputation', (accounts) => {
       '0',
       updatedValidator.reputation.toString(10),
       `Expected validator reputation is 0 but found ${updatedValidator.reputation} `,
+    );
+  });
+
+  it('should not update validator information in slashed state', async () => {
+    await coreputationInstance.upsertValidator(
+      inputValidatorInfo.validator,
+      inputValidatorInfo.reputation,
+    );
+    await coreputationInstance.setValidatorSlashed(
+      inputValidatorInfo.validator,
+    );
+    await coreputationInstance.upsertValidator(
+      inputValidatorInfo.validator,
+      new BN(20),
+    );
+
+    const updatedValidator = await coreputationInstance.validators.call(inputValidatorInfo.validator);
+    assert.strictEqual(
+      ValidatorStatus.Slashed.toString(),
+      updatedValidator.status.toString(10),
+      `Expected validator status is ${ValidatorStatus.Slashed} but found ${updatedValidator.status} `,
+    );
+
+    assert.strictEqual(
+      (new BN(0)).toString(10),
+      updatedValidator.reputation.toString(10),
+      `Expected validator reputation is 0 but found ${updatedValidator.reputation.toString(10)} `,
     );
   });
 });

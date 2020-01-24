@@ -30,5 +30,6 @@ contract CoreputationTest is Coreputation {
     {
         ValidatorInfo storage vInfo = validators[_validator];
         vInfo.status = ValidatorStatus.Slashed;
+        vInfo.reputation = uint256(0);
     }
 }

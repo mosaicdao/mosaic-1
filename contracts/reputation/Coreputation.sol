@@ -77,16 +77,12 @@ contract Coreputation is MasterCopyNonUpgradable, CoConsensusModule {
     /**
      * @notice Insert or update validator information.
      *
-     * @dev Validator status is marked Staked, if validator status is
-     *      Undefined and he has non zero reputation value.
-     *      Validator is not inserted if his reputation value is zero.
-     *      Validator status is marked to Deregistered when his current status
-     *      is Staked and reputation value changes to zero.
+     * @dev Validator information is not updated when his status is Slashed.
+     *      Validator is marked Deregistered if provided reputation is zero.
+     *      Validator is marked Staked, if he has non zero reputation value.
      *
      * @dev Function requires:
-     *      - msg.sender should be CoConsensus
-     *      - Validator address should non zero
-     *      - Newly added validators reputation should be non zero
+     *      - msg.sender should be Coconsensus
      *
      * @param _validator Validator address to upsert.
      * @param _reputation Validator reputation value.
@@ -99,18 +95,13 @@ contract Coreputation is MasterCopyNonUpgradable, CoConsensusModule {
         onlyCoConsensus
     {
         ValidatorInfo storage vInfo = validators[_validator];
-        if (vInfo.status == ValidatorStatus.Undefined) {
-            if (_reputation == uint256(0)) {
-                return;
-            }
-
-            vInfo.status = ValidatorStatus.Staked;
+        if (vInfo.status != ValidatorStatus.Slashed) {
             vInfo.reputation = _reputation;
-        } else {
-            if(_reputation == uint256(0) &&
-                vInfo.status == ValidatorStatus.Staked) {
+            if (_reputation == uint256(0)) {
                 vInfo.status = ValidatorStatus.Deregistered;
-                vInfo.reputation = _reputation;
+            } else {
+                assert(vInfo.status < ValidatorStatus.Deregistered);
+                vInfo.status = ValidatorStatus.Staked;
             }
         }
     }
