@@ -33,7 +33,7 @@ contract ValidatorSet {
     /* Storage */
 
     /** Linked list of validators. */
-    mapping(address => address) validators;
+    mapping(address => address) public validators;
 
     /**
      * Validator begin height assigned to this set:
@@ -53,6 +53,15 @@ contract ValidatorSet {
 
 
     /* Public Functions */
+
+    /**
+     * @notice It initializes validators set.
+     */
+    function setup()
+        public
+    {
+        validators[SENTINEL_VALIDATORS] = SENTINEL_VALIDATORS;
+    }
 
     /**
      * @notice Checks if validator is in validator set or not.
@@ -88,5 +97,64 @@ contract ValidatorSet {
         return validatorBeginHeight[_validator] <= _height &&
             validatorEndHeight[_validator] > _height &&
             validatorEndHeight[_validator] > 0;
+    }
+
+
+    /* Internal Functions  */
+
+    /**
+     * @notice It is for inserting validators into the validator set.
+     *
+     * @dev Function requires :
+     *          - Validator address must not be 0.
+     *          - Validator address is already not used.
+     *
+     * @param _validator Validator address.
+     * @param _beginHeight Begin height for the validator.
+     */
+    function insertValidatorInternal(
+        address _validator,
+        uint256 _beginHeight
+    )
+        internal
+    {
+        assert(_validator != address(0));
+        assert(
+            validatorBeginHeight[_validator] == 0 && validatorEndHeight[_validator] == 0
+        );
+
+        address lastValidator = validators[SENTINEL_VALIDATORS];
+        validators[_validator] = lastValidator;
+        validators[SENTINEL_VALIDATORS] = _validator;
+
+        validatorBeginHeight[_validator] = _beginHeight;
+        validatorEndHeight[_validator] = MAX_FUTURE_END_HEIGHT;
+    }
+
+    /**
+     * @notice It is for removing validators from the validator set.
+     *
+     * @dev Function requires :
+     *          - Validator address must not be 0.
+     *          - Validator begin height must be less than end height.
+     *          - Validator end height must be equal to MAX_FUTURE_END_HEIGHT.
+     *
+     * @param _validator Validator address.
+     * @param _endHeight End height for the validator.
+     */
+    function removeValidatorInternal(
+        address _validator,
+        uint256 _endHeight
+    )
+        internal
+    {
+        assert(
+            validatorBeginHeight[_validator] < _endHeight
+        );
+        assert(
+            validatorEndHeight[_validator] == MAX_FUTURE_END_HEIGHT
+        );
+
+        validatorEndHeight[_validator] = _endHeight;
     }
 }
