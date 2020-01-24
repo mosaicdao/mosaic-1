@@ -28,22 +28,33 @@ contract OriginProtocore MasterCopyUpgradable, GenesisOriginProtocore, Protocore
     /**
      * @notice setup() function initializes the current contract.
      *
+     * @dev These input params will be provided by the coconsensus contract.
+     *      This can be called only by the coconsensus contract.
+     *
+     * @param _metachainId Metachain id.
+     * @param _core Core contract address.
      * @param _epochLength Epoch length.
      * @param _metablockHeight Metablock height.
      */
     fucntion setup(
+        bytes32 _metachainId,
+        address _core,
         uint256 _epochLength,
         uint256 _metablockHeight
     ) 
+        onlyCoconsensus
         external 
     {
         // Call setup function of protocore contract to generate domain separator.
         Protocore.setup(
+            _metachainId,
+            _core
             _epochLength,
+            _metablockHeight,
             genesisOriginParentVoteMessageHash,
             bytes32(0)
             genesisOriginTargetBlockHash,
-            genesisOriginTargetBlockNumber,
-            _metablockHeight);
+            genesisOriginTargetBlockNumber
+        );
     }
 }

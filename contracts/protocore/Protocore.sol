@@ -64,9 +64,28 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
     }
 
 
+    /* Constants */
+
+    /** EIP-712 domain separator name for Protocore. */
+    string public constant DOMAIN_SEPARATOR_NAME = "Mosaic-Core";
+
+    /** EIP-712 domain separator typehash for Protocore. */
+    bytes32 public constant DOMAIN_SEPARATOR_TYPEHASH = keccak256(
+        "EIP712Domain(string name,string version,bytes32 metachainId,address verifyingContract)"
+    );
+
+    /** EIP-712 type hash for a Vote Message */
+    bytes32 public constant VOTE_MESSAGE_TYPEHASH = keccak256(
+        "VoteMessage(bytes32 transitionHash,bytes32 sourceBlockHash,bytes32 targetBlockHash,uint256 sourceBlockNumber,uint256 targetBlockNumber)"
+    );
+
+
     /* Storage */
 
     mapping(bytes32 /* vote message hash */ => Link) public links;
+
+    /** EIP-712 domain separator. */
+    bytes32 public domainSeparator;
 
     uint256 public openKernelHeight;
     bytes32 public openKernelHash;
@@ -81,17 +100,28 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
      * @notice setup() function initializes the current contract.
      *         The function will be called by inherited contracts.
      *
+     * @param _metachainId Metachain Id.
+     * @param _core Core contract address.
+     * @param _epochLength Epoch length.
+     * @param _metablockHeight Metablock height.
+     * @param _genesisParentVoteMessageHash Parent vote message hash for the genesis link.
+     * @param _genesisSourceTransitionHash Source transition hash for the genesis link.
+     * @param _genesisTargetBlockHash Target blockhash for the genesis link.
+     * @param _genesisTargetBlockNumber Target block number for the genesis link.
+     *
      * \pre `_epochLength` is not 0.
      *
      * \post Sets epochLength to the given value.
      */
     function setup(
+        bytes32 _metachainId,
+        address _core,
         uint256 _epochLength,
+        uint256 _metablockHeight,
         bytes32 _genesisParentVoteMessageHash,
         bytes32 _genesisSourceTransitionHash
         bytes32 _genesisTargetBlockHash,
-        uint256 _genesisTargetBlockNumber,
-        uint256 _metablockHeight
+        uint256 _genesisTargetBlockNumber
     )
         internal
     {
@@ -102,6 +132,18 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
 
         epochLength = _epochLength;
 
+        // Generate the domain separator.
+        domainSeparator = keccak256(
+            abi.encode(
+                DOMAIN_SEPARATOR_TYPEHASH,
+                DOMAIN_SEPARATOR_NAME,
+                DOMAIN_SEPARATOR_VERSION,
+                _metachainId,
+                _core
+            )
+        );
+
+        // Generate the genesis vote message hash.
         bytes32 genesisVoteMessageHash = hashVoteMessageInternal(
             _genesisSourceTransitionHash,
             bytes32(0),
@@ -110,6 +152,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
             _genesisTargetBlockNumber
         );
 
+        // Store the genesis link.
         Link storage genesisLink = links[genesisVoteMessageHash];
         genesisLink.parentVoteMessageHash = _genesisParentVoteMessageHash;
         genesisLink.targetBlockHash = _genesisTargetBlockHash;
@@ -241,18 +284,47 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         proposedLink.targetFinalisation = CheckpointFinalisationStatus.Registered;
     }
 
+ 
+    /* Private Functions */
+
     /**
-     * @notice Takes vote message parameters and returns the typed vote
-     *         message hash.
+     * @notice It calculates vote message hash.
+     *
+     * @param _transitionHash Transition hash.
+     * @param _sourceBlockHash Blockhash of source chain.
+     * @param _targetBlockHash Blockhash of target chain.
+     * @param _sourceBlockNumber Block number at source.
+     * @param _targetBlockNumber Block number at target.
      */
-    function hashVoteMessageInternal(
-        bytes32 _sourceTransitionHash,
+    function hashVoteMessage(
+        bytes32 _transitionHash,
         bytes32 _sourceBlockHash,
         bytes32 _targetBlockHash,
         uint256 _sourceBlockNumber,
         uint256 _targetBlockNumber
     )
-        internal
+        private
         view
-        returns (bytes32 voteMessageHash_);
+        returns (bytes32 voteMessageHash_)
+    {
+        bytes32 typedVoteMessageHash = keccak256(
+            abi.encode(
+                VOTE_MESSAGE_TYPEHASH,
+                _transitionHash,
+                _sourceBlockHash,
+                _targetBlockHash,
+                _sourceBlockNumber,
+                _targetBlockNumber
+            )
+        );
+
+        voteMessageHash_ = keccak256(
+            abi.encodePacked(
+                byte(0x19),
+                byte(0x01),
+                domainSeparator,
+                typedVoteMessageHash
+            )
+        );
+    }
 }
