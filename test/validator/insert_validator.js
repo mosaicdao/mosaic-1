@@ -26,6 +26,7 @@ contract('ValidatorSet::insertValidator', (accounts) => {
   const beginHeight = new BN(100);
   beforeEach(async () => {
     validatorSet = await ValidatorSet.new();
+    await validatorSet.setup();
   });
 
   contract('Positive Tests', () => {
@@ -51,22 +52,24 @@ contract('ValidatorSet::insertValidator', (accounts) => {
       // Inserting another validator.
       await validatorSet.insertValidator(account2, beginHeight);
 
-      const actualValidatorAtSentinelAddress = await validatorSet.validators.call(
-        Utils.SENTINEL_ADDRESS,
-      );
-
-      assert.strictEqual(
-        actualValidatorAtSentinelAddress,
-        account2,
-        'Incorrect validator address at sentinel address',
-      );
-
-      const expectedValidatorLinkedToAccount2 = await validatorSet.validators.call(account2);
-
-      assert.strictEqual(
-        expectedValidatorLinkedToAccount2,
+      const addressAtAccount1 = await validatorSet.validators.call(
         account1,
-        'Incorrectly linked linked-list',
+      );
+
+      assert.notStrictEqual(
+        addressAtAccount1,
+        Utils.NULL_ADDRESS,
+        'Invalid address in the linked list',
+      );
+
+      const addressAtAccount2 = await validatorSet.validators.call(
+        account2,
+      );
+
+      assert.notStrictEqual(
+        addressAtAccount2,
+        Utils.NULL_ADDRESS,
+        'Invalid address in the linked list',
       );
     });
   });

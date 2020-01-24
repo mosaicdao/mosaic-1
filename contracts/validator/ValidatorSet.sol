@@ -148,13 +148,11 @@ contract ValidatorSet {
     )
         internal
     {
-        require(
-            validatorBeginHeight[_validator] < _endHeight,
-            "Validator begin height must be less than end height."
+        assert(
+            validatorBeginHeight[_validator] < _endHeight
         );
-        require(
-            validatorEndHeight[_validator] == MAX_FUTURE_END_HEIGHT,
-            "Validator must be active."
+        assert(
+            validatorEndHeight[_validator] == MAX_FUTURE_END_HEIGHT
         );
 
         validatorEndHeight[_validator] = _endHeight;
