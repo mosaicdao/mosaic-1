@@ -21,7 +21,7 @@ contract GenesisUtmost {
 
      /* Constants */
 
-    /** Total supply value for Utmost token */
-    uint256 public constant TOTAL_SUPPLY = uint256(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+    /** Total initial supply value for Utmost token */
+    uint256 public genesisTotalSupply;
 
 }
