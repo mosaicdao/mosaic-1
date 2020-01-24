@@ -290,9 +290,9 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         address validator = ecrecover(_voteMessageHash, _v, _r, _s);
 
         if (link.proposedMetablockHeight == openKernelHeight) {
-            registerVoteForCurrentMetablock(_voteMessageHash, validator);
+            registerVoteForCurrentMetablock(link, validator);
         } else if (link.proposedMetablockHeight.add(1) == openKernelHeight) {
-            registeVoteForProgressedMetablock(_voteMessageHash, validator);
+            registeVoteForProgressedMetablock(link, validator);
         } else {
             revert(
                 "Metablock height should be equal to the open kernel height or minus 1."
@@ -319,13 +319,11 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
     /* Private Functions */
 
     function registerVoteForCurrentMetablock(
-        bytes32 _voteMessageHash,
+        Link storage link,
         address _validator
     )
         private
     {
-        Link storage link = links[_voteMessageHash];
-
         bool isInRearValidatorSet = inForwardValidatorSet(
             _validator,
             link.proposedMetablockHeight.sub(1)
@@ -348,12 +346,12 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
             link.forwardVoteCount >= quorums[link.proposedMetablockHeight].forward &&
             link.targetFinalisation < CheckpointFinalisationStatus.Justified)
         {
-            justify(_voteMessageHash);
+            justify(link);
         }
     }
 
     function registeVoteForProgressedMetablock(
-        bytes32 _voteMessageHash,
+        Link storage link,
         address validator
     )
         private
@@ -385,11 +383,9 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
      * \post coconsensus::finaliseCheckpoint function is called with the link's
      *       source block number and hash.
      */
-    function justify(bytes32 _voteMessageHash)
+    function justify(Link storage link)
         private
     {
-        Link storage link = links[_voteMessageHash];
-
         Link storage parentLink = links[link.parentVoteMessageHash];
 
         link.targetFinalisation = CheckpointFinalisationStatus.Justified;
@@ -402,6 +398,50 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
                 parentLink.targetBlockNumber,
                 parentLink.targetBlockHash
             );
+        }
+    }
+
+    function getRearVoteCount(Link storage link)
+        private
+        view
+        returns (uint256 rearVoteCount_)
+    {
+        if (link.proposedMetablockHeight == openKernelHeight) {
+            rearVoteCount_ = link.forwardVoteCountPreviousHeight;
+        } else {
+            rearVoteCount_ = link.forwardVoteCount;
+        }
+    }
+
+    function incrementRearVoteCount(Link storage link)
+        private
+    {
+        if (link.proposedMetablockHeight == openKernelHeight) {
+            link.forwardVoteCountPreviousHeight = link.forwardVoteCountPreviousHeight.add(1);
+        } else {
+            link.forwardVoteCount = link.forwardVoteCount.add(1);
+        }
+    }
+
+    function getForwardVoteCount(Link storage link)
+        private
+        view
+        returns (uint256 forwardVoteCount_)
+    {
+        if (link.proposedMetablockHeight == openKernelHeight) {
+            forwardVoteCount_ = link.forwardVoteCount;
+        } else {
+            forwardVoteCount_ = link.forwardVoteCountNextHeight;
+        }
+    }
+
+    function incrementForwardVoteCount(Link storage link)
+        private
+    {
+        if (link.proposedMetablockHeight == openKernelHeight) {
+            link.forwardVoteCount = link.forwardVoteCount.add(1);
+        } else {
+            link.forwardVoteCountNextHeight = link.forwardVoteCountNextHeight.add(1);
         }
     }
 }
