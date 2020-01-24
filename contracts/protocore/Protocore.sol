@@ -66,17 +66,17 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
 
     /* Constants */
 
-    /** EIP-712 domain separator name for ProtoCore. */
+    /** EIP-712 domain separator name for Protocore. */
     string public constant DOMAIN_SEPARATOR_NAME = "Mosaic-Core";
 
-    /** EIP-712 domain separator typehash for ProtoCore. */
+    /** EIP-712 domain separator typehash for Protocore. */
     bytes32 public constant DOMAIN_SEPARATOR_TYPEHASH = keccak256(
         "EIP712Domain(string name,string version,bytes32 metachainId,address core)"
     );
 
     /** EIP-712 type hash for a Vote Message */
     bytes32 public constant VOTE_MESSAGE_TYPEHASH = keccak256(
-        "VoteMessage(bytes32 transitionHash,bytes32 sourceBlockHash,bytes32 targetBlockHash,uint256 sourceBlockHeight,uint256 targetBlockHeight)"
+        "VoteMessage(bytes32 transitionHash,bytes32 sourceBlockHash,bytes32 targetBlockHash,uint256 sourceBlockNumber,uint256 targetBlockNumber)"
     );
 
 
@@ -160,7 +160,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
     }
 
 
-    /* Internal Functions */
+    /* Private Functions */
 
     /**
      * @notice It calculates vote message hash.
@@ -169,10 +169,10 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         bytes32 _transitionHash,
         bytes32 _sourceBlockHash,
         bytes32 _targetBlockHash,
-        uint256 _sourceBlockHeight,
-        uint256 _targetBlockHeight
+        uint256 _sourceBlockNumber,
+        uint256 _targetBlockNumber
     )
-        internal
+        private
         view
         returns (bytes32 voteMessageHash_)
     {
@@ -182,8 +182,8 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
                 _transitionHash,
                 _sourceBlockHash,
                 _targetBlockHash,
-                _sourceBlockHeight,
-                _targetBlockHeight
+                _sourceBlockNumber,
+                _targetBlockNumber
             )
         );
 
