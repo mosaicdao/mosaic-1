@@ -14,8 +14,9 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../ERC20I.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
+import "../ERC20I.sol";
 
 /**
  * @title ERC20Token contract.
@@ -23,6 +24,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
  * @notice ERC20Token implements ERC20I.
  */
 contract ERC20Token is ERC20I {
+
     /* Usings */
 
     using SafeMath for uint256;
@@ -45,7 +47,8 @@ contract ERC20Token is ERC20I {
     /** Stores the authorization information. */
     mapping(address => mapping(address => uint256)) allowed;
 
-    /* Public functions. */
+
+    /* Public Functions. */
 
     /**
      * @notice Public function to get the name of the token.
@@ -177,12 +180,12 @@ contract ERC20Token is ERC20I {
         success_ = true;
     }
 
-    /* Internal functions. */
+    /* Internal Functions. */
 
     /**
      * @notice Internal function to transfer the tokens.
      *
-     * @dev This is an internal functions that transfers the token. This
+     * @dev This is an internal function that transfers the token. This
      *      function is called from transfer and transferFrom functions.
      *
      * @param _from Address from which tokens are transferred.
@@ -210,6 +213,8 @@ contract ERC20Token is ERC20I {
     }
 
     /**
+     * @notice Internal function to mint tokens.
+     *
      * @dev Internal function that mints an amount of the token and assigns it to
      *      an account. This encapsulates the modification of balances such that the
      *      proper events are emitted.
@@ -225,6 +230,8 @@ contract ERC20Token is ERC20I {
     }
 
     /**
+     * @notice Internal function that burns tokens.
+     *
      * @dev Internal function that burns an amount of the token of a given
      *      account.
      * @param _account The account whose tokens will be burnt.
@@ -239,6 +246,8 @@ contract ERC20Token is ERC20I {
     }
 
     /**
+     * @notice Internal function that burns tokens of spender.
+     *
      * @dev Internal function that burns an amount of the token of a given
      *      account, deducting from the sender's allowance for said account. Uses the
      *      internal burn function.

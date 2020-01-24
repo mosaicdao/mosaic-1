@@ -39,13 +39,21 @@ contract('UtilityToken::burnFrom', (accounts) => {
       consensusCogateway,
     );
 
-    await utilityToken.mint(beneficiary, amount, {
-      from: consensusCogateway,
-    });
+    await utilityToken.mint(
+      beneficiary,
+      amount,
+      {
+        from: consensusCogateway,
+      },
+    );
 
-    await utilityToken.approve(spender, amount, {
-      from: beneficiary,
-    });
+    await utilityToken.approve(
+      spender,
+      amount,
+      {
+        from: beneficiary,
+      },
+    );
   });
 
   it('should burn tokens from beneficiary when called with proper params by spender using burnFrom.', async () => {

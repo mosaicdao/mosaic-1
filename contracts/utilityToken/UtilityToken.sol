@@ -23,15 +23,18 @@ import "./ERC20Token.sol";
  *
  */
 contract UtilityToken is ERC20Token {
+
     /* events */
 
     /** Emitted whenever a ConsensusCogateway address is set */
     event ConsensusCogatewaySet(address _consensusCogateway);
 
+
     /* Storage */
 
     /** Address of ConsensusCogateway contract. */
     address public consensusCogateway;
+
 
     /* Modifiers */
 
@@ -45,7 +48,8 @@ contract UtilityToken is ERC20Token {
         _;
     }
 
-    /* External functions */
+
+    /* External Functions */
 
     /**
      * @notice Sets up the symbol, name, decimals, totalSupply
@@ -89,6 +93,8 @@ contract UtilityToken is ERC20Token {
     }
 
     /**
+     * @notice External function to mint tokens
+     *
      * @dev Mints an amount of the token and assigns it to an account.
      *      This encapsulates the modification of balances such that the
      *      proper events are emitted.
@@ -110,6 +116,8 @@ contract UtilityToken is ERC20Token {
     }
 
     /**
+     * @notice External function to burn tokens
+     *
      * @dev Burns an amount of the token of a given
      *      account. Calls the internal burn function.
      * @param _account The account whose tokens will be burnt.
@@ -127,6 +135,8 @@ contract UtilityToken is ERC20Token {
     }
 
     /**
+     * @notice External function to burn tokens of spender
+     *
      * @dev Burns an amount of the token of a given
      *      account, deducting from the sender's allowance for said
      *      account. Uses the internal _burnFrom function.
