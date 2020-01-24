@@ -1,4 +1,4 @@
-// Copyright 2019 OpenST Ltd.
+// Copyright 2020 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -79,7 +79,7 @@ contract('Protocore::proposeLinkInternal', (accounts) => {
           targetBlockHash,
           targetBlockNumber,
         ),
-        'Parent link does not exist.',
+        'Parent link\'s target finalisation status should be at least justified.',
       );
     });
 
@@ -118,7 +118,7 @@ contract('Protocore::proposeLinkInternal', (accounts) => {
       );
     });
 
-    it('should revert if target block number is not a multiply of the epoch length', async () => {
+    it('should revert if target block number is not a multiple of the epoch length', async () => {
       const sourceTransitionHash = Utils.getRandomHash();
       const targetBlockHash = Utils.getRandomHash();
       const targetBlockNumber = config.genesisTargetBlockNumber.add(config.epochLength.muln(2).addn(1));

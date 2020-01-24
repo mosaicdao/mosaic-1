@@ -176,18 +176,6 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
             "Parent vote message hash is 0."
         );
 
-        Link storage parentLink = links[_parentVoteMessageHash];
-
-        require(
-            parentLink.targetBlockHash != bytes32(0),
-            "Parent link does not exist."
-        );
-
-        require(
-            parentLink.targetFinalisation >= CheckpointFinalisationStatus.Justified,
-            "Parent link's target finalisation status should be at least justified."
-        );
-
         require(
             _targetBlockHash != bytes32(0),
             "Target block hash of the proposed link is 0."
@@ -196,6 +184,13 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         require(
             _targetBlockNumber % epochLength == 0,
             "Target block number of the link should be multiple of the epoch length."
+        );
+
+        Link storage parentLink = links[_parentVoteMessageHash];
+
+        require(
+            parentLink.targetFinalisation >= CheckpointFinalisationStatus.Justified,
+            "Parent link's target finalisation status should be at least justified."
         );
 
         require(
