@@ -28,5 +28,11 @@ interface CoconsensusI {
      */
     function getAnchor(bytes32 _metachainId) external returns(address);
 
+    function finaliseCheckpoint(
+        bytes32 metachainId,
+        uint256 blockNumber,
+        bytes32 blockHash
+    )
+    external;
 }
 

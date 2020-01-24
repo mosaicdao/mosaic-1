@@ -63,10 +63,27 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         CheckpointFinalisationStatus targetFinalisation;
     }
 
+    struct Quorum {
+        uint256 rear;
+        uint256 forward;
+    }
+
+
+    /* Constants */
+
+    /** Defines a super-majority fraction used for reaching consensus. */
+    uint256 public constant CORE_SUPER_MAJORITY_NUMERATOR = uint256(2);
+    uint256 public constant CORE_SUPER_MAJORITY_DENOMINATOR = uint256(3);
+
 
     /* Storage */
 
+    /** Metachain id of the meta-blockchain. */
+    bytes32 public metachainId;
+
     mapping(bytes32 /* vote message hash */ => Link) public links;
+
+    mapping(uint256 /* metablock height */ => Quorum) public quorums;
 
     uint256 public openKernelHeight;
     bytes32 public openKernelHash;
@@ -115,6 +132,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
      *
      * \post Increments open kernel height.
      * \post Updates stored open kernel hash.
+     * \post Updates rear/forward quorums for the newly opened metablock height.
      */
     function openKernel(
         uint256 _kernelHeight,
@@ -135,6 +153,10 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
 
         openKernelHeight = openKernelHeight.add(1);
         openKernelHash = _kernelHash;
+
+        Quorum storage quorum = quorums[openKernelHeight];
+        quorum.rear = calculateQuorum(forwardValidatorCount(openKernelHeight.sub(1)));
+        quorum.forward = calculateQuorum(forwardValidatorCount(openKernelHeight));
 
         emit KernelOpened(
             openKernelHeight,
@@ -221,6 +243,64 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
     }
 
     /**
+     * @notice registerVoteInternal() function registers a vote for a link
+     *         specified by vote message hash.
+     *         If rear and forward validator sets reach quorum the target
+     *         checkpoint of the link gets justified.
+     *         In addition to this, if the link is a finalisation link (a
+     *         distance between the source and target checkpoints is one epoch
+     *         length) the source checkpoint gets finalised.
+     *         Function also reports to the Coconsensus contract about
+     *         finalised source checkpoint.
+     *
+     * \pre `_voteMessageHash` is not 0.
+     * \pre A link mapping to the `_voteMessageHash` exists.
+     * \pre The metablock height of the link pointed by `_voteMessageHash` is
+     *      equal to the open metablock height or open metablock height minus 1.
+     *
+     * \post If quorum reached then for the link pointed by `_voteMessageHash`
+     *       targetFinalisation of the target checkpoint is set to justified.
+     * \post If the link length is equal to the epoch length (finalisation link)
+     *       then marks targetFinalisation of the link pointed by
+     *       parentVoteMessageHash of the given link as finalised once quorum
+     *       is reached.
+     * \post Calls coconsensus if the source checkpoint of the link gets
+     *       finalised.
+     */
+    function registerVoteInternal(
+        bytes32 _voteMessageHash,
+        bytes32 _r,
+        bytes32 _s,
+        uint8 _v
+    )
+        internal
+    {
+        require(
+            _voteMessageHash != bytes32(0),
+            "Vote message hash is 0."
+        );
+
+        Link storage link = links[_voteMessageHash];
+
+        require(
+            link.targetFinalisation == CheckpointFinalisationStatus.Registered,
+            "Corresponding link was not reported."
+        );
+
+        address validator = ecrecover(_voteMessageHash, _v, _r, _s);
+
+        if (link.proposedMetablockHeight == openKernelHeight) {
+            registerVoteForCurrentMetablock(_voteMessageHash, validator);
+        } else if (link.proposedMetablockHeight.add(1) == openKernelHeight) {
+            registeVoteForProgressedMetablock(_voteMessageHash, validator);
+        } else {
+            revert(
+                "Metablock height should be equal to the open kernel height or minus 1."
+            );
+        }
+    }
+
+    /**
      * @notice Takes vote message parameters and returns the typed vote
      *         message hash.
      */
@@ -234,4 +314,94 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         internal
         view
         returns (bytes32 voteMessageHash_);
+
+
+    /* Private Functions */
+
+    function registerVoteForCurrentMetablock(
+        bytes32 _voteMessageHash,
+        address _validator
+    )
+        private
+    {
+        Link storage link = links[_voteMessageHash];
+
+        bool isInRearValidatorSet = inForwardValidatorSet(
+            _validator,
+            link.proposedMetablockHeight.sub(1)
+        );
+
+        if (isInRearValidatorSet) {
+            link.forwardVoteCountPreviousHeight = link.forwardVoteCountPreviousHeight.add(1);
+        }
+
+        bool isInForwardValidatorSet = inForwardValidatorSet(
+            _validator,
+            link.proposedMetablockHeight
+        );
+
+        if (isInForwardValidatorSet) {
+            link.forwardVoteCount = link.forwardVoteCount.add(1);
+        }
+
+        if (link.forwardVoteCountPreviousHeight >= quorums[link.proposedMetablockHeight].rear &&
+            link.forwardVoteCount >= quorums[link.proposedMetablockHeight].forward &&
+            link.targetFinalisation < CheckpointFinalisationStatus.Justified)
+        {
+            justify(_voteMessageHash);
+        }
+    }
+
+    function registeVoteForProgressedMetablock(
+        bytes32 _voteMessageHash,
+        address validator
+    )
+        private
+    {
+    }
+
+    function calculateQuorum(uint256 _count)
+        private
+        pure
+        returns (uint256 quorum_)
+    {
+        quorum_ = _count
+            .mul(CORE_SUPER_MAJORITY_NUMERATOR)
+            .div(CORE_SUPER_MAJORITY_DENOMINATOR);
+    }
+
+    /**
+     * @notice justify() function justifies the specified link.
+     *         If the specified link is a finalisation link (a distance between
+     *         its checkpoints is equal to one epoch length) the function
+     *         finalises the source checkpoint of the link and reports it to
+     *         coconsensus contract (Coconsensus::finaliseCheckpoint).
+     *
+     * @dev Function assumes the specified link is valid without any check.
+     *
+     * \post Target checkpoint of the given link is marked as justified.
+     * \post Source checkpoint of the given link is marked as finalised if
+     *       the link is finalisation link.
+     * \post coconsensus::finaliseCheckpoint function is called with the link's
+     *       source block number and hash.
+     */
+    function justify(bytes32 _voteMessageHash)
+        private
+    {
+        Link storage link = links[_voteMessageHash];
+
+        Link storage parentLink = links[link.parentVoteMessageHash];
+
+        link.targetFinalisation = CheckpointFinalisationStatus.Justified;
+
+        if (link.targetBlockNumber.sub(parentLink.targetBlockNumber) == epochLength) {
+            parentLink.targetFinalisation = CheckpointFinalisationStatus.Finalised;
+
+            getCoconsensus().finaliseCheckpoint(
+                metachainId,
+                parentLink.targetBlockNumber,
+                parentLink.targetBlockHash
+            );
+        }
+    }
 }

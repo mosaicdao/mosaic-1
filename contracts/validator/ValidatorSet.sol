@@ -157,4 +157,9 @@ contract ValidatorSet {
 
         validatorEndHeight[_validator] = _endHeight;
     }
+
+    function forwardValidatorCount(uint256 _height)
+        public
+        view
+        returns (uint256);
 }
