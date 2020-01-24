@@ -17,9 +17,9 @@ pragma solidity >=0.5.0 <0.6.0;
 import "./ERC20Token.sol";
 
 /**
- *  @title UtilityToken is an EIP20Token.
+ *  @title UtilityToken is an ERC20Token.
  *
- *  @notice This contract extends the functionalities of the EIP20Token.
+ *  @notice This contract extends the functionalities of the ERC20Token.
  *
  */
 contract UtilityToken is ERC20Token {
