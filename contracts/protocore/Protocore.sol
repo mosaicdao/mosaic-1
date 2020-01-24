@@ -289,15 +289,17 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
 
         address validator = ecrecover(_voteMessageHash, _v, _r, _s);
 
-        if (link.proposedMetablockHeight == openKernelHeight) {
-            registerVoteForCurrentMetablock(link, validator);
-        } else if (link.proposedMetablockHeight.add(1) == openKernelHeight) {
-            registeVoteForProgressedMetablock(link, validator);
-        } else {
-            revert(
-                "Metablock height should be equal to the open kernel height or minus 1."
-            );
-        }
+        // if (link.proposedMetablockHeight == openKernelHeight) {
+
+        // } else if (link.proposedMetablockHeight.add(1) == openKernelHeight) {
+
+        // } else {
+        //     revert(
+        //         "Metablock height should be equal to the open kernel height or minus 1."
+        //     );
+        // }
+
+        registerVotePrivate(link, validator);
     }
 
     /**
@@ -318,7 +320,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
 
     /* Private Functions */
 
-    function registerVoteForCurrentMetablock(
+    function registerVotePrivate(
         Link storage link,
         address _validator
     )
@@ -326,36 +328,27 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
     {
         bool isInRearValidatorSet = inForwardValidatorSet(
             _validator,
-            link.proposedMetablockHeight.sub(1)
+            openKernelHeight
         );
 
         if (isInRearValidatorSet) {
-            link.forwardVoteCountPreviousHeight = link.forwardVoteCountPreviousHeight.add(1);
+            incrementRearVoteCount(link);
         }
 
         bool isInForwardValidatorSet = inForwardValidatorSet(
             _validator,
-            link.proposedMetablockHeight
+            openKernelHeight
         );
 
         if (isInForwardValidatorSet) {
-            link.forwardVoteCount = link.forwardVoteCount.add(1);
+            incrementForwardVoteCount(link);
         }
 
-        if (link.forwardVoteCountPreviousHeight >= quorums[link.proposedMetablockHeight].rear &&
-            link.forwardVoteCount >= quorums[link.proposedMetablockHeight].forward &&
-            link.targetFinalisation < CheckpointFinalisationStatus.Justified)
+        if (link.targetFinalisation < CheckpointFinalisationStatus.Justified &&
+            hasQuorumReached(link))
         {
             justify(link);
         }
-    }
-
-    function registeVoteForProgressedMetablock(
-        Link storage link,
-        address validator
-    )
-        private
-    {
     }
 
     function calculateQuorum(uint256 _count)
@@ -442,6 +435,22 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
             link.forwardVoteCount = link.forwardVoteCount.add(1);
         } else {
             link.forwardVoteCountNextHeight = link.forwardVoteCountNextHeight.add(1);
+        }
+    }
+
+    function hasQuorumReached(Link storage link)
+        private
+        view
+        returns (bool hasQuorumReached_)
+    {
+        Quorum storage quorum = quorums[openKernelHeight];
+
+        if (link.proposedMetablockHeight == openKernelHeight) {
+            hasQuorumReached_ = link.forwardVoteCountPreviousHeight >= quorum.rear &&
+                link.forwardVoteCount >= quorum.forward;
+        } else {
+            hasQuorumReached_ = link.forwardVoteCount >= quorum.rear &&
+                link.forwardVoteCountNextHeight >= quorum.forward;
         }
     }
 }
