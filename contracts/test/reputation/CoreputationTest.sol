@@ -21,7 +21,21 @@ import "../../reputation/Coreputation.sol";
  */
 contract CoreputationTest is Coreputation {
 
-    /* External functions */
+    CoconsensusI public coconsensus;
+
+
+    /* Special Functions */
+
+    constructor(
+        CoconsensusI _coconsensus
+    )
+        public
+    {
+        coconsensus = _coconsensus;
+    }
+
+
+    /* External Functions */
 
     function setValidatorSlashed(
         address _validator
@@ -31,5 +45,12 @@ contract CoreputationTest is Coreputation {
         ValidatorInfo storage vInfo = validators[_validator];
         vInfo.status = ValidatorStatus.Slashed;
         vInfo.reputation = uint256(0);
+    }
+
+
+     /* Public Functions */
+
+    function getCoconsensus() public view returns (CoconsensusI) {
+        return coconsensus;
     }
 }

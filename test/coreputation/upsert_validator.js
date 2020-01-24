@@ -19,7 +19,7 @@ const { AccountProvider } = require('../test_lib/utils.js');
 
 const Coreputation = artifacts.require('CoreputationTest');
 
-contract('Coreputation::getReputation', (accounts) => {
+contract('Coreputation::upsertValidator', (accounts) => {
   let accountProvider;
   let coreputationInstance;
   let inputValidatorInfo;
@@ -33,13 +33,12 @@ contract('Coreputation::getReputation', (accounts) => {
 
   beforeEach(async () => {
     accountProvider = new AccountProvider(accounts);
-    coreputationInstance = await Coreputation.new();
     coconsensus = accountProvider.get();
+    coreputationInstance = await Coreputation.new(coconsensus);
     inputValidatorInfo = {
       validator: accountProvider.get(),
       reputation: new BN('10'),
     };
-    await coreputationInstance.setup(coconsensus);
   });
 
   it('should add validator in Staked state when reputation is non-zero', async () => {

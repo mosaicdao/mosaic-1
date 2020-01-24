@@ -76,7 +76,7 @@ contract Coreputation is MasterCopyNonUpgradable, CoconsensusModule {
         uint256 _reputation
     )
         external
-        onlyCoConsensus
+        onlyCoconsensus
     {
         ValidatorInfo storage vInfo = validators[_validator];
         if (vInfo.status != ValidatorStatus.Slashed) {

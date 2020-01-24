@@ -19,7 +19,7 @@ const { AccountProvider } = require('../test_lib/utils.js');
 
 const Coreputation = artifacts.require('CoreputationTest');
 
-contract('Coreputation::getReputation', (accounts) => {
+contract('Coreputation::isSlashed', (accounts) => {
   let accountProvider;
   let coreputationInstance;
   let validatorInfo;
@@ -27,15 +27,12 @@ contract('Coreputation::getReputation', (accounts) => {
 
   beforeEach(async () => {
     accountProvider = new AccountProvider(accounts);
-    coreputationInstance = await Coreputation.new();
     coconsensus = accountProvider.get();
+    coreputationInstance = await Coreputation.new(coconsensus);
     validatorInfo = {
       validator: accountProvider.get(),
       reputation: new BN('10'),
     };
-    await coreputationInstance.setup(
-      coconsensus,
-    );
     await coreputationInstance.upsertValidator(
       validatorInfo.validator,
       validatorInfo.reputation,
