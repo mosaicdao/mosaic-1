@@ -20,15 +20,15 @@ pragma solidity >=0.5.0 <0.6.0;
 //
 // ----------------------------------------------------------------------------
 
-import "./ERC20Interface.sol";
+import "../ERC20I.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
  * @title ERC20Token contract.
  *
- * @notice ERC20Token implements ERC20Interface.
+ * @notice ERC20Token implements ERC20I.
  */
-contract ERC20Token is ERC20Interface {
+contract ERC20Token is ERC20I {
     /* Usings */
 
     using SafeMath for uint256;
