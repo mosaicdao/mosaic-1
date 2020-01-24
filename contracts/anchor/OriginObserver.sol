@@ -34,7 +34,7 @@ contract OriginObserver is
     StateRootProvider
 {
 
-    /* External functions */
+    /* External Functions */
 
     /**
      * @notice Setup function for origin observer contract.

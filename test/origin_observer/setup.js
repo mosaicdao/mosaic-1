@@ -40,7 +40,7 @@ contract('OriginObserver::setup', () => {
   });
 
   contract('Positive Tests', () => {
-    it('should anchor state root', async () => {
+    it('should do setup successfully', async () => {
       await originObserver.setup();
 
       const latestStateRootBlockNumber = await originObserver.getLatestStateRootBlockNumber();
