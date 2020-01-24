@@ -41,7 +41,7 @@ contract OriginObserver is
      *
      * @dev This can be called by anyone only once. The check in StateRootProvider::setup
      *      ensures this in its circular buffer setup. Another check is provided by
-     *      StateRootProvider::anchorStateRoot can be only called once for a given block
+     *      StateRootProvider::anchorStateRootInternal can be only called once for a given block
      *      number and has to be increasing.
      */
     function setup() external {
