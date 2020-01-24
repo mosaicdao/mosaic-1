@@ -83,10 +83,15 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
      *
      * \pre `_epochLength` is not 0.
      *
-     * \post Sets epochLenght to the given value.
+     * \post Sets epochLength to the given value.
      */
     function setup(
-        uint256 _epochLength
+        uint256 _epochLength,
+        bytes32 _genesisParentVoteMessageHash,
+        bytes32 _genesisSourceTransitionHash
+        bytes32 _genesisTargetBlockHash,
+        uint256 _genesisTargetBlockNumber,
+        uint256 _metablockHeight
     )
         internal
     {
@@ -96,6 +101,22 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         );
 
         epochLength = _epochLength;
+
+        bytes32 genesisVoteMessageHash = hashVoteMessageInternal(
+            _genesisSourceTransitionHash,
+            bytes32(0),
+            _genesisTargetBlockHash,
+            uint256(0),
+            _genesisTargetBlockNumber
+        );
+
+        Link storage genesisLink = links[genesisVoteMessageHash];
+        genesisLink.parentVoteMessageHash = _genesisParentVoteMessageHash;
+        genesisLink.targetBlockHash = _genesisTargetBlockHash;
+        genesisLink.targetBlockNumber = _genesisTargetBlockNumber;
+        genesisLink.sourceTransitionHash = _genesisSourceTransitionHash;
+        genesisLink.proposedMetablockHeight = _metablockHeight;
+        genesisLink.targetFinalisation = CheckpointFinalisationStatus.Finalised;
     }
 
 
