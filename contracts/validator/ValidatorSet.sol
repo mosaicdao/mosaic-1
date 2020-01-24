@@ -1,6 +1,6 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-// Copyright 2019 OpenST Ltd.
+// Copyright 2020 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,4 +50,43 @@ contract ValidatorSet {
      *   - less than MAX_FUTURE_END_HEIGHT: for logged out validators.
      */
     mapping(address => uint256) public validatorEndHeight;
+
+
+    /* Public Functions */
+
+    /**
+     * @notice Checks if validator is in validator set or not.
+     *
+     * @param _validator Address of validator.
+     * @param _height Metablock height.
+     * Returns true if validator with given metablock height is in validator
+     * set.
+     */
+    function inValidatorSet(address _validator, uint256 _height)
+        public
+        view
+        returns (bool)
+    {
+        return validatorBeginHeight[_validator] <= _height &&
+            validatorEndHeight[_validator] >= _height &&
+            validatorEndHeight[_validator] > 0;
+    }
+
+    /**
+     * @notice Checks if validator is in forward validator set or not.
+     *
+     * @param _validator Address of validator.
+     * @param _height Metablock height.
+     * Returns true if validator with given metablock height is in forward
+     * validator set.
+     */
+    function inForwardValidatorSet(address _validator, uint256 _height)
+        public
+        view
+        returns (bool)
+    {
+        return validatorBeginHeight[_validator] <= _height &&
+            validatorEndHeight[_validator] > _height &&
+            validatorEndHeight[_validator] > 0;
+    }
 }
