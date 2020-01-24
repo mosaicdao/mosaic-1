@@ -31,5 +31,5 @@ contract GenesisOriginProtocore {
     uint256 public genesisOriginTargetBlockNumber;
 
     /** Parent vote message hash */
-    bytes32 public genesisParentVoteMessageHash;
+    bytes32 public genesisOriginParentVoteMessageHash;
 }
