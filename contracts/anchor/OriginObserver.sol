@@ -46,7 +46,7 @@ contract OriginObserver is
      */
     function setup() external {
         StateRootProvider.setup(genesisMaxStateRootLimitCount);
-        StateRootProvider.anchorStateRootInternal(genesisBlockNumber, genesisStateRoot);
+        StateRootProvider.anchorStateRootInternal(genesisOriginBlockNumber, genesisOriginStateRoot);
     }
 
     /**
