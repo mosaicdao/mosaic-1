@@ -71,7 +71,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
 
     /** EIP-712 domain separator typehash for Protocore. */
     bytes32 public constant DOMAIN_SEPARATOR_TYPEHASH = keccak256(
-        "EIP712Domain(string name,string version,bytes32 metachainId,address core)"
+        "EIP712Domain(string name,string version,bytes32 metachainId,address verifyingContract)"
     );
 
     /** EIP-712 type hash for a Vote Message */
@@ -90,31 +90,6 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
     uint256 public openKernelHeight;
     bytes32 public openKernelHash;
 
-
-    /* Public Functions */
-
-    /**
-     * @notice Sets up Protocore contract.
-     *
-     * @param _metachainId Metachain Id.
-     * @param _core Core contract address.
-     */
-    function setup(
-        bytes32 _metachainId,
-        address _core
-    )
-        public
-    {
-        domainSeparator = keccak256(
-            abi.encode(
-                DOMAIN_SEPARATOR_TYPEHASH,
-                DOMAIN_SEPARATOR_NAME,
-                DOMAIN_SEPARATOR_VERSION,
-                _metachainId,
-                _core
-            )
-        );
-    }
 
     /* External Functions */
 
@@ -160,10 +135,42 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
     }
 
 
+    /* Internal Functions */
+
+    /**
+     * @notice Sets up Protocore contract.
+     *
+     * @param _metachainId Metachain Id.
+     * @param _core Core contract address.
+     */
+    function setup(
+        bytes32 _metachainId,
+        address _core
+    )
+        internal
+    {
+        domainSeparator = keccak256(
+            abi.encode(
+                DOMAIN_SEPARATOR_TYPEHASH,
+                DOMAIN_SEPARATOR_NAME,
+                DOMAIN_SEPARATOR_VERSION,
+                _metachainId,
+                _core
+            )
+        );
+    }
+
+
     /* Private Functions */
 
     /**
      * @notice It calculates vote message hash.
+     *
+     * @param _transitionHash Transition hash.
+     * @param _sourceBlockHash Blockhash of source chain.
+     * @param _targetBlockHash Blockhash of target chain.
+     * @param _sourceBlockNumber Block number at source.
+     * @param _targetBlockNumber Block number at target.
      */
     function hashVoteMessage(
         bytes32 _transitionHash,
