@@ -24,7 +24,6 @@ import "../ERC20I.sol";
  * @notice ERC20Token implements ERC20I.
  */
 contract ERC20Token is ERC20I {
-
     /* Usings */
 
     using SafeMath for uint256;
@@ -41,11 +40,11 @@ contract ERC20Token is ERC20I {
     /** Total supply of the token. */
     uint256 internal totalTokenSupply;
 
-    /** Stores the token balance of the accounts. */
+    /** Stores the token balance of the owners. */
     mapping(address => uint256) balances;
 
-    /** Stores the authorization information. */
-    mapping(address => mapping(address => uint256)) allowed;
+    /** Stores the allowances. */
+    mapping(address => mapping(address => uint256)) allowances;
 
 
     /* Public Functions. */
@@ -113,14 +112,14 @@ contract ERC20Token is ERC20I {
         view
         returns (uint256 allowance_)
     {
-        allowance_ = allowed[_owner][_spender];
+        allowance_ = allowances[_owner][_spender];
     }
 
     /**
      * @notice Public function to transfer the token.
      *
-     * @dev Fires the transfer event, throws if, _from account does not have
-     *      enough tokens to spend.
+     * @dev Fires the transfer event, reverts if, _from account does not have
+     *      enough tokens to transfer.
      *
      * @param _to Address to which tokens are transferred.
      * @param _value Amount of tokens to be transferred.
@@ -152,7 +151,7 @@ contract ERC20Token is ERC20I {
         public
         returns (bool success_)
     {
-        allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
+        allowances[_from][msg.sender] = allowances[_from][msg.sender].sub(_value);
         success_ = transferBalance(_from, _to, _value);
     }
 
@@ -173,7 +172,7 @@ contract ERC20Token is ERC20I {
         public
         returns (bool success_)
     {
-        allowed[msg.sender][_spender] = _value;
+        allowances[msg.sender][_spender] = _value;
 
         emit Approval(msg.sender, _spender, _value);
 
@@ -256,10 +255,10 @@ contract ERC20Token is ERC20I {
      * @param _value The amount that will be burnt.
      */
     function _burnFrom(address _account, uint256 _value) internal {
-        allowed[_account][msg.sender] = allowed[_account][msg.sender].sub(
+        allowances[_account][msg.sender] = allowances[_account][msg.sender].sub(
             _value
         );
         _burn(_account, _value);
-        emit Approval(_account, msg.sender, allowed[_account][msg.sender]);
+        emit Approval(_account, msg.sender, allowances[_account][msg.sender]);
     }
 }
