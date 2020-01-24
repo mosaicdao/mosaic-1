@@ -14,19 +14,29 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-contract SpyCoconsensus {
+import "../../protocore/Protocore.sol";
 
-    mapping(bytes32 => address) public anchors;
+contract TestProtocore is Protocore {
 
-    bytes32 public spyMetachainId;
+    CoconsensusI public coconsensus;
 
-    function setAnchorAddress(bytes32 _metachainId, address anchor) public {
-        anchors[_metachainId] = anchor;
+    /* Special Functions */
+
+    constructor(
+        CoconsensusI _coconsensus,
+        uint256 genesisKernelHeight,
+        bytes32 genesisKernelHash
+    )
+        public
+    {
+        assert(genesisKernelHash != bytes32(0));
+
+        openKernelHeight = genesisKernelHeight;
+        openKernelHash = genesisKernelHash;
+        coconsensus = _coconsensus;
     }
 
-    function getAnchor(bytes32 _metachainId) public returns(address) {
-        spyMetachainId = _metachainId;
-        return anchors[_metachainId];
+    function getCoconsensus() public view returns (CoconsensusI) {
+        return coconsensus;
     }
 }
-

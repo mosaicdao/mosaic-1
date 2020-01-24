@@ -1,6 +1,6 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-// Copyright 2019 OpenST Ltd.
+// Copyright 2020 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,19 +14,14 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-contract SpyCoconsensus {
+/**
+ * @title Genesis Utmost contract.
+ */
+contract GenesisUtmost {
 
-    mapping(bytes32 => address) public anchors;
+     /* Constants */
 
-    bytes32 public spyMetachainId;
+    /** Total initial supply value for Utmost token */
+    uint256 public genesisTotalSupply;
 
-    function setAnchorAddress(bytes32 _metachainId, address anchor) public {
-        anchors[_metachainId] = anchor;
-    }
-
-    function getAnchor(bytes32 _metachainId) public returns(address) {
-        spyMetachainId = _metachainId;
-        return anchors[_metachainId];
-    }
 }
-

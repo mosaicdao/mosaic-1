@@ -14,7 +14,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../consensus/CoConsensusModule.sol";
+import "../consensus/CoconsensusModule.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 
 /**
@@ -23,7 +23,7 @@ import "../proxies/MasterCopyNonUpgradable.sol";
  * @notice Coreputation contract stores validator status and reputation value
  *         for validators.
  */
-contract Coreputation is MasterCopyNonUpgradable, CoConsensusModule {
+contract Coreputation is MasterCopyNonUpgradable, CoconsensusModule {
 
     /** Validator status enum */
     enum ValidatorStatus {
@@ -57,22 +57,6 @@ contract Coreputation is MasterCopyNonUpgradable, CoConsensusModule {
 
 
     /* External functions */
-
-    /**
-     * @notice It sets up Coreputation contract. It can only be called once.
-     *
-     * @dev TODO Remove setup method after coConsensus storage variable is made
-     *      constant value in CoConsensusModule.
-     *
-     * @param _coConsensus Address of coConsensus contract.
-     */
-    function setup(
-        CoConsensusI _coConsensus
-    )
-        external
-    {
-        CoConsensusModule.setupCoConsensus(_coConsensus);
-    }
 
     /**
      * @notice Insert or update validator information.
