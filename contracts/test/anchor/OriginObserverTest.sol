@@ -21,14 +21,14 @@ contract OriginObserverTest is OriginObserver {
     address public testCoconsensus;
 
     function setGenesisStorageVariables(
-        uint256 _genesisBlockNumber,
-        bytes32 _genesisStateRoot,
+        uint256 _genesisOriginBlockNumber,
+        bytes32 _genesisOriginStateRoot,
         uint256 _genesisMaxStateRootLimitCount
     )
         public
     {
-        genesisBlockNumber = _genesisBlockNumber;
-        genesisStateRoot = _genesisStateRoot;
+        genesisOriginBlockNumber = _genesisOriginBlockNumber;
+        genesisOriginStateRoot = _genesisOriginStateRoot;
         genesisMaxStateRootLimitCount = _genesisMaxStateRootLimitCount;
     }
 

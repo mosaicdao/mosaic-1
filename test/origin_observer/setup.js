@@ -26,15 +26,15 @@ let config = {};
 contract('OriginObserver::setup', () => {
   beforeEach(async () => {
     config = {
-      genesisBlockNumber: await Utils.getBlockNumber(),
-      genesisStateRoot: Utils.getRandomHash(),
+      genesisOriginBlockNumber: await Utils.getBlockNumber(),
+      genesisOriginStateRoot: Utils.getRandomHash(),
       genesisMaxStateRootLimitCount: new BN(100),
     };
 
     originObserver = await OriginObserver.new();
     await originObserver.setGenesisStorageVariables(
-      config.genesisBlockNumber,
-      config.genesisStateRoot,
+      config.genesisOriginBlockNumber,
+      config.genesisOriginStateRoot,
       config.genesisMaxStateRootLimitCount,
     );
   });
@@ -47,15 +47,15 @@ contract('OriginObserver::setup', () => {
       const stateRoot = await originObserver.getStateRoot(latestStateRootBlockNumber);
 
       assert.strictEqual(
-        latestStateRootBlockNumber.eq(config.genesisBlockNumber),
+        latestStateRootBlockNumber.eq(config.genesisOriginBlockNumber),
         true,
         `Latest block number from contract ${latestStateRootBlockNumber.toString(10)}`
-        + `must be equal to ${config.genesisBlockNumber.toString(10)}`,
+        + `must be equal to ${config.genesisOriginBlockNumber.toString(10)}`,
       );
 
       assert.strictEqual(
         stateRoot,
-        config.genesisStateRoot,
+        config.genesisOriginStateRoot,
         'Latest state root must be equal to genesis state root.',
       );
     });

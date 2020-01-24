@@ -25,10 +25,10 @@ contract GenesisOriginObserver {
     /* Public variables */
 
     /** Initial block number */
-    uint256 public genesisBlockNumber;
+    uint256 public genesisOriginBlockNumber;
 
     /** Initial state root */
-    bytes32 public genesisStateRoot;
+    bytes32 public genesisOriginStateRoot;
 
     /** Maximum number of state roots to be stored in circular buffer */
     uint256 public genesisMaxStateRootLimitCount;

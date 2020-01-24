@@ -48,7 +48,7 @@ contract StateRootProvider is CircularBufferUint {
     function getStateRoot(
         uint256 _blockNumber
     )
-        public
+        external
         view
         returns (bytes32 stateRoot_)
     {
@@ -61,7 +61,7 @@ contract StateRootProvider is CircularBufferUint {
      * @return uint256 Block number of the latest anchored state root.
      */
     function getLatestStateRootBlockNumber()
-        public
+        external
         view
         returns (uint256 blockNumber_)
     {

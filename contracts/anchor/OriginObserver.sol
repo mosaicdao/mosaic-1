@@ -23,7 +23,7 @@ import "../proxies/MasterCopyNonUpgradable.sol";
  * @title OriginObserver - Contract on the auxiliary chain that stores the
  *        state root of the origin chain.
  *
- * @notice This contract stores the state root and block height from the
+ * @notice This contract stores the state root and block number from the
  *         origin chain. This contract is Coconsensus module. Only coconsensus
  *         contract will be able to anchor the state root.
  */
@@ -33,17 +33,6 @@ contract OriginObserver is
     CoconsensusModule,
     StateRootProvider
 {
-    /* Constants */
-
-    /** Storage index for genesisBlockNumber */
-    uint8 public constant genesisBlockNumberIndex = uint8(1);
-
-    /** Storage index for genesisStateRoot */
-    uint8 public constant genesisStateRootIndex = uint8(2);
-
-    /** Storage index for MaxStateRootLimitCount */
-    uint8 public constant genesisMaxStateRootLimitCountIndex = uint8(3);
-
 
     /* External functions */
 
@@ -51,8 +40,8 @@ contract OriginObserver is
      * @notice Setup function for origin observer contract.
      *
      * @dev This can be called by anyone only once. The check in StateRootProvider::setup
-     *      ensures this in its circular buffer setup. Onother check is provided by
-     *      StateRootProvider::anchoStateRoot can be only called once for a given block
+     *      ensures this in its circular buffer setup. Another check is provided by
+     *      StateRootProvider::anchorStateRoot can be only called once for a given block
      *      number and has to be increasing.
      */
     function setup() external {
