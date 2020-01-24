@@ -56,6 +56,8 @@ contract UtilityToken is ERC20Token {
      * @param _decimals Decimal of token.
      * @param _totalTokenSupply Total token supply.
      * @param _consensusCogateway ConsensusCogateway contract address.
+     *
+     * @return success_ `true` for a successful setup, `false` otherwise.
      */
     function setup(
         string calldata _symbol,
@@ -63,7 +65,10 @@ contract UtilityToken is ERC20Token {
         uint8 _decimals,
         uint256 _totalTokenSupply,
         address _consensusCogateway
-    ) external returns (bool success_) {
+    )
+        external
+        returns (bool success_)
+    {
         require(
             consensusCogateway == address(0),
             "ConsensusCogateway address is already set."
@@ -89,6 +94,8 @@ contract UtilityToken is ERC20Token {
      *      proper events are emitted.
      * @param _account The account that will receive the created tokens.
      * @param _value The amount that will be created.
+     *
+     * @return success_ `true` for a successful mint, `false` otherwise.
      */
     function mint(address _account, uint256 _value)
         external
@@ -107,6 +114,8 @@ contract UtilityToken is ERC20Token {
      *      account. Calls the internal burn function.
      * @param _account The account whose tokens will be burnt.
      * @param _value The amount that will be burnt.
+     *
+     * @return success_ `true` for a successful burn, `false` otherwise.
      */
     function burn(address _account, uint256 _value)
         external
@@ -123,6 +132,8 @@ contract UtilityToken is ERC20Token {
      *      account. Uses the internal _burnFrom function.
      * @param _account The account whose tokens will be burnt.
      * @param _value The amount that will be burnt.
+     *
+     * @return success_ `true` for a successful burnFrom, `false` otherwise.
      */
     function burnFrom(address _account, uint256 _value)
         external
