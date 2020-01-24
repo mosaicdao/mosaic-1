@@ -118,17 +118,13 @@ contract ValidatorSet {
     )
         internal
     {
-        require(
-            _validator != address(0),
-            "Validator must not be null address."
-        );
-        require(
-            validatorBeginHeight[_validator] == 0 && validatorEndHeight[_validator] == 0,
-            "Validator address is already used."
+        assert(_validator != address(0));
+        assert(
+            validatorBeginHeight[_validator] == 0 && validatorEndHeight[_validator] == 0
         );
 
-        address currentValidator = validators[SENTINEL_VALIDATORS];
-        validators[_validator] = currentValidator;
+        address lastValidator = validators[SENTINEL_VALIDATORS];
+        validators[_validator] = lastValidator;
         validators[SENTINEL_VALIDATORS] = _validator;
 
         validatorBeginHeight[_validator] = _beginHeight;

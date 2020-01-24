@@ -43,8 +43,8 @@ contract('ValidatorSet::insertValidator', (accounts) => {
       );
 
       assert.isOk(
-        actualValidatorEndHeight.eq(Utils.MAX_FUTURE_END_HEIGHT),
-        `Expected validator end height is ${Utils.MAX_FUTURE_END_HEIGHT} `
+        actualValidatorEndHeight.eq(Utils.MAX_UINT256),
+        `Expected validator end height is ${Utils.MAX_UINT256} `
          + `but got ${actualValidatorEndHeight}`,
       );
 
@@ -66,7 +66,7 @@ contract('ValidatorSet::insertValidator', (accounts) => {
       assert.strictEqual(
         expectedValidatorLinkedToAccount2,
         account1,
-        'Invalid validator address',
+        'Incorrectly linked linked-list',
       );
     });
   });
