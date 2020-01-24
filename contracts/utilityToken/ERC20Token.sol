@@ -118,7 +118,7 @@ contract ERC20Token is ERC20I {
     /**
      * @notice Public function to transfer the token.
      *
-     * @dev Fires the transfer event, reverts if, _from account does not have
+     * @dev Fires the transfer event, reverts if _from account does not have
      *      enough tokens to transfer.
      *
      * @param _to Address to which tokens are transferred.
