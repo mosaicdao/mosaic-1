@@ -194,6 +194,17 @@ contract TestProtocore is Protocore {
     }
 
 
+    /* Public Functions */
+
+    function forwardValidatorCount(uint256)
+        public
+        view
+        returns (uint256)
+    {
+        revert("Implementation is missing!");
+    }
+
+
     /* Internal Functions */
 
     function hashVoteMessageInternal(
