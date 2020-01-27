@@ -44,13 +44,13 @@ contract('Coreputation::upsertValidator', (accounts) => {
     );
     const insertedValidator = await coreputationInstance.validators.call(inputValidatorInfo.validator);
     assert.strictEqual(
-      ValidatorStatus.Staked.toString(),
-      insertedValidator.status.toString(10),
+      insertedValidator.status.eq(new BN(ValidatorStatus.Staked)),
+      true,
       `Expected validator status is ${ValidatorStatus.Staked} but found ${insertedValidator.status} `,
     );
     assert.strictEqual(
-      inputValidatorInfo.reputation.toString(10),
-      insertedValidator.reputation.toString(10),
+      inputValidatorInfo.reputation.eq(insertedValidator.reputation),
+      true,
       `Expected validator reputation is ${inputValidatorInfo.reputation} but found ${insertedValidator.reputation} `,
     );
   });
@@ -61,16 +61,16 @@ contract('Coreputation::upsertValidator', (accounts) => {
       new BN(0),
       { from: coconsensus },
     );
-    const insertedValidator = await coreputationInstance.validators.call(inputValidatorInfo.validator);
 
+    const insertedValidator = await coreputationInstance.validators.call(inputValidatorInfo.validator);
     assert.strictEqual(
-      ValidatorStatus.Deregistered.toString(),
-      insertedValidator.status.toString(10),
+      insertedValidator.status.eq(new BN(ValidatorStatus.Deregistered)),
+      true,
       `Expected validator status is ${ValidatorStatus.Deregistered} but found ${insertedValidator.status} `,
     );
     assert.strictEqual(
-      (new BN(0)).toString(10),
-      insertedValidator.reputation.toString(10),
+      (new BN(0)).eq(insertedValidator.reputation),
+      true,
       `Expected validator reputation is ${(new BN(0)).toString(10)} but found ${insertedValidator.reputation} `,
     );
   });
@@ -86,14 +86,14 @@ contract('Coreputation::upsertValidator', (accounts) => {
     );
     const updatedValidator = await coreputationInstance.validators.call(inputValidatorInfo.validator);
     assert.strictEqual(
-      ValidatorStatus.Deregistered.toString(),
-      updatedValidator.status.toString(10),
+      updatedValidator.status.eq(new BN(ValidatorStatus.Deregistered)),
+      true,
       `Expected validator status is ${ValidatorStatus.Deregistered} but found ${updatedValidator.status} `,
     );
 
     assert.strictEqual(
-      '0',
-      updatedValidator.reputation.toString(10),
+      updatedValidator.reputation.eq(new BN('0')),
+      true,
       `Expected validator reputation is 0 but found ${updatedValidator.reputation} `,
     );
   });
@@ -113,14 +113,14 @@ contract('Coreputation::upsertValidator', (accounts) => {
 
     const updatedValidator = await coreputationInstance.validators.call(inputValidatorInfo.validator);
     assert.strictEqual(
-      ValidatorStatus.Slashed.toString(),
-      updatedValidator.status.toString(10),
+      updatedValidator.status.eq(new BN(ValidatorStatus.Slashed)),
+      true,
       `Expected validator status is ${ValidatorStatus.Slashed} but found ${updatedValidator.status} `,
     );
 
     assert.strictEqual(
-      (new BN(0)).toString(10),
-      updatedValidator.reputation.toString(10),
+      (new BN(0)).eq(updatedValidator.reputation),
+      true,
       `Expected validator reputation is 0 but found ${updatedValidator.reputation.toString(10)} `,
     );
   });

@@ -43,8 +43,8 @@ contract('Coreputation::getReputation', (accounts) => {
   it('should return correct reputation for a known validator', async () => {
     const reputationValue = await coreputationInstance.getReputation.call(validatorInfo.validator);
     assert.strictEqual(
-      reputationValue.toString(10),
-      validatorInfo.reputation.toString(10),
+      reputationValue.eq(validatorInfo.reputation),
+      true,
       `Expected reputation is ${validatorInfo.reputation.toString(10)} but found ${reputationValue.toString(10)}`,
     );
   });
