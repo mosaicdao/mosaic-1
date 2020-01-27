@@ -128,6 +128,16 @@ contract Protocore is MosaicVersion, CoconsensusModule {
     )
         internal
     {
+        domainSeparator = keccak256(
+            abi.encode(
+                DOMAIN_SEPARATOR_TYPEHASH,
+                DOMAIN_SEPARATOR_NAME,
+                DOMAIN_SEPARATOR_VERSION,
+                _metachainId,
+                _core
+            )
+        );
+
         require(
             _epochLength != 0,
             "Epoch length is 0."
@@ -303,11 +313,11 @@ contract Protocore is MosaicVersion, CoconsensusModule {
         proposedLink.targetFinalisation = CheckpointFinalisationStatus.Registered;
     }
 
- 
     /* Private Functions */
 
     /**
-     * @notice It calculates vote message hash.
+     * @notice Takes vote message parameters and returns the typed vote
+     *         message hash.
      *
      * @param _transitionHash Transition hash.
      * @param _sourceBlockHash Blockhash of source chain.
