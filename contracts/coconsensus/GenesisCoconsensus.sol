@@ -19,9 +19,9 @@ pragma solidity >=0.5.0 <0.6.0;
  *        the initial values required by the contract that were written in the
  *        genesis block. This contract stores the information related to metachains.
  *        Coconsensus can track multiple protocores, so the values needed to
- *        initialize protocore is stored in the mapping. The metachain id's are
+ *        initialize protocore are stored in the mapping. The metachain id's are
  *        stored as a linked list and is iterable. The corresponding core address,
- *        epoch length and metablock height can be retrived for a given metachain
+ *        epoch length and metablock height can be retrieved for a given metachain
  *        id from the mappings.
  */
 contract GenesisCoconsensus {
@@ -41,8 +41,8 @@ contract GenesisCoconsensus {
     mapping(bytes32 => address) public genesisCores;
 
     /** Mapping of metablock id to the epoch lengths. */
-    mapping(bytes32 => uint256) public genesisEpochlengths;
+    mapping(bytes32 => uint256) public genesisEpochLengths;
 
-    /** Mapping of metablock id to the metblock height. */
+    /** Mapping of metablock id to the metablock height. */
     mapping(bytes32 => uint256) public genesisMetablockHeights;
 }
