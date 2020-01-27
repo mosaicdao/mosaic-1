@@ -44,7 +44,7 @@ contract('Coreputation::upsertValidator', (accounts) => {
     );
     const insertedValidator = await coreputationInstance.validators.call(inputValidatorInfo.validator);
     assert.strictEqual(
-      insertedValidator.status.eq(new BN(ValidatorStatus.Staked)),
+      insertedValidator.status.eqn(ValidatorStatus.Staked),
       true,
       `Expected validator status is ${ValidatorStatus.Staked} but found ${insertedValidator.status} `,
     );
@@ -64,12 +64,12 @@ contract('Coreputation::upsertValidator', (accounts) => {
 
     const insertedValidator = await coreputationInstance.validators.call(inputValidatorInfo.validator);
     assert.strictEqual(
-      insertedValidator.status.eq(new BN(ValidatorStatus.Deregistered)),
+      insertedValidator.status.eqn(ValidatorStatus.Deregistered),
       true,
       `Expected validator status is ${ValidatorStatus.Deregistered} but found ${insertedValidator.status} `,
     );
     assert.strictEqual(
-      (new BN(0)).eq(insertedValidator.reputation),
+      insertedValidator.reputation.eqn(0),
       true,
       `Expected validator reputation is ${(new BN(0)).toString(10)} but found ${insertedValidator.reputation} `,
     );
@@ -86,13 +86,13 @@ contract('Coreputation::upsertValidator', (accounts) => {
     );
     const updatedValidator = await coreputationInstance.validators.call(inputValidatorInfo.validator);
     assert.strictEqual(
-      updatedValidator.status.eq(new BN(ValidatorStatus.Deregistered)),
+      updatedValidator.status.eqn(ValidatorStatus.Deregistered),
       true,
       `Expected validator status is ${ValidatorStatus.Deregistered} but found ${updatedValidator.status} `,
     );
 
     assert.strictEqual(
-      updatedValidator.reputation.eq(new BN('0')),
+      updatedValidator.reputation.eqn(0),
       true,
       `Expected validator reputation is 0 but found ${updatedValidator.reputation} `,
     );
@@ -113,13 +113,13 @@ contract('Coreputation::upsertValidator', (accounts) => {
 
     const updatedValidator = await coreputationInstance.validators.call(inputValidatorInfo.validator);
     assert.strictEqual(
-      updatedValidator.status.eq(new BN(ValidatorStatus.Slashed)),
+      updatedValidator.status.eqn(ValidatorStatus.Slashed),
       true,
       `Expected validator status is ${ValidatorStatus.Slashed} but found ${updatedValidator.status} `,
     );
 
     assert.strictEqual(
-      (new BN(0)).eq(updatedValidator.reputation),
+      updatedValidator.reputation.eqn(0),
       true,
       `Expected validator reputation is 0 but found ${updatedValidator.reputation.toString(10)} `,
     );
