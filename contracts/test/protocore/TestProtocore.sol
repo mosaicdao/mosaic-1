@@ -53,25 +53,6 @@ contract TestProtocore is Protocore {
         openKernelHeight = _genesisKernelHeight;
         openKernelHash = _genesisKernelHash;
 
-/*
-        bytes32 voteMessageHash = hashVoteMessage(
-            _genesisSourceTransitionHash,
-            _genesisSourceBlockHash,
-            _genesisTargetBlockHash,
-            _genesisSourceBlockNumber,
-            _genesisTargetBlockNumber
-        );
-
-        Link storage link = links[voteMessageHash];
-        assert(link.targetBlockHash == bytes32(0));
-
-        link.parentVoteMessageHash = _genesisParentVoteMessageHash;
-        link.targetBlockHash = _genesisTargetBlockHash;
-        link.targetBlockNumber = _genesisTargetBlockNumber;
-        link.sourceTransitionHash = _genesisSourceTransitionHash;
-        link.proposedMetablockHeight = _genesisProposedMetablockHeight;
-        link.targetFinalisation = CheckpointFinalisationStatus.Finalised;
-*/
         coconsensus = _coconsensus;
 
         super.setup(

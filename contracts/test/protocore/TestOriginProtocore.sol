@@ -19,7 +19,7 @@ import "../../protocore/OriginProtocore.sol";
 
 contract TestOriginProtocore is OriginProtocore {
 
-	/* Storage */
+    /* Storage */
 
     CoconsensusI public coconsensus;
 

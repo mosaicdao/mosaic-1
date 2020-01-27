@@ -52,7 +52,7 @@ contract ValidatorSet {
     mapping(address => uint256) public validatorEndHeight;
 
 
-    /* Public Functions */
+    /* Special Functions */
 
     /**
      * @notice It initializes validators set.
@@ -62,6 +62,9 @@ contract ValidatorSet {
     {
         validators[SENTINEL_VALIDATORS] = SENTINEL_VALIDATORS;
     }
+
+
+    /* Public Functions */
 
     /**
      * @notice Checks if validator is in validator set or not.
