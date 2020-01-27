@@ -35,7 +35,10 @@ contract('Protocore::openKernel', (accounts) => {
     config.genesisKernelHeight = new BN(1);
     config.genesisKernelHash = Utils.getRandomHash();
 
+    config.core = accountProvider.get();
+
     config.genesisParentVoteMessageHash = Utils.getRandomHash();
+    config.metachainId = Utils.getRandomHash();
     config.genesisSourceTransitionHash = Utils.getRandomHash();
     config.genesisSourceBlockHash = Utils.getRandomHash();
     config.genesisTargetBlockHash = Utils.getRandomHash();

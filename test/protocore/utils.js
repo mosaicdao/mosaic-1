@@ -25,8 +25,12 @@ const CheckpointFinalisationStatus = Object.freeze({
 
 const DOMAIN_SEPARATOR_NAME = 'Mosaic-Core';
 const DOMAIN_SEPARATOR_VERSION = '0';
-const DOMAIN_SEPARATOR_TYPEHASH = web3.utils.soliditySha3('EIP712Domain(string name,string version,bytes32 metachainId,address verifyingContract)');
-const VOTE_MESSAGE_TYPEHASH = web3.utils.soliditySha3('VoteMessage(bytes32 transitionHash,bytes32 sourceBlockHash,bytes32 targetBlockHash,uint256 sourceBlockNumber,uint256 targetBlockNumber)');
+const DOMAIN_SEPARATOR_TYPEHASH = web3.utils.soliditySha3(
+  'EIP712Domain(string name,string version,bytes32 metachainId,address verifyingContract)',
+);
+const VOTE_MESSAGE_TYPEHASH = web3.utils.soliditySha3(
+  'VoteMessage(bytes32 transitionHash,bytes32 sourceBlockHash,bytes32 targetBlockHash,uint256 sourceBlockNumber,uint256 targetBlockNumber)',
+);
 
 function getDomainSeparator(metachainId, coreAddress) {
   return web3.utils.sha3(
@@ -79,12 +83,14 @@ function hashVoteMessage(
     ),
   );
   const domainSeparator = getDomainSeparator(metachainId, coreAddress);
-  const voteMessageHash = web3.utils.soliditySha3(
-    { t: 'bytes', v: '0x19' },
-    { t: 'bytes', v: '0x01' },
-    { t: 'bytes32', v: domainSeparator },
-    { t: 'bytes32', v: voteMessageTypeHash },
-  ).toString('hex');
+  const voteMessageHash = web3.utils
+    .soliditySha3(
+      { t: 'bytes', v: '0x19' },
+      { t: 'bytes', v: '0x01' },
+      { t: 'bytes32', v: domainSeparator },
+      { t: 'bytes32', v: voteMessageTypeHash },
+    )
+    .toString('hex');
 
   return voteMessageHash;
 }
