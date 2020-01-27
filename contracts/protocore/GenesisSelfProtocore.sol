@@ -15,7 +15,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 /**
- * @title Genesis origin protocore contract is a storage contract that holds
+ * @title Genesis self protocore contract is a storage contract that holds
  *        the initial values required by the contract that were written in the
  *        genesis block. It stores target checkpoint, parent vote message hash,
  *        source transition hash, source dynasty number and source accumulated
