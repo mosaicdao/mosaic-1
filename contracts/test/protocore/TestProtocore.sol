@@ -28,6 +28,8 @@ contract TestProtocore is Protocore {
 
     constructor(
         CoconsensusI _coconsensus,
+        bytes32 _metachainId,
+        address _core,
         uint256 _epochLength,
         uint256 _genesisKernelHeight,
         bytes32 _genesisKernelHash,
@@ -72,7 +74,14 @@ contract TestProtocore is Protocore {
         coconsensus = _coconsensus;
 
         super.setup(
-            _epochLength
+            _metachainId,
+            _core,
+            _epochLength,
+            _genesisProposedMetablockHeight,
+            _genesisParentVoteMessageHash,
+            _genesisSourceTransitionHash,
+            _genesisTargetBlockHash,
+            _genesisTargetBlockNumber
         );
     }
 
@@ -204,7 +213,7 @@ contract TestProtocore is Protocore {
         uint256 _targetBlockNumber
     )
         internal
-        view
+        pure
         returns (bytes32 voteMessageHash_)
     {
         voteMessageHash_ = keccak256(

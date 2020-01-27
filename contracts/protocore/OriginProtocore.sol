@@ -21,11 +21,11 @@ import "../proxies/MasterCopyNonUpgradable.sol";
 /**
  * @title Origin protocore - This contract finalizes the proposed blocks of origin chain.
  */
-contract OriginProtocore MasterCopyUpgradable, GenesisOriginProtocore, Protocore {
+contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Protocore {
 
     /* Storage */
 
-    /** 
+    /**
      * Address of self protocore.
      * @dev this is needed to get the inforamation related to validator. Origin
      *      protocore will not have validator set, instead it will query Self protocore
@@ -57,15 +57,15 @@ contract OriginProtocore MasterCopyUpgradable, GenesisOriginProtocore, Protocore
      *
      * \post Sets selfProtocore to the given value.
      */
-    fucntion setup(
+    function setup(
         bytes32 _metachainId,
         address _core,
         uint256 _epochLength,
         uint256 _metablockHeight,
         address _selfProtocore
-    ) 
+    )
+        external
         onlyCoconsensus
-        external 
     {
         require(
             selfProtocore == address(0),
@@ -81,11 +81,11 @@ contract OriginProtocore MasterCopyUpgradable, GenesisOriginProtocore, Protocore
         // The source transition hash should be zero for origin protocore.
         Protocore.setup(
             _metachainId,
-            _core
+            _core,
             _epochLength,
             _metablockHeight,
             genesisOriginParentVoteMessageHash,
-            bytes32(0)
+            bytes32(0),
             genesisOriginTargetBlockHash,
             genesisOriginTargetBlockNumber
         );

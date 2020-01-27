@@ -119,7 +119,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         uint256 _epochLength,
         uint256 _metablockHeight,
         bytes32 _genesisParentVoteMessageHash,
-        bytes32 _genesisSourceTransitionHash
+        bytes32 _genesisSourceTransitionHash,
         bytes32 _genesisTargetBlockHash,
         uint256 _genesisTargetBlockNumber
     )
