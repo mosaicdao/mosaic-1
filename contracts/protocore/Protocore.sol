@@ -90,6 +90,48 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
     uint256 public openKernelHeight;
     bytes32 public openKernelHash;
 
+    /** Epoch length */
+    uint256 public epochLength;
+
+
+    /* Special Functions */
+
+    /**
+     * @notice setup() function initializes the current contract.
+     *         The function will be called by inherited contracts.
+     *
+     * @param _metachainId Metachain Id.
+     * @param _core Core contract address.
+     *
+     * \pre `_epochLength` is not 0.
+     *
+     * \post Sets epochLength to the given value.
+     */
+    function setup(
+        bytes32 _metachainId,
+        address _core,
+        uint256 _epochLength
+    )
+        internal
+    {
+        domainSeparator = keccak256(
+            abi.encode(
+                DOMAIN_SEPARATOR_TYPEHASH,
+                DOMAIN_SEPARATOR_NAME,
+                DOMAIN_SEPARATOR_VERSION,
+                _metachainId,
+                _core
+            )
+        );
+
+        require(
+            _epochLength != 0,
+            "Epoch length is 0."
+        );
+
+        epochLength = _epochLength;
+    }
+
 
     /* External Functions */
 
@@ -135,36 +177,88 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
     }
 
 
-    /* Internal Functions */
+    /** Internal Functions */
 
     /**
-     * @notice Sets up Protocore contract.
+     * @notice proposeLinkInternal() function proposes a valid link to be
+     *         voted later by active validators.
      *
-     * @param _metachainId Metachain Id.
-     * @param _core Core contract address.
+     * \pre `parentVoteMessageHash` is not 0.
+     * \pre `parentVoteMessageHash` refers to an already proposed link which
+     *      `targetFinalisation` is at least justified.
+     * \pre `targetBlockHash` is not 0
+     * \pre `targetBlockNumber` is a multiple of the epoch length.
+     * \pre `targetBlockNumber` is bigger than a targetBlockNumber pointed
+     *      by `_parentVoteMessageHash` link.
+     * \pre A vote message hash (calculated with input params) does not exist.
+     *
+     * \post The link is saved in `links` mapping with currently
+     *       open kernel/metablock height as `proposedMetablockHeight`.
+     * \post `targetFinalisation` is set to 'Registered'.
+     * \post forwardVoteCount -s set to 0.
      */
-    function setup(
-        bytes32 _metachainId,
-        address _core
+    function proposeLinkInternal(
+        bytes32 _parentVoteMessageHash,
+        bytes32 _sourceTransitionHash,
+        bytes32 _targetBlockHash,
+        uint256 _targetBlockNumber
     )
         internal
     {
-        domainSeparator = keccak256(
-            abi.encode(
-                DOMAIN_SEPARATOR_TYPEHASH,
-                DOMAIN_SEPARATOR_NAME,
-                DOMAIN_SEPARATOR_VERSION,
-                _metachainId,
-                _core
-            )
+        require(
+            _parentVoteMessageHash != bytes32(0),
+            "Parent vote message hash is 0."
         );
-    }
 
+        require(
+            _targetBlockHash != bytes32(0),
+            "Target block hash of the proposed link is 0."
+        );
+
+        require(
+            _targetBlockNumber % epochLength == 0,
+            "Target block number of the link should be multiple of the epoch length."
+        );
+
+        Link storage parentLink = links[_parentVoteMessageHash];
+
+        require(
+            parentLink.targetFinalisation >= CheckpointFinalisationStatus.Justified,
+            "Parent link's target finalisation status should be at least justified."
+        );
+
+        require(
+            _targetBlockNumber > parentLink.targetBlockNumber,
+            "Target block number of the proposed link should be bigger than parent one."
+        );
+
+        bytes32 voteMessageHash = hashVoteMessage(
+            _sourceTransitionHash,
+            parentLink.targetBlockHash,
+            _targetBlockHash,
+            parentLink.targetBlockNumber,
+            _targetBlockNumber
+        );
+
+        require(
+            links[voteMessageHash].targetBlockHash == bytes32(0),
+            "The proposed link already exists."
+        );
+
+        Link storage proposedLink = links[voteMessageHash];
+        proposedLink.parentVoteMessageHash = _parentVoteMessageHash;
+        proposedLink.targetBlockHash = _targetBlockHash;
+        proposedLink.targetBlockNumber = _targetBlockNumber;
+        proposedLink.sourceTransitionHash = _sourceTransitionHash;
+        proposedLink.proposedMetablockHeight = openKernelHeight;
+        proposedLink.targetFinalisation = CheckpointFinalisationStatus.Registered;
+    }
 
     /* Private Functions */
 
     /**
-     * @notice It calculates vote message hash.
+     * @notice Takes vote message parameters and returns the typed vote
+     *         message hash.
      *
      * @param _transitionHash Transition hash.
      * @param _sourceBlockHash Blockhash of source chain.

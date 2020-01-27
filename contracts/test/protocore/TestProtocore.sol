@@ -14,29 +14,179 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import "../../consensus/CoconsensusI.sol";
 import "../../protocore/Protocore.sol";
 
 contract TestProtocore is Protocore {
 
+	/* Storage */
+
     CoconsensusI public coconsensus;
+
 
     /* Special Functions */
 
     constructor(
         CoconsensusI _coconsensus,
-        uint256 genesisKernelHeight,
-        bytes32 genesisKernelHash
+        address _core,
+        bytes32 _metachainId,
+        uint256 _epochLength,
+        uint256 _genesisKernelHeight,
+        bytes32 _genesisKernelHash,
+        bytes32 _genesisParentVoteMessageHash,
+        bytes32 _genesisSourceTransitionHash,
+        bytes32 _genesisSourceBlockHash,
+        bytes32 _genesisTargetBlockHash,
+        uint256 _genesisSourceBlockNumber,
+        uint256 _genesisTargetBlockNumber,
+        uint256 _genesisProposedMetablockHeight,
+        bytes32 voteMessageHash
     )
         public
     {
-        assert(genesisKernelHash != bytes32(0));
+        assert(_genesisKernelHash != bytes32(0));
+        assert(_genesisSourceBlockNumber % _epochLength == 0);
+        assert(_genesisTargetBlockHash != bytes32(0));
+        assert(_genesisTargetBlockNumber % _epochLength == 0);
+        assert(_genesisTargetBlockNumber >= _genesisSourceBlockNumber);
+        assert(_genesisProposedMetablockHeight <= _genesisKernelHeight);
 
-        openKernelHeight = genesisKernelHeight;
-        openKernelHash = genesisKernelHash;
+        openKernelHeight = _genesisKernelHeight;
+        openKernelHash = _genesisKernelHash;
+
+        Link storage link = links[voteMessageHash];
+        assert(link.targetBlockHash == bytes32(0));
+
+        link.parentVoteMessageHash = _genesisParentVoteMessageHash;
+        link.targetBlockHash = _genesisTargetBlockHash;
+        link.targetBlockNumber = _genesisTargetBlockNumber;
+        link.sourceTransitionHash = _genesisSourceTransitionHash;
+        link.proposedMetablockHeight = _genesisProposedMetablockHeight;
+        link.targetFinalisation = CheckpointFinalisationStatus.Finalised;
+
         coconsensus = _coconsensus;
+
+        super.setup(
+            _metachainId,
+            _core,
+            _epochLength
+        );
     }
 
-    function getCoconsensus() public view returns (CoconsensusI) {
+
+    /* External Functions */
+
+    function getCoconsensus()
+		public
+		view
+		returns (CoconsensusI)
+	{
         return coconsensus;
+    }
+
+    function proposeLink(
+        bytes32 _parentVoteMessageHash,
+        bytes32 _sourceTransitionHash,
+        bytes32 _targetBlockHash,
+        uint256 _targetBlockNumber
+    )
+        external
+    {
+        Protocore.proposeLinkInternal(
+            _parentVoteMessageHash,
+            _sourceTransitionHash,
+            _targetBlockHash,
+            _targetBlockNumber
+        );
+    }
+
+    function getParentVoteMessageHash(
+        bytes32 _voteMessageHash
+    )
+        external
+        view
+        returns (bytes32)
+    {
+        return links[_voteMessageHash].parentVoteMessageHash;
+    }
+
+    function getTargetBlockHash(
+        bytes32 _voteMessageHash
+    )
+        external
+        view
+        returns (bytes32)
+    {
+        return links[_voteMessageHash].targetBlockHash;
+    }
+
+    function getTargetBlockNumber(
+        bytes32 _voteMessageHash
+    )
+        external
+        view
+        returns (uint256)
+    {
+        return links[_voteMessageHash].targetBlockNumber;
+    }
+
+    function getSourceTransitionHash(
+        bytes32 _voteMessageHash
+    )
+        external
+        view
+        returns (bytes32)
+    {
+        return links[_voteMessageHash].sourceTransitionHash;
+    }
+
+    function getProposedMetablockHeight(
+        bytes32 _voteMessageHash
+    )
+        external
+        view
+        returns (uint256)
+    {
+        return links[_voteMessageHash].proposedMetablockHeight;
+    }
+
+    function getForwardVoteCount(
+        bytes32 _voteMessageHash
+    )
+        external
+        view
+        returns (uint256)
+    {
+        return links[_voteMessageHash].forwardVoteCount;
+    }
+
+    function getForwardVoteCountNextHeight(
+        bytes32 _voteMessageHash
+    )
+        external
+        view
+        returns (uint256)
+    {
+        return links[_voteMessageHash].forwardVoteCountNextHeight;
+    }
+
+    function getForwardVoteCountPreviousHeight(
+        bytes32 _voteMessageHash
+    )
+        external
+        view
+        returns (uint256)
+    {
+        return links[_voteMessageHash].forwardVoteCountPreviousHeight;
+    }
+
+    function getTargetFinalisation(
+        bytes32 _voteMessageHash
+    )
+        external
+        view
+        returns (CheckpointFinalisationStatus)
+    {
+        return links[_voteMessageHash].targetFinalisation;
     }
 }
