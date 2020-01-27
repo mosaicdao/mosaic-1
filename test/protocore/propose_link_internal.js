@@ -70,7 +70,6 @@ contract('Protocore::proposeLinkInternal', (accounts) => {
       config.genesisSourceBlockNumber,
       config.genesisTargetBlockNumber,
       config.genesisProposedMetablockHeight,
-      config.genesisVoteMessageHash,
     );
   });
 
