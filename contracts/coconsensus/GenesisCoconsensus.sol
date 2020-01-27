@@ -28,18 +28,21 @@ contract GenesisCoconsensus {
 
     /* Storage */
 
+    /** Metachain id of the origin chain. */
+    bytes32 public genesisOriginMetachainId;
+
     /** Metachain id of the auxiliary chain. */
     bytes32 public genesisMetachainId;
 
-    /** Link list of metablock ids.  */
+    /** Link list of metablock ids (for other protocores).  */
     mapping(bytes32 => bytes32) public genesisMetachainIds;
 
     /** Mapping of metablock id to its core contract address on origin chain. */
-    mapping(bytes32 => address) public cores;
+    mapping(bytes32 => address) public genesisCores;
 
     /** Mapping of metablock id to the epoch lengths. */
-    mapping(bytes32 => uint256) public epochlengths;
+    mapping(bytes32 => uint256) public genesisEpochlengths;
 
     /** Mapping of metablock id to the metblock height. */
-    mapping(bytes32 => uint256) public metablockHeights;
+    mapping(bytes32 => uint256) public genesisMetablockHeights;
 }
