@@ -28,10 +28,16 @@ contract TestOriginProtocore is OriginProtocore {
     }
 
     function setGenesisStorage(
+        bytes32 _genesisOriginParentVoteMessageHash,
+        bytes32 _genesisOriginSourceBlockHash,
+        uint256 _genesisOriginSourceBlockNumber,
         bytes32 _genesisOriginTargetBlockHash,
-        uint256 _genesisOriginTargetBlockNumber,
-        bytes32 _genesisOriginParentVoteMessageHash
-    ) external {
+        uint256 _genesisOriginTargetBlockNumber
+    )
+        external
+    {
+        genesisOriginSourceBlockHash = _genesisOriginSourceBlockHash;
+        genesisOriginSourceBlockNumber = _genesisOriginSourceBlockNumber;
         genesisOriginTargetBlockHash = _genesisOriginTargetBlockHash;
         genesisOriginTargetBlockNumber = _genesisOriginTargetBlockNumber;
         genesisOriginParentVoteMessageHash = _genesisOriginParentVoteMessageHash;

@@ -53,7 +53,8 @@ contract TestProtocore is Protocore {
         openKernelHeight = _genesisKernelHeight;
         openKernelHash = _genesisKernelHash;
 
-        bytes32 voteMessageHash = hashVoteMessageInternal(
+/*
+        bytes32 voteMessageHash = hashVoteMessage(
             _genesisSourceTransitionHash,
             _genesisSourceBlockHash,
             _genesisTargetBlockHash,
@@ -70,7 +71,7 @@ contract TestProtocore is Protocore {
         link.sourceTransitionHash = _genesisSourceTransitionHash;
         link.proposedMetablockHeight = _genesisProposedMetablockHeight;
         link.targetFinalisation = CheckpointFinalisationStatus.Finalised;
-
+*/
         coconsensus = _coconsensus;
 
         super.setup(
@@ -80,6 +81,8 @@ contract TestProtocore is Protocore {
             _genesisProposedMetablockHeight,
             _genesisParentVoteMessageHash,
             _genesisSourceTransitionHash,
+            _genesisSourceBlockHash,
+            _genesisSourceBlockNumber,
             _genesisTargetBlockHash,
             _genesisTargetBlockNumber
         );
@@ -200,30 +203,5 @@ contract TestProtocore is Protocore {
         returns (CheckpointFinalisationStatus)
     {
         return links[_voteMessageHash].targetFinalisation;
-    }
-
-
-    /* Internal Functions */
-
-    function hashVoteMessageInternal(
-        bytes32 _sourceTransitionHash,
-        bytes32 _sourceBlockHash,
-        bytes32 _targetBlockHash,
-        uint256 _sourceBlockNumber,
-        uint256 _targetBlockNumber
-    )
-        internal
-        pure
-        returns (bytes32 voteMessageHash_)
-    {
-        voteMessageHash_ = keccak256(
-            abi.encode(
-                _sourceTransitionHash,
-                _sourceBlockHash,
-                _targetBlockHash,
-                _sourceBlockNumber,
-                _targetBlockNumber
-            )
-        );
     }
 }

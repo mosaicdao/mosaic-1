@@ -29,9 +29,10 @@ contract('OriginProtocore::setup', (accounts) => {
 
   beforeEach(async () => {
     config.genesis = {};
-    config.genesis.originTargetBlockHash = Utils.getRandomHash();
     config.genesis.originParentVoteMessageHash = Utils.getRandomHash();
-    config.genesis.originTargetBlockNumber = await Utils.getBlockNumber();
+    config.genesis.originSourceBlockHash = Utils.ZERO_BYTES32;
+    config.genesis.originSourceBlockNumber = new BN(0);
+    config.genesis.originTargetBlockHash = Utils.getRandomHash();
 
     config.setupParams = {};
     config.setupParams.metachainId = Utils.getRandomHash();
@@ -41,6 +42,10 @@ contract('OriginProtocore::setup', (accounts) => {
     config.setupParams.selfProtocore = accountProvider.get();
     config.setupParams.coconsensus = accountProvider.get();
 
+    config.genesis.originTargetBlockNumber = new BN(
+      Utils.getRandomNumber(10000) * config.setupParams.epochLength,
+    );
+
     config.contracts = {};
 
     // Deploy the origin protocore contract.
@@ -48,9 +53,11 @@ contract('OriginProtocore::setup', (accounts) => {
 
     // Set the value of genesis variables
     await config.contracts.originProtocore.setGenesisStorage(
+      config.genesis.originParentVoteMessageHash,
+      config.genesis.originSourceBlockHash,
+      config.genesis.originSourceBlockNumber,
       config.genesis.originTargetBlockHash,
       config.genesis.originTargetBlockNumber,
-      config.genesis.originParentVoteMessageHash,
     );
 
     // Set coconsensus contract address

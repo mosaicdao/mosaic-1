@@ -86,6 +86,8 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
             _metablockHeight,
             genesisOriginParentVoteMessageHash,
             bytes32(0),
+            genesisOriginSourceBlockHash,
+            genesisOriginSourceBlockNumber,
             genesisOriginTargetBlockHash,
             genesisOriginTargetBlockNumber
         );

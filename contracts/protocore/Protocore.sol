@@ -106,6 +106,8 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
      * @param _metablockHeight Metablock height.
      * @param _genesisParentVoteMessageHash Parent vote message hash for the genesis link.
      * @param _genesisSourceTransitionHash Source transition hash for the genesis link.
+     * @param _genesisSourceBlockHash Source blockhash for the genesis link.
+     * @param _genesisSourceBlockNumber Source block number for the genesis link.
      * @param _genesisTargetBlockHash Target blockhash for the genesis link.
      * @param _genesisTargetBlockNumber Target block number for the genesis link.
      *
@@ -120,6 +122,8 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         uint256 _metablockHeight,
         bytes32 _genesisParentVoteMessageHash,
         bytes32 _genesisSourceTransitionHash,
+        bytes32 _genesisSourceBlockHash,
+        uint256 _genesisSourceBlockNumber,
         bytes32 _genesisTargetBlockHash,
         uint256 _genesisTargetBlockNumber
     )
@@ -128,6 +132,22 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         require(
             _epochLength != 0,
             "Epoch length is 0."
+        );
+        require(
+            _genesisSourceBlockNumber % _epochLength == 0,
+            "Genesis source block number must be multiple of epoch length."
+        );
+        require(
+            _genesisTargetBlockNumber % _epochLength == 0,
+            "Genesis target block number must be multiple of epoch length."
+        );
+        require(
+            _genesisTargetBlockHash != bytes32(0),
+            "Genesis target block hash must not be null."
+        );
+        require(
+            _genesisTargetBlockNumber > _genesisSourceBlockNumber,
+            "Genesis target block number is less than genesis source block number."
         );
 
         epochLength = _epochLength;
@@ -146,9 +166,9 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         // Generate the genesis vote message hash.
         bytes32 genesisVoteMessageHash = hashVoteMessage(
             _genesisSourceTransitionHash,
-            bytes32(0),
+            _genesisSourceBlockHash,
             _genesisTargetBlockHash,
-            uint256(0),
+            _genesisSourceBlockNumber,
             _genesisTargetBlockNumber
         );
 

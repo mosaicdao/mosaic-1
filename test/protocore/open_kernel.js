@@ -28,6 +28,7 @@ contract('Protocore::openKernel', (accounts) => {
 
   beforeEach(async () => {
     config.coconsensusAddress = accountProvider.get();
+    config.coreAddress = accountProvider.get();
 
     config.epochLength = new BN(100);
 
@@ -42,8 +43,12 @@ contract('Protocore::openKernel', (accounts) => {
     config.genesisTargetBlockNumber = new BN(config.epochLength);
     config.genesisProposedMetablockHeight = new BN(1);
 
+    config.metachainId = Utils.getRandomHash();
+
     config.protocore = await TestProtocore.new(
       config.coconsensusAddress,
+      config.metachainId,
+      config.coreAddress,
       config.epochLength,
       config.genesisKernelHeight,
       config.genesisKernelHash,
