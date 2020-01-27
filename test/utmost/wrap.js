@@ -16,12 +16,11 @@ const Utmost = artifacts.require('UtmostTest');
 
 const BN = require('bn.js');
 
-const web3 = require('./../test_lib/web3.js');
 const Utils = require('./../test_lib/utils');
 const EventDecoder = require('./../test_lib/event_decoder.js');
 const { AccountProvider } = require('../test_lib/utils.js');
 
-contract('OSTPrime.wrap()', (accounts) => {
+contract('Utmost.wrap()', (accounts) => {
   let utmost;
   let consensusCogateway;
   let initialSupply;
@@ -32,85 +31,79 @@ contract('OSTPrime.wrap()', (accounts) => {
   beforeEach(async () => {
     utmost = await Utmost.new();
     consensusCogateway = accountProvider.get();
-    initialSupply = new BN('100');
+    initialSupply = new BN('1000000');
     await utmost.setup(
-      initialSupply, consensusCogateway,
+      initialSupply,
+      consensusCogateway,
     );
     caller = AccountProvider.get();
-    amount = new BN(100);
+    amount = new BN('50');
+    await utmost.setTokenBalance(utmost.address, amount);
   });
 
-  it('should pass with correct parameters ', async () => {
-    const initialContractBalance = await Utils.getBalance(utmost.address);
+  it('should wrap successfully with correct parameters ', async () => {
+    const initialContractBaseCoinBalance = await Utils.getBalance(utmost.address);
+    const initialCallerBaseCoinBalance = await Utils.getBalance(caller);
 
-    const initialCallerBalance = await Utils.getBalance(caller);
-
-    const result = await ostPrime.wrap.call({
-      from: callerAddress,
+    const result = await utmost.wrap.call({
+      from: caller,
       value: amount,
     });
-
     assert.strictEqual(result, true, 'The contract should return true.');
 
-    const tx = await ostPrime.wrap({ from: callerAddress, value: amount });
+    const tx = await utmost.wrap({ from: caller, value: amount });
     const gasUsed = new BN(tx.receipt.gasUsed);
 
-    const callerEIP20Tokenbalance = await ostPrime.balanceOf.call(
-      callerAddress,
+    const callerERC20TokenBalance = await utmost.balanceOf.call(
+      caller,
     );
     assert.strictEqual(
-      callerEIP20Tokenbalance.eq(amount),
+      callerERC20TokenBalance.eq(amount),
       true,
-      `The balance of ${callerAddress} should increase by ${amount}.`,
+      `The balance of ${caller} should match ${amount}.`,
     );
 
-    const contractEIP20Tokenbalance = await ostPrime.balanceOf.call(
-      ostPrime.address,
+    const contractERC20Tokenbalance = await utmost.balanceOf.call(
+      utmost.address,
     );
     assert.strictEqual(
-      contractEIP20Tokenbalance.eq(new BN(0)),
+      contractERC20Tokenbalance.eqn(0),
       true,
-      'The balance of OST prime contract should be zero.',
+      'The balance of Utmost contract should be zero.',
     );
 
-    const finalContractBalance = await Utils.getBalance(ostPrime.address);
-
-    const finalCallerBalance = await Utils.getBalance(callerAddress);
+    const finalContractBaseCoinBalance = await Utils.getBalance(utmost.address);
+    const finalCallerBaseCoinBalance = await Utils.getBalance(caller);
 
     assert.strictEqual(
-      finalContractBalance.eq(initialContractBalance.add(amount)),
+      finalContractBaseCoinBalance.eq(initialContractBaseCoinBalance.add(amount)),
       true,
-      `Contract base token balance should increase by ${amount}`,
+      `Contract base coin balance should increase by ${amount}`,
     );
 
     assert.strictEqual(
-      finalCallerBalance.eq(initialCallerBalance.sub(amount).sub(gasUsed)),
+      finalCallerBaseCoinBalance.eq(initialCallerBaseCoinBalance.sub(amount).sub(gasUsed)),
       true,
-      `Caller's base token balance should decrease by ${amount.sub(gasUsed)}`,
+      `Caller's base coin balance should decrease by ${amount.sub(gasUsed)}`,
     );
   });
 
-  it('should emit transfer event', async () => {
-    await initialize();
-
-    const tx = await ostPrime.wrap({ from: callerAddress, value: amount });
-
-    const event = EventDecoder.getEvents(tx, ostPrime);
-
+  it('It should emit transfer event', async () => {
+    const tx = await utmost.wrap({ from: caller, value: amount });
+    const event = EventDecoder.getEvents(tx, utmost);
     assert.isDefined(event.Transfer, 'Event `Transfer` must be emitted.');
-
     const eventData = event.Transfer;
 
     assert.strictEqual(
       eventData._from,
-      ostPrime.address,
-      `The _from address in the event should be equal to ${ostPrime.address}`,
+      utmost.address,
+      `The _from address in the event should be equal to ${utmost.address}`,
     );
 
     assert.strictEqual(
       eventData._to,
-      callerAddress,
-      `The _to address in the event should be equal to ${callerAddress}`,
+      caller,
+      `The _to address in the event should be equal to ${caller}`,
     );
 
     assert.strictEqual(
@@ -121,11 +114,8 @@ contract('OSTPrime.wrap()', (accounts) => {
   });
 
   it('should emit token wrapped event', async () => {
-    await initialize();
-
-    const tx = await ostPrime.wrap({ from: callerAddress, value: amount });
-
-    const event = EventDecoder.getEvents(tx, ostPrime);
+    const tx = await utmost.wrap({ from: caller, value: amount });
+    const event = EventDecoder.getEvents(tx, utmost);
 
     assert.isDefined(
       event.TokenWrapped,
@@ -133,11 +123,10 @@ contract('OSTPrime.wrap()', (accounts) => {
     );
 
     const eventData = event.TokenWrapped;
-
     assert.strictEqual(
       eventData._account,
-      callerAddress,
-      `The _account address in the event should be equal to ${callerAddress}`,
+      caller,
+      `The _account address in the event should be equal to ${caller}`,
     );
 
     assert.strictEqual(
