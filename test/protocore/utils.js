@@ -90,5 +90,4 @@ module.exports = {
   isRegistered,
   isJustified,
   isFinalised,
-  VOTE_MESSAGE_TYPEHASH,
 };
