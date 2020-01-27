@@ -84,7 +84,7 @@ contract Coreputation is MasterCopyNonUpgradable, CoconsensusModule {
             if (_reputation == uint256(0)) {
                 vInfo.status = ValidatorStatus.Deregistered;
             } else {
-                assert(vInfo.status < ValidatorStatus.Deregistered);
+                assert(vInfo.status <= ValidatorStatus.Staked);
                 vInfo.status = ValidatorStatus.Staked;
             }
         }

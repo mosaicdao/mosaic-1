@@ -43,7 +43,7 @@ contract('Coreputation::isSlashed', (accounts) => {
     );
   });
 
-  it('should return correct reputation for a known validator', async () => {
+  it('should return true if validator is slashed', async () => {
     const isSlashed = await coreputationInstance.isSlashed.call(validatorInfo.validator);
     assert.strictEqual(
       isSlashed,

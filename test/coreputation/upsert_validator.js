@@ -16,6 +16,7 @@
 
 const BN = require('bn.js');
 const { AccountProvider } = require('../test_lib/utils.js');
+const { ValidatorStatus } = require('./utils.js');
 
 const Coreputation = artifacts.require('CoreputationTest');
 
@@ -24,12 +25,6 @@ contract('Coreputation::upsertValidator', (accounts) => {
   let coreputationInstance;
   let inputValidatorInfo;
   let coconsensus;
-  const ValidatorStatus = {
-    Undefined: 0,
-    Slashed: 1,
-    Staked: 2,
-    Deregistered: 3,
-  };
 
   beforeEach(async () => {
     accountProvider = new AccountProvider(accounts);
