@@ -20,19 +20,20 @@ const { AccountProvider } = require('../test_lib/utils.js');
 const ProtocoreUtils = require('../protocore/utils');
 const Utils = require('../test_lib/utils.js');
 
-const OriginProtocore = artifacts.require('TestOriginProtocore');
+const SelfProtocore = artifacts.require('TestSelfProtocore');
 
 const config = {};
 
-contract('OriginProtocore::setup', (accounts) => {
+contract('SelfProtocore::setup', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
 
   beforeEach(async () => {
     config.genesis = {};
-    config.genesis.originParentVoteMessageHash = Utils.getRandomHash();
-    config.genesis.originSourceBlockHash = Utils.ZERO_BYTES32;
-    config.genesis.originSourceBlockNumber = new BN(0);
-    config.genesis.originTargetBlockHash = Utils.getRandomHash();
+    config.genesis.auxiliaryParentVoteMessageHash = Utils.getRandomHash();
+    config.genesis.auxiliarySourceTransitionHash = Utils.getRandomHash();
+    config.genesis.auxiliarySourceBlockHash = Utils.getRandomHash();
+    config.genesis.auxiliaryTargetBlockHash = Utils.getRandomHash();
+    config.genesis.auxiliaryAccumulatedGas = new BN(1000000);
 
     config.setupParams = {};
     config.setupParams.metachainId = Utils.getRandomHash();
@@ -42,37 +43,40 @@ contract('OriginProtocore::setup', (accounts) => {
     config.setupParams.selfProtocore = accountProvider.get();
     config.setupParams.coconsensus = accountProvider.get();
 
-    config.genesis.originTargetBlockNumber = new BN(
+    config.genesis.auxiliarySourceBlockNumber = new BN(
       Utils.getRandomNumber(10000) * config.setupParams.epochLength,
     );
+    config.genesis.auxiliaryTargetBlockNumber = config.genesis.auxiliarySourceBlockNumber
+      .add(config.setupParams.epochLength);
 
     config.contracts = {};
 
-    // Deploy the origin protocore contract.
-    config.contracts.originProtocore = await OriginProtocore.new();
+    // Deploy the self protocore contract.
+    config.contracts.selfProtocore = await SelfProtocore.new();
 
     // Set the value of genesis variables
-    await config.contracts.originProtocore.setGenesisStorage(
-      config.genesis.originParentVoteMessageHash,
-      config.genesis.originSourceBlockHash,
-      config.genesis.originSourceBlockNumber,
-      config.genesis.originTargetBlockHash,
-      config.genesis.originTargetBlockNumber,
+    await config.contracts.selfProtocore.setGenesisStorage(
+      config.genesis.auxiliaryParentVoteMessageHash,
+      config.genesis.auxiliarySourceTransitionHash,
+      config.genesis.auxiliarySourceBlockHash,
+      config.genesis.auxiliarySourceBlockNumber,
+      config.genesis.auxiliaryTargetBlockHash,
+      config.genesis.auxiliaryTargetBlockNumber,
+      config.genesis.auxiliaryAccumulatedGas,
     );
 
     // Set coconsensus contract address
-    await config.contracts.originProtocore.setCoconsensus(config.setupParams.coconsensus);
+    await config.contracts.selfProtocore.setCoconsensus(config.setupParams.coconsensus);
   });
 
   contract('Negative Tests', async () => {
     it('should revert if caller is not coconsensus', async () => {
       await Utils.expectRevert(
-        config.contracts.originProtocore.setup(
+        config.contracts.selfProtocore.setup(
           config.setupParams.metachainId,
           config.setupParams.core,
           config.setupParams.epochLength,
           config.setupParams.metablockHeight,
-          config.setupParams.selfProtocore,
           { from: accountProvider.get() },
         ),
         'Only the Coconsensus contract can call this function.',
@@ -80,49 +84,39 @@ contract('OriginProtocore::setup', (accounts) => {
     });
 
     it('should revert if setup is already called once', async () => {
-      await config.contracts.originProtocore.setup(
+      await config.contracts.selfProtocore.setup(
         config.setupParams.metachainId,
         config.setupParams.core,
         config.setupParams.epochLength,
         config.setupParams.metablockHeight,
-        config.setupParams.selfProtocore,
         { from: config.setupParams.coconsensus },
       );
       await Utils.expectRevert(
-        config.contracts.originProtocore.setup(
+        config.contracts.selfProtocore.setup(
           config.setupParams.metachainId,
           config.setupParams.core,
           config.setupParams.epochLength,
           config.setupParams.metablockHeight,
-          config.setupParams.selfProtocore,
           { from: config.setupParams.coconsensus },
         ),
-        'Origin protocore contract is already initialized.',
+        'Self protocore contract is already initialized.',
       );
     });
   });
 
   contract('Positive Tests', async () => {
     it('should initialize the contract successfully', async () => {
-      const { originProtocore } = config.contracts;
+      const { selfProtocore } = config.contracts;
 
-      await originProtocore.setup(
+      await selfProtocore.setup(
         config.setupParams.metachainId,
         config.setupParams.core,
         config.setupParams.epochLength,
         config.setupParams.metablockHeight,
-        config.setupParams.selfProtocore,
         { from: config.setupParams.coconsensus },
       );
 
-      const selfProtocoreAddress = await originProtocore.selfProtocore.call();
-      assert.strictEqual(
-        selfProtocoreAddress,
-        config.setupParams.selfProtocore,
-        'Self protocore address is not set during the setup.',
-      );
-
-      const epochLength = await originProtocore.epochLength.call();
+      const epochLength = await selfProtocore.epochLength.call();
       assert.strictEqual(
         epochLength.eq(config.setupParams.epochLength),
         true,
@@ -133,35 +127,35 @@ contract('OriginProtocore::setup', (accounts) => {
       const genesisVoteMessageHash = ProtocoreUtils.hashVoteMessage(
         config.setupParams.metachainId,
         config.setupParams.core,
-        Utils.ZERO_BYTES32,
-        Utils.ZERO_BYTES32,
-        config.genesis.originTargetBlockHash,
-        new BN(0),
-        config.genesis.originTargetBlockNumber,
+        config.genesis.auxiliarySourceTransitionHash,
+        config.genesis.auxiliarySourceBlockHash,
+        config.genesis.auxiliaryTargetBlockHash,
+        config.genesis.auxiliarySourceBlockNumber,
+        config.genesis.auxiliaryTargetBlockNumber,
       );
 
-      const genesisLink = await originProtocore.links(genesisVoteMessageHash);
+      const genesisLink = await selfProtocore.links(genesisVoteMessageHash);
 
       assert.strictEqual(
         genesisLink.parentVoteMessageHash,
-        config.genesis.originParentVoteMessageHash,
+        config.genesis.auxiliaryParentVoteMessageHash,
         'Parent vote message hash is not set in the contract.',
       );
       assert.strictEqual(
         genesisLink.targetBlockHash,
-        config.genesis.originTargetBlockHash,
-        'Origin target block hash is not set in the contract.',
+        config.genesis.auxiliaryTargetBlockHash,
+        'Auxiliary target block hash is not set in the contract.',
       );
       assert.strictEqual(
-        genesisLink.targetBlockNumber.eq(config.genesis.originTargetBlockNumber),
+        genesisLink.targetBlockNumber.eq(config.genesis.auxiliaryTargetBlockNumber),
         true,
-        `Origin target block number from contract ${genesisLink.targetBlockNumber.toString(10)} `
-        + `must be equal to expected value ${config.genesis.originTargetBlockNumber.toString(10)}.`,
+        `Auxiliary target block number from contract ${genesisLink.targetBlockNumber.toString(10)} `
+        + `must be equal to expected value ${config.genesis.auxiliaryTargetBlockNumber.toString(10)}.`,
       );
       assert.strictEqual(
         genesisLink.sourceTransitionHash,
-        Utils.ZERO_BYTES32,
-        'Source transition hash in genesis link must be null.',
+        config.genesis.auxiliarySourceTransitionHash,
+        `Source transition hash in genesis link must be ${config.genesis.auxiliarySourceTransitionHash}.`,
       );
       assert.strictEqual(
         genesisLink.proposedMetablockHeight.eq(config.setupParams.metablockHeight),
