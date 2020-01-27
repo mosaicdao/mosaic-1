@@ -29,7 +29,7 @@ contract CoreputationTest is Coreputation {
     constructor(
         CoconsensusI _coconsensus
     )
-        public
+        external
     {
         coconsensus = _coconsensus;
     }
