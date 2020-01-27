@@ -144,7 +144,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         );
 
         // Generate the genesis vote message hash.
-        bytes32 genesisVoteMessageHash = hashVoteMessageInternal(
+        bytes32 genesisVoteMessageHash = hashVoteMessage(
             _genesisSourceTransitionHash,
             bytes32(0),
             _genesisTargetBlockHash,
@@ -262,7 +262,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
             "Target block number of the proposed link should be bigger than parent one."
         );
 
-        bytes32 voteMessageHash = hashVoteMessageInternal(
+        bytes32 voteMessageHash = hashVoteMessage(
             _sourceTransitionHash,
             parentLink.targetBlockHash,
             _targetBlockHash,

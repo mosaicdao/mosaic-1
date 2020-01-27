@@ -19,9 +19,20 @@ import "../protocore/GenesisOriginProtocore.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 
 /**
- * @title Origin protocore
+ * @title Origin protocore - This contract finalizes the proposed blocks of origin chain.
  */
 contract OriginProtocore MasterCopyUpgradable, GenesisOriginProtocore, Protocore {
+
+    /* Storage */
+
+    /** 
+     * Address of self protocore.
+     * @dev this is needed to get the inforamation related to validator. Origin
+     *      protocore will not have validator set, instead it will query Self protocore
+     *      contract.
+     */
+    address public selfProtocore;
+
 
     /* Special Functions */
 
@@ -30,22 +41,44 @@ contract OriginProtocore MasterCopyUpgradable, GenesisOriginProtocore, Protocore
      *
      * @dev These input params will be provided by the coconsensus contract.
      *      This can be called only by the coconsensus contract.
+     *      Function requires:
+     *          - Only coconsensus contract address can call this function
+     *          - This function can be called only once
+     *          - Input param selfProtocore must not be null
+     *          - Input param epoch lengh must not be zero
      *
      * @param _metachainId Metachain id.
      * @param _core Core contract address.
      * @param _epochLength Epoch length.
      * @param _metablockHeight Metablock height.
+     * @param _selfProtocore SelfProtocore contract address.
+     *
+     * \pre `_selfProtocore` is not 0.
+     *
+     * \post Sets selfProtocore to the given value.
      */
     fucntion setup(
         bytes32 _metachainId,
         address _core,
         uint256 _epochLength,
-        uint256 _metablockHeight
+        uint256 _metablockHeight,
+        address _selfProtocore
     ) 
         onlyCoconsensus
         external 
     {
-        // Call setup function of protocore contract to generate domain separator.
+        require(
+            selfProtocore == address(0),
+            "Origin protocore contract is already initialized."
+        );
+        require(
+            _selfProtocore != address(0),
+            "Self protocore contract address is null."
+        );
+
+        selfProtocore = _selfProtocore;
+
+        // The source transition hash should be zero for origin protocore.
         Protocore.setup(
             _metachainId,
             _core
