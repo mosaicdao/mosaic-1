@@ -176,6 +176,39 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         );
     }
 
+    /**
+     * @notice Insert or remove validator. It inserts validator if not already
+     *         present and reputation is greater than 0. It removes validator
+     *         if it is present and reputation is 0.
+     *
+     * @dev Function requires:
+     *      - Caller should be Coconsensus contract.
+     *
+     *
+     * @param _validator Validator address to upsert.
+     * @param _height Validator start or end height to be updated.
+     * @param _reputation Validator's reputation value.
+     */
+    function upsertValidator(
+        address _validator,
+        uint256 _height,
+        uint256 _reputation
+    )
+        external
+        onlyCoconsensus
+    {
+        if(ValidatorSet.inValidatorSet(_validator, _height)) {
+            if(_reputation == 0) {
+                removeValidatorInternal(_validator, _height);
+            }
+        }
+        else {
+            if(_reputation > 0) {
+                insertValidatorInternal(_validator, _height);
+            }
+        }
+    }
+
 
     /** Internal Functions */
 
