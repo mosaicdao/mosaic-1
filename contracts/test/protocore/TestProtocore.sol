@@ -28,6 +28,8 @@ contract TestProtocore is Protocore {
 
     constructor(
         CoconsensusI _coconsensus,
+        address _core,
+        bytes32 _metachainId,
         uint256 _epochLength,
         uint256 _genesisKernelHeight,
         bytes32 _genesisKernelHash,
@@ -37,7 +39,8 @@ contract TestProtocore is Protocore {
         bytes32 _genesisTargetBlockHash,
         uint256 _genesisSourceBlockNumber,
         uint256 _genesisTargetBlockNumber,
-        uint256 _genesisProposedMetablockHeight
+        uint256 _genesisProposedMetablockHeight,
+        bytes32 voteMessageHash
     )
         public
     {
@@ -50,14 +53,6 @@ contract TestProtocore is Protocore {
 
         openKernelHeight = _genesisKernelHeight;
         openKernelHash = _genesisKernelHash;
-
-        bytes32 voteMessageHash = hashVoteMessageInternal(
-            _genesisSourceTransitionHash,
-            _genesisSourceBlockHash,
-            _genesisTargetBlockHash,
-            _genesisSourceBlockNumber,
-            _genesisTargetBlockNumber
-        );
 
         Link storage link = links[voteMessageHash];
         assert(link.targetBlockHash == bytes32(0));
@@ -72,6 +67,8 @@ contract TestProtocore is Protocore {
         coconsensus = _coconsensus;
 
         super.setup(
+            _metachainId,
+            _core,
             _epochLength
         );
     }
@@ -191,30 +188,5 @@ contract TestProtocore is Protocore {
         returns (CheckpointFinalisationStatus)
     {
         return links[_voteMessageHash].targetFinalisation;
-    }
-
-
-    /* Internal Functions */
-
-    function hashVoteMessageInternal(
-        bytes32 _sourceTransitionHash,
-        bytes32 _sourceBlockHash,
-        bytes32 _targetBlockHash,
-        uint256 _sourceBlockNumber,
-        uint256 _targetBlockNumber
-    )
-        internal
-        view
-        returns (bytes32 voteMessageHash_)
-    {
-        voteMessageHash_ = keccak256(
-            abi.encode(
-                _sourceTransitionHash,
-                _sourceBlockHash,
-                _targetBlockHash,
-                _sourceBlockNumber,
-                _targetBlockNumber
-            )
-        );
     }
 }
