@@ -22,14 +22,16 @@ interface ProtocoreI {
     /**
      * @notice setup() function initializes the protocore contract.
      *
-     * @param _metachainId Metachain Id.
-     * @param _core Core contract address.
+     * @param _metachainId Metachain id.
+     * @param _domainSeparator Domain separator.
      * @param _epochLength Epoch length.
+     * @param _metablockHeight Metablock height.
      */
-     function setup(
+    function setup(
         bytes32 _metachainId,
-        address _core,
-        uint256 _epochLength
+        bytes32 _domainSeparator,
+        uint256 _epochLength,
+        uint256 _metablockHeight
     )
-        external;
+        external
 }
