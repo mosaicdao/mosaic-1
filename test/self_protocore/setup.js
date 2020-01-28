@@ -56,7 +56,7 @@ contract('SelfProtocore::setup', (accounts) => {
 
     // Set the value of genesis variables
     await config.contracts.selfProtocore.setGenesisStorage(
-      config.genesis.originMetachainId,
+      config.genesis.auxiliaryMetachainId,
       config.genesis.domainSeparator,
       config.genesis.epochLength,
       config.genesis.metablockHeight,
