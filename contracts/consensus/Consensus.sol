@@ -46,6 +46,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         string endpoint
     );
 
+    event ValidatorLoggedOut(
+        address validator,
+        uint256 endHeight,
+        uint256 withdrawalBlockHeight
+    );
+
 
     /* Enums */
 
@@ -741,9 +747,13 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             "Core lifetime status must be genesis or active."
         );
 
-        reputation.deregister(msg.sender);
+        uint256 withdrawalBlockHeight = reputation.deregister(msg.sender);
+
+        uint256 endHeight = _core.logout(msg.sender);
 
         _core.logout(msg.sender);
+
+        emit ValidatorLoggedOut(msg.sender, endHeight, withdrawalBlockHeight);
     }
 
     /** @notice Creates a new meta chain.

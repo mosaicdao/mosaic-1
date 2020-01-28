@@ -396,7 +396,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      * @param _originObservation Origin observation of a proposed metablock.
      * @param _dynasty Dynasty of a proposed metablock.
      * @param _accumulatedGas Accumulated gas in a proposed metablock.
-     * @param _committeeLock Committe lock (transition root hash) of a proposed
+     * @param _committeeLock Committee lock (transition root hash) of a proposed
      *                       metablock.
      * @param _source Source blockhash of a vote message for a proposed metablock.
      * @param _target Target blockhash of a vote message for a proposed metablock.
@@ -806,6 +806,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         external
         onlyConsensus
         whileRunning
+        returns (uint256 nextKernelHeight)
     {
         require(
             countValidators
@@ -818,7 +819,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             "Maximum number of validators that can log out in one metablock is reached."
         );
 
-        uint256 nextKernelHeight = openKernelHeight.add(1);
+        nextKernelHeight = openKernelHeight.add(1);
 
         // removeValidator performs necessary requirements
         // remove validator from next metablock height
@@ -1016,7 +1017,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *          - the given end height of a validator is bigger than open
      *            kernel height
      *          - validator must have begun
-     *          - validatvalidator must be active
+     *          - validator must be active
      */
     function removeValidator(address _validator, uint256 _endHeight)
         internal

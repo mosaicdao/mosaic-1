@@ -101,6 +101,7 @@ contract MockConsensus is ConsensusI, ReputationI {
 
     function deregister(address _validator)
         external
+        returns (uint256)
     {
         // do nothing for now
     }

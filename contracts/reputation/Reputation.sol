@@ -460,6 +460,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
         external
         onlyConsensus
         isActive(_validator)
+        returns (uint256)
     {
         ValidatorInfo storage v = validators[_validator];
 
@@ -468,6 +469,8 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
         v.withdrawalBlockHeight = block.number.add(
             withdrawalCooldownPeriodInBlocks
         );
+
+        return v.withdrawalBlockHeight;
     }
 
     /**

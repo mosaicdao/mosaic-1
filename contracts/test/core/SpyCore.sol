@@ -72,7 +72,7 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
         spyValidator = _validator;
     }
 
-    function logout(address _validator) external {
+    function logout(address _validator) external returns (uint256) {
         spyValidator = _validator;
     }
 

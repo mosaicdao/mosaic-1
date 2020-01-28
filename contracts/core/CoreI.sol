@@ -27,7 +27,7 @@ interface CoreI {
 
     function join(address _validator) external;
 
-    function logout(address _validator) external;
+    function logout(address _validator) external returns (uint256);
 
     function openMetablock(
         uint256 _committedDynasty,
