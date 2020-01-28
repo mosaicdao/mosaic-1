@@ -17,6 +17,7 @@ pragma solidity >=0.5.0 <0.6.0;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "../consensus/CoconsensusModule.sol";
+import "../validator/ValidatorSet.sol";
 import "../version/MosaicVersion.sol";
 
 /**
@@ -71,7 +72,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
 
     /* Storage */
 
-    /** Metachain id of the meta-blockchain. */
+    /** Metachain id of the metablockchain. */
     bytes32 public metachainId;
 
     /** Epoch length */
@@ -79,9 +80,6 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
 
     /** EIP-712 domain separator. */
     bytes32 public domainSeparator;
-
-    /** Metachain Id */
-    bytes32 public metachainId;
 
     uint256 public openKernelHeight;
     bytes32 public openKernelHash;
