@@ -20,9 +20,9 @@ pragma solidity >=0.5.0 <0.6.0;
  *        genesis block. This contract stores the information related to metachains.
  *        Coconsensus can track multiple protocores, so the values needed to
  *        initialize protocore are stored in the mapping. The metachain id's are
- *        stored as a linked list and is iterable. The corresponding core address,
- *        epoch length and metablock height can be retrieved for a given metachain
- *        id from the mappings.
+ *        stored as a linked list and is iterable. The corresponding anchor address,
+ *        protocore address epoch length, domain separators and metablock height can
+ *        be retrieved for a given metachain id from the mappings.
  */
 contract GenesisCoconsensus {
 
@@ -32,17 +32,23 @@ contract GenesisCoconsensus {
     bytes32 public genesisOriginMetachainId;
 
     /** Metachain id of the auxiliary chain. */
-    bytes32 public genesisMetachainId;
+    bytes32 public genesisAuxiliaryMetachainId;
 
-    /** Link list of metablock ids (for other protocores).  */
+    /** Link list of metachain ids (for all protocores). */
     mapping(bytes32 => bytes32) public genesisMetachainIds;
 
-    /** Mapping of metablock id to its core contract address on origin chain. */
-    mapping(bytes32 => address) public genesisCores;
+    /** Mapping of metachain id to its anchor contract address on auxiliary chain. */
+    mapping(bytes32 => address) public genesisAnchors;
 
-    /** Mapping of metablock id to the epoch lengths. */
+    /** Mapping of metachain id to its protocore contract address on auxiliary chain. */
+    mapping(bytes32 => address) public genesisProtocores;
+
+    /** Mapping of metachain id to the epoch lengths. */
     mapping(bytes32 => uint256) public genesisEpochLengths;
 
-    /** Mapping of metablock id to the metablock height. */
+    /** Mapping of metachain id to the metablock height. */
     mapping(bytes32 => uint256) public genesisMetablockHeights;
+
+    /** Mapping of metachain id to the domain separator. */
+    mapping(bytes32 => bytes32) public genesisDomainSeparators;
 }
