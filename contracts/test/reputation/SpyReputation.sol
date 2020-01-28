@@ -86,6 +86,7 @@ contract SpyReputation is MasterCopyNonUpgradable, ReputationI {
         address _withdrawalAddress
     )
         external
+        returns (uint256)
     {
         validator = _validator;
         spyWithdrawalAddress = _withdrawalAddress;

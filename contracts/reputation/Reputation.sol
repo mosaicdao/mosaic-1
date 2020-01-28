@@ -396,6 +396,8 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
      *
      * @param _validator A validator address to stake.
      * @param _withdrawalAddress A withdrawal address of newly staked validator.
+     *
+     * @return reputation_ Initial reputation of a validator
      */
     function stake(
         address _validator,
@@ -403,6 +405,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
     )
         external
         onlyConsensus
+        returns(uint256 reputation_)
     {
         require(
             _validator != address(0),
@@ -445,6 +448,8 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
             wETH.transferFrom(_validator, address(this), stakeWETHAmount),
             "Failed to transfer wETH stake amount from a validator."
         );
+
+        reputation_ = initialReputation;
     }
 
     /**

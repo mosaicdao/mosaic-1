@@ -60,6 +60,13 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         uint256 gasTarget
     );
 
+    event ValidatorJoined(
+        address validatorGA,
+        address coreGA,
+        uint256 beginHeight,
+        uint256 reputation
+    );
+
 
     /* Enums */
 
@@ -659,10 +666,17 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         );
 
         // Stake in reputation contract.
-        reputation.stake(msg.sender, _withdrawalAddress);
+        uint256 validatorReputation = reputation.stake(msg.sender, _withdrawalAddress);
 
         // Join in core contract.
-        core.join(msg.sender);
+        uint256 beginHeight = core.join(msg.sender);
+
+        emit ValidatorJoined(
+            msg.sender,
+            address(core),
+            beginHeight,
+            validatorReputation
+        );
     }
 
     /**
@@ -697,12 +711,13 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         );
 
         // Stake in reputation contract.
-        reputation.stake(msg.sender, _withdrawalAddress);
+        uint256 validatorReputation = reputation.stake(msg.sender, _withdrawalAddress);
 
         // Join in core contract.
         (
             uint256 validatorCount,
-            uint256 minValidatorCount
+            uint256 minValidatorCount,
+            uint256 beginHeight
         ) = core.joinBeforeOpen(msg.sender);
 
         if (validatorCount >= minValidatorCount) {
@@ -715,6 +730,13 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
                 feeGasLimit
             );
         }
+
+        emit ValidatorJoined(
+            msg.sender,
+            address(core),
+            beginHeight,
+            validatorReputation
+        );
     }
 
     /**

@@ -95,6 +95,7 @@ contract MockConsensus is ConsensusI, ReputationI {
 
     function stake(address _validator, address _withdrawalAddress)
         external
+        returns (uint256)
     {
         // do nothing for now
     }

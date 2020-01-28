@@ -707,13 +707,13 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *
      * @param _validator A validator's address to join.
      *
-     * @return The total count of joined validators.
+     * @return The total count of joined validators and begin height.
      */
     function joinBeforeOpen(address _validator)
         external
         onlyConsensus
         beforeOpen
-        returns(uint256 validatorCount_, uint256 minValidatorCount_)
+        returns(uint256 validatorCount_, uint256 minValidatorCount_, uint256 beginHeight_)
     {
         // during created state, validators join at creation kernel height
         insertValidator(_validator, creationKernelHeight);
@@ -742,6 +742,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
         validatorCount_ = countValidators;
         minValidatorCount_ = minimumValidatorCount;
+
+        beginHeight_ = creationKernelHeight;
     }
 
     /**
@@ -757,11 +759,14 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *          - validator has not joined
      *
      * @param _validator Address of a validator to join.
+     *
+     * @return beginHeight_ Begin height of the validator
      */
     function join(address _validator)
         external
         onlyConsensus
         whileRunning
+        returns(uint256 beginHeight_)
     {
         require(
             countValidators
@@ -786,6 +791,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         nextKernel.updatedValidators.push(_validator);
         // TASK: reputation can be uint64, and initial rep set properly.
         nextKernel.updatedReputation.push(uint256(1));
+
+        beginHeight_ = nextKernelHeight;
     }
 
     /**
@@ -801,12 +808,14 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *          - validator has joined
      *
      * @param _validator An address of the validator to logout.
+     *
+     * @return nextKernelHeight_ validator end height.
      */
     function logout(address _validator)
         external
         onlyConsensus
         whileRunning
-        returns (uint256 nextKernelHeight)
+        returns (uint256 nextKernelHeight_)
     {
         require(
             countValidators
@@ -819,13 +828,13 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             "Maximum number of validators that can log out in one metablock is reached."
         );
 
-        nextKernelHeight = openKernelHeight.add(1);
+        nextKernelHeight_ = openKernelHeight.add(1);
 
         // removeValidator performs necessary requirements
         // remove validator from next metablock height
-        removeValidator(_validator, nextKernelHeight);
+        removeValidator(_validator, nextKernelHeight_);
 
-        Kernel storage nextKernel = kernels[nextKernelHeight];
+        Kernel storage nextKernel = kernels[nextKernelHeight_];
         nextKernel.updatedValidators.push(_validator);
         nextKernel.updatedReputation.push(uint256(0));
 
