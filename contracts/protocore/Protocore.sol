@@ -197,6 +197,10 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         external
         onlyCoconsensus
     {
+        require(
+            _height >= openKernelHeight,
+            "Validator must enter at height equal or greater than open kernel height"
+        );
         if(ValidatorSet.inValidatorSet(_validator, _height)) {
             if(_reputation == 0) {
                 removeValidatorInternal(_validator, _height);
