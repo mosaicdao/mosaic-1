@@ -28,6 +28,11 @@ contract TestOriginProtocore is OriginProtocore {
     }
 
     function setGenesisStorage(
+        bytes32 _genesisOriginMetachainId,
+        bytes32 _genesisDomainSeparator,
+        uint256 _genesisEpochLength,
+        uint256 _genesisMetablockHeight,
+        address _genesisSelfProtocore,
         bytes32 _genesisOriginParentVoteMessageHash,
         bytes32 _genesisOriginSourceBlockHash,
         uint256 _genesisOriginSourceBlockNumber,
@@ -36,6 +41,11 @@ contract TestOriginProtocore is OriginProtocore {
     )
         external
     {
+        genesisOriginMetachainId = _genesisOriginMetachainId;
+        genesisDomainSeparator = _genesisDomainSeparator;
+        genesisEpochLength = _genesisEpochLength;
+        genesisMetablockHeight = _genesisMetablockHeight;
+        genesisSelfProtocore = _genesisSelfProtocore;
         genesisOriginSourceBlockHash = _genesisOriginSourceBlockHash;
         genesisOriginSourceBlockNumber = _genesisOriginSourceBlockNumber;
         genesisOriginTargetBlockHash = _genesisOriginTargetBlockHash;

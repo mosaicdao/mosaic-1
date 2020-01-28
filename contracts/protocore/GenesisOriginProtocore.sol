@@ -24,18 +24,33 @@ contract GenesisOriginProtocore {
 
     /* Storage */
 
-    /** Block hash of source checkpoint */
+    /** Metachain id of the origin chain. */
+    bytes32 public genesisOriginMetachainId;
+
+    /** Epoch length. */
+    uint256 public genesisEpochLength;
+
+    /** Initial metablock height. */
+    uint256 public genesisMetablockHeight;
+
+    /** Domain separator. */
+    bytes32 public genesisDomainSeparator;
+
+    /** Block hash of source checkpoint. */
     bytes32 public genesisOriginSourceBlockHash;
 
-    /** Block number of source checkpoint */
+    /** Block number of source checkpoint. */
     uint256 public genesisOriginSourceBlockNumber;
 
-    /** Block hash of target checkpoint */
+    /** Block hash of target checkpoint. */
     bytes32 public genesisOriginTargetBlockHash;
 
-    /** Block number of target checkpoint */
+    /** Block number of target checkpoint. */
     uint256 public genesisOriginTargetBlockNumber;
 
-    /** Parent vote message hash */
+    /** Parent vote message hash. */
     bytes32 public genesisOriginParentVoteMessageHash;
+
+    /** Self protocore address. */
+    address public genesisSelfProtocore;
 }

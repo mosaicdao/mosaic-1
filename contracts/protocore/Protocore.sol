@@ -91,7 +91,7 @@ contract Protocore is MosaicVersion, CoconsensusModule {
     /* Special Functions */
 
     /**
-     * @notice setup() function initializes the current contract.
+     * @notice setupProtocore() function initializes the current contract.
      *         The function will be called by inherited contracts.
      *
      * @param _metachainId Metachain Id.
@@ -118,7 +118,7 @@ contract Protocore is MosaicVersion, CoconsensusModule {
      * \post Sets `metachainId` to the given value.
      * \post Sets genesis link.
      */
-    function setup(
+    function setupProtocore(
         bytes32 _metachainId,
         bytes32 _domainSeparator,
         uint256 _epochLength,
