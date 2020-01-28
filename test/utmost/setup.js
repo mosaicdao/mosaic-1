@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const Utmost = artifacts.require('Utmost');
+const Utmost = artifacts.require('UtmostTest');
 const BN = require('bn.js');
 const web3 = require('./../test_lib/web3');
 
@@ -22,19 +22,18 @@ contract('Utmost::setup', (accounts) => {
   let utmost;
   let consensusCogateway;
   let initialSupply;
+  let coconsensus;
   const accountProvider = new AccountProvider(accounts);
 
   beforeEach(async () => {
-    utmost = await Utmost.new();
-    consensusCogateway = accountProvider.get();
+    coconsensus = accountProvider.get();
     initialSupply = new BN('1000000');
+    utmost = await Utmost.new(coconsensus, initialSupply);
+    consensusCogateway = '0x0000000000000000000000000000000000004d02';
   });
 
   it('should setup Utmost token correctly.', async () => {
-    await utmost.setup(
-      initialSupply,
-      consensusCogateway,
-    );
+    await utmost.setup({ from: coconsensus });
 
     assert.strictEqual(
       web3.utils.isAddress(utmost.address),

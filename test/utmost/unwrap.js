@@ -22,28 +22,23 @@ const { AccountProvider } = require('./../test_lib/utils');
 
 contract('Utmost.unwrap()', (accounts) => {
   let utmost;
-  let consensusCogateway;
   let initialSupply;
   let caller;
-  let amount;
+  let wrappedAmount;
   let amountToUnwrap;
+  let coconsensus;
   const accountProvider = new AccountProvider(accounts);
 
   beforeEach(async () => {
-    utmost = await Utmost.new();
-    consensusCogateway = accountProvider.get();
+    coconsensus = accountProvider.get();
     initialSupply = new BN('1000000');
-    await utmost.setup(
-      initialSupply,
-      consensusCogateway,
-    );
+    utmost = await Utmost.new(coconsensus, initialSupply);
+    await utmost.setup({ from: coconsensus });
     caller = accountProvider.get();
-    amount = new BN('100');
     amountToUnwrap = new BN('20');
-    await utmost.setTokenBalance(caller, amount);
-    await utmost.initializeBaseCoinBalance(
-      { from: caller, value: initialSupply },
-    );
+    // Mints ERC20 Utmost balance for caller
+    wrappedAmount = new BN('100');
+    await utmost.wrap({ from: caller, value: wrappedAmount });
   });
 
   it('should unwrap successfully with correct parameters', async () => {
@@ -71,9 +66,9 @@ contract('Utmost.unwrap()', (accounts) => {
       utmost.address,
     );
     assert.strictEqual(
-      contractERC20TokenBalance.eq(amountToUnwrap),
+      contractERC20TokenBalance.eq((initialSupply.sub(wrappedAmount)).add(amountToUnwrap)),
       true,
-      `The balance of Utmost contract should increase by ${amountToUnwrap.toString(10)}.`,
+      `The token balance of Utmost contract should increase by ${amountToUnwrap.toString(10)}.`,
     );
 
     const finalContractBaseCoinBalance = await Utils.getBalance(utmost.address);

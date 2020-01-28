@@ -21,36 +21,32 @@ import "./../../most/Utmost.sol";
  */
 contract UtmostTest is Utmost {
 
-    /* External Functions. */
+    CoconsensusI public coconsensus;
+
+    /* Special Member Functions */
 
     /**
-     * @notice Set the Utmost token balance for the given account address.
+     * Constructor
      *
-     * @dev This is used only for testing.
-     *
-     * @param _account Address for which the balance is to be set.
-     * @param _amount The amount of Utmost tokens to be set.
+     * @param _coconsensus Coconsensus contract address.
+     * @param _initialTokenSupply Initial token supply.
      */
-    function setTokenBalance(
-        address _account,
-        uint256 _amount
-    )
-        external
+    constructor(CoconsensusI _coconsensus, uint256 _initialTokenSupply)
+        public
     {
-        balances[_account] = _amount;
+        genesisTotalSupply = _initialTokenSupply;
+        coconsensus = _coconsensus;
     }
 
+
+    /** Public Functions */
+
     /**
-     * @notice Sets the base coin balance for the given account address.
+     * @notice Gets the coconsensus contract address.
      *
-     * @dev This is used only for testing.
-     * Returns true if successful.
+     * @return Coconsensus contract address.
      */
-    function initializeBaseCoinBalance()
-        external
-        payable
-        returns (bool success_)
-    {
-        success_ = true;
+    function getCoconsensus() public view returns (CoconsensusI) {
+        return coconsensus;
     }
 }

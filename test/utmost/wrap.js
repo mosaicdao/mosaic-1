@@ -22,23 +22,19 @@ const { AccountProvider } = require('../test_lib/utils.js');
 
 contract('Utmost.wrap()', (accounts) => {
   let utmost;
-  let consensusCogateway;
   let initialSupply;
   let caller;
-  let amount;
+  let amountToWrap;
+  let coconsensus;
   const accountProvider = new AccountProvider(accounts);
 
   beforeEach(async () => {
-    utmost = await Utmost.new();
-    consensusCogateway = accountProvider.get();
+    coconsensus = accountProvider.get();
     initialSupply = new BN('1000000');
-    await utmost.setup(
-      initialSupply,
-      consensusCogateway,
-    );
+    utmost = await Utmost.new(coconsensus, initialSupply);
+    await utmost.setup({ from: coconsensus });
     caller = accountProvider.get();
-    amount = new BN('100');
-    await utmost.setTokenBalance(utmost.address, amount);
+    amountToWrap = new BN('100');
   });
 
   it('should wrap successfully with correct parameters ', async () => {
@@ -47,7 +43,7 @@ contract('Utmost.wrap()', (accounts) => {
 
     const result = await utmost.wrap.call({
       from: caller, // Caller has gas initially from AccountProvider
-      value: amount,
+      value: amountToWrap,
     });
     assert.strictEqual(
       result,
@@ -55,45 +51,45 @@ contract('Utmost.wrap()', (accounts) => {
       'The contract should return true.',
     );
 
-    const tx = await utmost.wrap({ from: caller, value: amount });
+    const tx = await utmost.wrap({ from: caller, value: amountToWrap });
     const gasUsed = new BN(tx.receipt.gasUsed);
 
     const callerERC20TokenBalance = await utmost.balanceOf.call(
       caller,
     );
     assert.strictEqual(
-      callerERC20TokenBalance.eq(amount),
+      callerERC20TokenBalance.eq(amountToWrap),
       true,
-      `The balance of ${caller} should match ${amount.toString(10)}.`,
+      `The balance of ${caller} should match ${amountToWrap.toString(10)}.`,
     );
 
     const contractERC20TokenBalance = await utmost.balanceOf.call(
       utmost.address,
     );
     assert.strictEqual(
-      contractERC20TokenBalance.eqn(0),
+      contractERC20TokenBalance.eq(initialSupply.sub(amountToWrap)),
       true,
-      'The balance of Utmost contract should be zero.',
+      `The balance of Utmost contract should be ${contractERC20TokenBalance.toString(10)}.`,
     );
 
     const finalContractBaseCoinBalance = await Utils.getBalance(utmost.address);
     const finalCallerBaseCoinBalance = await Utils.getBalance(caller);
 
     assert.strictEqual(
-      finalContractBaseCoinBalance.eq(initialContractBaseCoinBalance.add(amount)),
+      finalContractBaseCoinBalance.eq(initialContractBaseCoinBalance.add(amountToWrap)),
       true,
-      `Contract base coin balance should increase by ${amount}`,
+      `Contract base coin balance should increase by ${amountToWrap}`,
     );
 
     assert.strictEqual(
-      finalCallerBaseCoinBalance.eq(initialCallerBaseCoinBalance.sub(amount).sub(gasUsed)),
+      finalCallerBaseCoinBalance.eq(initialCallerBaseCoinBalance.sub(amountToWrap).sub(gasUsed)),
       true,
-      `Caller's base coin balance should decrease by ${amount.sub(gasUsed).toString(10)}`,
+      `Caller's base coin balance should decrease by ${amountToWrap.sub(gasUsed).toString(10)}`,
     );
   });
 
   it('It should emit transfer event', async () => {
-    const tx = await utmost.wrap({ from: caller, value: amount });
+    const tx = await utmost.wrap({ from: caller, value: amountToWrap });
     const event = EventDecoder.getEvents(tx, utmost);
     assert.isDefined(event.Transfer, 'Event `Transfer` must be emitted.');
     const eventData = event.Transfer;
@@ -111,14 +107,14 @@ contract('Utmost.wrap()', (accounts) => {
     );
 
     assert.strictEqual(
-      amount.eq(eventData._value),
+      amountToWrap.eq(eventData._value),
       true,
-      `The _value in the event should be equal to ${amount.toString(10)}`,
+      `The _value in the event should be equal to ${amountToWrap.toString(10)}`,
     );
   });
 
   it('should emit token wrapped event', async () => {
-    const tx = await utmost.wrap({ from: caller, value: amount });
+    const tx = await utmost.wrap({ from: caller, value: amountToWrap });
     const event = EventDecoder.getEvents(tx, utmost);
 
     assert.isDefined(
@@ -134,9 +130,9 @@ contract('Utmost.wrap()', (accounts) => {
     );
 
     assert.strictEqual(
-      amount.eq(eventData._amount),
+      amountToWrap.eq(eventData._amount),
       true,
-      `The _amount in the event should be equal to ${amount.toString(10)}`,
+      `The _amount in the event should be equal to ${amountToWrap.toString(10)}`,
     );
   });
 });

@@ -16,7 +16,8 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "./GenesisUtmost.sol";
-import "../utilityToken/UtilityToken.sol";
+import "./../consensus/CoconsensusModule.sol";
+import "./../utilityToken/UtilityToken.sol";
 
 /**
  * @title Utmost contract implements UtilityToken.
@@ -24,7 +25,7 @@ import "../utilityToken/UtilityToken.sol";
  * @dev Utmost is an ERC20 token wrapper for the base coin that is used to pay
  *      for gas consumption on the auxiliary chain.
  */
-contract Utmost is MasterCopyNonUpgradable, GenesisUtmost, UtilityToken {
+contract Utmost is MasterCopyNonUpgradable, GenesisUtmost, UtilityToken, CoconsensusModule {
 
     /* Events */
 
@@ -56,30 +57,27 @@ contract Utmost is MasterCopyNonUpgradable, GenesisUtmost, UtilityToken {
     /* External Functions */
 
     /**
-     * @notice Sets up the genesisTokenSupply and calls UtilityToken.setup.
+     * @notice Calls UtilityToken.setup.
+     *
+     * @dev Function requires:
+     *      - msg.sender should be Coconsensus
      *
      * @dev This function must be called only once. This check is done in setup
      *      function of UtilityToken.
-     *
-     * @param _genesisTokenSupply Initial token supply.
-     * @param _consensusCogateway ConsensusCogateway contract address.
-     *
      */
-    function setup(
-        uint256 _genesisTokenSupply,
-        address _consensusCogateway
-    )
+    function setup()
         external
+        onlyCoconsensus
     {
         UtilityToken.setup(
             TOKEN_SYMBOL,
             TOKEN_NAME,
             TOKEN_DECIMALS,
-            _genesisTokenSupply,
-            _consensusCogateway
+            genesisTotalSupply,
+            address(0x0000000000000000000000000000000000004d02)
         );
 
-        genesisTotalSupply = _genesisTokenSupply;
+        balances[address(this)] = genesisTotalSupply;
     }
 
     /**
