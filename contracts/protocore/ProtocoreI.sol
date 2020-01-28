@@ -33,5 +33,5 @@ interface ProtocoreI {
         uint256 _epochLength,
         uint256 _metablockHeight
     )
-        external
+        external;
 }
