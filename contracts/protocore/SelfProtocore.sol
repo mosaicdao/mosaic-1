@@ -35,17 +35,17 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Validat
      *      Function requires:
      *          - Only coconsensus contract address can call this function
      *          - This function can be called only once
-     *          - Input param epoch lengh must not be zero
+     *          - Input param epoch length must not be zero
      *
      * @param _metachainId Metachain id.
-     * @param _core Core contract address.
+     * @param _domainSeparator Domain separator.
      * @param _epochLength Epoch length.
      * @param _metablockHeight Metablock height.
      *
      */
     function setup(
         bytes32 _metachainId,
-        address _core,
+        bytes32 _domainSeparator,
         uint256 _epochLength,
         uint256 _metablockHeight
     )
@@ -59,7 +59,7 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Validat
 
         Protocore.setup(
             _metachainId,
-            _core,
+            _domainSeparator,
             _epochLength,
             _metablockHeight,
             genesisAuxiliaryParentVoteMessageHash,

@@ -37,7 +37,7 @@ contract('SelfProtocore::setup', (accounts) => {
 
     config.setupParams = {};
     config.setupParams.metachainId = Utils.getRandomHash();
-    config.setupParams.core = accountProvider.get();
+    config.setupParams.domainSeparator = Utils.getRandomHash();
     config.setupParams.epochLength = new BN(100);
     config.setupParams.metablockHeight = new BN(Utils.getRandomNumber(1000));
     config.setupParams.selfProtocore = accountProvider.get();
@@ -74,7 +74,7 @@ contract('SelfProtocore::setup', (accounts) => {
       await Utils.expectRevert(
         config.contracts.selfProtocore.setup(
           config.setupParams.metachainId,
-          config.setupParams.core,
+          config.setupParams.domainSeparator,
           config.setupParams.epochLength,
           config.setupParams.metablockHeight,
           { from: accountProvider.get() },
@@ -86,7 +86,7 @@ contract('SelfProtocore::setup', (accounts) => {
     it('should revert if setup is already called once', async () => {
       await config.contracts.selfProtocore.setup(
         config.setupParams.metachainId,
-        config.setupParams.core,
+        config.setupParams.domainSeparator,
         config.setupParams.epochLength,
         config.setupParams.metablockHeight,
         { from: config.setupParams.coconsensus },
@@ -94,7 +94,7 @@ contract('SelfProtocore::setup', (accounts) => {
       await Utils.expectRevert(
         config.contracts.selfProtocore.setup(
           config.setupParams.metachainId,
-          config.setupParams.core,
+          config.setupParams.domainSeparator,
           config.setupParams.epochLength,
           config.setupParams.metablockHeight,
           { from: config.setupParams.coconsensus },
@@ -110,7 +110,7 @@ contract('SelfProtocore::setup', (accounts) => {
 
       await selfProtocore.setup(
         config.setupParams.metachainId,
-        config.setupParams.core,
+        config.setupParams.domainSeparator,
         config.setupParams.epochLength,
         config.setupParams.metablockHeight,
         { from: config.setupParams.coconsensus },
@@ -125,8 +125,7 @@ contract('SelfProtocore::setup', (accounts) => {
       );
 
       const genesisVoteMessageHash = ProtocoreUtils.hashVoteMessage(
-        config.setupParams.metachainId,
-        config.setupParams.core,
+        config.setupParams.domainSeparator,
         config.genesis.auxiliarySourceTransitionHash,
         config.genesis.auxiliarySourceBlockHash,
         config.genesis.auxiliaryTargetBlockHash,
