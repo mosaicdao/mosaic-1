@@ -28,8 +28,8 @@ contract TestProtocore is Protocore {
 
     constructor(
         CoconsensusI _coconsensus,
-        address _core,
         bytes32 _metachainId,
+        bytes32 _domainSeparator,
         uint256 _epochLength,
         uint256 _genesisKernelHeight,
         bytes32 _genesisKernelHash,
@@ -39,8 +39,7 @@ contract TestProtocore is Protocore {
         bytes32 _genesisTargetBlockHash,
         uint256 _genesisSourceBlockNumber,
         uint256 _genesisTargetBlockNumber,
-        uint256 _genesisProposedMetablockHeight,
-        bytes32 voteMessageHash
+        uint256 _genesisProposedMetablockHeight
     )
         public
     {
@@ -54,22 +53,19 @@ contract TestProtocore is Protocore {
         openKernelHeight = _genesisKernelHeight;
         openKernelHash = _genesisKernelHash;
 
-        Link storage link = links[voteMessageHash];
-        assert(link.targetBlockHash == bytes32(0));
-
-        link.parentVoteMessageHash = _genesisParentVoteMessageHash;
-        link.targetBlockHash = _genesisTargetBlockHash;
-        link.targetBlockNumber = _genesisTargetBlockNumber;
-        link.sourceTransitionHash = _genesisSourceTransitionHash;
-        link.proposedMetablockHeight = _genesisProposedMetablockHeight;
-        link.targetFinalisation = CheckpointFinalisationStatus.Finalised;
-
         coconsensus = _coconsensus;
 
-        super.setup(
+        Protocore.setup(
             _metachainId,
-            _core,
-            _epochLength
+            _domainSeparator,
+            _epochLength,
+            _genesisProposedMetablockHeight,
+            _genesisParentVoteMessageHash,
+            _genesisSourceTransitionHash,
+            _genesisSourceBlockHash,
+            _genesisSourceBlockNumber,
+            _genesisTargetBlockHash,
+            _genesisTargetBlockNumber
         );
     }
 
