@@ -17,22 +17,25 @@ pragma solidity >=0.5.0 <0.6.0;
 import "../../reputation/Coreputation.sol";
 
 /**
- * @title TestCoreputation contract.
+ * @title CoreputationTest contract.
  */
 contract CoreputationTest is Coreputation {
 
-    /* External functions */
+    CoconsensusI public coconsensus;
 
-    function upsertValidator(
-        address _validator,
-        uint256 _reputation
+
+    /* Special Functions */
+
+    constructor(
+        CoconsensusI _coconsensus
     )
-        external
+        public
     {
-        ValidatorInfo storage vInfo = validators[_validator];
-        vInfo.status = ValidatorStatus.Staked;
-        vInfo.reputation = _reputation;
+        coconsensus = _coconsensus;
     }
+
+
+    /* External Functions */
 
     function setValidatorSlashed(
         address _validator
@@ -41,5 +44,13 @@ contract CoreputationTest is Coreputation {
     {
         ValidatorInfo storage vInfo = validators[_validator];
         vInfo.status = ValidatorStatus.Slashed;
+        vInfo.reputation = uint256(0);
+    }
+
+
+     /* Public Functions */
+
+    function getCoconsensus() public view returns (CoconsensusI) {
+        return coconsensus;
     }
 }
