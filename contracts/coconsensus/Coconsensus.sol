@@ -52,7 +52,7 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
      * Sentinel pointer for marking the ending of circular,
      * linked-list of genesis metachain ids.
      */
-    //address public constant SENTINEL_METACHAIN_ID = bytes32(0x1);
+    bytes32 public constant SENTINEL_METACHAIN_ID = bytes32(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
 
 
     /* Storage */
@@ -60,7 +60,7 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     /** Mapping to track the blocks for each metachain. */
     mapping (bytes32 /* metachainId */ => mapping(uint256 /* blocknumber */ => Block)) blockchains;
 
-    /** 
+    /**
      * Mapping of metachain id to latest block number(tip) stored
      * in blockchains.
      */
@@ -76,27 +76,104 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     mapping (bytes32 /* metachainId */ => bytes32 /* domain separator */) domainSeparators;
 
 
-    /* External Functions */
+    /* Public Functions */
 
     /**
      * Setup function does the initialization of all the mosaic contracts on the auxiliary chain.
      *
      * @dev This function can be called only once.
      */
-    function setup() external {
-        // bytes32 currentMetachainId = genesisMetachainIds[SENTINEL_METACHAIN_ID];
-        // while (currentMetachainId != SENTINEL_METACHAIN_ID) {
-        //     setupObservers(currentMetachainId);
-        //     setupProtocores(currentMetachainId);
-        // }
+    function setup() public {
+        bytes32 currentMetachainId = genesisMetachainIds[SENTINEL_METACHAIN_ID];
+
+        // Loop through the genesis metachainId link list.
+        while (currentMetachainId != SENTINEL_METACHAIN_ID) {
+
+            // Setup observer contract for the given metachain id.
+            setupObservers(currentMetachainId);
+
+            // Setup protocore contract for the given metachain id.
+            setupProtocores(currentMetachainId);
+
+            // Traverse to next metachain id from the link list mapping.
+            currentMetachainId = genesisMetachainIds[currentMetachainId];
+        }
     }
 
-    // function setupProtocores(bytes32 _metachainId) private {
-    //     Protocore protocore = Protocore(genesisProtocores[_metachainId]);
-    //     protocore.setup();
-    // }
 
-    // function setupObservers(bytes32 _metachainId) private {
+    /* Private Functions */
 
-    // }
+    /**
+     * @notice Do the initial setup of protocore contract and initialize the
+     *         storage of coconsensus contract.
+     * @param _metachainId Metachain id
+     *
+     * /pre `protocoreAddress` is not 0
+     *
+     * /post Setup protocore contract.
+     * /post Set `protocores` mapping with the protocore address.
+     * /post Set `domainSeparators` mapping with domain separator.
+     * /post Set `blockchains` mapping with Block object.
+     * /post Set `blockTips` mapping with the block number.
+     */
+    function setupProtocores(bytes32 _metachainId) private {
+
+        // Get the protocore contract address from the genesis storage.
+        address protocoreAddress = genesisProtocores[_metachainId];
+
+        require(
+            protocoreAddress != address(0),
+            "Protocore address must not be null."
+        );
+
+        // Setup protocore.
+        ProtocoreI protocore = ProtocoreI(protocoreAddress);
+        protocore.setup();
+
+        // Store the protocore address in protocores mapping.
+        protocores[_metachainId] = protocore;
+
+        // Get the domain separator and store it in domainSeparators mapping.
+        domainSeparators[_metachainId] = protocore.domainSeparator();
+
+        // Get metablock height, block number and block hash of the genesis link.
+        (uint256 metablockHeight, uint256 blockNumber, bytes32 blockHash) = protocore.latestFinalizedBlock();
+
+        // Store the block informations in blockchains mapping.
+        blockchains[_metachainId][blockNumber] = Block(
+            blockHash,
+            CheckpointCommitStatus.Finalized,
+            metablockHeight
+        );
+
+        // Store the blocknumber as tip.
+        blockTips[_metachainId] = blockNumber;
+    }
+
+    /**
+     * @notice Do the initial setup of observer contract and initialize the
+     *         storage of coconsensus contract.
+     * @param _metachainId Metachain id
+     *
+     * /pre `observerAddress` is not 0
+     *
+     * /post Setup observer contract.
+     * /post Set `observers` mapping with the observer address.
+     */
+    function setupObservers(bytes32 _metachainId) private {
+
+        // Get the observer contract address from the genesis storage.
+        address observerAddress = genesisObservers[_metachainId];
+        require(
+            observerAddress != address(0),
+            "Observer address must not be null."
+        );
+        
+        // Call the setup function.
+        ObserverI observer = ObserverI(observerAddress);
+        observer.setup();
+
+        // Update the observers mapping.
+        observers[_metachainId] = observer;
+    }
 }

@@ -75,6 +75,9 @@ contract Protocore is MosaicVersion, CoconsensusModule {
 
     mapping(bytes32 /* vote message hash */ => Link) public links;
 
+    /** Vote message hash of the latest finalized link */
+    bytes32 public latestFinalizedVoteMessageHash;
+
     /** EIP-712 domain separator. */
     bytes32 public domainSeparator;
 
@@ -184,6 +187,8 @@ contract Protocore is MosaicVersion, CoconsensusModule {
         genesisLink.sourceTransitionHash = _genesisSourceTransitionHash;
         genesisLink.proposedMetablockHeight = _metablockHeight;
         genesisLink.targetFinalisation = CheckpointFinalisationStatus.Finalised;
+
+        latestFinalizedVoteMessageHash = genesisVoteMessageHash;
     }
 
 
@@ -230,6 +235,26 @@ contract Protocore is MosaicVersion, CoconsensusModule {
         );
     }
 
+    /**
+     * @notice Function to return the metablock height, block number
+     *         and block hash of the finalized checkpoint.
+     */
+    function latestFinalizedBlock()
+        external
+        view
+        returns (
+            uint256 metablockHeight_,
+            uint256 blockNumber_,
+            bytes32 blockHash_
+        )
+    {
+        // Get the latest finalized link.
+        Link storage finalizedLink = links[latestFinalizedVoteMessageHash];
+
+        metablockHeight_ = finalizedLink.proposedMetablockHeight;
+        blockNumber_ = finalizedLink.targetBlockNumber;
+        blockHash_ = finalizedLink.targetBlockHash;
+    }
 
     /** Internal Functions */
 

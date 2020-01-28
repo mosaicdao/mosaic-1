@@ -48,13 +48,4 @@ contract GenesisCoconsensus {
      * address on auxiliary chain.
      */
     mapping(bytes32 => address) public genesisProtocores;
-
-    /** Mapping of metachain id to the epoch lengths. */
-    mapping(bytes32 => uint256) public genesisEpochLengths;
-
-    /** Mapping of metachain id to the metablock height. */
-    mapping(bytes32 => uint256) public genesisMetablockHeights;
-
-    /** Mapping of metachain id to the domain separator. */
-    mapping(bytes32 => bytes32) public genesisDomainSeparators;
 }
