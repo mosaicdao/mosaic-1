@@ -26,7 +26,7 @@ contract('ValidatorSet::insertValidator', (accounts) => {
   const beginHeight = new BN(100);
   beforeEach(async () => {
     validatorSet = await ValidatorSet.new();
-    await validatorSet.setup();
+    await validatorSet.setupValidator();
   });
 
   contract('Positive Tests', () => {
