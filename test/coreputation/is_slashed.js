@@ -17,32 +17,38 @@
 const BN = require('bn.js');
 const { AccountProvider } = require('../test_lib/utils.js');
 
-const CoReputation = artifacts.require('CoreputationTest');
+const Coreputation = artifacts.require('CoreputationTest');
 
-contract('Coreputation::getReputation', (accounts) => {
+contract('Coreputation::isSlashed', (accounts) => {
   let accountProvider;
-  let coReputation;
+  let coreputationInstance;
   let validatorInfo;
+  let coconsensus;
 
   beforeEach(async () => {
     accountProvider = new AccountProvider(accounts);
-    coReputation = await CoReputation.new();
+    coconsensus = accountProvider.get();
+    coreputationInstance = await Coreputation.new(coconsensus);
     validatorInfo = {
       validator: accountProvider.get(),
       reputation: new BN('10'),
     };
-    await coReputation.upsertValidator(
+    await coreputationInstance.upsertValidator(
       validatorInfo.validator,
       validatorInfo.reputation,
+      { from: coconsensus },
+    );
+    await coreputationInstance.setValidatorSlashed(
+      validatorInfo.validator,
     );
   });
 
-  it('should return correct reputation for a known validator', async () => {
-    const reputationValue = await coReputation.getReputation.call(validatorInfo.validator);
+  it('should return true if validator is slashed', async () => {
+    const isSlashed = await coreputationInstance.isSlashed.call(validatorInfo.validator);
     assert.strictEqual(
-      reputationValue.toString(10),
-      validatorInfo.reputation.toString(10),
-      `Expected reputation is ${validatorInfo.reputation.toString(10)} but found ${reputationValue.toString(10)}`,
+      isSlashed,
+      true,
+      `Expected is true but found ${isSlashed}`,
     );
   });
 });

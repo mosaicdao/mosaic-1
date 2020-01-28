@@ -17,35 +17,35 @@
 const BN = require('bn.js');
 const { AccountProvider } = require('../test_lib/utils.js');
 
-const CoReputation = artifacts.require('CoreputationTest');
+const Coreputation = artifacts.require('CoreputationTest');
 
 contract('Coreputation::getReputation', (accounts) => {
   let accountProvider;
-  let coReputation;
+  let coreputationInstance;
   let validatorInfo;
+  let coconsensus;
 
   beforeEach(async () => {
     accountProvider = new AccountProvider(accounts);
-    coReputation = await CoReputation.new();
+    coconsensus = accountProvider.get();
+    coreputationInstance = await Coreputation.new(coconsensus);
     validatorInfo = {
       validator: accountProvider.get(),
       reputation: new BN('10'),
     };
-    await coReputation.upsertValidator(
+    await coreputationInstance.upsertValidator(
       validatorInfo.validator,
       validatorInfo.reputation,
-    );
-    await coReputation.setValidatorSlashed(
-      validatorInfo.validator,
+      { from: coconsensus },
     );
   });
 
   it('should return correct reputation for a known validator', async () => {
-    const isSlashed = await coReputation.isSlashed.call(validatorInfo.validator);
+    const reputationValue = await coreputationInstance.getReputation.call(validatorInfo.validator);
     assert.strictEqual(
-      isSlashed,
+      reputationValue.eq(validatorInfo.reputation),
       true,
-      `Expected is true but found ${isSlashed}`,
+      `Expected reputation is ${validatorInfo.reputation.toString(10)} but found ${reputationValue.toString(10)}`,
     );
   });
 });
