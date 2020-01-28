@@ -21,7 +21,8 @@ import "../proxies/MasterCopyNonUpgradable.sol";
 import "../version/MosaicVersion.sol";
 
 /**
- * @title Coconsensus contract - This mirrors the consensus contract on the auxiliary chain.
+ * @title Coconsensus contract - This mirrors the consensus contract on
+ *        the auxiliary chain.
  */
 contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersion {
 
@@ -50,7 +51,10 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     /** Mapping to track the blocks for each metachain. */
     mapping (bytes32 /* metachainId */ => mapping(uint256 /* blocknumber */ => Block)) blockchains;
 
-    /** Mapping of metachain id to latest block number(tip) stored in blockchains. */
+    /** 
+     * Mapping of metachain id to latest block number(tip) stored
+     * in blockchains.
+     */
     mapping (bytes32 /* metachainId */ => uint256 /* blocknumber */) blockTips;
 
     /** Mapping of metachain id to the protocore contract address. */
