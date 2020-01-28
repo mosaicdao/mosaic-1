@@ -84,7 +84,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
     uint256 public openKernelHeight;
     bytes32 public openKernelHash;
 
-    mapping(uint256 /* metablock height */ => uint256 /* Quorum */) public quorums;
+    mapping(uint256 /* metablock height */ => uint256 /* Quorum */) public fvsQuorums;
 
     mapping(bytes32 /* vote message hash */ => Link) public links;
 
@@ -92,7 +92,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         mapping(uint256 /* metablock height */ =>
             mapping(address => address) /* validators linked list */
         )
-    ) public forwardValidatorVotes;
+    ) public fvsVotes;
 
 
     /* Special Functions */
@@ -210,9 +210,12 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
      *
      * \post Increments open kernel height.
      * \post Updates stored open kernel hash.
-     * \post Updates rear/forward quorums for the newly opened metablock height.
+     * \post Updates forward validator set quorum for the newly opened metablock height.
      */
-    function openKernel(uint256 _kernelHeight, bytes32 _kernelHash)
+    function openKernel(
+        uint256 _kernelHeight,
+        bytes32 _kernelHash
+    )
         external
         onlyCoconsensus
     {
@@ -226,7 +229,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         openKernelHeight = _kernelHeight;
         openKernelHash = _kernelHash;
 
-        quorums[openKernelHeight] = calculateQuorum(
+        fvsQuorums[openKernelHeight] = calculateQuorum(
             forwardValidatorCount(openKernelHeight)
         );
 
@@ -259,7 +262,9 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         bytes32 _sourceTransitionHash,
         bytes32 _targetBlockHash,
         uint256 _targetBlockNumber
-    ) internal {
+    )
+        internal
+    {
         require(
             _parentVoteMessageHash != bytes32(0),
             "Parent vote message hash is 0."
@@ -375,7 +380,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
 
         require(
             link.targetFinalisation >= CheckpointFinalisationStatus.Registered,
-            "The given link status is not reported."
+            "The given link status is at least reported."
         );
 
         require(
@@ -390,7 +395,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
             "Validator must not be null."
         );
 
-        bool quorumReached = countVoteForForwardValidatorSets(_voteMessageHash, validator);
+        bool quorumReached = countVoteForForwardValidatorSets(_voteMessageHash, link, validator);
         insertForwardValidatorVote(_voteMessageHash, validator);
 
         if (quorumReached) {
@@ -419,21 +424,20 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
 
     function countVoteForForwardValidatorSets(
         bytes32 _voteMessageHash,
+        Link storage _link,
         address _validator
     )
         private
         returns (bool quorumReached_)
     {
-        Link storage link = links[_voteMessageHash];
-
         bool quorumForwardValidatorSet = false;
         if (canVoteInForwardValidatorSet(
             _voteMessageHash,
             openKernelHeight,
             openKernelHeight,
             _validator)) {
-            link.fvsVoteCount[openKernelHeight] = link.fvsVoteCount[openKernelHeight].add(1);
-            quorumForwardValidatorSet = (link.fvsVoteCount[openKernelHeight] >= quorums[openKernelHeight]);
+            _link.fvsVoteCount[openKernelHeight] = _link.fvsVoteCount[openKernelHeight].add(1);
+            quorumForwardValidatorSet = (_link.fvsVoteCount[openKernelHeight] >= fvsQuorums[openKernelHeight]);
         }
 
         bool quorumRearValidatorSet = true;
@@ -444,9 +448,9 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
                 openKernelHeight,
                 previousHeight,
                 _validator)) {
-                link.fvsVoteCount[openKernelHeight] = link.fvsVoteCount[previousHeight].add(1);
+                _link.fvsVoteCount[openKernelHeight] = _link.fvsVoteCount[previousHeight].add(1);
             }
-            quorumRearValidatorSet = (link.fvsVoteCount[previousHeight] >= quorums[previousHeight]);
+            quorumRearValidatorSet = (_link.fvsVoteCount[previousHeight] >= fvsQuorums[previousHeight]);
         }
         quorumReached_ = (quorumForwardValidatorSet && quorumRearValidatorSet);
     }
@@ -461,7 +465,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         view
         returns (bool)
     {
-        bool hasNotVoted = (forwardValidatorVotes[_voteMessageHash][_votedHeight][_validator] == address(0));
+        bool hasNotVoted = (fvsVotes[_voteMessageHash][_votedHeight][_validator] == address(0));
         bool inFvs = inForwardValidatorSet(
             _validator,
             _fvsHeight
@@ -475,13 +479,19 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
     )
         private
     {
-        address lastValidator = forwardValidatorVotes[_voteMessageHash][openKernelHeight][SENTINEL_VALIDATORS];
+        require(
+            fvsVotes[_voteMessageHash][openKernelHeight][_validator] == address(0),
+            "Validator cannot be inserted twice in FVS votes."
+        );
+
+        address lastValidator = fvsVotes[_voteMessageHash][openKernelHeight][SENTINEL_VALIDATORS];
+        // lazy-initialise linked list for forward validator set votes
         if (lastValidator == address(0)) {
-            forwardValidatorVotes[_voteMessageHash][openKernelHeight][SENTINEL_VALIDATORS] = SENTINEL_VALIDATORS;
+            fvsVotes[_voteMessageHash][openKernelHeight][SENTINEL_VALIDATORS] = SENTINEL_VALIDATORS;
         }
 
-        forwardValidatorVotes[_voteMessageHash][openKernelHeight][_validator] = lastValidator;
-        forwardValidatorVotes[_voteMessageHash][openKernelHeight][SENTINEL_VALIDATORS] = _validator;
+        fvsVotes[_voteMessageHash][openKernelHeight][_validator] = lastValidator;
+        fvsVotes[_voteMessageHash][openKernelHeight][SENTINEL_VALIDATORS] = _validator;
     }
 
     /**
