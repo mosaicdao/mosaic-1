@@ -104,6 +104,7 @@ contract('SelfProtocore::upsertValidator', (accounts) => {
       assert.notStrictEqual(
         await config.selfProtocore.validators.call(validator.address),
         Utils.NULL_ADDRESS,
+        'Expected address is SENTINEL_ADDRESS(0x1)',
       );
     });
 
