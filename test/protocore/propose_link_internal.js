@@ -30,19 +30,20 @@ contract('Protocore::proposeLinkInternal', (accounts) => {
 
   beforeEach(async () => {
     config.coconsensusAddress = accountProvider.get();
-
+    config.domainSeparator = Utils.getRandomHash();
     config.epochLength = new BN(100);
+    config.metachainId = Utils.getRandomHash();
 
     config.genesisKernelHeight = new BN(1);
     config.genesisKernelHash = Utils.getRandomHash();
-
-    config.genesisParentVoteMessageHash = Utils.getRandomHash();
+    config.genesisParentVoteMessageHash = Utils.getRandomHash();    
     config.genesisSourceTransitionHash = Utils.getRandomHash();
     config.genesisSourceBlockHash = Utils.getRandomHash();
     config.genesisTargetBlockHash = Utils.getRandomHash();
     config.genesisSourceBlockNumber = new BN(0);
     config.genesisTargetBlockNumber = new BN(config.epochLength);
     config.genesisVoteMessageHash = ProtocoreUtils.hashVoteMessage(
+      config.domainSeparator,
       config.genesisSourceTransitionHash,
       config.genesisSourceBlockHash,
       config.genesisTargetBlockHash,
@@ -53,6 +54,8 @@ contract('Protocore::proposeLinkInternal', (accounts) => {
 
     config.protocore = await TestProtocore.new(
       config.coconsensusAddress,
+      config.metachainId,
+      config.domainSeparator,
       config.epochLength,
       config.genesisKernelHeight,
       config.genesisKernelHash,
@@ -96,6 +99,7 @@ contract('Protocore::proposeLinkInternal', (accounts) => {
       );
 
       const voteMessageHash1 = ProtocoreUtils.hashVoteMessage(
+        config.domainSeparator,
         sourceTransitionHash1,
         config.genesisTargetBlockHash,
         targetBlockHash1,
@@ -173,6 +177,7 @@ contract('Protocore::proposeLinkInternal', (accounts) => {
       );
 
       const voteMessageHash = ProtocoreUtils.hashVoteMessage(
+        config.domainSeparator,
         sourceTransitionHash,
         config.genesisTargetBlockHash,
         targetBlockHash,

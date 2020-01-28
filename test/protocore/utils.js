@@ -16,31 +16,55 @@
 
 const web3 = require('../test_lib/web3.js');
 
+const CheckpointFinalisationStatus = Object.freeze({
+  Undefined: 0,
+  Registered: 1,
+  Justified: 2,
+  Finalised: 3,
+});
+
+const VOTE_MESSAGE_TYPEHASH = web3.utils.soliditySha3(
+  'VoteMessage(bytes32 transitionHash,bytes32 sourceBlockHash,bytes32 targetBlockHash,uint256 sourceBlockNumber,uint256 targetBlockNumber)',
+);
+
 function hashVoteMessage(
+  domainSeparator,
   sourceTransitionHash,
   sourceBlockHash,
   targetBlockHash,
   sourceBlockNumber,
   targetBlockNumber,
 ) {
-  return web3.utils.keccak256(
+  const voteMessageTypeHash = web3.utils.keccak256(
     web3.eth.abi.encodeParameters(
       [
         'bytes32',
         'bytes32',
         'bytes32',
+        'bytes32',
         'uint256',
         'uint256',
       ],
       [
+        VOTE_MESSAGE_TYPEHASH,
         sourceTransitionHash,
         sourceBlockHash,
         targetBlockHash,
-        sourceBlockNumber.toNumber(),
-        targetBlockNumber.toNumber(),
+        sourceBlockNumber.toString(10),
+        targetBlockNumber.toString(10),
       ],
     ),
   );
+  const voteMessageHash = web3.utils
+    .soliditySha3(
+      { t: 'bytes', v: '0x19' },
+      { t: 'bytes', v: '0x01' },
+      { t: 'bytes32', v: domainSeparator },
+      { t: 'bytes32', v: voteMessageTypeHash },
+    )
+    .toString('hex');
+
+  return voteMessageHash;
 }
 
 function isUndefined(finalisationStatus) { return finalisationStatus.eqn(0); }
@@ -57,4 +81,5 @@ module.exports = {
   isRegistered,
   isJustified,
   isFinalised,
+  CheckpointFinalisationStatus,
 };

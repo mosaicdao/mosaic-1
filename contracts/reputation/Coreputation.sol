@@ -59,6 +59,38 @@ contract Coreputation is MasterCopyNonUpgradable, CoconsensusModule {
     /* External functions */
 
     /**
+     * @notice Insert or update validator information.
+     *
+     * @dev Validator information is not updated when his status is Slashed.
+     *      Validator is marked Deregistered if provided reputation is zero.
+     *      Validator is marked Staked, if he has non zero reputation value.
+     *
+     * @dev Function requires:
+     *      - msg.sender should be Coconsensus
+     *
+     * @param _validator Validator address to upsert.
+     * @param _reputation Validator reputation value.
+     */
+    function upsertValidator(
+        address _validator,
+        uint256 _reputation
+    )
+        external
+        onlyCoconsensus
+    {
+        ValidatorInfo storage vInfo = validators[_validator];
+        if (vInfo.status != ValidatorStatus.Slashed) {
+            vInfo.reputation = _reputation;
+            if (_reputation == uint256(0)) {
+                vInfo.status = ValidatorStatus.Deregistered;
+            } else {
+                assert(vInfo.status <= ValidatorStatus.Staked);
+                vInfo.status = ValidatorStatus.Staked;
+            }
+        }
+    }
+
+    /**
      * @notice Returns reputation of a validator.
      *
      * @param _validator An address of a validator.
