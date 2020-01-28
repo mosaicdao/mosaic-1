@@ -17,7 +17,7 @@ pragma solidity >=0.5.0 <0.6.0;
 import "../protocore/Protocore.sol";
 import "../protocore/GenesisSelfProtocore.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
-import "../validator/ValidatorSet.sol";
+import "../validator-set/ValidatorSet.sol";
 
 
 /**
