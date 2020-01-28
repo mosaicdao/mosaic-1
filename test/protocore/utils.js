@@ -23,39 +23,12 @@ const CheckpointFinalisationStatus = Object.freeze({
   Finalised: 3,
 });
 
-const DOMAIN_SEPARATOR_NAME = 'Mosaic-Core';
-const DOMAIN_SEPARATOR_VERSION = '0';
-const DOMAIN_SEPARATOR_TYPEHASH = web3.utils.soliditySha3(
-  'EIP712Domain(string name,string version,bytes32 metachainId,address verifyingContract)',
-);
 const VOTE_MESSAGE_TYPEHASH = web3.utils.soliditySha3(
   'VoteMessage(bytes32 transitionHash,bytes32 sourceBlockHash,bytes32 targetBlockHash,uint256 sourceBlockNumber,uint256 targetBlockNumber)',
 );
 
-function getDomainSeparator(metachainId, coreAddress) {
-  return web3.utils.sha3(
-    web3.eth.abi.encodeParameters(
-      [
-        'bytes32',
-        'string',
-        'string',
-        'bytes32',
-        'address',
-      ],
-      [
-        DOMAIN_SEPARATOR_TYPEHASH,
-        DOMAIN_SEPARATOR_NAME,
-        DOMAIN_SEPARATOR_VERSION,
-        metachainId,
-        coreAddress,
-      ],
-    ),
-  );
-}
-
 function hashVoteMessage(
-  metachainId,
-  coreAddress,
+  domainSeparator,
   sourceTransitionHash,
   sourceBlockHash,
   targetBlockHash,
@@ -82,7 +55,6 @@ function hashVoteMessage(
       ],
     ),
   );
-  const domainSeparator = getDomainSeparator(metachainId, coreAddress);
   const voteMessageHash = web3.utils
     .soliditySha3(
       { t: 'bytes', v: '0x19' },
@@ -104,7 +76,6 @@ function isJustified(finalisationStatus) { return finalisationStatus.eqn(2); }
 function isFinalised(finalisationStatus) { return finalisationStatus.eqn(3); }
 
 module.exports = {
-  getDomainSeparator,
   hashVoteMessage,
   isUndefined,
   isRegistered,

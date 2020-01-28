@@ -48,7 +48,7 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
      *          - Input param epoch lengh must not be zero
      *
      * @param _metachainId Metachain id.
-     * @param _core Core contract address.
+     * @param _domainSeparator Domain separator.
      * @param _epochLength Epoch length.
      * @param _metablockHeight Metablock height.
      * @param _selfProtocore SelfProtocore contract address.
@@ -59,7 +59,7 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
      */
     function setup(
         bytes32 _metachainId,
-        address _core,
+        bytes32 _domainSeparator,
         uint256 _epochLength,
         uint256 _metablockHeight,
         address _selfProtocore
@@ -81,7 +81,7 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
         // The source transition hash should be zero for origin protocore.
         Protocore.setup(
             _metachainId,
-            _core,
+            _domainSeparator,
             _epochLength,
             _metablockHeight,
             genesisOriginParentVoteMessageHash,

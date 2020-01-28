@@ -36,7 +36,7 @@ contract('OriginProtocore::setup', (accounts) => {
 
     config.setupParams = {};
     config.setupParams.metachainId = Utils.getRandomHash();
-    config.setupParams.core = accountProvider.get();
+    config.setupParams.domainSeparator = Utils.getRandomHash();
     config.setupParams.epochLength = new BN(100);
     config.setupParams.metablockHeight = new BN(Utils.getRandomNumber(1000));
     config.setupParams.selfProtocore = accountProvider.get();
@@ -69,7 +69,7 @@ contract('OriginProtocore::setup', (accounts) => {
       await Utils.expectRevert(
         config.contracts.originProtocore.setup(
           config.setupParams.metachainId,
-          config.setupParams.core,
+          config.setupParams.domainSeparator,
           config.setupParams.epochLength,
           config.setupParams.metablockHeight,
           config.setupParams.selfProtocore,
@@ -82,7 +82,7 @@ contract('OriginProtocore::setup', (accounts) => {
     it('should revert if setup is already called once', async () => {
       await config.contracts.originProtocore.setup(
         config.setupParams.metachainId,
-        config.setupParams.core,
+        config.setupParams.domainSeparator,
         config.setupParams.epochLength,
         config.setupParams.metablockHeight,
         config.setupParams.selfProtocore,
@@ -91,7 +91,7 @@ contract('OriginProtocore::setup', (accounts) => {
       await Utils.expectRevert(
         config.contracts.originProtocore.setup(
           config.setupParams.metachainId,
-          config.setupParams.core,
+          config.setupParams.domainSeparator,
           config.setupParams.epochLength,
           config.setupParams.metablockHeight,
           config.setupParams.selfProtocore,
@@ -108,7 +108,7 @@ contract('OriginProtocore::setup', (accounts) => {
 
       await originProtocore.setup(
         config.setupParams.metachainId,
-        config.setupParams.core,
+        config.setupParams.domainSeparator,
         config.setupParams.epochLength,
         config.setupParams.metablockHeight,
         config.setupParams.selfProtocore,
@@ -131,8 +131,7 @@ contract('OriginProtocore::setup', (accounts) => {
       );
 
       const genesisVoteMessageHash = ProtocoreUtils.hashVoteMessage(
-        config.setupParams.metachainId,
-        config.setupParams.core,
+        config.setupParams.domainSeparator,
         Utils.ZERO_BYTES32,
         Utils.ZERO_BYTES32,
         config.genesis.originTargetBlockHash,
