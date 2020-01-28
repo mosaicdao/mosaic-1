@@ -21,8 +21,8 @@ import "../utilityToken/UtilityToken.sol";
 /**
  * @title Utmost contract implements UtilityToken.
  *
- * @dev Utmost functions as the base coin to pay for gas consumption on the
- *      auxiliary chain.
+ * @dev Utmost is an ERC20 token wrapper for the base coin that is used to pay
+ *      for gas consumption on the auxiliary chain.
  */
 contract Utmost is MasterCopyNonUpgradable, GenesisUtmost, UtilityToken {
 
