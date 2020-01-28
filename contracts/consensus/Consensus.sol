@@ -52,6 +52,14 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         uint256 withdrawalBlockHeight
     );
 
+    event CoreCreated(
+        address coreGA,
+        bytes32 metaChainId,
+        uint256 minValidators,
+        uint256 maxValidators,
+        uint256 gasTarget
+    );
+
 
     /* Enums */
 
@@ -803,6 +811,14 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         consensusGateways[metachainId_] = ConsensusGatewayI(consensusGateway);
 
         coreLifetimes[core] = CoreLifetime.creation;
+
+        emit CoreCreated(
+            address(core),
+            metachainId_,
+            minValidators,
+            joinLimit,
+            gasTargetDelta
+        );
     }
 
     /** Get minimum validator and join limit count. */
