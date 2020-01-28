@@ -67,6 +67,11 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         uint256 reputation
     );
 
+    event CoreLifetimeUpdated(
+        address coreGA,
+        uint256 coreLifetime
+    );
+
 
     /* Enums */
 
@@ -386,6 +391,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         // On first precommit by a core, CoreLifetime state will change to active.
         if (coreLifetimes[address(core)] == CoreLifetime.genesis) {
             coreLifetimes[address(core)] = CoreLifetime.active;
+            emit CoreLifetimeUpdated(
+                address(core),
+                uint256(CoreLifetime.active)
+            );
         }
     }
 
@@ -729,6 +738,11 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
                 feeGasPrice,
                 feeGasLimit
             );
+
+            emit CoreLifetimeUpdated(
+                address(core),
+                uint256(CoreLifetime.genesis)
+            );
         }
 
         emit ValidatorJoined(
@@ -833,6 +847,11 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         consensusGateways[metachainId_] = ConsensusGatewayI(consensusGateway);
 
         coreLifetimes[core] = CoreLifetime.creation;
+
+        emit CoreLifetimeUpdated(
+            address(core),
+            uint256(CoreLifetime.creation)
+        );
 
         emit CoreCreated(
             address(core),
