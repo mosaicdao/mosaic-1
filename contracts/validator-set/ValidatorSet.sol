@@ -24,7 +24,8 @@ contract ValidatorSet {
     /* Constants */
 
     /** Maximum future end height, set for all active validators. */
-    uint256 public constant MAX_FUTURE_END_HEIGHT = uint256(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+    uint256 public constant MAX_FUTURE_END_HEIGHT =
+        uint256(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
 
     /** Sentinel pointer for marking start and end of linked-list of validators. */
     address public constant SENTINEL_VALIDATORS = address(0x1);
@@ -51,13 +52,16 @@ contract ValidatorSet {
      */
     mapping(address => uint256) public validatorEndHeight;
 
+    /* forward validator set count per height */
+    mapping(uint256 /* metablock height */ => uint256 /* FVS count */) fvsCount;
+
 
     /* Special Functions */
 
     /**
-     * @notice It initializes validators set.
+     * @notice setupValidatorSet initializes validator set linked-list.
      */
-    function setup()
+    function setupValidatorSet()
         internal
     {
         validators[SENTINEL_VALIDATORS] = SENTINEL_VALIDATORS;
@@ -106,11 +110,11 @@ contract ValidatorSet {
     /* Internal Functions  */
 
     /**
-     * @notice It is for inserting validators into the validator set.
+     * @notice Inserts validators into the validator set and sets begin height.
      *
-     * @dev Function requires :
+     * @dev Function asserts :
      *          - Validator address must not be 0.
-     *          - Validator address is already not used.
+     *          - Validator address is not already present.
      *
      * @param _validator Validator address.
      * @param _beginHeight Begin height for the validator.
@@ -122,11 +126,10 @@ contract ValidatorSet {
         internal
     {
         assert(_validator != address(0));
-        assert(
-            validatorBeginHeight[_validator] == 0 && validatorEndHeight[_validator] == 0
-        );
+        assert(validators[_validator] == address(0));
 
         address lastValidator = validators[SENTINEL_VALIDATORS];
+        assert(lastValidator != address(0));
         validators[_validator] = lastValidator;
         validators[SENTINEL_VALIDATORS] = _validator;
 
@@ -135,11 +138,10 @@ contract ValidatorSet {
     }
 
     /**
-     * @notice It is for removing validators from the validator set.
+     * @notice Removes validators from the validator set and sets end height.
      *
      * @dev Function requires :
-     *          - Validator address must not be 0.
-     *          - Validator begin height must be less than end height.
+     *          - Validator end height must be greater than begin height.
      *          - Validator end height must be equal to MAX_FUTURE_END_HEIGHT.
      *
      * @param _validator Validator address.
@@ -151,9 +153,11 @@ contract ValidatorSet {
     )
         internal
     {
-        assert(
-            validatorBeginHeight[_validator] < _endHeight
+        require(
+            validatorBeginHeight[_validator] < _endHeight,
+            "End height must be strictly greater than the start height."
         );
+
         assert(
             validatorEndHeight[_validator] == MAX_FUTURE_END_HEIGHT
         );
