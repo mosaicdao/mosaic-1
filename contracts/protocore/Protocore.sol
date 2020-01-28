@@ -183,7 +183,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
      *
      * @dev Function requires:
      *      - Caller should be Coconsensus contract.
-     *
+     *      - Validator must enter at height equal to current open kernel height.
      *
      * @param _validator Validator address to upsert.
      * @param _height Validator start or end height to be updated.
@@ -198,8 +198,8 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         onlyCoconsensus
     {
         require(
-            _height >= openKernelHeight,
-            "Validator must enter at height equal or greater than open kernel height"
+            _height == openKernelHeight,
+            "Validator must enter at height equal to current open kernel height."
         );
         if(ValidatorSet.inValidatorSet(_validator, _height)) {
             if(_reputation == 0) {
