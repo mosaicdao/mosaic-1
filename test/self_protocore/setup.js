@@ -99,7 +99,7 @@ contract('SelfProtocore::setup', (accounts) => {
           config.setupParams.metablockHeight,
           { from: config.setupParams.coconsensus },
         ),
-        'Self protocore contract is already initialized.',
+        'Contract is already initialized.',
       );
     });
   });

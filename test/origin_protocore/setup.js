@@ -97,7 +97,7 @@ contract('OriginProtocore::setup', (accounts) => {
           config.setupParams.selfProtocore,
           { from: config.setupParams.coconsensus },
         ),
-        'Origin protocore contract is already initialized.',
+        'Contract is already initialized.',
       );
     });
   });

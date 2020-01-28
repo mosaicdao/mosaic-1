@@ -31,17 +31,22 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Validat
      * @notice setup() function initializes the current contract.
      *
      * @dev These input params will be provided by the coconsensus contract.
-     *      This can be called only by the coconsensus contract.
-     *      Function requires:
-     *          - Only coconsensus contract address can call this function
-     *          - This function can be called only once
-     *          - Input param epoch length must not be zero
+     *      This can be called only by the coconsensus contract once.
      *
      * @param _metachainId Metachain id.
      * @param _domainSeparator Domain separator.
      * @param _epochLength Epoch length.
      * @param _metablockHeight Metablock height.
      *
+     * \pre `_metachainId` is not 0.
+     * \pre `_domainSeparator` is not 0.
+     * \pre `_epochLength` is not 0.
+     *
+     * \post Sets `selfProtocore` to the given value.
+     * \post Sets `domainSeparator` to the given value.
+     * \post Sets `epochLength` to the given value.
+     * \post Sets `metachainId` to the given value.
+     * \post Sets genesis link.
      */
     function setup(
         bytes32 _metachainId,
@@ -52,11 +57,6 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Validat
         external
         onlyCoconsensus
     {
-        require(
-            epochLength == uint256(0),
-            "Self protocore contract is already initialized."
-        );
-
         Protocore.setup(
             _metachainId,
             _domainSeparator,
