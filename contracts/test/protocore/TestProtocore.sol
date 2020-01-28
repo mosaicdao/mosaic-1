@@ -29,7 +29,7 @@ contract TestProtocore is Protocore {
     constructor(
         CoconsensusI _coconsensus,
         bytes32 _metachainId,
-        address _core,
+        bytes32 _domainSeparator,
         uint256 _epochLength,
         uint256 _genesisKernelHeight,
         bytes32 _genesisKernelHash,
@@ -55,9 +55,9 @@ contract TestProtocore is Protocore {
 
         coconsensus = _coconsensus;
 
-        super.setup(
+        Protocore.setup(
             _metachainId,
-            _core,
+            _domainSeparator,
             _epochLength,
             _genesisProposedMetablockHeight,
             _genesisParentVoteMessageHash,

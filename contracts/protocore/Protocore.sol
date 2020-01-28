@@ -66,14 +66,6 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
 
     /* Constants */
 
-    /** EIP-712 domain separator name for Protocore. */
-    string public constant DOMAIN_SEPARATOR_NAME = "Mosaic-Core";
-
-    /** EIP-712 domain separator typehash for Protocore. */
-    bytes32 public constant DOMAIN_SEPARATOR_TYPEHASH = keccak256(
-        "EIP712Domain(string name,string version,bytes32 metachainId,address verifyingContract)"
-    );
-
     /** EIP-712 type hash for a Vote Message */
     bytes32 public constant VOTE_MESSAGE_TYPEHASH = keccak256(
         "VoteMessage(bytes32 transitionHash,bytes32 sourceBlockHash,bytes32 targetBlockHash,uint256 sourceBlockNumber,uint256 targetBlockNumber)"
@@ -86,6 +78,9 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
 
     /** EIP-712 domain separator. */
     bytes32 public domainSeparator;
+
+    /** Metachain Id */
+    bytes32 public metachainId;
 
     uint256 public openKernelHeight;
     bytes32 public openKernelHash;
@@ -101,7 +96,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
      *         The function will be called by inherited contracts.
      *
      * @param _metachainId Metachain Id.
-     * @param _core Core contract address.
+     * @param _domainSeparator Domain separator.
      * @param _epochLength Epoch length.
      * @param _metablockHeight Metablock height.
      * @param _genesisParentVoteMessageHash Parent vote message hash for the genesis link.
@@ -117,7 +112,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
      */
     function setup(
         bytes32 _metachainId,
-        address _core,
+        bytes32 _domainSeparator,
         uint256 _epochLength,
         uint256 _metablockHeight,
         bytes32 _genesisParentVoteMessageHash,
@@ -129,19 +124,13 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
     )
         internal
     {
-        domainSeparator = keccak256(
-            abi.encode(
-                DOMAIN_SEPARATOR_TYPEHASH,
-                DOMAIN_SEPARATOR_NAME,
-                DOMAIN_SEPARATOR_VERSION,
-                _metachainId,
-                _core
-            )
-        );
-
         require(
             _epochLength != 0,
             "Epoch length is 0."
+        );
+        require(
+            _domainSeparator != bytes32(0),
+            "Domain separator must not be null."
         );
         require(
             _genesisSourceBlockNumber % _epochLength == 0,
@@ -160,18 +149,11 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
             "Genesis target block number is less than genesis source block number."
         );
 
-        epochLength = _epochLength;
+        metachainId = _metachainId;
 
-        // Generate the domain separator.
-        domainSeparator = keccak256(
-            abi.encode(
-                DOMAIN_SEPARATOR_TYPEHASH,
-                DOMAIN_SEPARATOR_NAME,
-                DOMAIN_SEPARATOR_VERSION,
-                _metachainId,
-                _core
-            )
-        );
+        domainSeparator = _domainSeparator;
+
+        epochLength = _epochLength;
 
         // Generate the genesis vote message hash.
         bytes32 genesisVoteMessageHash = hashVoteMessage(

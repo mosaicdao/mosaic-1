@@ -28,17 +28,13 @@ contract('Protocore::openKernel', (accounts) => {
 
   beforeEach(async () => {
     config.coconsensusAddress = accountProvider.get();
-    config.coreAddress = accountProvider.get();
-
+    config.domainSeparator = Utils.getRandomHash();
+    config.metachainId = Utils.getRandomHash();
     config.epochLength = new BN(100);
 
     config.genesisKernelHeight = new BN(1);
     config.genesisKernelHash = Utils.getRandomHash();
-
-    config.core = accountProvider.get();
-
     config.genesisParentVoteMessageHash = Utils.getRandomHash();
-    config.metachainId = Utils.getRandomHash();
     config.genesisSourceTransitionHash = Utils.getRandomHash();
     config.genesisSourceBlockHash = Utils.getRandomHash();
     config.genesisTargetBlockHash = Utils.getRandomHash();
@@ -51,7 +47,7 @@ contract('Protocore::openKernel', (accounts) => {
     config.protocore = await TestProtocore.new(
       config.coconsensusAddress,
       config.metachainId,
-      config.coreAddress,
+      config.domainSeparator,
       config.epochLength,
       config.genesisKernelHeight,
       config.genesisKernelHash,
