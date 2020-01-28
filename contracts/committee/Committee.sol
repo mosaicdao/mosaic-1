@@ -31,6 +31,19 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
     using SafeMath for uint256;
 
 
+    /* Events */
+
+    event StatusUpdated(CommitteeStatus status);
+
+    event MemberEntered(address member);
+
+    event MemberEjected(address member);
+
+    event MemberCommitted(address member);
+
+    event MemberRevealed(address member);
+
+
     /* Constants */
 
     /**
@@ -272,7 +285,7 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
 
         metachainId = _metachainId;
 
-        committeeStatus = CommitteeStatus.Open;
+        updateCommitteeStatus(CommitteeStatus.Open);
 
         // Initialize the members linked-list as the empty set.
         members[SENTINEL_MEMBERS] = SENTINEL_MEMBERS;
@@ -401,7 +414,7 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
 
         activationBlockHeight = block.number + COMMITTEE_FORMATION_COOLDOWN;
 
-        committeeStatus = CommitteeStatus.Cooldown;
+        updateCommitteeStatus(CommitteeStatus.Cooldown);
     }
 
     /**
@@ -439,7 +452,7 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
             "Member has been excluded."
         );
 
-        committeeStatus = CommitteeStatus.Invalid;
+        updateCommitteeStatus(CommitteeStatus.Invalid);
 
         // @qn (pro): We can remove this call and let consensus to slash
         // a member that has wrongly initiated cooldown.
@@ -467,7 +480,8 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
 
         assert(commitTimeOutBlockHeight == 0);
 
-        committeeStatus = CommitteeStatus.CommitPhase;
+        updateCommitteeStatus(CommitteeStatus.CommitPhase);
+
         commitTimeOutBlockHeight = block.number + COMMITTEE_COMMIT_PHASE_TIMEOUT;
     }
 
@@ -650,7 +664,8 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
         //            less then the quorum amount.
         if (submissionCount == memberCount ||
             block.number > commitTimeOutBlockHeight) {
-            committeeStatus = CommitteeStatus.RevealPhase;
+            updateCommitteeStatus(CommitteeStatus.RevealPhase);
+
             revealTimeOutBlockHeight = block.number + COMMITTEE_REVEAL_PHASE_TIMEOUT;
         }
     }
@@ -774,5 +789,13 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
                 msg.sender
             )
         );
+    }
+
+    function updateCommitteeStatus(CommitteeStatus _status)
+        private
+    {
+        committeeStatus = _status;
+
+        emit StatusUpdated(committeeStatus);
     }
 }
