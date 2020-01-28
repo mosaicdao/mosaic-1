@@ -72,6 +72,13 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         uint256 coreLifetime
     );
 
+    event MetablockPrecommitted(
+        bytes32 metablockHash,
+        bytes32 metachainId,
+        uint256 metablockHeight,
+        uint256 roundMetablockNumber
+    );
+
 
     /* Enums */
 
@@ -396,6 +403,13 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
                 uint256(CoreLifetime.active)
             );
         }
+
+        emit MetablockPrecommitted(
+            _metablockHashPrecommit,
+            _metachainId,
+            _metablockHeight,
+            block.number
+        );
     }
 
     /**
