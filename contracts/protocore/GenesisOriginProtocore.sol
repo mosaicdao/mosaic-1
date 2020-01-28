@@ -24,6 +24,12 @@ contract GenesisOriginProtocore {
 
     /* Storage */
 
+    /** Block hash of source checkpoint */
+    bytes32 public genesisOriginSourceBlockHash;
+
+    /** Block number of source checkpoint */
+    uint256 public genesisOriginSourceBlockNumber;
+
     /** Block hash of target checkpoint */
     bytes32 public genesisOriginTargetBlockHash;
 

@@ -66,14 +66,6 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
 
     /* Constants */
 
-    /** EIP-712 domain separator name for Protocore. */
-    string public constant DOMAIN_SEPARATOR_NAME = "Mosaic-Core";
-
-    /** EIP-712 domain separator typehash for Protocore. */
-    bytes32 public constant DOMAIN_SEPARATOR_TYPEHASH = keccak256(
-        "EIP712Domain(string name,string version,bytes32 metachainId,address verifyingContract)"
-    );
-
     /** EIP-712 type hash for a Vote Message */
     bytes32 public constant VOTE_MESSAGE_TYPEHASH = keccak256(
         "VoteMessage(bytes32 transitionHash,bytes32 sourceBlockHash,bytes32 targetBlockHash,uint256 sourceBlockNumber,uint256 targetBlockNumber)"
@@ -86,6 +78,9 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
 
     /** EIP-712 domain separator. */
     bytes32 public domainSeparator;
+
+    /** Metachain Id */
+    bytes32 public metachainId;
 
     uint256 public openKernelHeight;
     bytes32 public openKernelHash;
@@ -101,35 +96,95 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
      *         The function will be called by inherited contracts.
      *
      * @param _metachainId Metachain Id.
-     * @param _core Core contract address.
+     * @param _domainSeparator Domain separator.
+     * @param _epochLength Epoch length.
+     * @param _metablockHeight Metablock height.
+     * @param _genesisParentVoteMessageHash Parent vote message hash for the genesis link.
+     * @param _genesisSourceTransitionHash Source transition hash for the genesis link.
+     * @param _genesisSourceBlockHash Source blockhash for the genesis link.
+     * @param _genesisSourceBlockNumber Source block number for the genesis link.
+     * @param _genesisTargetBlockHash Target blockhash for the genesis link.
+     * @param _genesisTargetBlockNumber Target block number for the genesis link.
      *
+     * \pre `_metachainId` is not 0.
+     * \pre `_domainSeparator` is not 0.
      * \pre `_epochLength` is not 0.
+     * \pre `_genesisSourceBlockNumber` must be multiple of `_epochLength`.
+     * \pre `_genesisTargetBlockNumber` must be multiple of `_epochLength`.
+     * \pre `_genesisTargetBlockHash` must not be 0.
+     * \pre `_genesisTargetBlockNumber` must be greater than or equal to `_genesisSourceBlockNumber`.
      *
-     * \post Sets epochLength to the given value.
+     * \post Sets `domainSeparator` to the given value.
+     * \post Sets `epochLength` to the given value.
+     * \post Sets `metachainId` to the given value.
+     * \post Sets genesis link.
      */
     function setup(
         bytes32 _metachainId,
-        address _core,
-        uint256 _epochLength
+        bytes32 _domainSeparator,
+        uint256 _epochLength,
+        uint256 _metablockHeight,
+        bytes32 _genesisParentVoteMessageHash,
+        bytes32 _genesisSourceTransitionHash,
+        bytes32 _genesisSourceBlockHash,
+        uint256 _genesisSourceBlockNumber,
+        bytes32 _genesisTargetBlockHash,
+        uint256 _genesisTargetBlockNumber
     )
         internal
     {
-        domainSeparator = keccak256(
-            abi.encode(
-                DOMAIN_SEPARATOR_TYPEHASH,
-                DOMAIN_SEPARATOR_NAME,
-                DOMAIN_SEPARATOR_VERSION,
-                _metachainId,
-                _core
-            )
+        require(
+            metachainId == bytes32(0),
+            "Contract is already initialized."
         );
-
         require(
             _epochLength != 0,
             "Epoch length is 0."
         );
+        require(
+            _domainSeparator != bytes32(0),
+            "Domain separator must not be null."
+        );
+        require(
+            _genesisSourceBlockNumber % _epochLength == 0,
+            "Genesis source block number must be multiple of epoch length."
+        );
+        require(
+            _genesisTargetBlockNumber % _epochLength == 0,
+            "Genesis target block number must be multiple of epoch length."
+        );
+        require(
+            _genesisTargetBlockHash != bytes32(0),
+            "Genesis target block hash must not be null."
+        );
+        require(
+            _genesisTargetBlockNumber >= _genesisSourceBlockNumber,
+            "Genesis target block number is less than genesis source block number."
+        );
+
+        metachainId = _metachainId;
+
+        domainSeparator = _domainSeparator;
 
         epochLength = _epochLength;
+
+        // Generate the genesis vote message hash.
+        bytes32 genesisVoteMessageHash = hashVoteMessage(
+            _genesisSourceTransitionHash,
+            _genesisSourceBlockHash,
+            _genesisTargetBlockHash,
+            _genesisSourceBlockNumber,
+            _genesisTargetBlockNumber
+        );
+
+        // Store the genesis link.
+        Link storage genesisLink = links[genesisVoteMessageHash];
+        genesisLink.parentVoteMessageHash = _genesisParentVoteMessageHash;
+        genesisLink.targetBlockHash = _genesisTargetBlockHash;
+        genesisLink.targetBlockNumber = _genesisTargetBlockNumber;
+        genesisLink.sourceTransitionHash = _genesisSourceTransitionHash;
+        genesisLink.proposedMetablockHeight = _metablockHeight;
+        genesisLink.targetFinalisation = CheckpointFinalisationStatus.Finalised;
     }
 
 
