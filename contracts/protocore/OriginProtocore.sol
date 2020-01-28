@@ -40,12 +40,7 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
      * @notice setup() function initializes the current contract.
      *
      * @dev These input params will be provided by the coconsensus contract.
-     *      This can be called only by the coconsensus contract.
-     *      Function requires:
-     *          - Only coconsensus contract address can call this function
-     *          - This function can be called only once
-     *          - Input param selfProtocore must not be null
-     *          - Input param epoch lengh must not be zero
+     *      This can be called only by the coconsensus contract once.
      *
      * @param _metachainId Metachain id.
      * @param _domainSeparator Domain separator.
@@ -53,9 +48,16 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
      * @param _metablockHeight Metablock height.
      * @param _selfProtocore SelfProtocore contract address.
      *
+     * \pre `_metachainId` is not 0.
+     * \pre `_domainSeparator` is not 0.
+     * \pre `_epochLength` is not 0.
      * \pre `_selfProtocore` is not 0.
      *
-     * \post Sets selfProtocore to the given value.
+     * \post Sets `selfProtocore` to the given value.
+     * \post Sets `domainSeparator` to the given value.
+     * \post Sets `epochLength` to the given value.
+     * \post Sets `metachainId` to the given value.
+     * \post Sets genesis link.
      */
     function setup(
         bytes32 _metachainId,
@@ -67,10 +69,6 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
         external
         onlyCoconsensus
     {
-        require(
-            selfProtocore == address(0),
-            "Origin protocore contract is already initialized."
-        );
         require(
             _selfProtocore != address(0),
             "Self protocore contract address is null."

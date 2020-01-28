@@ -106,9 +106,18 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
      * @param _genesisTargetBlockHash Target blockhash for the genesis link.
      * @param _genesisTargetBlockNumber Target block number for the genesis link.
      *
+     * \pre `_metachainId` is not 0.
+     * \pre `_domainSeparator` is not 0.
      * \pre `_epochLength` is not 0.
+     * \pre `_genesisSourceBlockNumber` must be multiple of `_epochLength`.
+     * \pre `_genesisTargetBlockNumber` must be multiple of `_epochLength`.
+     * \pre `_genesisTargetBlockHash` must not be 0.
+     * \pre `_genesisTargetBlockNumber` must be greater than or equal to `_genesisSourceBlockNumber`.
      *
-     * \post Sets epochLength to the given value.
+     * \post Sets `domainSeparator` to the given value.
+     * \post Sets `epochLength` to the given value.
+     * \post Sets `metachainId` to the given value.
+     * \post Sets genesis link.
      */
     function setup(
         bytes32 _metachainId,
@@ -124,6 +133,10 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
     )
         internal
     {
+        require(
+            metachainId == bytes(0),
+            "Contract is already initialized."
+        );
         require(
             _epochLength != 0,
             "Epoch length is 0."
@@ -145,7 +158,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
             "Genesis target block hash must not be null."
         );
         require(
-            _genesisTargetBlockNumber > _genesisSourceBlockNumber,
+            _genesisTargetBlockNumber >= _genesisSourceBlockNumber,
             "Genesis target block number is less than genesis source block number."
         );
 
