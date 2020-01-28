@@ -154,34 +154,16 @@ contract TestProtocore is Protocore {
     }
 
     function getForwardVoteCount(
-        bytes32 _voteMessageHash
+        bytes32 _voteMessageHash,
+        uint256 _height
     )
         external
         view
         returns (uint256)
     {
-        return links[_voteMessageHash].forwardVoteCount;
+        return links[_voteMessageHash].fvsVoteCount[_height];
     }
 
-    function getForwardVoteCountNextHeight(
-        bytes32 _voteMessageHash
-    )
-        external
-        view
-        returns (uint256)
-    {
-        return links[_voteMessageHash].forwardVoteCountNextHeight;
-    }
-
-    function getForwardVoteCountPreviousHeight(
-        bytes32 _voteMessageHash
-    )
-        external
-        view
-        returns (uint256)
-    {
-        return links[_voteMessageHash].forwardVoteCountPreviousHeight;
-    }
 
     function getTargetFinalisation(
         bytes32 _voteMessageHash

@@ -25,19 +25,13 @@ import "../version/MosaicVersion.sol";
  *        OriginProtocore and SelfProtocore contracts.
  */
 contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
-
     /* Usings */
 
     using SafeMath for uint256;
 
-
     /* Events */
 
-    event KernelOpened (
-        uint256 kernelHeight,
-        bytes32 kernelHash
-    );
-
+    event KernelOpened(uint256 kernelHeight, bytes32 kernelHash);
 
     /* Enums */
 
@@ -48,7 +42,6 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         Finalised
     }
 
-
     /* Structs */
 
     struct Link {
@@ -57,15 +50,8 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         uint256 targetBlockNumber;
         bytes32 sourceTransitionHash;
         uint256 proposedMetablockHeight;
-        uint256 forwardVoteCountNextHeight;
-        uint256 forwardVoteCount;
-        uint256 forwardVoteCountPreviousHeight;
+        mapping(uint256 /* height */ => uint256 /* FVS vote count */) fvsVoteCount;
         CheckpointFinalisationStatus targetFinalisation;
-    }
-
-    struct Quorum {
-        uint256 previousForward;
-        uint256 forward;
     }
 
 
@@ -90,7 +76,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
     uint256 public openKernelHeight;
     bytes32 public openKernelHash;
 
-    mapping(uint256 /* metablock height */ => Quorum) public quorums;
+    mapping(uint256 /* metablock height */ => uint256 /* Quorum */) public quorums;
 
     mapping(bytes32 /* vote message hash */ => Link) public links;
 
@@ -98,7 +84,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         mapping(uint256 /* metablock height */ =>
             mapping(address => address) /* validators linked list */
         )
-    ) public validatorVotes;
+    ) public forwardValidatorVotes;
 
 
     /* Special Functions */
@@ -143,10 +129,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
      * \post Updates stored open kernel hash.
      * \post Updates rear/forward quorums for the newly opened metablock height.
      */
-    function openKernel(
-        uint256 _kernelHeight,
-        bytes32 _kernelHash
-    )
+    function openKernel(uint256 _kernelHeight, bytes32 _kernelHash)
         external
         onlyCoconsensus
     {
@@ -155,22 +138,16 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
             "The given kernel height should be plus 1 of the current one."
         );
 
-        require(
-            _kernelHash != bytes32(0),
-            "The given kernel hash is 0."
-        );
+        require(_kernelHash != bytes32(0), "The given kernel hash is 0.");
 
-        openKernelHeight = openKernelHeight.add(1);
+        openKernelHeight = _kernelHeight;
         openKernelHash = _kernelHash;
 
-        Quorum storage quorum = quorums[openKernelHeight];
-        quorum.previousForward = calculateQuorum(forwardValidatorCount(openKernelHeight.sub(1)));
-        quorum.forward = calculateQuorum(forwardValidatorCount(openKernelHeight));
-
-        emit KernelOpened(
-            openKernelHeight,
-            openKernelHash
+        quorums[openKernelHeight] = calculateQuorum(
+            forwardValidatorCount(openKernelHeight)
         );
+
+        emit KernelOpened(openKernelHeight, openKernelHash);
     }
 
 
@@ -199,9 +176,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         bytes32 _sourceTransitionHash,
         bytes32 _targetBlockHash,
         uint256 _targetBlockNumber
-    )
-        internal
-    {
+    ) internal {
         require(
             _parentVoteMessageHash != bytes32(0),
             "Parent vote message hash is 0."
@@ -220,7 +195,8 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         Link storage parentLink = links[_parentVoteMessageHash];
 
         require(
-            parentLink.targetFinalisation >= CheckpointFinalisationStatus.Justified,
+            parentLink.targetFinalisation >=
+                CheckpointFinalisationStatus.Justified,
             "Parent link's target finalisation status should be at least justified."
         );
 
@@ -268,23 +244,20 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
      *         During a proposal of a link the open metablock height "H" is
      *         stored as a "proposedMetablockHeight" of the link. Validators
      *         register their votes to justify/finalise the link's checkpoints.
-     *         A "happy"/"normal" path is when the link gets justified/finalised
-     *         before a new metablock is opened. However, it's viable that
-     *         a link is not justified/finalised (however, contains some
-     *         votes from validators) and metablock height is progressing
-     *         to "H+1". We call those links: "hot-links". Implementation
-     *         keeps votes of validators that were included in forward
-     *         validator set of the metablock height "H" as those votes are
-     *         valid votes for the progressed metablock height "H+1".
-     *         Validators whose votes were included in this set should
-     *         re-register their votes for the same link, however, already
-     *         at the new (progressed) metablock height. Implementation will
-     *         take care to exclude double voting for the above mentioned
-     *         validator set.
+     *         Most links get justified/finalised before a new metablock is opened.
+     *         However, it's inevitable that
+     *         some links are not justified/finalised when a new metablock is opened.
+     *         With a new metablock the validator set and quorum changes.
+     *         As the change in validator set is stitched with the Forward Validator Set (FVS)
+     *         of `H` and `H-1`; the vote count for the FVS(H) can be preserved,
+     *         but the quorum is now for FVS(H+1) && FVS(H) when the new metablock is opened.
+     *
+     *         Validator votes that need to be counted for FVS(H+1) must be re-registered;
+     *         double-counting for FVS(H) is accounted for in the implementation.
      *
      * \pre `_voteMessageHash` is not 0.
      * \pre A link mapping to the `_voteMessageHash` exists.
-     * \pre A status of a target checkpoint of the given link is "Registered".
+     * \pre A status of a target checkpoint of the given link is "Registered" or higher.
      * \pre The proposed metablock height of the link pointed by
      *      `_voteMessageHash` is equal to the open metablock height or
      *      open metablock height minus 1.
@@ -316,26 +289,27 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         Link storage link = links[_voteMessageHash];
 
         require(
-            link.targetFinalisation == CheckpointFinalisationStatus.Registered,
+            link.targetFinalisation >= CheckpointFinalisationStatus.Registered,
             "The given link status is not reported."
+        );
+
+        require(
+            link.proposedMetablockHeight.add(1) >= openKernelHeight,
+            "Link height inclusion principle has surpassed."
         );
 
         address validator = ecrecover(_voteMessageHash, _v, _r, _s);
 
         require(
-            validatorVotes[_voteMessageHash][openKernelHeight][validator] == address(0),
-            "Validator has already registered a vote at this metablock height."
+            validator != address(0),
+            "Validator must not be null."
         );
-        insertValidatorVote(_voteMessageHash, openKernelHeight, validator);
 
-        if (link.proposedMetablockHeight == openKernelHeight) {
-            registerVoteForNonProgressedMetablockHeight(link, validator);
-        } else if (link.proposedMetablockHeight.add(1) == openKernelHeight) {
-            registerVoteForProgressedMetablockHeight(_voteMessageHash, link, validator);
-        } else {
-            revert(
-                "Metablock height should be equal to the open kernel height or minus 1."
-            );
+        bool quorumReached = countVoteForForwardValidatorSets(_voteMessageHash, validator);
+        insertForwardValidatorVote(_voteMessageHash, validator);
+
+        if (quorumReached) {
+            justifyLink(link);
         }
     }
 
@@ -373,128 +347,103 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
             .div(CORE_SUPER_MAJORITY_DENOMINATOR);
     }
 
-    function insertValidatorVote(
+    function countVoteForForwardValidatorSets(
         bytes32 _voteMessageHash,
-        uint256 _height,
+        address _validator
+    )
+        private
+        returns (bool quorumReached_)
+    {
+        Link storage link = links[_voteMessageHash];
+
+        bool quorumForwardValidatorSet = false;
+        if (canVoteInForwardValidatorSet(
+            _voteMessageHash,
+            openKernelHeight,
+            openKernelHeight,
+            _validator)) {
+            link.fvsVoteCount[openKernelHeight] = link.fvsVoteCount[openKernelHeight].add(1);
+            quorumForwardValidatorSet = (link.fvsVoteCount[openKernelHeight] >= quorums[openKernelHeight]);
+        }
+
+        bool quorumRearValidatorSet = true;
+        if (openKernelHeight > uint256(0)) {
+            uint256 previousHeight = openKernelHeight.sub(1);
+            if (canVoteInForwardValidatorSet(
+                _voteMessageHash,
+                openKernelHeight,
+                previousHeight,
+                _validator)) {
+                link.fvsVoteCount[openKernelHeight] = link.fvsVoteCount[previousHeight].add(1);
+            }
+            quorumRearValidatorSet = (link.fvsVoteCount[previousHeight] >= quorums[previousHeight]);
+        }
+        quorumReached_ = (quorumForwardValidatorSet && quorumRearValidatorSet);
+    }
+
+    function canVoteInForwardValidatorSet(
+        bytes32 _voteMessageHash,
+        uint256 _votedHeight,
+        uint256 _fvsHeight,
+        address _validator
+    )
+        private
+        view
+        returns (bool)
+    {
+        bool hasNotVoted = (forwardValidatorVotes[_voteMessageHash][_votedHeight][_validator] == address(0));
+        bool inFvs = inForwardValidatorSet(
+            _validator,
+            _fvsHeight
+        );
+        return (hasNotVoted && inFvs);
+    }
+
+    function insertForwardValidatorVote(
+        bytes32 _voteMessageHash,
         address _validator
     )
         private
     {
-        address lastValidator = validatorVotes[_voteMessageHash][_height][SENTINEL_VALIDATORS];
+        address lastValidator = forwardValidatorVotes[_voteMessageHash][openKernelHeight][SENTINEL_VALIDATORS];
         if (lastValidator == address(0)) {
-            validatorVotes[_voteMessageHash][_height][SENTINEL_VALIDATORS] = SENTINEL_VALIDATORS;
+            forwardValidatorVotes[_voteMessageHash][openKernelHeight][SENTINEL_VALIDATORS] = SENTINEL_VALIDATORS;
         }
 
-        validatorVotes[_voteMessageHash][_height][_validator] = lastValidator;
-        validatorVotes[_voteMessageHash][_height][SENTINEL_VALIDATORS] = _validator;
-    }
-
-    function registerVoteForNonProgressedMetablockHeight(
-        Link storage _link,
-        address _validator
-    )
-        private
-    {
-        bool isInPreviousForwardValidatorSet = inForwardValidatorSet(
-            _validator,
-            openKernelHeight.sub(1)
-        );
-
-        if (isInPreviousForwardValidatorSet) {
-            _link.forwardVoteCountPreviousHeight = _link.forwardVoteCountPreviousHeight.add(1);
-        }
-
-        bool isInForwardValidatorSet = inForwardValidatorSet(
-            _validator,
-            openKernelHeight
-        );
-
-        if (isInForwardValidatorSet) {
-            _link.forwardVoteCount = _link.forwardVoteCount.add(1);
-        }
-
-        Quorum storage quorum = quorums[openKernelHeight];
-
-        bool hasQuorumReached = _link.forwardVoteCountPreviousHeight >= quorum.previousForward &&
-            _link.forwardVoteCount >= quorum.forward;
-
-        if (hasQuorumReached)
-        {
-            processLink(_link);
-        }
-    }
-
-    function registerVoteForProgressedMetablockHeight(
-        bytes32 _voteMessageHash,
-        Link storage _link,
-        address _validator
-    )
-        private
-    {
-        bool isInPreviousForwardValidatorSet = inForwardValidatorSet(
-            _validator,
-            openKernelHeight.sub(1)
-        );
-
-        // Checking if the validator has voted for the link in the previous
-        // metablock height (no need to check if it was part of the forward
-        // validator set on the previous metablock height, as if it's part
-        // of the previous metablock height for the currently opened
-        // metablock height already satisfies that condition).
-        // If both conditions are true, it means validator vote is already
-        // counted in this set and should be excluded to avoid double voting.
-        if (isInPreviousForwardValidatorSet &&
-            validatorVotes[_voteMessageHash][openKernelHeight.sub(1)][_validator] != address(0))
-        {
-            _link.forwardVoteCount = _link.forwardVoteCount.add(1);
-        }
-
-        bool isInForwardValidatorSet = inForwardValidatorSet(
-            _validator,
-            openKernelHeight
-        );
-
-        if (isInForwardValidatorSet) {
-            _link.forwardVoteCountNextHeight = _link.forwardVoteCountNextHeight.add(1);
-        }
-
-        Quorum storage quorum = quorums[openKernelHeight];
-
-        bool hasQuorumReached = _link.forwardVoteCount >= quorum.previousForward &&
-            _link.forwardVoteCountNextHeight >= quorum.forward;
-
-        if (hasQuorumReached)
-        {
-            processLink(_link);
-        }
+        forwardValidatorVotes[_voteMessageHash][openKernelHeight][_validator] = lastValidator;
+        forwardValidatorVotes[_voteMessageHash][openKernelHeight][SENTINEL_VALIDATORS] = _validator;
     }
 
     /**
-     * @notice processLink() function justifies the target checkpoint of the
+     * @notice justifyLink() function justifies the target checkpoint of the
      *         given link, finalises the source checkpoint of the given link if
      *         it is a finalisation link, and reports coconsensus about the
-     *         finalisation of the checkpint (if applicable).
+     *         finalisation of the checkpint (if applicable). Only executes once
+     *         when link goes from Registered to Justified.
      *
      * @dev Function assumes correctness of the link and the fact that
      *      quorum has reached.
      */
-    function processLink(
+    function justifyLink(
         Link storage _link
     )
         private
     {
-        _link.targetFinalisation = CheckpointFinalisationStatus.Justified;
+        if (_link.targetFinalisation == CheckpointFinalisationStatus.Registered) {
+            _link.targetFinalisation = CheckpointFinalisationStatus.Justified;
 
-        Link storage parentLink = links[_link.parentVoteMessageHash];
+            Link storage parentLink = links[_link.parentVoteMessageHash];
 
-        if (_link.targetBlockNumber.sub(parentLink.targetBlockNumber) == epochLength) {
-            parentLink.targetFinalisation = CheckpointFinalisationStatus.Finalised;
+            if (_link.targetBlockNumber.sub(parentLink.targetBlockNumber) == epochLength) {
+                assert(parentLink.targetFinalisation >= CheckpointFinalisationStatus.Justified);
+                parentLink.targetFinalisation = CheckpointFinalisationStatus.Finalised;
 
-            getCoconsensus().finaliseCheckpoint(
-                metachainId,
-                parentLink.targetBlockNumber,
-                parentLink.targetBlockHash
-            );
+                getCoconsensus().finaliseCheckpoint(
+                    metachainId,
+                    parentLink.targetBlockNumber,
+                    parentLink.targetBlockHash
+                );
+            }
         }
     }
 }
