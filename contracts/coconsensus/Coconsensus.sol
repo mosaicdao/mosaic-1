@@ -44,6 +44,15 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     }
 
 
+    /* Constants */
+
+    /**
+     * Sentinel pointer for marking the ending of circular,
+     * linked-list of genesis metachain ids.
+     */
+    address public constant SENTINEL_METACHAIN_ID = bytes32(0x1);
+
+
     /* Storage */
 
     /** Mapping to track the blocks for each metachain. */
@@ -57,4 +66,29 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
 
     /** Mapping of metachain id to the domain separators. */
     mapping (bytes32 /* metachainId */ => bytes32 /* domain separator */) domainSeparators;
+
+
+    /* External Functions */
+
+    /**
+     * Setup function does the initialization of all the mosaic contracts on the auxiliary chain.
+     *
+     * @dev This function can be called only once.
+     */
+    function setup() external {
+        bytes32 currentMetachainId = genesisMetachainIds[SENTINEL_METACHAIN_ID];
+        while (currentMetachainId != SENTINEL_METACHAIN_ID) {
+            setupObservers(currentMetachainId);
+            setupProtocores(currentMetachainId);
+        }
+    }
+
+    function setupProtocores(bytes32 _metachainId) private {
+        Protocore protocore = Protocore(genesisProtocores[_metachainId]);
+        protocore.setup();
+    }
+
+    function setupObservers(bytes32 _metachainId) private {
+
+    }
 }
