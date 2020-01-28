@@ -25,13 +25,11 @@ import "../version/MosaicVersion.sol";
  *        OriginProtocore and SelfProtocore contracts.
  */
 contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
+
     /* Usings */
 
     using SafeMath for uint256;
 
-    /* Events */
-
-    event KernelOpened(uint256 kernelHeight, bytes32 kernelHash);
 
     /* Enums */
 
@@ -41,6 +39,25 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         Justified,
         Finalised
     }
+
+
+    /* Events */
+
+    event KernelOpened(uint256 kernelHeight, bytes32 kernelHash);
+
+    event VoteRegistered(
+        bytes32 voteMessageHash,
+        uint256 height,
+        bytes32 r,
+        bytes32 s,
+        uint8 v
+    );
+
+    event LinkUpvoted(
+        bytes32 voteMessageHash,
+        CheckpointFinalisationStatus targetFinalisationStatus
+    );
+
 
     /* Structs */
 
@@ -398,9 +415,12 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         bool quorumReached = countVoteForForwardValidatorSets(_voteMessageHash, link, validator);
         insertForwardValidatorVote(_voteMessageHash, validator);
 
+        emit VoteRegistered(_voteMessageHash, openKernelHeight, _r, _s, _v);
+
         if (quorumReached) {
-            justifyLink(link);
+            justifyLink(_voteMessageHash, link);
         }
+
     }
 
 
@@ -505,18 +525,27 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
      *      quorum has reached.
      */
     function justifyLink(
+        bytes32 _voteMessageHash,
         Link storage _link
     )
         private
     {
         if (_link.targetFinalisation == CheckpointFinalisationStatus.Registered) {
             _link.targetFinalisation = CheckpointFinalisationStatus.Justified;
+            emit LinkUpvoted(
+                _voteMessageHash,
+                CheckpointFinalisationStatus.Justified
+            );
 
             Link storage parentLink = links[_link.parentVoteMessageHash];
 
             if (_link.targetBlockNumber.sub(parentLink.targetBlockNumber) == epochLength) {
                 assert(parentLink.targetFinalisation >= CheckpointFinalisationStatus.Justified);
                 parentLink.targetFinalisation = CheckpointFinalisationStatus.Finalised;
+                emit LinkUpvoted(
+                    _link.parentVoteMessageHash,
+                    CheckpointFinalisationStatus.Finalised
+                );
 
                 getCoconsensus().finaliseCheckpoint(
                     metachainId,
