@@ -25,6 +25,12 @@ contract ValidatorSetDouble is ValidatorSet {
 
     /* External Functions */
 
+    function setupValidator()
+        external
+    {
+        ValidatorSet.setup();
+    }
+
     /**
      * @notice It is used to insert validator.
      *

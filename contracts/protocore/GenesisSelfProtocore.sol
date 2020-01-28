@@ -25,21 +25,24 @@ contract GenesisSelfProtocore {
 
     /* Storage */
 
+    /** Block hash of source checkpoint */
+    bytes32 public genesisAuxiliarySourceBlockHash;
+
+    /** Block number of source checkpoint */
+    uint256 public genesisAuxiliarySourceBlockNumber;
+
     /** Block hash of target checkpoint */
-    bytes32 public genesisSelfTargetBlockHash;
+    bytes32 public genesisAuxiliaryTargetBlockHash;
 
     /** Block number of target checkpoint */
-    uint256 public genesisSelfTargetBlockNumber;
+    uint256 public genesisAuxiliaryTargetBlockNumber;
 
     /** Parent vote message hash */
-    bytes32 public genesisParentVoteMessageHash;
+    bytes32 public genesisAuxiliaryParentVoteMessageHash;
 
     /** Source transition hash */
-    bytes32 public genesisSourceTransitionHash;
+    bytes32 public genesisAuxiliarySourceTransitionHash;
 
-    /** Transition dynasty number for source */
-    uint256 public genesisSourceDynasty;
-
-    /** Accumulated gas at source */
-    uint256 public genesisSourceAccumulatedGas;
+    /** Accumulated gas */
+    uint256 public genesisAuxiliaryAccumulatedGas;
 }
