@@ -412,6 +412,11 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
             "Validator must not be null."
         );
 
+        require(
+            fvsVotes[_voteMessageHash][openKernelHeight][validator] == address(0),
+            "Validator vote cannot be registered twice in FVS votes at the same height."
+        );
+
         bool quorumReached = countVoteForForwardValidatorSets(_voteMessageHash, link, validator);
         insertForwardValidatorVote(_voteMessageHash, validator);
 
@@ -454,7 +459,6 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         if (canVoteInForwardValidatorSet(
             _voteMessageHash,
             openKernelHeight,
-            openKernelHeight,
             _validator)) {
             _link.fvsVoteCount[openKernelHeight] = _link.fvsVoteCount[openKernelHeight].add(1);
             quorumForwardValidatorSet = (_link.fvsVoteCount[openKernelHeight] >= fvsQuorums[openKernelHeight]);
@@ -465,7 +469,6 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
             uint256 previousHeight = openKernelHeight.sub(1);
             if (canVoteInForwardValidatorSet(
                 _voteMessageHash,
-                openKernelHeight,
                 previousHeight,
                 _validator)) {
                 _link.fvsVoteCount[openKernelHeight] = _link.fvsVoteCount[previousHeight].add(1);
@@ -477,7 +480,6 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
 
     function canVoteInForwardValidatorSet(
         bytes32 _voteMessageHash,
-        uint256 _votedHeight,
         uint256 _fvsHeight,
         address _validator
     )
@@ -485,7 +487,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         view
         returns (bool)
     {
-        bool hasNotVoted = (fvsVotes[_voteMessageHash][_votedHeight][_validator] == address(0));
+        bool hasNotVoted = (fvsVotes[_voteMessageHash][_fvsHeight][_validator] == address(0));
         bool inFvs = inForwardValidatorSet(
             _validator,
             _fvsHeight
@@ -499,11 +501,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
     )
         private
     {
-        require(
-            fvsVotes[_voteMessageHash][openKernelHeight][_validator] == address(0),
-            "Validator cannot be inserted twice in FVS votes."
-        );
-
+        assert(fvsVotes[_voteMessageHash][openKernelHeight][_validator] == address(0));
         address lastValidator = fvsVotes[_voteMessageHash][openKernelHeight][SENTINEL_VALIDATORS];
         // lazy-initialise linked list for forward validator set votes
         if (lastValidator == address(0)) {
