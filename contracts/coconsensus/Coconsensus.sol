@@ -15,12 +15,14 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 import "../coconsensus/GenesisCoconsensus.sol";
-import "../protocore/Protocore.sol";
+import "../observer/ObserverI.sol";
+import "../protocore/ProtocoreI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../version/MosaicVersion.sol";
 
 /**
- * @title Coconsensus contract - This mirrors the consensus contract on the auxiliary chain.
+ * @title Coconsensus contract - This mirrors the consensus contract on
+ *        the auxiliary chain.
  */
 contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersion {
 
@@ -56,13 +58,19 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     /* Storage */
 
     /** Mapping to track the blocks for each metachain. */
-    mapping (bytes32 /* metachainid */ => mapping(uint256 /* blocknumber */ => Block)) blockchains;
+    mapping (bytes32 /* metachainId */ => mapping(uint256 /* blocknumber */ => Block)) blockchains;
 
-    /** Mapping of metachain id to latest block number(tip) stored in blockchains. */
+    /** 
+     * Mapping of metachain id to latest block number(tip) stored
+     * in blockchains.
+     */
     mapping (bytes32 /* metachainId */ => uint256 /* blocknumber */) blockTips;
 
     /** Mapping of metachain id to the protocore contract address. */
-    mapping (bytes32 /* metachainId */ => Protocore) protocores;
+    mapping (bytes32 /* metachainId */ => ProtocoreI) protocores;
+
+    /** Mapping of metachain id to the observers contract address. */
+    mapping (bytes32 /* metachainId */ => ObserverI) observers;
 
     /** Mapping of metachain id to the domain separators. */
     mapping (bytes32 /* metachainId */ => bytes32 /* domain separator */) domainSeparators;

@@ -37,10 +37,16 @@ contract GenesisCoconsensus {
     /** Link list of metachain ids (for all protocores). */
     mapping(bytes32 => bytes32) public genesisMetachainIds;
 
-    /** Mapping of metachain id to its observer contract address on auxiliary chain. */
+    /**
+     * Mapping of metachain id to its observers (anchor) contract
+     * address on auxiliary chain.
+     */
     mapping(bytes32 => address) public genesisObservers;
 
-    /** Mapping of metachain id to its protocore contract address on auxiliary chain. */
+    /**
+     * Mapping of metachain id to its protocore contract
+     * address on auxiliary chain.
+     */
     mapping(bytes32 => address) public genesisProtocores;
 
     /** Mapping of metachain id to the epoch lengths. */
