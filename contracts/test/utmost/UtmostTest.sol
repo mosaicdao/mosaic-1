@@ -21,7 +21,7 @@ import "./../../most/Utmost.sol";
  */
 contract UtmostTest is Utmost {
 
-    /* Public functions. */
+    /* External Functions. */
 
     /**
      * @notice Set the Utmost token balance for the given account address.

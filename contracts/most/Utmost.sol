@@ -56,7 +56,7 @@ contract Utmost is MasterCopyNonUpgradable, GenesisUtmost, UtilityToken {
     /* External Functions */
 
     /**
-     * @notice Sets up the _genesisTokenSupply and calls UtilityToken.setup.
+     * @notice Sets up the genesisTokenSupply and calls UtilityToken.setup.
      *
      * @dev This function must be called only once. This check is done in setup
      *      function of UtilityToken.
@@ -88,7 +88,11 @@ contract Utmost is MasterCopyNonUpgradable, GenesisUtmost, UtilityToken {
      * @dev  This contract's base coin balance must always be greater than
      *       unwrap amount.
      *
-     * @param _amount Amount of ERC20 Utmost to convert to base coin.
+     * @dev Function requires:
+     *      - Amount should be non-zero
+     *      - Caller Utmost token balance should be greater than amount
+     *
+     * @param _amount Amount of ERC20 Utmost token to convert to base coin.
      */
     function unwrap(
         uint256 _amount
@@ -122,6 +126,9 @@ contract Utmost is MasterCopyNonUpgradable, GenesisUtmost, UtilityToken {
      *
      * @dev The ERC20 OST balance of contract should always be greater than the
      *      received payable amount.
+     *
+     * @dev Function requires:
+     *      - msg.value should be non-zero
      *
      * @return success_ `true` if wrap was successfully progressed.
      */
