@@ -41,7 +41,7 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
 
     event MemberCommitted(address member);
 
-    event MemberRevealed(address member);
+    event MemberRevealed(address member, bytes32 position);
 
 
     /* Constants */
@@ -517,6 +517,8 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
 
         commits[msg.sender] = _sealedCommit;
 
+        emit MemberCommitted(msg.sender);
+
         submissionCount = submissionCount.add(1);
 
         tryStartRevealPhase();
@@ -578,6 +580,8 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
         delete commits[msg.sender];
 
         positions[msg.sender] = _position;
+
+        emit MemberRevealed(msg.sender, _position);
 
         positionCounts[_position] = positionCounts[_position].add(1);
 
@@ -706,6 +710,9 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
         // group is already full.
         members[_member] = _previousMember;
         members[_nextMember] = _member;
+
+        emit MemberEntered(_member);
+
         increaseCount();
     }
 
@@ -735,6 +742,8 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
             members[SENTINEL_MEMBERS] = secondFurthestMember;
             delete members[furthestMember];
             memberCount = memberCount.sub(1);
+
+            emit MemberEjected(furthestMember);
         }
     }
 
