@@ -18,7 +18,7 @@ const web3 = require('./../test_lib/web3');
 
 const { AccountProvider } = require('../test_lib/utils.js');
 
-contract('UtilityToken::setup', (accounts) => {
+contract('Utmost::setup', (accounts) => {
   let utmost;
   let consensusCogateway;
   let initialSupply;
@@ -27,7 +27,7 @@ contract('UtilityToken::setup', (accounts) => {
   beforeEach(async () => {
     utmost = await Utmost.new();
     consensusCogateway = accountProvider.get();
-    initialSupply = new BN('100');
+    initialSupply = new BN('1000000');
   });
 
   it('should setup Utmost token correctly.', async () => {
@@ -45,19 +45,20 @@ contract('UtilityToken::setup', (accounts) => {
     const name = await utmost.name.call();
     assert.strictEqual(
       name,
+      'Utmost',
       'Utmost Token name from contract must be equal to Utmost.',
     );
 
     const symbol = await utmost.symbol();
     assert.strictEqual(
       symbol,
-      'UT',
+      'UM',
       'Token symbol from contract must be equal to UT.',
     );
 
     const decimals = await utmost.decimals();
     assert.strictEqual(
-      decimals.eqn(new BN('18')),
+      decimals.eqn(18),
       true,
       'Token decimals from contract must be equal to 18.',
     );

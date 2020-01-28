@@ -64,13 +64,13 @@ contract UtilityToken is ERC20Token {
      * @return success_ `true` for a successful setup, `false` otherwise.
      */
     function setup(
-        string calldata _symbol,
-        string calldata _name,
+        string memory _symbol,
+        string memory _name,
         uint8 _decimals,
         uint256 _totalTokenSupply,
         address _consensusCogateway
     )
-        external
+        public
         returns (bool success_)
     {
         require(

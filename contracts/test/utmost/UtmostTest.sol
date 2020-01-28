@@ -14,7 +14,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "./../most/Utmost.sol";
+import "./../../most/Utmost.sol";
 
 /**
  * @title UtmostTest contract.
@@ -29,7 +29,7 @@ contract UtmostTest is Utmost {
      * @dev This is used only for testing.
      *
      * @param _account Address for which the balance is to be set.
-     * @param _amount The amount of tokens to be set.
+     * @param _amount The amount of Utmost tokens to be set.
      */
     function setTokenBalance(
         address _account,
@@ -38,5 +38,19 @@ contract UtmostTest is Utmost {
         external
     {
         balances[_account] = _amount;
+    }
+
+    /**
+     * @notice Sets the base coin balance for the given account address.
+     *
+     * @dev This is used only for testing.
+     * Returns true if successful.
+     */
+    function initializeBaseCoinBalance()
+        external
+        payable
+        returns (bool success_)
+    {
+        success_ = true;
     }
 }

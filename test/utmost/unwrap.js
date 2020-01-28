@@ -1,4 +1,4 @@
-// Copyright 20290 OpenST Ltd.
+// Copyright 2020 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ contract('Utmost.unwrap()', (accounts) => {
   let initialSupply;
   let caller;
   let amount;
+  let amountToUnwrap;
   const accountProvider = new AccountProvider(accounts);
 
   beforeEach(async () => {
@@ -36,16 +37,19 @@ contract('Utmost.unwrap()', (accounts) => {
       initialSupply,
       consensusCogateway,
     );
-    caller = AccountProvider.get();
-    amount = new BN('500');
+    caller = accountProvider.get();
+    amount = new BN('100');
+    amountToUnwrap = new BN('20');
     await utmost.setTokenBalance(caller, amount);
+    await utmost.initializeBaseCoinBalance(
+      { from: caller, value: initialSupply },
+    );
   });
 
   it('should unwrap successfully with correct parameters', async () => {
     const initialContractBaseCoinBalance = await Utils.getBalance(utmost.address);
     const initialCallerBaseCoinBalance = await Utils.getBalance(caller);
 
-    const amountToUnwrap = new BN('200');
     const result = await utmost.unwrap.call(amountToUnwrap, {
       from: caller,
     });
@@ -58,9 +62,9 @@ contract('Utmost.unwrap()', (accounts) => {
       caller,
     );
     assert.strictEqual(
-      callerERC20TokenBalance.eqn(300),
+      callerERC20TokenBalance.eqn(80),
       true,
-      `The balance of ${caller} should be 300.`,
+      `The balance of ${caller} should be 80.`,
     );
 
     const contractERC20TokenBalance = await utmost.balanceOf.call(
@@ -76,20 +80,20 @@ contract('Utmost.unwrap()', (accounts) => {
     const finalCallerBaseCoinBalance = await Utils.getBalance(caller);
 
     assert.strictEqual(
-      finalContractBaseCoinBalance.eq(initialContractBaseCoinBalance.sub(amount)),
+      finalContractBaseCoinBalance.eq(initialContractBaseCoinBalance.sub(amountToUnwrap)),
       true,
-      `Contract base token balance should decrease by ${amount}`,
+      `Contract base token balance should decrease by ${amountToUnwrap.toString(10)}`,
     );
 
     assert.strictEqual(
-      finalCallerBaseCoinBalance.eq(initialCallerBaseCoinBalance.add(amount).sub(gasUsed)),
+      finalCallerBaseCoinBalance.eq(initialCallerBaseCoinBalance.add(amountToUnwrap).sub(gasUsed)),
       true,
-      `Caller's base coin balance should change by ${amount.sub(gasUsed)}`,
+      `Caller's base coin balance should change by ${amountToUnwrap.sub(gasUsed).toString(10)}`,
     );
   });
 
   it('should emit transfer event', async () => {
-    const tx = await utmost.unwrap(amount, { from: caller });
+    const tx = await utmost.unwrap(amountToUnwrap, { from: caller });
     const event = EventDecoder.getEvents(tx, utmost);
 
     assert.isDefined(event.Transfer, 'Event `Transfer` must be emitted.');
@@ -109,14 +113,14 @@ contract('Utmost.unwrap()', (accounts) => {
     );
 
     assert.strictEqual(
-      amount.eq(eventData._value),
+      amountToUnwrap.eq(eventData._value),
       true,
-      `The _value in the event should be equal to ${amount}`,
+      `The _value in the event should be equal to ${amountToUnwrap}`,
     );
   });
 
   it('should emit token unwrapped event', async () => {
-    const tx = await utmost.unwrap(amount, { from: caller });
+    const tx = await utmost.unwrap(amountToUnwrap, { from: caller });
 
     const event = EventDecoder.getEvents(tx, utmost);
 
@@ -134,9 +138,9 @@ contract('Utmost.unwrap()', (accounts) => {
     );
 
     assert.strictEqual(
-      amount.eq(eventData._amount),
+      amountToUnwrap.eq(eventData._amount),
       true,
-      `The _amount in the event should be equal to ${amount}`,
+      `The _amount in the event should be equal to ${amountToUnwrap.toString(10)}`,
     );
   });
 });

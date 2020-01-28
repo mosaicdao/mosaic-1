@@ -36,8 +36,8 @@ contract('Utmost.wrap()', (accounts) => {
       initialSupply,
       consensusCogateway,
     );
-    caller = AccountProvider.get();
-    amount = new BN('50');
+    caller = accountProvider.get();
+    amount = new BN('100');
     await utmost.setTokenBalance(utmost.address, amount);
   });
 
@@ -46,10 +46,14 @@ contract('Utmost.wrap()', (accounts) => {
     const initialCallerBaseCoinBalance = await Utils.getBalance(caller);
 
     const result = await utmost.wrap.call({
-      from: caller,
+      from: caller, // Caller has gas initially from AccountProvider
       value: amount,
     });
-    assert.strictEqual(result, true, 'The contract should return true.');
+    assert.strictEqual(
+      result,
+      true,
+      'The contract should return true.',
+    );
 
     const tx = await utmost.wrap({ from: caller, value: amount });
     const gasUsed = new BN(tx.receipt.gasUsed);
@@ -60,14 +64,14 @@ contract('Utmost.wrap()', (accounts) => {
     assert.strictEqual(
       callerERC20TokenBalance.eq(amount),
       true,
-      `The balance of ${caller} should match ${amount}.`,
+      `The balance of ${caller} should match ${amount.toString(10)}.`,
     );
 
-    const contractERC20Tokenbalance = await utmost.balanceOf.call(
+    const contractERC20TokenBalance = await utmost.balanceOf.call(
       utmost.address,
     );
     assert.strictEqual(
-      contractERC20Tokenbalance.eqn(0),
+      contractERC20TokenBalance.eqn(0),
       true,
       'The balance of Utmost contract should be zero.',
     );
@@ -84,7 +88,7 @@ contract('Utmost.wrap()', (accounts) => {
     assert.strictEqual(
       finalCallerBaseCoinBalance.eq(initialCallerBaseCoinBalance.sub(amount).sub(gasUsed)),
       true,
-      `Caller's base coin balance should decrease by ${amount.sub(gasUsed)}`,
+      `Caller's base coin balance should decrease by ${amount.sub(gasUsed).toString(10)}`,
     );
   });
 
@@ -109,7 +113,7 @@ contract('Utmost.wrap()', (accounts) => {
     assert.strictEqual(
       amount.eq(eventData._value),
       true,
-      `The _value in the event should be equal to ${amount}`,
+      `The _value in the event should be equal to ${amount.toString(10)}`,
     );
   });
 
@@ -132,7 +136,7 @@ contract('Utmost.wrap()', (accounts) => {
     assert.strictEqual(
       amount.eq(eventData._amount),
       true,
-      `The _amount in the event should be equal to ${amount}`,
+      `The _amount in the event should be equal to ${amount.toString(10)}`,
     );
   });
 });

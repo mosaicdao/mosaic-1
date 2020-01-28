@@ -22,19 +22,19 @@ import "../utilityToken/UtilityToken.sol";
  * @title Utmost contract implements UtilityToken.
  *
  * @dev Utmost functions as the base coin to pay for gas consumption on the
- *      utility chain.
+ *      auxiliary chain.
  */
 contract Utmost is MasterCopyNonUpgradable, GenesisUtmost, UtilityToken {
 
     /* Events */
 
-    /** Emitted whenever the EIP20 Utmost is converted to base coin Utmost. */
+    /** Emitted whenever the ERC20 Utmost is converted to base coin Utmost. */
     event TokenUnwrapped(
         address indexed _account,
         uint256 _amount
     );
 
-    /** Emitted whenever the base coin Utmost is converted to EIP20 Utmost. */
+    /** Emitted whenever the base coin Utmost is converted to ERC20 Utmost. */
     event TokenWrapped(
         address indexed _account,
         uint256 _amount
@@ -85,9 +85,10 @@ contract Utmost is MasterCopyNonUpgradable, GenesisUtmost, UtilityToken {
     /**
      * @notice Unwrap converts ERC20 Utmost to base coin.
      *
-     * @param _amount Amount of ERC20 Utmost to convert to base coin.
+     * @dev  This contract's base coin balance must always be greater than
+     *       unwrap amount.
      *
-     * @return success_ `true` if unwrap was successful.
+     * @param _amount Amount of ERC20 Utmost to convert to base coin.
      */
     function unwrap(
         uint256 _amount
@@ -97,7 +98,7 @@ contract Utmost is MasterCopyNonUpgradable, GenesisUtmost, UtilityToken {
     {
         require(
             _amount > 0,
-            "Amount must not be zero."
+            "Amount is zero."
         );
 
         require(
@@ -105,10 +106,6 @@ contract Utmost is MasterCopyNonUpgradable, GenesisUtmost, UtilityToken {
             "Insufficient balance."
         );
 
-        /*
-         * This contract's base coin balance must always be greater than unwrap
-         * amount.
-         */
         assert(address(this).balance >= _amount);
 
         transferBalance(msg.sender, address(this), _amount);
@@ -122,6 +119,9 @@ contract Utmost is MasterCopyNonUpgradable, GenesisUtmost, UtilityToken {
 
     /**
      * @notice Wrap converts base coin to ERC20 Utmost.
+     *
+     * @dev The ERC20 OST balance of contract should always be greater than the
+     *      received payable amount.
      *
      * @return success_ `true` if wrap was successfully progressed.
      */
@@ -138,10 +138,6 @@ contract Utmost is MasterCopyNonUpgradable, GenesisUtmost, UtilityToken {
             "Payable amount should not be zero."
         );
 
-        /*
-         * The ERC20 OST balance of contract should always be greater than the
-         * received payable amount.
-         */
         assert(balances[address(this)] >= amount);
 
         transferBalance(address(this), account, amount);
