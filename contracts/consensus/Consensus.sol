@@ -79,6 +79,16 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         uint256 roundMetablockNumber
     );
 
+    event MetablockCommitteeFormed(
+        address committeeGA,
+        bytes32 metablockHash,
+        bytes32 metachainId,
+        uint256 formationHeight,
+        bytes32 seed,
+        uint256 size,
+        uint256 quorum
+    );
+
 
     /* Enums */
 
@@ -455,7 +465,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         currentMetablock.round = MetablockRound.CommitteeFormed;
         currentMetablock.roundBlockNumber = block.number;
 
-        startCommittee(_metachainId, seed, currentMetablock.metablockHash);
+        startCommittee(_metachainId, seed, currentMetablock.metablockHash, committeeFormationBlockHeight);
     }
 
     /**
@@ -734,7 +744,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         );
 
         // Stake in reputation contract.
-        uint256 validatorReputation = reputation.stake(msg.sender, _withdrawalAddress);
+        uint256 validatorReputation = reputation.stake(
+            msg.sender,
+            _withdrawalAddress
+        );
 
         // Join in core contract.
         (
@@ -1029,11 +1042,14 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      * @param _metachainId Metachain id of a proposed metablock.
      * @param _dislocation Hash to shuffle validators.
      * @param _metablockHash Proposal under consideration for committee.
+     *
+     * @return committee_ CommitteeI instance for committee address
      */
     function startCommittee(
         bytes32 _metachainId,
         bytes32 _dislocation,
-        bytes32 _metablockHash
+        bytes32 _metablockHash,
+        uint256 _committeeFormationBlockHeight
     )
         internal
     {
@@ -1044,6 +1060,18 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             committeeSize,
             _dislocation,
             _metablockHash
+        );
+
+        CommitteeI committee = committees[_metablockHash];
+
+        emit MetablockCommitteeFormed(
+            address(committee),
+            _metablockHash,
+            _metachainId,
+            _committeeFormationBlockHeight,
+            _dislocation,
+            committeeSize,
+            committee.quorum()
         );
     }
 

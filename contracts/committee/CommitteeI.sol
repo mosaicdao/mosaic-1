@@ -23,4 +23,9 @@ interface CommitteeI {
      * Committee decision once the quorum is reached.
      */
     function committeeDecision() external view returns (bytes32);
+
+    /**
+     * For accessing quorum.
+     */
+    function quorum() external view returns (uint256);
 }
