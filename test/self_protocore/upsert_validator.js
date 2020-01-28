@@ -19,12 +19,12 @@ const BN = require('bn.js');
 const { AccountProvider } = require('../test_lib/utils.js');
 const Utils = require('../test_lib/utils.js');
 
-const TestProtocore = artifacts.require('TestProtocore');
+const TestSelfProtocore = artifacts.require('TestSelfProtocore');
 
 const config = {};
 const validator = {};
 
-contract('Protocore::upsertValidator', (accounts) => {
+contract('SelfProtocore::upsertValidator', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
 
   beforeEach(async () => {
@@ -36,31 +36,39 @@ contract('Protocore::upsertValidator', (accounts) => {
     config.genesisKernelHash = Utils.getRandomHash();
 
     config.core = accountProvider.get();
+    config.genesis = {};
+    config.genesis.auxiliaryParentVoteMessageHash = Utils.getRandomHash();
+    config.genesis.auxiliarySourceTransitionHash = Utils.getRandomHash();
+    config.genesis.auxiliarySourceBlockHash = Utils.getRandomHash();
+    config.genesis.auxiliaryTargetBlockHash = Utils.getRandomHash();
+    config.genesis.auxiliaryAccumulatedGas = new BN(1000000);
 
-    config.genesisParentVoteMessageHash = Utils.getRandomHash();
-    config.metachainId = Utils.getRandomHash();
-    config.genesisSourceTransitionHash = Utils.getRandomHash();
-    config.genesisSourceBlockHash = Utils.getRandomHash();
-    config.genesisTargetBlockHash = Utils.getRandomHash();
-    config.genesisSourceBlockNumber = new BN(0);
-    config.genesisTargetBlockNumber = new BN(config.epochLength);
-    config.genesisProposedMetablockHeight = new BN(1);
+    config.setupParams = {};
+    config.setupParams.metachainId = Utils.getRandomHash();
+    config.setupParams.domainSeparator = Utils.getRandomHash();
+    config.setupParams.epochLength = new BN(100);
+    config.setupParams.metablockHeight = new BN(Utils.getRandomNumber(1000));
+    config.setupParams.selfProtocore = accountProvider.get();
+    config.setupParams.coconsensus = accountProvider.get();
 
-    config.protocore = await TestProtocore.new(
-      config.coconsensusAddress,
-      config.core,
-      config.metachainId,
-      config.epochLength,
-      config.genesisKernelHeight,
-      config.genesisKernelHash,
-      config.genesisParentVoteMessageHash,
-      config.genesisSourceTransitionHash,
-      config.genesisSourceBlockHash,
-      config.genesisTargetBlockHash,
-      config.genesisSourceBlockNumber,
-      config.genesisTargetBlockNumber,
-      config.genesisProposedMetablockHeight,
-      config.genesisParentVoteMessageHash,
+    config.genesis.auxiliarySourceBlockNumber = new BN(
+      Utils.getRandomNumber(10000) * config.setupParams.epochLength,
+    );
+    config.genesis.auxiliaryTargetBlockNumber = config.genesis.auxiliarySourceBlockNumber.add(
+      config.setupParams.epochLength,
+    );
+
+    // Deploy the self protocore contract.
+    config.selfProtocore = await TestSelfProtocore.new();
+
+    await config.selfProtocore.setGenesisStorage(
+      config.genesis.auxiliaryParentVoteMessageHash,
+      config.genesis.auxiliarySourceTransitionHash,
+      config.genesis.auxiliarySourceBlockHash,
+      config.genesis.auxiliarySourceBlockNumber,
+      config.genesis.auxiliaryTargetBlockHash,
+      config.genesis.auxiliaryTargetBlockNumber,
+      config.genesis.auxiliaryAccumulatedGas,
     );
 
     validator.address = accountProvider.get();
@@ -68,13 +76,23 @@ contract('Protocore::upsertValidator', (accounts) => {
     validator.endHeight = new BN(100);
     validator.reputation = new BN(500);
 
-    await config.protocore.setup();
-  });
+    await config.selfProtocore.setCoconsensus(config.coconsensusAddress);
+    await config.selfProtocore.setOpenKernelHeight(validator.beginHeight);
 
+    await config.selfProtocore.setup(
+      config.setupParams.metachainId,
+      Utils.getRandomHash(),
+      new BN(100),
+      new BN(20),
+      {
+        from: config.coconsensusAddress,
+      },
+    );
+  });
 
   contract('Positive Tests', async () => {
     it('should insert new validator if already not present', async () => {
-      await config.protocore.upsertValidator(
+      await config.selfProtocore.upsertValidator(
         validator.address,
         validator.beginHeight,
         validator.reputation,
@@ -84,13 +102,13 @@ contract('Protocore::upsertValidator', (accounts) => {
       );
 
       assert.notStrictEqual(
-        await config.protocore.validators.call(validator.address),
+        await config.selfProtocore.validators.call(validator.address),
         Utils.NULL_ADDRESS,
       );
     });
 
     it('should remove validator if reputation is 0', async () => {
-      await config.protocore.upsertValidator(
+      await config.selfProtocore.upsertValidator(
         validator.address,
         validator.beginHeight,
         validator.reputation,
@@ -99,7 +117,7 @@ contract('Protocore::upsertValidator', (accounts) => {
         },
       );
 
-      const actualValidatorEndHeight = await config.protocore.validatorEndHeight.call(
+      const actualValidatorEndHeight = await config.selfProtocore.validatorEndHeight.call(
         validator.address,
       );
 
@@ -109,7 +127,7 @@ contract('Protocore::upsertValidator', (accounts) => {
         `Expected validator end height is ${Utils.MAX_UINT256} but got ${actualValidatorEndHeight}`,
       );
 
-      await config.protocore.upsertValidator(
+      await config.selfProtocore.upsertValidator(
         validator.address,
         validator.endHeight,
         '0',
@@ -118,7 +136,7 @@ contract('Protocore::upsertValidator', (accounts) => {
         },
       );
 
-      const actualValidatorEndHeightAfterRemoval = await config.protocore.validatorEndHeight.call(
+      const actualValidatorEndHeightAfterRemoval = await config.selfProtocore.validatorEndHeight.call(
         validator.address,
       );
       assert.strictEqual(

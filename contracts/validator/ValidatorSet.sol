@@ -57,7 +57,7 @@ contract ValidatorSet {
     /**
      * @notice It initializes validators set.
      */
-    function setup()
+    function setupValidatorSet()
         internal
     {
         validators[SENTINEL_VALIDATORS] = SENTINEL_VALIDATORS;

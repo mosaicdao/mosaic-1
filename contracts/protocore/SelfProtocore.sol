@@ -69,5 +69,48 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Validat
             genesisAuxiliaryTargetBlockHash,
             genesisAuxiliaryTargetBlockNumber
         );
+        ValidatorSet.setupValidatorSet();
     }
+
+
+    /* External */
+
+    /**
+     * @notice Insert or remove validator. It inserts validator if not already
+     *         present and reputation is greater than 0. It removes validator
+     *         if it is present and reputation is 0.
+     *
+     * @dev Function requires:
+     *      - Caller should be Coconsensus contract.
+     *      - Validator must enter at height equal to current open kernel height.
+     *
+     * @param _validator Validator address to upsert.
+     * @param _height Validator start or end height to be updated.
+     * @param _reputation Validator's reputation value.
+     */
+    function upsertValidator(
+        address _validator,
+        uint256 _height,
+        uint256 _reputation
+    )
+        external
+        onlyCoconsensus
+    {
+        if(ValidatorSet.inValidatorSet(_validator, _height)) {
+            if(_reputation == 0) {
+                removeValidatorInternal(_validator, _height);
+            }
+        }
+        else {
+            if(_reputation > 0) {
+                require(
+                    _height == openKernelHeight,
+                    "Validator must enter at height equal to current open kernel height."
+                );
+
+                insertValidatorInternal(_validator, _height);
+            }
+        }
+    }
+
 }

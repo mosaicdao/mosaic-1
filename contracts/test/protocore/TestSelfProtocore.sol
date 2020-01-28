@@ -27,6 +27,10 @@ contract TestSelfProtocore is SelfProtocore {
         coconsensus = CoconsensusI(_coconsensus);
     }
 
+    function setOpenKernelHeight(uint256 _openKernelHeight) external {
+        openKernelHeight = _openKernelHeight;
+    }
+
     function setGenesisStorage(
         bytes32 _genesisAuxiliaryParentVoteMessageHash,
         bytes32 _genesisAuxiliarySourceTransitionHash,
