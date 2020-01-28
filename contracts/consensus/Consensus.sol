@@ -84,9 +84,18 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         bytes32 metablockHash,
         bytes32 metachainId,
         uint256 formationHeight,
-        bytes32 seed,
         uint256 size,
         uint256 quorum
+    );
+
+    event MetablockCommitteeDecided(
+        address committeeGA,
+        bytes32 metablockHash,
+        bytes32 metachainId,
+        uint256 size,
+        bytes32 decision,
+        uint256 quorum,
+        uint256 roundMetablockNumber
     );
 
 
@@ -582,6 +591,18 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         );
 
         decisions[currentMetablock.metablockHash] = _committeeDecision;
+
+        CommitteeI committee = committees[currentMetablock.metablockHash];
+
+        emit MetablockCommitteeDecided(
+            address(committee),
+            currentMetablock.metablockHash,
+            _metachainId,
+            committeeSize,
+            _committeeDecision,
+            committee.quorum(),
+            uint256(currentMetablock.round)
+        );
     }
 
     /**
@@ -1069,7 +1090,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             _metablockHash,
             _metachainId,
             _committeeFormationBlockHeight,
-            _dislocation,
             committeeSize,
             committee.quorum()
         );
