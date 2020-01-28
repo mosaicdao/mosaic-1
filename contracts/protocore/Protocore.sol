@@ -134,7 +134,7 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         internal
     {
         require(
-            metachainId == bytes(0),
+            metachainId == bytes32(0),
             "Contract is already initialized."
         );
         require(
