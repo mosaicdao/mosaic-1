@@ -82,7 +82,6 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Validat
      *
      * @dev Function requires:
      *      - Caller should be Coconsensus contract.
-     *      - Validator must enter at height equal to current open kernel height.
      *
      * @param _validator Validator address to upsert.
      * @param _height Validator start or end height to be updated.
@@ -96,14 +95,14 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Validat
         external
         onlyCoconsensus
     {
-        if(validators[_validator] != address(0)) {
+        if(ValidatorSet.inValidatorSet(_validator, openKernelHeight)) {
             if(_reputation == 0) {
-                removeValidatorInternal(_validator, _height, openKernelHeight);
+                removeValidatorInternal(_validator, _height);
             }
         }
         else {
             if(_reputation > 0) {
-                insertValidatorInternal(_validator, _height, openKernelHeight);
+                insertValidatorInternal(_validator, _height);
             }
         }
     }
