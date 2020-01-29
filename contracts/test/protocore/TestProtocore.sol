@@ -16,8 +16,9 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "../../consensus/CoconsensusI.sol";
 import "../../protocore/Protocore.sol";
+import "../../validator/ValidatorSet.sol";
 
-contract TestProtocore is Protocore {
+contract TestProtocore is Protocore, ValidatorSet {
 
 	/* Storage */
 
@@ -78,6 +79,16 @@ contract TestProtocore is Protocore {
 		returns (CoconsensusI)
 	{
         return coconsensus;
+    }
+
+    // @TODO: This function should be removed once
+    //        ValidatorSet::forwardValidatorCount is implemented.
+    function forwardValidatorCount(uint256)
+        public
+        view
+        returns (uint256)
+    {
+        return 0;
     }
 
     function proposeLink(
@@ -166,16 +177,5 @@ contract TestProtocore is Protocore {
         returns (CheckpointFinalisationStatus)
     {
         return links[_voteMessageHash].targetFinalisation;
-    }
-
-
-    /* Public Functions */
-
-    function forwardValidatorCount(uint256)
-        public
-        view
-        returns (uint256)
-    {
-        revert("Implementation is missing!");
     }
 }

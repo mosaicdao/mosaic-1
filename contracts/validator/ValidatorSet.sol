@@ -104,6 +104,13 @@ contract ValidatorSet is ForwardValidatorSetAbstract {
             validatorEndHeight[_validator] > 0;
     }
 
+    function forwardValidatorCount(uint256)
+        public
+        view
+        returns (uint256)
+    {
+        revert("Implementation is missing.");
+    }
 
     /* Internal Functions  */
 
@@ -162,9 +169,4 @@ contract ValidatorSet is ForwardValidatorSetAbstract {
 
         validatorEndHeight[_validator] = _endHeight;
     }
-
-    function forwardValidatorCount(uint256 _height)
-        public
-        view
-        returns (uint256);
 }
