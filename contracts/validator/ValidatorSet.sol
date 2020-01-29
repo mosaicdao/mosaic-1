@@ -114,16 +114,23 @@ contract ValidatorSet {
      *
      * @param _validator Validator address.
      * @param _beginHeight Begin height for the validator.
+     * @param _openKernelHeight Current open kernel height.
      */
     function insertValidatorInternal(
         address _validator,
-        uint256 _beginHeight
+        uint256 _beginHeight,
+        uint256 _openKernelHeight
     )
         internal
     {
         assert(_validator != address(0));
         assert(
             validatorBeginHeight[_validator] == 0 && validatorEndHeight[_validator] == 0
+        );
+
+        require(
+            _beginHeight == _openKernelHeight,
+            "Validator must enter at height equal to current open kernel height."
         );
 
         address lastValidator = validators[SENTINEL_VALIDATORS];

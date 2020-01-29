@@ -24,6 +24,7 @@ contract('ValidatorSet::insertValidator', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
   let validatorSet;
   const beginHeight = new BN(100);
+  const openKernelHeight = new BN(100);
   beforeEach(async () => {
     validatorSet = await ValidatorSet.new();
     await validatorSet.setupValidator();
@@ -34,7 +35,7 @@ contract('ValidatorSet::insertValidator', (accounts) => {
       const account1 = accountProvider.get();
       const account2 = accountProvider.get();
 
-      await validatorSet.insertValidator(account1, beginHeight);
+      await validatorSet.insertValidator(account1, beginHeight, openKernelHeight);
 
       const actualValidatorBeginHeight = await validatorSet.validatorBeginHeight.call(account1);
       const actualValidatorEndHeight = await validatorSet.validatorEndHeight.call(account1);
@@ -50,7 +51,11 @@ contract('ValidatorSet::insertValidator', (accounts) => {
       );
 
       // Inserting another validator.
-      await validatorSet.insertValidator(account2, beginHeight);
+      await validatorSet.insertValidator(
+        account2,
+        beginHeight,
+        openKernelHeight,
+      );
 
       const addressAtAccount1 = await validatorSet.validators.call(
         account1,

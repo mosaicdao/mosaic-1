@@ -36,9 +36,10 @@ contract ValidatorSetDouble is ValidatorSet {
      *
      * @param _validator Validator address.
      * @param _beginHeight Begin height for the validator.
+     * @param _openKernelHeight Current open kernel height.
      */
-    function insertValidator(address _validator, uint256 _beginHeight) external {
-        insertValidatorInternal(_validator, _beginHeight);
+    function insertValidator(address _validator, uint256 _beginHeight, uint256 _openKernelHeight) external {
+        insertValidatorInternal(_validator, _beginHeight, _openKernelHeight);
     }
 
    /**

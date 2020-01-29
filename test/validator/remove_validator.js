@@ -23,12 +23,13 @@ contract('ValidatorSet::removeValidator', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
   let validatorSet;
   const beginHeight = new BN(100);
+  const openKernelHeight = new BN(100);
   const endHeight = new BN(500);
   let account;
   beforeEach(async () => {
     validatorSet = await ValidatorSet.new();
     account = accountProvider.get();
-    await validatorSet.insertValidator(account, beginHeight);
+    await validatorSet.insertValidator(account, beginHeight, openKernelHeight);
   });
 
   contract('Positive Tests', () => {

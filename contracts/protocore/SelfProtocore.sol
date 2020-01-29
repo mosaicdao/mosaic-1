@@ -103,12 +103,7 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Validat
         }
         else {
             if(_reputation > 0) {
-                require(
-                    _height == openKernelHeight,
-                    "Validator must enter at height equal to current open kernel height."
-                );
-
-                insertValidatorInternal(_validator, _height);
+                insertValidatorInternal(_validator, _height, openKernelHeight);
             }
         }
     }
