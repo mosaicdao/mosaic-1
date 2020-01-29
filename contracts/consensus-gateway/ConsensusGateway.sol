@@ -152,11 +152,12 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
      *      In normal cases, since this function is called by consensus, we can
      *      trust that same height will not be passed.
      *
-     * @dev Function requires:
-     *     - Only consensus can call
-     *     - Core address should not be 0
-     *     - Either Kernel height should equal currentMetablockHeight plus one
-             or kernel can be opened at same height in case of chain halting
+     *      Function requires:
+     *          - Only consensus can call
+     *          - Core address should not be 0
+     *          - Either Kernel height should equal currentMetablockHeight plus
+     *            one or kernel can be opened at same height in case of chain
+     *            halting.
      *
      * @param _core Core contract address.
      * @param _feeGasPrice Fee gas price.
