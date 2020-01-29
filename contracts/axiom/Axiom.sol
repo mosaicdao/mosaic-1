@@ -31,7 +31,7 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
     /* Events */
 
     /* Emitted when new metachain is created */
-    event MetachainCreated(bytes32 metachainId);
+    event MetachainCreated(bytes32 metachainId, address anchor);
 
 
     /* Constants */
@@ -265,7 +265,8 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
      * @notice Deploy Committee proxy contract. This can be called only by consensus
      *         contract.
      * @param _data Setup function call data.
-     * @return Deployed contract address.
+     *
+     * @return deployedAddress_ Deployed contract address.
      */
     function newCommittee(
         bytes calldata _data
@@ -280,16 +281,19 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
     /**
      * @notice Setup a new metachain. Only technical governance address can
      *         call this function.
+     *
+     * @return metachainId_ Metachain id.
      */
     function newMetaChain()
         external
         onlyTechGov
         returns(bytes32 metachainId_)
     {
+        address anchor;
 
-        metachainId_ = consensus.newMetaChain();
+        (metachainId_, anchor) = consensus.newMetaChain();
 
-        emit MetachainCreated(metachainId_);
+        emit MetachainCreated(metachainId_, anchor);
     }
 
     /**

@@ -868,11 +868,14 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      * @dev Function requires:
      *          - msg.sender should be axiom contract.
      *          - core is not assigned to metachain.
+     *
+     * @return metachainId_ Metachain id.
+     * @return anchor_ Address of anchor.
      */
     function newMetaChain()
         external
         onlyAxiom
-        returns(bytes32 metachainId_)
+        returns(bytes32 metachainId_, address anchor_)
     {
 
         bytes memory anchorSetupCallData = anchorSetupData(
@@ -881,7 +884,9 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         );
 
         AnchorI anchor = AnchorI(axiom.deployAnchor(anchorSetupCallData));
-        metachainId_ = hashMetachainId(address(anchor));
+
+        anchor_ = address(anchor);
+        metachainId_ = hashMetachainId(anchor_);
 
         bytes memory coreSetupCallData = coreSetupData(
             metachainId_,
