@@ -45,11 +45,6 @@ contract('Utmost.unwrap()', (accounts) => {
     const initialContractBaseCoinBalance = await Utils.getBalance(utmost.address);
     const initialCallerBaseCoinBalance = await Utils.getBalance(caller);
 
-    const result = await utmost.unwrap.call(amountToUnwrap, {
-      from: caller,
-    });
-    assert.strictEqual(result, true, 'The contract should return true.');
-
     const tx = await utmost.unwrap(amountToUnwrap, { from: caller });
     const gasUsed = new BN(tx.receipt.gasUsed);
 

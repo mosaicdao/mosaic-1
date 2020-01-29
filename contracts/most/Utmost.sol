@@ -48,7 +48,7 @@ contract Utmost is MasterCopyNonUpgradable, GenesisUtmost, UtilityToken, Coconse
      *
      * @dev This function must be called only once. This check is done in setup
      *      function of UtilityToken.
-     *      Utmost contract ERC20 token balance needs to initialize with
+     *      Utmost contract ERC20 token balance needs to be initialized with
      *      genesisTotalSupply else wrap function will fail.
      *
      *      Function requires:
