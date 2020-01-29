@@ -98,6 +98,13 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         uint256 roundMetablockNumber
     );
 
+    event MetablockCommitted(
+        bytes32 kernelHash,
+        address coreGA,
+        bytes32 metachainId,
+        bytes32 metablockHash
+    );
+
 
     /* Enums */
 
@@ -638,7 +645,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      */
     function commitMetablock(
         bytes32 _metachainId,
-        bytes calldata _rlpBlockHeader,
+        bytes memory _rlpBlockHeader,
         bytes32 _kernelHash,
         bytes32 _originObservation,
         uint256 _dynasty,
@@ -649,7 +656,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         uint256 _sourceBlockHeight,
         uint256 _targetBlockHeight
     )
-        external
+        public
     {
         require(
             _source == keccak256(_rlpBlockHeader),
@@ -687,6 +694,13 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             _accumulatedGas,
             _sourceBlockHeight,
             gasTargetDelta
+        );
+
+        emit MetablockCommitted(
+            _kernelHash,
+            address(core),
+            _metachainId,
+            metablockHash
         );
     }
 
