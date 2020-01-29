@@ -499,7 +499,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *          - validator active in this core
      *          - validator should not be slashed in reputation contract
      *          - validator has not already cast the same vote
-     *          - vote gets updated only if the new vote is at higher dynsaty
+     *          - vote gets updated only if the new vote is at higher dynasty
      */
     function registerVote(
         bytes32 _proposal,
@@ -566,7 +566,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      * @param _originObservation Origin observation of a provided metablock.
      * @param _dynasty Dynasty of a provided metablock.
      * @param _accumulatedGas Accumulated gas in a provided metablock.
-     * @param _committeeLock Committe lock (transition root hash) of a provided
+     * @param _committeeLock Committee lock (transition root hash) of a provided
      *                       metablock.
      * @param _source Source blockhash of a vote message for a
      *                provided metablock.
@@ -711,11 +711,17 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      * @return minValidatorCount_ Minimum validator count required set by consensus.
      * @return beginHeight_ Begin height of validator.
      */
-    function joinBeforeOpen(address _validator)
+    function joinBeforeOpen(
+        address _validator
+    )
         external
         onlyConsensus
         beforeOpen
-        returns(uint256 validatorCount_, uint256 minValidatorCount_, uint256 beginHeight_)
+        returns (
+            uint256 validatorCount_,
+            uint256 minValidatorCount_,
+            uint256 beginHeight_
+        )
     {
         // during created state, validators join at creation kernel height
         insertValidator(_validator, creationKernelHeight);
@@ -768,7 +774,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         external
         onlyConsensus
         whileRunning
-        returns(uint256 beginHeight_)
+        returns (uint256 beginHeight_)
     {
         require(
             countValidators
@@ -892,7 +898,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
     /**
      * @notice Precommits to a given proposal and lock core validators
-     *         to associated responsability.
+     *         to associated responsibility.
      */
     function registerPrecommit(bytes32 _proposal)
         internal

@@ -22,7 +22,8 @@ interface ReputationI {
         address _validator,
         address _withdrawalAddress
     )
-        external returns (uint256);
+        external
+        returns (uint256);
 
     function deregister(address _validator) external returns (uint256);
 

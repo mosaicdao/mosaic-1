@@ -38,6 +38,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
     /* Events */
 
+    /** Emitted when endpoint is published */
     event EndpointPublished(
         bytes32 metachainId,
         address core,
@@ -46,32 +47,37 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         string endpoint
     );
 
+    /** Emitted when validator logs out*/
     event ValidatorLoggedOut(
         address validator,
         uint256 endHeight,
         uint256 withdrawalBlockHeight
     );
 
+    /** Emitted when core is created */
     event CoreCreated(
-        address coreGA,
-        bytes32 metaChainId,
+        address core,
+        bytes32 metachainId,
         uint256 minValidators,
         uint256 maxValidators,
         uint256 gasTarget
     );
 
+    /** Emitted when validator joins */
     event ValidatorJoined(
-        address validatorGA,
-        address coreGA,
+        address validator,
+        address core,
         uint256 beginHeight,
         uint256 reputation
     );
 
+    /** Emitted when core lifetime is updated */
     event CoreLifetimeUpdated(
-        address coreGA,
+        address core,
         uint256 coreLifetime
     );
 
+    /** Emitted when metablock is precommitted */
     event MetablockPrecommitted(
         bytes32 metablockHash,
         bytes32 metachainId,
@@ -79,28 +85,28 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         uint256 roundMetablockNumber
     );
 
+    /** Emitted when committee is formed */
     event MetablockCommitteeFormed(
-        address committeeGA,
+        address committee,
         bytes32 metablockHash,
         bytes32 metachainId,
         uint256 formationHeight,
-        uint256 size,
-        uint256 quorum
+        uint256 size
     );
 
+    /** Emitted when committee is decided */
     event MetablockCommitteeDecided(
-        address committeeGA,
+        address committee,
         bytes32 metablockHash,
         bytes32 metachainId,
         uint256 size,
-        bytes32 decision,
-        uint256 quorum,
-        uint256 roundMetablockNumber
+        bytes32 decision
     );
 
+    /** Emitted when metablock is committed*/
     event MetablockCommitted(
         bytes32 kernelHash,
-        address coreGA,
+        address core,
         bytes32 metachainId,
         bytes32 metablockHash
     );
@@ -481,7 +487,20 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         currentMetablock.round = MetablockRound.CommitteeFormed;
         currentMetablock.roundBlockNumber = block.number;
 
-        startCommittee(_metachainId, seed, currentMetablock.metablockHash, committeeFormationBlockHeight);
+        startCommittee(
+            _metachainId,
+            seed,
+            currentMetablock.metablockHash,
+            committeeFormationBlockHeight
+        );
+
+        emit MetablockCommitteeFormed(
+            address(committee),
+            currentMetablock.metablockHash,
+            _metachainId,
+            committeeFormationBlockHeight,
+            committeeSize
+        );
     }
 
     /**
@@ -606,9 +625,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             currentMetablock.metablockHash,
             _metachainId,
             committeeSize,
-            _committeeDecision,
-            committee.quorum(),
-            uint256(currentMetablock.round)
+            _committeeDecision
         );
     }
 
@@ -629,7 +646,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      *          - anchor contract for the given metachain id should exist
      *
      * @param _metachainId Metachain id.
-     * @param _rlpBlockHeader RLP ecoded block header.
+     * @param _rlpBlockHeader RLP encoded block header.
      * @param _kernelHash Kernel hash
      * @param _originObservation Observation of the origin chain.
      * @param _dynasty The dynasty number where the meta-block closes
@@ -734,7 +751,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         );
 
         // Stake in reputation contract.
-        uint256 validatorReputation = reputation.stake(msg.sender, _withdrawalAddress);
+        uint256 validatorReputation = reputation.stake(
+            msg.sender,
+            _withdrawalAddress
+        );
 
         // Join in core contract.
         uint256 beginHeight = core.join(msg.sender);
@@ -875,7 +895,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
     function newMetaChain()
         external
         onlyAxiom
-        returns(bytes32 metachainId_, address anchor_)
+        returns (bytes32 metachainId_, address anchor_)
     {
 
         bytes memory anchorSetupCallData = anchorSetupData(
@@ -1082,8 +1102,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      * @param _metachainId Metachain id of a proposed metablock.
      * @param _dislocation Hash to shuffle validators.
      * @param _metablockHash Proposal under consideration for committee.
-     *
-     * @return committee_ CommitteeI instance for committee address
      */
     function startCommittee(
         bytes32 _metachainId,
@@ -1100,17 +1118,6 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             committeeSize,
             _dislocation,
             _metablockHash
-        );
-
-        CommitteeI committee = committees[_metablockHash];
-
-        emit MetablockCommitteeFormed(
-            address(committee),
-            _metablockHash,
-            _metachainId,
-            _committeeFormationBlockHeight,
-            committeeSize,
-            committee.quorum()
         );
     }
 

@@ -397,7 +397,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
      * @param _validator A validator address to stake.
      * @param _withdrawalAddress A withdrawal address of newly staked validator.
      *
-     * @return reputation_ Initial reputation of a validator
+     * @return reputation_ Initial reputation of a validator.
      */
     function stake(
         address _validator,
@@ -405,7 +405,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
     )
         external
         onlyConsensus
-        returns(uint256 reputation_)
+        returns (uint256 reputation_)
     {
         require(
             _validator != address(0),

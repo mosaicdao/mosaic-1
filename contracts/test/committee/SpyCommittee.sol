@@ -72,8 +72,4 @@ contract SpyCommittee is MasterCopyNonUpgradable, CommitteeI{
         spyDislocation = _dislocation;
         spyProposal = _proposal;
     }
-
-    function quorum() external view returns (uint256) {
-        return uint256(1);
-    }
 }

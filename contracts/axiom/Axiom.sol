@@ -30,7 +30,7 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
 
     /* Events */
 
-    /* Emitted when new metachain is created */
+    /** Emitted when new metachain is created */
     event MetachainCreated(bytes32 metachainId, address anchor);
 
 
