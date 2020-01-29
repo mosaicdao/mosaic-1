@@ -487,15 +487,14 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         currentMetablock.round = MetablockRound.CommitteeFormed;
         currentMetablock.roundBlockNumber = block.number;
 
-        startCommittee(
+        address committee = startCommittee(
             _metachainId,
             seed,
-            currentMetablock.metablockHash,
-            committeeFormationBlockHeight
+            currentMetablock.metablockHash
         );
 
         emit MetablockCommitteeFormed(
-            address(committee),
+            committee,
             currentMetablock.metablockHash,
             _metachainId,
             committeeFormationBlockHeight,
@@ -1102,14 +1101,16 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      * @param _metachainId Metachain id of a proposed metablock.
      * @param _dislocation Hash to shuffle validators.
      * @param _metablockHash Proposal under consideration for committee.
+     *
+     * @return committeeAddress_ Address of the committee
      */
     function startCommittee(
         bytes32 _metachainId,
         bytes32 _dislocation,
-        bytes32 _metablockHash,
-        uint256 _committeeFormationBlockHeight
+        bytes32 _metablockHash
     )
         internal
+        returns (address committeeAddress_)
     {
         assert(committees[_metablockHash] == CommitteeI(0));
 
@@ -1119,6 +1120,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             _dislocation,
             _metablockHash
         );
+
+        CommitteeI committee = committees[_metablockHash];
+
+        committeeAddress_ = address(committee);
     }
 
     /**
