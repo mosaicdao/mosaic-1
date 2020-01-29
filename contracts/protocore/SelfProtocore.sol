@@ -98,7 +98,7 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Validat
     {
         if(ValidatorSet.inValidatorSet(_validator, _height)) {
             if(_reputation == 0) {
-                removeValidatorInternal(_validator, _height);
+                removeValidatorInternal(_validator, _height, openKernelHeight);
             }
         }
         else {

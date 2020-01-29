@@ -129,8 +129,8 @@ contract ValidatorSet {
         );
 
         require(
-            _beginHeight == _openKernelHeight,
-            "Validator must enter at height equal to current open kernel height."
+            _beginHeight >= _openKernelHeight,
+            "Validator must enter at height equal or greater than current open kernel height."
         );
 
         address lastValidator = validators[SENTINEL_VALIDATORS];
@@ -145,16 +145,18 @@ contract ValidatorSet {
      * @notice It is for removing validators from the validator set.
      *
      * @dev Function requires :
-     *          - Validator address must not be 0.
      *          - Validator begin height must be less than end height.
      *          - Validator end height must be equal to MAX_FUTURE_END_HEIGHT.
+     *          - Validator begin height must be less than or equal to current open kernel height.
      *
      * @param _validator Validator address.
      * @param _endHeight End height for the validator.
+     * @param _openKernelHeight Current open kernel height.
      */
     function removeValidatorInternal(
         address _validator,
-        uint256 _endHeight
+        uint256 _endHeight,
+        uint256 _openKernelHeight
     )
         internal
     {
@@ -163,6 +165,11 @@ contract ValidatorSet {
         );
         assert(
             validatorEndHeight[_validator] == MAX_FUTURE_END_HEIGHT
+        );
+
+        require(
+            validatorBeginHeight[_validator] <= _openKernelHeight,
+            "Validator must leave at height equal to or less than current open kernel height."
         );
 
         validatorEndHeight[_validator] = _endHeight;

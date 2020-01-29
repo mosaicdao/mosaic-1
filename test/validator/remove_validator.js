@@ -34,7 +34,7 @@ contract('ValidatorSet::removeValidator', (accounts) => {
 
   contract('Positive Tests', () => {
     it('should remove validator', async () => {
-      await validatorSet.removeValidator(account, endHeight);
+      await validatorSet.removeValidator(account, endHeight, openKernelHeight);
 
       const actualValidatorBeginHeight = await validatorSet.validatorBeginHeight.call(account);
       const actualValidatorEndHeight = await validatorSet.validatorEndHeight.call(account);

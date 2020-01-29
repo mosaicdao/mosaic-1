@@ -47,8 +47,9 @@ contract ValidatorSetDouble is ValidatorSet {
     *
     * @param _validator Validator address.
     * @param _endHeight End height for the validator.
+    * @param _openKernelHeight Current open kernel height.
     */
-    function removeValidator(address _validator, uint256 _endHeight) external {
-        removeValidatorInternal(_validator, _endHeight);
+    function removeValidator(address _validator, uint256 _endHeight,  uint256 _openKernelHeight) external {
+        removeValidatorInternal(_validator, _endHeight, _openKernelHeight);
     }
 }
