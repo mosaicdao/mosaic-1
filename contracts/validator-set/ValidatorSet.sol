@@ -123,8 +123,6 @@ contract ValidatorSet {
      *
      * @param _validator Address of validator.
      * @param _height Metablock height.
-     * Returns true if validator with given metablock height is in validator
-     * set.
      */
     function inValidatorSet(address _validator, uint256 _height)
         public
@@ -141,8 +139,6 @@ contract ValidatorSet {
      *
      * @param _validator Address of validator.
      * @param _height Metablock height.
-     * Returns true if validator with given metablock height is in forward
-     * validator set.
      */
     function inForwardValidatorSet(address _validator, uint256 _height)
         public
@@ -155,6 +151,12 @@ contract ValidatorSet {
     }
 
     /**
+     * @notice returns the validator set count for heights up to active height.
+     *
+     * @dev Function requires:
+     *          - height is less or equal to active height
+     *
+     * @param _height Height for which to return the validator set count.
      */
     function validatorSetCount(uint256 _height)
         public
@@ -169,6 +171,12 @@ contract ValidatorSet {
     }
 
     /**
+     * @notice returns the forward validator set count for heights up to active height.
+     *
+     * @dev Function requires:
+     *          - height is less or equal to active height
+     *
+     * @param _height Height for which to return the forward validator set count.
      */
     function forwardValidatorSetCount(uint256 _height)
         public
@@ -213,6 +221,10 @@ contract ValidatorSet {
         validatorBeginHeight[_validator] = _beginHeight;
         validatorEndHeight[_validator] = MAX_FUTURE_END_HEIGHT;
 
+        // on inserting a validator at height h
+        //     N_h ++
+        //     N_(h+1) ++
+        //     F_h ++
         uint256 updatedValidatorCount = validatorCount[activeHeight].add(1);
         validatorCount[activeHeight] = updatedValidatorCount;
         validatorCount[activeHeight.add(1)] = updatedValidatorCount;
@@ -248,7 +260,11 @@ contract ValidatorSet {
 
         validatorEndHeight[_validator] = _endHeight;
 
-        validatorCount[activeHeight.add(1)] = validatorCount[activeHeight].sub(1);
+        // on removing a validator at height h
+        //     N_(h+1) --
+        //     F_h --
+        uint256 nextHeight = activeHeight.add(1);
+        validatorCount[nextHeight] = validatorCount[nextHeight].sub(1);
         fvsCount[activeHeight] = fvsCount[activeHeight].sub(1);
     }
 
@@ -274,6 +290,7 @@ contract ValidatorSet {
         if (nextHeight == _height) {
             // upon increasing active height, h -> h+1,
             // initialize N_(h+2) = N_(h+1) for the running counts
+            // and F_h+1 = N_(h+1)
             validatorCount[_height.add(2)] = validatorCount[nextHeight];
             fvsCount[nextHeight] = validatorCount[nextHeight];
             activeHeight = nextHeight;
