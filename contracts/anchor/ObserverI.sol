@@ -22,5 +22,5 @@ interface ObserverI {
     /**
      * @notice setup() function initializes the observer contract.
      */
-     function setup() external;
+    function setup() external;
 }
