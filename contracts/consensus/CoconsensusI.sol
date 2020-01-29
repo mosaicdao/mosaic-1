@@ -20,6 +20,7 @@ pragma solidity >=0.5.0 <0.6.0;
  * @notice Interface for Coconsensus contract.
  */
 interface CoconsensusI {
+
     /** External Functions */
 
     /**
@@ -46,7 +47,7 @@ interface CoconsensusI {
         external;
 
     /**
-     * @notice Commit the checkpoint.
+     * @notice Commits the checkpoint.
      *
      * @param _metachainId Metachain id.
      * @param _kernelHeight Kernel height.
