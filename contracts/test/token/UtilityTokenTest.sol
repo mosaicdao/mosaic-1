@@ -14,26 +14,24 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "./../../utilityToken/UtilityToken.sol";
+import "./../../utility-token/UtilityToken.sol";
 
 /**
  *  @title UtilityToken Test contract.
  */
 contract UtilityTokenTest is UtilityToken {
 
-    /** Public Functions */
+    /* Public Functions */
 
     /**
      * @notice Sets up the symbol, name, decimals, totalSupply
-     *         and the consensusCogateway address
+     *         and the consensusCogateway address.
      *
      * @param _symbol Symbol of token.
      * @param _name Name of token.
      * @param _decimals Decimal of token.
      * @param _totalTokenSupply Total token supply.
      * @param _consensusCogateway ConsensusCogateway contract address.
-     *
-     * @return success_ `true` for a successful setup, `false` otherwise.
      */
     function setupToken(
         string calldata _symbol,

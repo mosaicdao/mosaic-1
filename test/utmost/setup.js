@@ -35,12 +35,6 @@ contract('Utmost::setup', (accounts) => {
   it('should setup Utmost token correctly.', async () => {
     await utmost.setup({ from: coconsensus });
 
-    assert.strictEqual(
-      web3.utils.isAddress(utmost.address),
-      true,
-      'Utmost token contract address must not be zero.',
-    );
-
     const name = await utmost.name.call();
     assert.strictEqual(
       name,

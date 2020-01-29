@@ -21,12 +21,15 @@ import "./../../most/Utmost.sol";
  */
 contract UtmostTest is Utmost {
 
+    /* Storage */
+
     CoconsensusI public coconsensus;
 
-    /* Special Member Functions */
+
+    /* Special Functions */
 
     /**
-     * Constructor
+     * @notice UtmostTest constructor.
      *
      * @param _coconsensus Coconsensus contract address.
      * @param _initialTokenSupply Initial token supply.
@@ -39,7 +42,7 @@ contract UtmostTest is Utmost {
     }
 
 
-    /** Public Functions */
+    /* Public Functions */
 
     /**
      * @notice Gets the coconsensus contract address.

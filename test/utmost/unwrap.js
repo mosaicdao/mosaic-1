@@ -57,7 +57,7 @@ contract('Utmost.unwrap()', (accounts) => {
       caller,
     );
     assert.strictEqual(
-      callerERC20TokenBalance.eqn(80),
+      callerERC20TokenBalance.eq(wrappedAmount.sub(amountToUnwrap)),
       true,
       `The balance of ${caller} should be 80.`,
     );
@@ -111,31 +111,6 @@ contract('Utmost.unwrap()', (accounts) => {
       amountToUnwrap.eq(eventData._value),
       true,
       `The _value in the event should be equal to ${amountToUnwrap}`,
-    );
-  });
-
-  it('should emit token unwrapped event', async () => {
-    const tx = await utmost.unwrap(amountToUnwrap, { from: caller });
-
-    const event = EventDecoder.getEvents(tx, utmost);
-
-    assert.isDefined(
-      event.TokenUnwrapped,
-      'Event `TokenUnwrapped` must be emitted.',
-    );
-
-    const eventData = event.TokenUnwrapped;
-
-    assert.strictEqual(
-      eventData._account,
-      caller,
-      `The _account address in the event should be equal to ${caller}`,
-    );
-
-    assert.strictEqual(
-      amountToUnwrap.eq(eventData._amount),
-      true,
-      `The _amount in the event should be equal to ${amountToUnwrap.toString(10)}`,
     );
   });
 });

@@ -112,27 +112,4 @@ contract('Utmost.wrap()', (accounts) => {
       `The _value in the event should be equal to ${amountToWrap.toString(10)}`,
     );
   });
-
-  it('should emit token wrapped event', async () => {
-    const tx = await utmost.wrap({ from: caller, value: amountToWrap });
-    const event = EventDecoder.getEvents(tx, utmost);
-
-    assert.isDefined(
-      event.TokenWrapped,
-      'Event `TokenWrapped` must be emitted.',
-    );
-
-    const eventData = event.TokenWrapped;
-    assert.strictEqual(
-      eventData._account,
-      caller,
-      `The _account address in the event should be equal to ${caller}`,
-    );
-
-    assert.strictEqual(
-      amountToWrap.eq(eventData._amount),
-      true,
-      `The _amount in the event should be equal to ${amountToWrap.toString(10)}`,
-    );
-  });
 });

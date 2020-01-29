@@ -14,35 +14,19 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../proxies/MasterCopyNonUpgradable.sol";
 import "./GenesisUtmost.sol";
 import "./../consensus/CoconsensusModule.sol";
-import "./../utilityToken/UtilityToken.sol";
+import "../proxies/MasterCopyNonUpgradable.sol";
+import "./../utility-token/UtilityToken.sol";
 
 /**
- * @title Utmost contract implements UtilityToken.
- *
- * @dev Utmost is an ERC20 token wrapper for the base coin that is used to pay
- *      for gas consumption on the auxiliary chain.
+ * @title Utmost contract implements UtilityToken. Utmost is an ERC20 token
+ *        wrapper for the base coin that is used to pay for gas consumption on
+ *        the auxiliary chain.
  */
 contract Utmost is MasterCopyNonUpgradable, GenesisUtmost, UtilityToken, CoconsensusModule {
 
-    /* Events */
-
-    /** Emitted whenever the ERC20 Utmost is converted to base coin Utmost. */
-    event TokenUnwrapped(
-        address indexed _account,
-        uint256 _amount
-    );
-
-    /** Emitted whenever the base coin Utmost is converted to ERC20 Utmost. */
-    event TokenWrapped(
-        address indexed _account,
-        uint256 _amount
-    );
-
-
-    /** Constants */
+    /* Constants */
 
     /** Token Symbol */
     string public constant TOKEN_SYMBOL = "UM";
@@ -53,17 +37,22 @@ contract Utmost is MasterCopyNonUpgradable, GenesisUtmost, UtilityToken, Coconse
     /** Token Decimal */
     uint8 public constant TOKEN_DECIMALS = 18;
 
+    /** Consensus cogateway address defined in genesis. */
+    address public constant CONSENSUS_COGATEWAY = address(0x0000000000000000000000000000000000004d02);
+
 
     /* External Functions */
 
     /**
-     * @notice Calls UtilityToken.setup.
-     *
-     * @dev Function requires:
-     *      - msg.sender should be Coconsensus
+     * @notice Initializes the Utmost contract.
      *
      * @dev This function must be called only once. This check is done in setup
      *      function of UtilityToken.
+     *      Utmost contract ERC20 token balance needs to initialize with
+     *      genesisTotalSupply else wrap function will fail.
+     *
+     *      Function requires:
+     *          - msg.sender should be Coconsensus
      */
     function setup()
         external
@@ -74,7 +63,7 @@ contract Utmost is MasterCopyNonUpgradable, GenesisUtmost, UtilityToken, Coconse
             TOKEN_NAME,
             TOKEN_DECIMALS,
             genesisTotalSupply,
-            address(0x0000000000000000000000000000000000004d02)
+            CONSENSUS_COGATEWAY
         );
 
         balances[address(this)] = genesisTotalSupply;
@@ -86,9 +75,9 @@ contract Utmost is MasterCopyNonUpgradable, GenesisUtmost, UtilityToken, Coconse
      * @dev  This contract's base coin balance must always be greater than
      *       unwrap amount.
      *
-     * @dev Function requires:
-     *      - Amount should be non-zero
-     *      - Caller Utmost token balance should be greater than amount
+     *       Function requires:
+     *          - Amount should be non-zero
+     *          - Caller Utmost token balance should be greater than amount
      *
      * @param _amount Amount of ERC20 Utmost token to convert to base coin.
      */
@@ -96,7 +85,6 @@ contract Utmost is MasterCopyNonUpgradable, GenesisUtmost, UtilityToken, Coconse
         uint256 _amount
     )
         external
-        returns (bool success_)
     {
         require(
             _amount > 0,
@@ -113,10 +101,6 @@ contract Utmost is MasterCopyNonUpgradable, GenesisUtmost, UtilityToken, Coconse
         transferBalance(msg.sender, address(this), _amount);
 
         msg.sender.transfer(_amount);
-
-        emit TokenUnwrapped(msg.sender, _amount);
-
-        success_ = true;
     }
 
     /**
@@ -125,15 +109,12 @@ contract Utmost is MasterCopyNonUpgradable, GenesisUtmost, UtilityToken, Coconse
      * @dev The ERC20 OST balance of contract should always be greater than the
      *      received payable amount.
      *
-     * @dev Function requires:
-     *      - msg.value should be non-zero
-     *
-     * @return success_ `true` if wrap was successfully progressed.
+     *      Function requires:
+     *          - msg.value should be non-zero
      */
     function wrap()
         external
         payable
-        returns (bool success_)
     {
         uint256 amount = msg.value;
         address account = msg.sender;
@@ -146,10 +127,6 @@ contract Utmost is MasterCopyNonUpgradable, GenesisUtmost, UtilityToken, Coconse
         assert(balances[address(this)] >= amount);
 
         transferBalance(address(this), account, amount);
-
-        emit TokenWrapped(account, amount);
-
-        success_ = true;
     }
 
 }
