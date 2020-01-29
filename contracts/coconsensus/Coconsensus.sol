@@ -15,7 +15,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 import "../coconsensus/GenesisCoconsensus.sol";
-import "../observer/ObserverI.sol";
+import "../anchor/ObserverI.sol";
 import "../protocore/ProtocoreI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../version/MosaicVersion.sol";
@@ -51,7 +51,7 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     /** Mapping to track the blocks for each metachain. */
     mapping (bytes32 /* metachainId */ => mapping(uint256 /* blocknumber */ => Block)) blockchains;
 
-    /** 
+    /**
      * Mapping of metachain id to latest block number(tip) stored
      * in blockchains.
      */
