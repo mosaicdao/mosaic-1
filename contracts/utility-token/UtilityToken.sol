@@ -52,47 +52,6 @@ contract UtilityToken is ERC20Token {
     /* External Functions */
 
     /**
-     * @notice Sets up the symbol, name, decimals, totalSupply
-     *         and the consensusCogateway address
-     *
-     * @param _symbol Symbol of token.
-     * @param _name Name of token.
-     * @param _decimals Decimal of token.
-     * @param _totalTokenSupply Total token supply.
-     * @param _consensusCogateway ConsensusCogateway contract address.
-     *
-     * @return success_ `true` for a successful setup, `false` otherwise.
-     */
-    function setup(
-        string calldata _symbol,
-        string calldata _name,
-        uint8 _decimals,
-        uint256 _totalTokenSupply,
-        address _consensusCogateway
-    )
-        external
-        returns (bool success_)
-    {
-        require(
-            consensusCogateway == address(0),
-            "ConsensusCogateway address is already set."
-        );
-
-        require(
-            _consensusCogateway != address(0),
-            "ConsensusCogateway address should not be zero."
-        );
-
-        tokenSymbol = _symbol;
-        tokenName = _name;
-        tokenDecimals = _decimals;
-        totalTokenSupply = _totalTokenSupply;
-        consensusCogateway = _consensusCogateway;
-
-        success_ = true;
-    }
-
-    /**
      * @notice External function to mint tokens.
      *
      * @dev Mints an amount of the token and assigns it to an account.
@@ -150,6 +109,50 @@ contract UtilityToken is ERC20Token {
         returns (bool success_)
     {
         _burnFrom(_account, _value);
+
+        success_ = true;
+    }
+
+
+    /** Internal Functions */
+
+    /**
+     * @notice Sets up the symbol, name, decimals, totalSupply
+     *         and the consensusCogateway address
+     *
+     * @param _symbol Symbol of token.
+     * @param _name Name of token.
+     * @param _decimals Decimal of token.
+     * @param _totalTokenSupply Total token supply.
+     * @param _consensusCogateway ConsensusCogateway contract address.
+     *
+     * @return success_ `true` for a successful setup, `false` otherwise.
+     */
+    function setup(
+        string memory _symbol,
+        string memory _name,
+        uint8 _decimals,
+        uint256 _totalTokenSupply,
+        address _consensusCogateway
+    )
+        internal
+        returns (bool success_)
+    {
+        require(
+            consensusCogateway == address(0),
+            "ConsensusCogateway address is already set."
+        );
+
+        require(
+            _consensusCogateway != address(0),
+            "ConsensusCogateway address should not be zero."
+        );
+
+        tokenSymbol = _symbol;
+        tokenName = _name;
+        tokenDecimals = _decimals;
+        totalTokenSupply = _totalTokenSupply;
+        consensusCogateway = _consensusCogateway;
 
         success_ = true;
     }
