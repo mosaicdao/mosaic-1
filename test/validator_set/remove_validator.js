@@ -22,8 +22,8 @@ const ValidatorSet = artifacts.require('ValidatorSetDouble');
 contract('ValidatorSet::removeValidator', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
   let validatorSet;
-  const beginHeight = new BN(100);
-  const endHeight = new BN(500);
+  const beginHeight = new BN(1);
+  const endHeight = new BN(2);
   let account;
   beforeEach(async () => {
     validatorSet = await ValidatorSet.new();

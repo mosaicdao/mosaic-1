@@ -25,10 +25,10 @@ contract ValidatorSetDouble is ValidatorSet {
 
     /* External Functions */
 
-    function setupValidatorSetDouble()
+    function setupValidatorSetDouble(uint256 _activeHeight)
         external
     {
-        ValidatorSet.setupValidatorSet();
+        ValidatorSet.setupValidatorSet(_activeHeight);
     }
 
     /**
