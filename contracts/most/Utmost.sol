@@ -15,9 +15,10 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 import "./GenesisUtmost.sol";
-import "./../consensus/CoconsensusModule.sol";
+
+import "../consensus/CoconsensusModule.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
-import "./../utility-token/UtilityToken.sol";
+import "../utility-token/UtilityToken.sol";
 
 /**
  * @title Utmost contract implements UtilityToken. Utmost is an ERC20 token
@@ -48,8 +49,6 @@ contract Utmost is MasterCopyNonUpgradable, GenesisUtmost, UtilityToken, Coconse
      *
      * @dev This function must be called only once. This check is done in setup
      *      function of UtilityToken.
-     *      Utmost contract ERC20 token balance needs to be initialized with
-     *      genesisTotalSupply else wrap function will fail.
      *
      *      Function requires:
      *          - msg.sender should be Coconsensus
@@ -66,6 +65,15 @@ contract Utmost is MasterCopyNonUpgradable, GenesisUtmost, UtilityToken, Coconse
             CONSENSUS_COGATEWAY
         );
 
+        /*
+         * In the genesis block, validators gets base token equivalent to the
+         * amount they deposited before joining the core. Equivalent
+         * amount of ERC20 token should be minted and Utmost contract should
+         * hold that balance. Similar flow will happen in normal mint process
+         * where Utmost contract ERC20 balance will be incremented. So in the
+         * setup, Utmost contract holds the ERC20 token balance equal to the
+         * genesisTotalSupply.
+         */
         balances[address(this)] = genesisTotalSupply;
     }
 
