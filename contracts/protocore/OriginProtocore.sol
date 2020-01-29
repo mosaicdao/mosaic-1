@@ -146,7 +146,7 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
         returns (bool)
     {
         assert(selfProtocore != address(0));
-        return ForwardValidatorSetA(selfProtocore).inForwardValidatorSet(_validator, _height);
+        return ForwardValidatorSetAbstract(selfProtocore).inForwardValidatorSet(_validator, _height);
     }
 
     /**
@@ -159,6 +159,6 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
         returns (uint256)
     {
         assert(selfProtocore != address(0));
-        return ForwardValidatorSetA(selfProtocore).forwardValidatorCount(_height);
+        return ForwardValidatorSetAbstract(selfProtocore).forwardValidatorCount(_height);
     }
 }

@@ -17,7 +17,7 @@ pragma solidity >=0.5.0 <0.6.0;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "../consensus/CoconsensusModule.sol";
-import "../validator/ForwardValidatorSetA.sol";
+import "../validator/ForwardValidatorSetAbstract.sol";
 import "../validator/ValidatorSet.sol";
 import "../version/MosaicVersion.sol";
 
@@ -25,7 +25,7 @@ import "../version/MosaicVersion.sol";
  * @title Protocore abstract contract acting as a base contract for
  *        OriginProtocore and SelfProtocore contracts.
  */
-contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetA {
+contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstract {
 
     /* Usings */
 

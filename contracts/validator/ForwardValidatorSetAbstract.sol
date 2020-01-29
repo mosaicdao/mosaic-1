@@ -15,10 +15,10 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 /**
- * @title ForwardValidatorSetA abstract contract specifies a forward validator
+ * @title ForwardValidatorSetAbstract abstract contract specifies a forward validator
  *        set abstract interfaces.
  */
-contract ForwardValidatorSetA {
+contract ForwardValidatorSetAbstract {
 
     /* Public Functions */
 

@@ -14,14 +14,14 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../validator/ForwardValidatorSetA.sol";
+import "../validator/ForwardValidatorSetAbstract.sol";
 
 /**
  * @title ValidatorSet contract.
  *
  * @notice It contains methods to maintain validators for a metablock.
  */
-contract ValidatorSet is ForwardValidatorSetA {
+contract ValidatorSet is ForwardValidatorSetAbstract {
 
     /* Constants */
 
