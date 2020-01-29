@@ -17,11 +17,11 @@ pragma solidity >=0.5.0 <0.6.0;
 import "./../../utility-token/UtilityToken.sol";
 
 /**
- *  @title UtilityToken Test contract.
+ *  @title UtilityToken test contract.
  */
 contract UtilityTokenTest is UtilityToken {
 
-    /* Public Functions */
+    /* External Functions */
 
     /**
      * @notice Sets up the symbol, name, decimals, totalSupply
