@@ -90,9 +90,12 @@ contract ValidatorSet {
 
     /* Modifiers */
 
-    modifier onlyActiveHeight(uint _height)
+    modifier onlyActiveHeight(uint256 _height)
     {
-        restrictHeight(_height);
+        require(
+            activeHeight == _height,
+            "Height must equal active height."
+        );
         _;
     }
 
@@ -151,10 +154,10 @@ contract ValidatorSet {
     }
 
     /**
-     * @notice returns the validator set count for heights up to active height.
+     * @notice returns the validator set count for heights up to active height, but not included.
      *
      * @dev Function requires:
-     *          - height is less or equal to active height
+     *          - height is less than active height
      *
      * @param _height Height for which to return the validator set count.
      */
@@ -164,17 +167,17 @@ contract ValidatorSet {
         returns (uint256)
     {
         require(
-            _height <= activeHeight,
+            _height < activeHeight,
             "Validator set count is only defined up to active height."
         );
         return validatorCount[_height];
     }
 
     /**
-     * @notice returns the forward validator set count for heights up to active height.
+     * @notice returns the forward validator set count for heights up to active height, but not included.
      *
      * @dev Function requires:
-     *          - height is less or equal to active height
+     *          - height is less than active height
      *
      * @param _height Height for which to return the forward validator set count.
      */
@@ -184,13 +187,34 @@ contract ValidatorSet {
         returns (uint256)
     {
         require(
-            _height <= activeHeight,
+            _height < activeHeight,
             "Forward validator set count is only defined up to active height."
         );
         return fvsCount[_height];
     }
 
     /* Internal Functions  */
+
+    /**
+     * @notice Increments the active height, and height must be explicitly provided.
+     *         IncrementActiveHeight must be called on opening a new height, and
+     *         _nextHeight is the new `openKernelHeight + 1`.
+     *
+     * @param _nextHeight Incremented height equaling active height plus one.
+     */
+    function incrementActiveHeight(uint256 _nextHeight)
+        internal
+    {
+        assert(_nextHeight == activeHeight.add(1));
+
+        // before increasing active height, h -> h+1,
+        // initialize N_(h+2) = N_(h+1)
+        // and F_(h+1) = N_(h+1), for calculating the running counts.
+        validatorCount[_nextHeight.add(1)] = validatorCount[_nextHeight];
+        fvsCount[_nextHeight] = validatorCount[_nextHeight];
+
+        activeHeight = _nextHeight;
+    }
 
     /**
      * @notice Inserts validators into the validator set and sets begin height.
@@ -266,34 +290,5 @@ contract ValidatorSet {
         uint256 nextHeight = activeHeight.add(1);
         validatorCount[nextHeight] = validatorCount[nextHeight].sub(1);
         fvsCount[activeHeight] = fvsCount[activeHeight].sub(1);
-    }
-
-
-    /* Private Functions */
-
-    function restrictHeight(
-        uint256 _height
-    )
-        private
-    {
-        uint256 nextHeight = activeHeight.add(1);
-        require(
-            nextHeight >= _height,
-            "Active height can be incremented at most by one."
-        );
-
-        require(
-            _height >= activeHeight,
-            "Height cannot be less than active height."
-        );
-
-        if (nextHeight == _height) {
-            // upon increasing active height, h -> h+1,
-            // initialize N_(h+2) = N_(h+1) for the running counts
-            // and F_h+1 = N_(h+1)
-            validatorCount[_height.add(2)] = validatorCount[nextHeight];
-            fvsCount[nextHeight] = validatorCount[nextHeight];
-            activeHeight = nextHeight;
-        }
     }
 }
