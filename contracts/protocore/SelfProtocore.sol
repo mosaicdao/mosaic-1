@@ -19,24 +19,11 @@ import "../protocore/GenesisSelfProtocore.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../validator/ValidatorSet.sol";
 
+
 /**
  * @title Self protocore - This contract finalizes the proposed blocks of auxiliary chain.
  */
 contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, ValidatorSet, Protocore {
-
-    /* Events */
-
-    event LinkProposed(
-        bytes32 _parentVoteMessageHash,
-        bytes32 _targetBlockHash,
-        uint256 _targetBlockNumber,
-        bytes32 _sourceOriginObservation,
-        bytes32 _sourceKernelHash,
-        uint256 _sourceDynasty,
-        uint256 _sourceAccumulatedGas,
-        bytes32 _sourceCommitteeLock
-    );
-
 
     /* Special Functions */
 
@@ -86,7 +73,7 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Validat
     }
 
 
-    /* External */
+    /* External Functions */
 
     /**
      * @notice Insert or remove validator. It inserts validator if not already
