@@ -123,8 +123,6 @@ async function encodeNewCoreParams(coreParams) {
 }
 
 async function encodeNewCommitteeParams(committeeParams) {
-  console.log(JSON.stringify(committeeParams));
-
   const callPrefix = await Utils.encodeFunctionSignature(CommitteeSetupFunctionSignature);
   const callData = await Utils.encodeParameters(
     CommitteeSetupParamTypes.split(','),
