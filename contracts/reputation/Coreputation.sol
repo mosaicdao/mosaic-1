@@ -65,8 +65,8 @@ contract Coreputation is MasterCopyNonUpgradable, CoconsensusModule {
      *      Validator is marked Deregistered if provided reputation is zero.
      *      Validator is marked Staked, if he has non zero reputation value.
      *
-     * @dev Function requires:
-     *      - msg.sender should be Coconsensus
+     *      Function requires:
+     *          - msg.sender should be Coconsensus
      *
      * @param _validator Validator address to upsert.
      * @param _reputation Validator reputation value.
