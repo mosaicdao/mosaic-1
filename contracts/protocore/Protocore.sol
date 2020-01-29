@@ -448,19 +448,6 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetA {
             .div(CORE_SUPER_MAJORITY_DENOMINATOR);
     }
 
-    /**
-     * @notice quorumReached() function returns true if the forward validator
-     *         set of the given metablock height reached a quorum for
-     *         the given link.
-     */
-    function quorumReached(Link storage _link, uint256 _height)
-        private
-        view
-        returns (bool)
-    {
-        return _link.fvsVoteCount[_height] >= fvsQuorums[_height];
-    }
-
     function countVoteForForwardValidatorSets(
         bytes32 _voteMessageHash,
         Link storage _link,
@@ -475,7 +462,7 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetA {
             _validator)) {
             _link.fvsVoteCount[openKernelHeight] = _link.fvsVoteCount[openKernelHeight].add(1);
         }
-        bool quorumForwardValidatorSet = quorumReached(_link, openKernelHeight);
+        bool quorumForwardValidatorSet = _link.fvsVoteCount[openKernelHeight] >= fvsQuorums[openKernelHeight];
 
         bool quorumRearValidatorSet = true;
         if (openKernelHeight > uint256(0)) {
@@ -487,7 +474,7 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetA {
                 _link.fvsVoteCount[openKernelHeight] = _link.fvsVoteCount[previousHeight].add(1);
             }
 
-            quorumRearValidatorSet = quorumReached(_link, previousHeight);
+            quorumRearValidatorSet = _link.fvsVoteCount[previousHeight] >= fvsQuorums[previousHeight];
         }
 
         quorumReached_ = (quorumForwardValidatorSet && quorumRearValidatorSet);
