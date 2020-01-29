@@ -23,7 +23,7 @@ import "../validator/ValidatorSet.sol";
 /**
  * @title Self protocore - This contract finalizes the proposed blocks of auxiliary chain.
  */
-contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, ValidatorSet, Protocore {
+contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protocore, ValidatorSet {
 
     /* Special Functions */
 

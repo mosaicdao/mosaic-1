@@ -14,8 +14,8 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../protocore/Protocore.sol";
 import "../protocore/GenesisOriginProtocore.sol";
+import "../protocore/Protocore.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 
 /**
@@ -89,5 +89,34 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
             genesisOriginTargetBlockHash,
             genesisOriginTargetBlockNumber
         );
+    }
+
+
+    /* Public Functions */
+
+    /**
+     * @notice inForwardValidatorSet() function delegates the call to
+     *         the stored self protocore contract.
+     */
+    function inForwardValidatorSet(address _validator, uint256 _height)
+        public
+        view
+        returns (bool)
+    {
+        assert(selfProtocore != address(0));
+        return ForwardValidatorSetA(selfProtocore).inForwardValidatorSet(_validator, _height);
+    }
+
+    /**
+     * @notice forwardValidatorCount() function delegates the call to
+     *         the stored self protocore contract.
+     */
+    function forwardValidatorCount(uint256 _height)
+        public
+        view
+        returns (uint256)
+    {
+        assert(selfProtocore != address(0));
+        return ForwardValidatorSetA(selfProtocore).forwardValidatorCount(_height);
     }
 }

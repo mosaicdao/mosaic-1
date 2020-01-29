@@ -17,6 +17,7 @@ pragma solidity >=0.5.0 <0.6.0;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "../consensus/CoconsensusModule.sol";
+import "../validator/ForwardValidatorSetA.sol";
 import "../validator/ValidatorSet.sol";
 import "../version/MosaicVersion.sol";
 
@@ -24,7 +25,7 @@ import "../version/MosaicVersion.sol";
  * @title Protocore abstract contract acting as a base contract for
  *        OriginProtocore and SelfProtocore contracts.
  */
-contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
+contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetA {
 
     /* Usings */
 
@@ -455,14 +456,13 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
         private
         returns (bool quorumReached_)
     {
-        bool quorumForwardValidatorSet = false;
         if (canVoteInForwardValidatorSet(
             _voteMessageHash,
             openKernelHeight,
             _validator)) {
             _link.fvsVoteCount[openKernelHeight] = _link.fvsVoteCount[openKernelHeight].add(1);
-            quorumForwardValidatorSet = (_link.fvsVoteCount[openKernelHeight] >= fvsQuorums[openKernelHeight]);
         }
+        bool quorumForwardValidatorSet = (_link.fvsVoteCount[openKernelHeight] >= fvsQuorums[openKernelHeight]);
 
         bool quorumRearValidatorSet = true;
         if (openKernelHeight > uint256(0)) {
@@ -473,8 +473,10 @@ contract Protocore is MosaicVersion, ValidatorSet, CoconsensusModule {
                 _validator)) {
                 _link.fvsVoteCount[openKernelHeight] = _link.fvsVoteCount[previousHeight].add(1);
             }
+
             quorumRearValidatorSet = (_link.fvsVoteCount[previousHeight] >= fvsQuorums[previousHeight]);
         }
+
         quorumReached_ = (quorumForwardValidatorSet && quorumRearValidatorSet);
     }
 
