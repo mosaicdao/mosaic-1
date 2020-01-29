@@ -23,6 +23,15 @@ import "../proxies/MasterCopyNonUpgradable.sol";
  */
 contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Protocore {
 
+    /* Events */
+
+    event LinkProposed(
+        bytes32 parentVoteMessageHash,
+        bytes32 targetBlockHash,
+        uint256 targetBlockNumber
+    );
+
+
     /* Storage */
 
     /**
@@ -88,6 +97,39 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
             genesisOriginSourceBlockNumber,
             genesisOriginTargetBlockHash,
             genesisOriginTargetBlockNumber
+        );
+    }
+
+
+    /* External Functions */
+
+    /**
+     * @notice proposeLink() function proposes a valid link to be voted later by
+     *         active validators.
+     *
+     * @dev Satisfies \pre and \post conditions of
+     *      Protocore::proposeLinkInternal().
+	 *
+ 	 * \post Emits LinkProposed event.
+     */
+    function proposeLink(
+        bytes32 _parentVoteMessageHash,
+        bytes32 _targetBlockHash,
+        uint256 _targetBlockNumber
+    )
+        external
+    {
+        Protocore.proposeLinkInternal(
+            _parentVoteMessageHash,
+            bytes32(0),
+            _targetBlockHash,
+            _targetBlockNumber
+        );
+
+        emit LinkProposed(
+            _parentVoteMessageHash,
+            _targetBlockHash,
+            _targetBlockNumber
         );
     }
 
