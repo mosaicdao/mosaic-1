@@ -101,6 +101,7 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Validat
             }
         }
         else {
+            assert(_height == openKernelHeight.add(1));
             if(_reputation > 0) {
                 insertValidatorInternal(_validator, _height);
             }

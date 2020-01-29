@@ -70,14 +70,14 @@ contract('SelfProtocore::upsertValidator', (accounts) => {
       config.genesis.auxiliaryTargetBlockNumber,
       config.genesis.auxiliaryAccumulatedGas,
     );
-
+    config.openKernelHeight = new BN(20);
     validator.address = accountProvider.get();
-    validator.beginHeight = new BN(20);
+    validator.beginHeight = config.openKernelHeight.addn(1);
     validator.endHeight = new BN(100);
     validator.reputation = new BN(500);
 
     await config.selfProtocore.setCoconsensus(config.coconsensusAddress);
-    await config.selfProtocore.setOpenKernelHeight(validator.beginHeight);
+    await config.selfProtocore.setOpenKernelHeight(config.openKernelHeight);
 
     await config.selfProtocore.setup(
       config.setupParams.metachainId,
@@ -117,7 +117,6 @@ contract('SelfProtocore::upsertValidator', (accounts) => {
           from: config.coconsensusAddress,
         },
       );
-
       const actualValidatorEndHeight = await config.selfProtocore.validatorEndHeight.call(
         validator.address,
       );
@@ -128,10 +127,11 @@ contract('SelfProtocore::upsertValidator', (accounts) => {
         `Expected validator end height is ${Utils.MAX_UINT256} but got ${actualValidatorEndHeight}`,
       );
 
+      await config.selfProtocore.setOpenKernelHeight(config.openKernelHeight.addn(1));
       await config.selfProtocore.upsertValidator(
         validator.address,
         validator.endHeight,
-        '0',
+        new BN(0),
         {
           from: config.coconsensusAddress,
         },
