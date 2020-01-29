@@ -707,7 +707,9 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *
      * @param _validator A validator's address to join.
      *
-     * @return The total count of joined validators and begin height.
+     * @return validatorCount_ The total count of validators.
+     * @return minValidatorCount_ Minimum validator count required set by consensus.
+     * @return beginHeight_ Begin height of validator.
      */
     function joinBeforeOpen(address _validator)
         external
@@ -809,7 +811,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *
      * @param _validator An address of the validator to logout.
      *
-     * @return nextKernelHeight_ validator end height.
+     * @return nextKernelHeight_ Next kernel height.
      */
     function logout(address _validator)
         external
