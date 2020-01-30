@@ -90,6 +90,7 @@ contract Protocore is MosaicVersion, CoconsensusModule {
     /** Epoch length */
     uint256 public epochLength;
 
+    uint256 public currentDynasty;
 
     /* Special Functions */
 

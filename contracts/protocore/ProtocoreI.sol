@@ -37,4 +37,9 @@ interface ProtocoreI {
             uint256 blockNumber_,
             bytes32 blockHash_
         );
+
+    /**
+     * @notice Function to get the current dynasty.
+     */
+     function currentDynasty() external view returns (uint256);
 }

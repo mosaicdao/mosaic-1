@@ -14,6 +14,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import "../block/Block.sol";
 import "../coconsensus/GenesisCoconsensus.sol";
 import "../observer/ObserverI.sol";
 import "../protocore/ProtocoreI.sol";
@@ -39,7 +40,7 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     /* Structs */
 
     /** Struct to track dynasty and checkpoint commit status of a block. */
-    struct Block {
+    struct BlockStatus {
         bytes32 blockHash;
         CheckpointCommitStatus commitStatus;
         uint256 statusDynasty;
@@ -65,7 +66,7 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
 
     /** Mapping to track the blocks for each metachain. */
     mapping (bytes32 /* metachainId */ =>
-        mapping(uint256 /* blocknumber */ => Block)
+        mapping(uint256 /* blocknumber */ => BlockStatus)
     ) public blockchains;
 
     /**
@@ -119,6 +120,69 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     }
 
 
+    /* External Functions */
+
+    /**
+     * @notice Anchor the state root in to the observer contracts.
+     *
+     * @param _metachainId Metachain id.
+     * @param _rlpBlockHeader RLP encoded block header.
+     *
+     * /pre `_metachainId` is not 0.
+     * /pre `_rlpBlockHeader` is not 0.
+     * /pre `blockHash` should exist in blockchains.
+     * /pre The dynasty of the reported block should be less than current dynasty.
+     * /pre The reported block should be finalized.
+     *
+     * /post Anchor the state root in the observer contract.
+     */
+    function observeBlock(
+        bytes32 _metachainId,
+        bytes calldata _rlpBlockHeader
+    )
+        external
+    {
+        require(
+            _metachainId != bytes32(0),
+            "Metachain id must not be null."
+        );
+
+        require(
+            _rlpBlockHeader.length != 0,
+            "RLP block header must not be null."
+        );
+
+        // Decode the rlp encoded block header.
+        Block.Header memory blockHeader = Block.decodeHeader(_rlpBlockHeader);
+
+        BlockStatus memory blockStatus = blockchains[_metachainId][blockHeader.height];
+
+        require(
+            blockStatus.blockHash == blockHeader.blockHash,
+            "Provided block header is not valid."
+        );
+
+        require(
+            blockStatus.commitStatus > CheckpointCommitStatus.Committed,
+            "Block must be at least finalized."
+        );
+
+        // Get the current dynasty from the self protocore.
+        ProtocoreI protocore = protocores[auxiliaryMetachainId];
+        uint256 currentDynasty = protocore.currentDynasty();
+
+        require(
+            currentDynasty > blockStatus.statusDynasty,
+            "Block dynasty must be less than current dynasty."
+        );
+
+        // Get the observer contract.
+        ObserverI observer = observers[_metachainId];
+
+        // Anchor the state root.
+        observer.anchorStateRoot(blockHeader.height, blockHeader.stateRoot);
+    }
+
     /* Private Functions */
 
     /**
@@ -163,7 +227,7 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
         ) = protocore.latestFinalizedBlock();
 
         // Store the block informations in blockchains mapping.
-        blockchains[_metachainId][blockNumber] = Block(
+        blockchains[_metachainId][blockNumber] = BlockStatus(
             blockHash,
             CheckpointCommitStatus.Finalized,
             metablockHeight

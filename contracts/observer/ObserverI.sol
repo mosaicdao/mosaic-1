@@ -23,4 +23,17 @@ interface ObserverI {
      * @notice setup() function initializes the observer contract.
      */
      function setup() external;
+
+    /**
+     * @notice Anchor the state root for an (increasing) block number.
+     *
+     * @param _blockNumber Block number for which state root needs to
+     *                      update.
+     * @param _stateRoot State root of input block number.
+     */
+    function anchorStateRoot(
+        uint256 _blockNumber,
+        bytes32 _stateRoot
+    )
+        external;
 }
