@@ -96,8 +96,8 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Validat
     /* External Functions. */
 
     /**
-     * @notice proposeLinkInternal() function proposes a valid link to be
-     *         voted later by active validators. It emits LinkProposed event.
+     * @notice It proposes a valid link to be voted later by active validators.
+     *         It emits LinkProposed event.
      *
      * @dev Function requires :
      *          - parent vote messagehash must not be 0.
