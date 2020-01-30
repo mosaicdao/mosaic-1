@@ -18,14 +18,17 @@ import "../../consensus/CoconsensusI.sol";
 import "../../protocore/Protocore.sol";
 import "../../validator/ValidatorSet.sol";
 
-contract TestProtocore is Protocore, ValidatorSet {
+contract TestProtocore is Protocore {
 
 	/* Storage */
 
     CoconsensusI public coconsensus;
 
+    mapping(uint256 /* metablock height */ => mapping(address /* validator */ => bool)) fvs;
+    mapping(uint256 /* metablock height */ => uint256 /* fvs count */) fvsCounts;
 
-    /* Special Functions */
+
+    /* Functions */
 
     constructor(
         CoconsensusI _coconsensus,
@@ -70,25 +73,54 @@ contract TestProtocore is Protocore, ValidatorSet {
         );
     }
 
-
-    /* External Functions */
-
     function getCoconsensus()
-		public
-		view
-		returns (CoconsensusI)
-	{
+        public
+        view
+        returns (CoconsensusI)
+    {
         return coconsensus;
     }
 
-    // @TODO: This function should be removed once
-    //        ValidatorSet::forwardValidatorCount is implemented.
-    function forwardValidatorCount(uint256)
+    function addToFVS(address _validator, uint256 _height)
+        external
+    {
+        assert(_validator != address(0));
+        assert(fvs[_height][_validator] == false);
+
+        fvs[_height][_validator] = true;
+        fvsCounts[_height] = fvsCounts[_height].add(1);
+    }
+
+    function inForwardValidatorSet(address _validator, uint256 _height)
+        public
+        view
+        returns (bool)
+    {
+        return fvs[_height][_validator];
+    }
+
+    function forwardValidatorCount(uint256 _height)
         public
         view
         returns (uint256)
     {
-        return 0;
+        return fvsCounts[_height];
+    }
+
+    function registerVote(
+        bytes32 _voteMessageHash,
+        bytes32 _r,
+        bytes32 _s,
+        uint8 _v
+    )
+        external
+    {
+        return Protocore.registerVoteInternal(
+            _voteMessageHash,
+            _r,
+            _s,
+            _v
+        );
     }
 
     function proposeLink(
@@ -168,6 +200,17 @@ contract TestProtocore is Protocore, ValidatorSet {
         return links[_voteMessageHash].fvsVoteCount[_height];
     }
 
+    function hasVoted(
+        bytes32 _voteMessageHash,
+        uint256 _height,
+        address _validator
+    )
+        external
+        view
+        returns (bool)
+    {
+        return fvsVotes[_voteMessageHash][_height][_validator] != address(0);
+    }
 
     function getTargetFinalisation(
         bytes32 _voteMessageHash

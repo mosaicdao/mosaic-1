@@ -14,6 +14,9 @@
 
 'use strict';
 
+const EthUtils = require('ethereumjs-util');
+
+const Utils = require('../test_lib/utils.js');
 const web3 = require('../test_lib/web3.js');
 
 const CheckpointFinalisationStatus = Object.freeze({
@@ -67,6 +70,94 @@ function hashVoteMessage(
   return voteMessageHash;
 }
 
+async function proposeLinkInternal(
+  protocore,
+  parentVoteMessageHash,
+  targetBlockNumber,
+  targetBlockHash = Utils.getRandomHash(),
+  sourceTransitionHash = Utils.getRandomHash(),
+) {
+  await protocore.proposeLink(
+    parentVoteMessageHash,
+    sourceTransitionHash,
+    targetBlockHash,
+    targetBlockNumber,
+  );
+
+  const domainSeparator = await protocore.domainSeparator.call();
+
+  const parentLink = await protocore.links(parentVoteMessageHash);
+
+  const voteMessageHash = hashVoteMessage(
+    domainSeparator,
+    sourceTransitionHash,
+    parentLink.targetBlockHash, // acts as source block hash for the proposed link
+    targetBlockHash,
+    parentLink.targetBlockNumber, // acts as a source block number for the proposed link
+    targetBlockNumber,
+  );
+
+  return {
+    voteMessageHash,
+  };
+}
+
+async function proposeFinalisationLinkInternal(
+  protocore,
+  parentVoteMessageHash,
+  targetBlockHash = Utils.getRandomHash(),
+  sourceTransitionHash = Utils.getRandomHash(),
+) {
+  const parentLink = await protocore.links(parentVoteMessageHash);
+
+  const epochLength = await protocore.epochLength();
+
+  const targetBlockNumber = parentLink.targetBlockNumber + epochLength;
+
+  const { voteMessageHash } = await proposeLinkInternal(
+    protocore,
+    parentVoteMessageHash,
+    targetBlockNumber,
+    targetBlockHash,
+    sourceTransitionHash,
+  );
+
+  return {
+    voteMessageHash,
+    sourceTransitionHash,
+    targetBlockHash,
+    targetBlockNumber,
+  };
+}
+
+async function proposeNonFinalisationLinkInternal(
+  protocore,
+  parentVoteMessageHash,
+  targetBlockHash = Utils.getRandomHash(),
+  sourceTransitionHash = Utils.getRandomHash(),
+) {
+  const parentLink = await protocore.links(parentVoteMessageHash);
+
+  const epochLength = await protocore.epochLength();
+
+  const targetBlockNumber = parentLink.targetBlockNumber + 2 * epochLength;
+
+  const { voteMessageHash } = await proposeLinkInternal(
+    protocore,
+    parentVoteMessageHash,
+    targetBlockNumber,
+    targetBlockHash,
+    sourceTransitionHash,
+  );
+
+  return {
+    voteMessageHash,
+    sourceTransitionHash,
+    targetBlockHash,
+    targetBlockNumber,
+  };
+}
+
 function isUndefined(finalisationStatus) { return finalisationStatus.eqn(0); }
 
 function isRegistered(finalisationStatus) { return finalisationStatus.eqn(1); }
@@ -75,11 +166,49 @@ function isJustified(finalisationStatus) { return finalisationStatus.eqn(2); }
 
 function isFinalised(finalisationStatus) { return finalisationStatus.eqn(3); }
 
+class Validator {
+  static async create() {
+    const {
+      address,
+      privateKey,
+    } = await web3.eth.accounts.create();
+
+    return new Validator(address, privateKey);
+  }
+
+  constructor(address, privateKey) {
+    this.address = address;
+    this.privateKey = privateKey;
+  }
+
+  async ecsign(msg) {
+    return EthUtils.ecsign(
+      EthUtils.toBuffer(msg),
+      EthUtils.toBuffer(this.privateKey),
+    );
+  }
+
+  static async ecrecover(msg, sig) {
+    const pub = EthUtils.ecrecover(
+      EthUtils.toBuffer(msg),
+      sig.v, sig.r, sig.s,
+    );
+
+    return EthUtils.bufferToHex(
+      EthUtils.pubToAddress(pub),
+    );
+  }
+}
+
 module.exports = {
-  hashVoteMessage,
-  isUndefined,
-  isRegistered,
-  isJustified,
-  isFinalised,
   CheckpointFinalisationStatus,
+  hashVoteMessage,
+  isFinalised,
+  isJustified,
+  isRegistered,
+  isUndefined,
+  proposeFinalisationLinkInternal,
+  proposeLinkInternal,
+  proposeNonFinalisationLinkInternal,
+  Validator,
 };

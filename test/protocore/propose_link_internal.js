@@ -36,7 +36,7 @@ contract('Protocore::proposeLinkInternal', (accounts) => {
 
     config.genesisKernelHeight = new BN(1);
     config.genesisKernelHash = Utils.getRandomHash();
-    config.genesisParentVoteMessageHash = Utils.getRandomHash();    
+    config.genesisParentVoteMessageHash = Utils.getRandomHash();
     config.genesisSourceTransitionHash = Utils.getRandomHash();
     config.genesisSourceBlockHash = Utils.getRandomHash();
     config.genesisTargetBlockHash = Utils.getRandomHash();

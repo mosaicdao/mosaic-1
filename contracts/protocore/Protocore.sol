@@ -508,6 +508,7 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
         // lazy-initialise linked list for forward validator set votes
         if (lastValidator == address(0)) {
             fvsVotes[_voteMessageHash][openKernelHeight][SENTINEL_VALIDATORS] = SENTINEL_VALIDATORS;
+            lastValidator = SENTINEL_VALIDATORS;
         }
 
         fvsVotes[_voteMessageHash][openKernelHeight][_validator] = lastValidator;
