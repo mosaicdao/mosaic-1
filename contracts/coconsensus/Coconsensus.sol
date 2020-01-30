@@ -58,24 +58,25 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     /* Storage */
 
     /** Mapping to track the blocks for each metachain. */
-    mapping (bytes32 /* metachainId */ => mapping(uint256 /* blocknumber */ => Block)) blockchains;
+    mapping (bytes32 /* metachainId */ => mapping(uint256 /* blocknumber */ => Block)) public blockchains;
 
     /**
      * Mapping of metachain id to latest block number(tip) stored
      * in blockchains.
      */
-    mapping (bytes32 /* metachainId */ => uint256 /* blocknumber */) blockTips;
+    mapping (bytes32 /* metachainId */ => uint256 /* blocknumber */) public blockTips;
 
     /** Mapping of metachain id to the protocore contract address. */
-    mapping (bytes32 /* metachainId */ => ProtocoreI) protocores;
+    mapping (bytes32 /* metachainId */ => ProtocoreI) public protocores;
 
     /** Mapping of metachain id to the observers contract address. */
-    mapping (bytes32 /* metachainId */ => ObserverI) observers;
+    mapping (bytes32 /* metachainId */ => ObserverI) public observers;
 
     /** Mapping of metachain id to the domain separators. */
-    mapping (bytes32 /* metachainId */ => bytes32 /* domain separator */) domainSeparators;
+    mapping (bytes32 /* metachainId */ => bytes32 /* domain separator */) public domainSeparators;
 
 
+    event Debug(bytes32 currentMetachainId, ProtocoreI protocore);
     /* Public Functions */
 
     /**
@@ -168,7 +169,7 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
             observerAddress != address(0),
             "Observer address must not be null."
         );
-        
+
         // Call the setup function.
         ObserverI observer = ObserverI(observerAddress);
         observer.setup();
