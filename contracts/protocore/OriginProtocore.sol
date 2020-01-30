@@ -109,8 +109,8 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
      *
      * @dev Satisfies \pre and \post conditions of
      *      Protocore::proposeLinkInternal().
-	 *
- 	 * \post Emits LinkProposed event.
+     *
+     * \post Emits LinkProposed event.
      */
     function proposeLink(
         bytes32 _parentVoteMessageHash,
@@ -146,7 +146,10 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
         returns (bool)
     {
         assert(selfProtocore != address(0));
-        return ForwardValidatorSetAbstract(selfProtocore).inForwardValidatorSet(_validator, _height);
+        return ForwardValidatorSetAbstract(selfProtocore).inForwardValidatorSet(
+            _validator,
+            _height
+        );
     }
 
     /**
@@ -159,6 +162,8 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
         returns (uint256)
     {
         assert(selfProtocore != address(0));
-        return ForwardValidatorSetAbstract(selfProtocore).forwardValidatorCount(_height);
+        return ForwardValidatorSetAbstract(selfProtocore).forwardValidatorCount(
+            _height
+        );
     }
 }
