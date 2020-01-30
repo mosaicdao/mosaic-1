@@ -21,7 +21,7 @@ import "../validator/ValidatorSet.sol";
 
 
 /**
- * @title Self protocore - This contract finalizes the proposed blocks of auxiliary chain.
+ * @title SelfProtocore - This contract finalizes the proposed blocks of auxiliary chain.
  */
 contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, ValidatorSet, Protocore {
 
@@ -188,15 +188,15 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Validat
      * @notice Takes the parameters of an source transition object and returns the
      *         typed hash of it.
      *
-     * @param _kernelHash Kernel hash
+     * @param _kernelHash Kernel hash.
      * @param _originObservation Observation of the origin chain.
      * @param _dynasty The dynasty number where the meta-block closes
      *                 on the auxiliary chain.
-     * @param _accumulatedGas The total consumed gas on auxiliary within this
+     * @param _accumulatedGas The total consumed gas on auxiliary within a
      *                        meta-block.
      * @param _committeeLock The committee lock that hashes the transaction
      *                       root on the auxiliary chain.
-     * @return hash_ The hash of source transition object.
+     * @return sourceTransitionHash_ The hash of source transition object.
      */
     function hashSourceTransition(
         bytes32 _kernelHash,
@@ -205,11 +205,11 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Validat
         uint256 _accumulatedGas,
         bytes32 _committeeLock
     )
-        internal
+        private
         view
-        returns (bytes32 hash_)
+        returns (bytes32 sourceTransitionHash_)
     {
-        bytes32 typedTransitionHash = keccak256(
+        bytes32 typedSourceTransitionHash = keccak256(
             abi.encode(
                 SOURCE_TRANSITION_TYPEHASH,
                 _kernelHash,
@@ -220,12 +220,12 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Validat
             )
         );
 
-        hash_ = keccak256(
+        sourceTransitionHash_ = keccak256(
             abi.encodePacked(
                 byte(0x19),
                 byte(0x01),
                 domainSeparator,
-                typedTransitionHash
+                typedSourceTransitionHash
             )
         );
     }
