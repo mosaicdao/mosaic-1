@@ -22,7 +22,6 @@ contract CoconsensusTest is Coconsensus {
 
     using SafeMath for uint256;
 
-    event Debug(bytes32 mid,address pt,address ob);
     function setGenesisStorage(
         bytes32[] calldata _metachainIds,
         address[] calldata _protocores,
@@ -42,8 +41,6 @@ contract CoconsensusTest is Coconsensus {
 
             genesisProtocores[currentMetachainId] = _protocores[i];
             genesisObservers[currentMetachainId] = _observers[i];
-
-            emit Debug(currentMetachainId,_protocores[i],_observers[i]);
         }
     }
 }
