@@ -107,7 +107,6 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
 
         // Loop through the genesis metachainId link list.
         while (currentMetachainId != SENTINEL_METACHAIN_ID) {
-
             // Setup observer contract for the given metachain id.
             setupObservers(currentMetachainId);
 
@@ -249,19 +248,15 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
      * /post Set `observers` mapping with the observer address.
      */
     function setupObservers(bytes32 _metachainId) private {
-
         // Get the observer contract address from the genesis storage.
         address observerAddress = genesisObservers[_metachainId];
-        require(
-            observerAddress != address(0),
-            "Observer address must not be null."
-        );
+        if(observerAddress != address(0)) {
+            // Call the setup function.
+            ObserverI observer = ObserverI(observerAddress);
+            observer.setup();
 
-        // Call the setup function.
-        ObserverI observer = ObserverI(observerAddress);
-        observer.setup();
-
-        // Update the observers mapping.
-        observers[_metachainId] = observer;
+            // Update the observers mapping.
+            observers[_metachainId] = observer;
+        }
     }
 }

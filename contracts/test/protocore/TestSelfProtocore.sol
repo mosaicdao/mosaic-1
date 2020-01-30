@@ -62,4 +62,8 @@ contract TestSelfProtocore is SelfProtocore {
 	{
         return coconsensus;
     }
+
+    function setCurrentDynasty(uint256 _dynasty) external {
+        currentDynasty = _dynasty;
+    }
 }

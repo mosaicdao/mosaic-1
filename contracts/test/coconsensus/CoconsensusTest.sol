@@ -14,15 +14,17 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-
 import "../../coconsensus/Coconsensus.sol";
+
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract CoconsensusTest is Coconsensus {
 
     using SafeMath for uint256;
 
-    event Debug(bytes32 mid,address pt,address ob);
+    /**
+     * @notice This function stores the genesis data.
+     */
     function setGenesisStorage(
         bytes32[] calldata _metachainIds,
         address[] calldata _protocores,
@@ -42,8 +44,27 @@ contract CoconsensusTest is Coconsensus {
 
             genesisProtocores[currentMetachainId] = _protocores[i];
             genesisObservers[currentMetachainId] = _observers[i];
-
-            emit Debug(currentMetachainId,_protocores[i],_observers[i]);
         }
+    }
+
+    /**
+     * @notice This function is used to set the finalize checkpoint.
+     */
+    function setFinaliseCheckpoint(
+        bytes32 _metachainId,
+        uint256 _blockNumber,
+        bytes32 _blockHash,
+        uint256 _dynasty
+    )
+        external
+    {
+        blockchains[_metachainId][_blockNumber] = BlockStatus(
+            _blockHash,
+            CheckpointCommitStatus.Finalized,
+            _dynasty
+        );
+
+        // Store the blocknumber as tip.
+        blockTips[_metachainId] = _blockNumber;
     }
 }
