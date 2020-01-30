@@ -159,7 +159,8 @@ contract('Coconsensus::setup', (accounts) => {
 
   contract('Positive Tests', async () => {
     it('should initialize the coconsensus contract', async () => {
-      const { coconsensus } = config.contracts.coconsensus;
+      const { coconsensus } = config.contracts;
+
       // Call setup function.
       await coconsensus.setup();
 
