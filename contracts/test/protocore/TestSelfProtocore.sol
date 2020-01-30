@@ -17,14 +17,41 @@ pragma solidity >=0.5.0 <0.6.0;
 import "../../consensus/CoconsensusI.sol";
 import "../../protocore/SelfProtocore.sol";
 
+
+/**
+ * @title TestSelfProtocore
+ *
+ * @notice It is used to test SelfProtocore contract.
+ */
 contract TestSelfProtocore is SelfProtocore {
 
     /* Storage */
 
     CoconsensusI public coconsensus;
 
+
+    /* External Functions */
+
+    /**
+     * @notice It is used to set coconsensus for testing purpose for calling setup
+     * of SelfProtocore contract.
+     */
     function setCoconsensus(address _coconsensus) external {
         coconsensus = CoconsensusI(_coconsensus);
+    }
+
+    /**
+     * @notice It is used to test SelfProtocore::proposeLink.
+     */
+    function setOpenKernelHash(bytes32 _openKernelHash) external {
+        openKernelHash = _openKernelHash;
+    }
+
+    /**
+     * @notice It is used to test SelfProtocore::proposeLink.
+     */
+    function setOpenKernelHeight(uint256 _openKernelHeight) external {
+        openKernelHeight = _openKernelHeight;
     }
 
     function setGenesisStorage(

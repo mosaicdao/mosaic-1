@@ -25,6 +25,27 @@ import "../validator/ValidatorSet.sol";
  */
 contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, ValidatorSet, Protocore {
 
+    /* Events */
+
+    event LinkProposed(
+        bytes32 _parentVoteMessageHash,
+        bytes32 _targetBlockHash,
+        uint256 _targetBlockNumber,
+        bytes32 _sourceOriginObservation,
+        bytes32 _sourceKernelHash,
+        uint256 _sourceDynasty,
+        uint256 _sourceAccumulatedGas,
+        bytes32 _sourceCommitteeLock
+    );
+
+
+    /* Constants */
+
+    bytes32 public constant SOURCE_TRANSITION_TYPEHASH = keccak256(
+        "Source(bytes32 kernelHash,bytes32 originObservation,uint256 dynasty,uint256 accumulatedGas,bytes32 committeeLock)"
+    );
+
+
     /* Special Functions */
 
     /**
@@ -68,6 +89,144 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Validat
             genesisAuxiliarySourceBlockNumber,
             genesisAuxiliaryTargetBlockHash,
             genesisAuxiliaryTargetBlockNumber
+        );
+    }
+
+
+    /* External Functions. */
+
+    /**
+     * @notice proposeLinkInternal() function proposes a valid link to be
+     *         voted later by active validators. It emits LinkProposed event.
+     *
+     * @dev Function requires :
+     *          - parent vote messagehash must not be 0.
+     *          - target block hash must not be 0.
+     *          - source origin observation must not be 0.
+     *          - source kernel hash must not be 0.
+     *          - source kernel hash must not be 0.
+     *          - source committee lock must not be 0.
+     *          - open kernel hash must be same as source kernel hash.
+     *
+     * @param _parentVoteMessageHash Vote message message of the parent metablock.
+     * @param _targetBlockHash Hash of block at target chain.
+     * @param _targetBlockNumber Block number at target.
+     * @param _sourceOriginObservation Observation of the origin chain.
+     * @param _sourceKernelHash Hash of kernel at origin chain.
+     * @param _sourceDynasty Dynasty of origin chain.
+     * @param _sourceAccumulatedGas Accumulated gas at origin chain.
+     * @param _sourceCommitteeLock Committee lock at source.
+     */
+    function proposeLink(
+        bytes32 _parentVoteMessageHash,
+        bytes32 _targetBlockHash,
+        uint256 _targetBlockNumber,
+        bytes32 _sourceKernelHash,
+        bytes32 _sourceOriginObservation,
+        uint256 _sourceDynasty,
+        uint256 _sourceAccumulatedGas,
+        bytes32 _sourceCommitteeLock
+    )
+        external
+    {
+        require(
+            _parentVoteMessageHash != bytes32(0),
+            "Vote message hash of parent must not be 0."
+        );
+        require(
+            _targetBlockHash != bytes32(0),
+            "Target blockhash must not be 0."
+        );
+        require(
+            _sourceKernelHash != bytes32(0),
+            "Origin observation must not be 0."
+        );
+        require(
+            _sourceOriginObservation != bytes32(0),
+            "Origin observation must not be 0."
+        );
+        require(
+            _sourceCommitteeLock != bytes32(0),
+            "Source committee lock must not be 0."
+        );
+        require(
+            _sourceKernelHash == openKernelHash,
+            "Source kernel hash must match with already opened kernel hash."
+        );
+
+        bytes32 sourceTransitionHash = hashSourceTransition(
+            _sourceKernelHash,
+            _sourceOriginObservation,
+            _sourceDynasty,
+            _sourceAccumulatedGas,
+            _sourceCommitteeLock
+        );
+
+        Protocore.proposeLinkInternal(
+            _parentVoteMessageHash,
+            sourceTransitionHash,
+            _targetBlockHash,
+            _targetBlockNumber
+        );
+
+        emit LinkProposed(
+            _parentVoteMessageHash,
+            _targetBlockHash,
+            _targetBlockNumber,
+            _sourceOriginObservation,
+            _sourceKernelHash,
+            _sourceDynasty,
+            _sourceAccumulatedGas,
+            _sourceCommitteeLock
+        );
+    }
+
+
+    /* Private Functions */
+
+    /**
+     * @notice Takes the parameters of an source transition object and returns the
+     *         typed hash of it.
+     *
+     * @param _kernelHash Kernel hash
+     * @param _originObservation Observation of the origin chain.
+     * @param _dynasty The dynasty number where the meta-block closes
+     *                 on the auxiliary chain.
+     * @param _accumulatedGas The total consumed gas on auxiliary within this
+     *                        meta-block.
+     * @param _committeeLock The committee lock that hashes the transaction
+     *                       root on the auxiliary chain.
+     * @return hash_ The hash of source transition object.
+     */
+    function hashSourceTransition(
+        bytes32 _kernelHash,
+        bytes32 _originObservation,
+        uint256 _dynasty,
+        uint256 _accumulatedGas,
+        bytes32 _committeeLock
+    )
+        internal
+        view
+        returns (bytes32 hash_)
+    {
+        bytes32 typedTransitionHash = keccak256(
+            abi.encode(
+                SOURCE_TRANSITION_TYPEHASH,
+                _kernelHash,
+                _originObservation,
+                _dynasty,
+                _accumulatedGas,
+                _committeeLock
+            )
+        );
+
+        hash_ = keccak256(
+            abi.encodePacked(
+                byte(0x19),
+                byte(0x01),
+                domainSeparator,
+                typedTransitionHash
+            )
         );
     }
 }
