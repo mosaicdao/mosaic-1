@@ -27,6 +27,7 @@ const config = {};
 
 // Function to do set the genesis data for protocore contracts.
 async function setProtocoreGenesisStorageData() {
+
   const genesis = {};
   genesis.auxiliaryParentVoteMessageHash = Utils.getRandomHash();
   genesis.auxiliarySourceTransitionHash = Utils.getRandomHash();
@@ -44,6 +45,7 @@ async function setProtocoreGenesisStorageData() {
     .add(genesis.epochLength);
 
   const protocore = await SelfProtocore.new();
+
   await protocore.setGenesisStorage(
     genesis.auxiliaryMetachainId,
     genesis.domainSeparator,
@@ -57,7 +59,9 @@ async function setProtocoreGenesisStorageData() {
     genesis.auxiliaryTargetBlockNumber,
     genesis.auxiliaryAccumulatedGas,
   );
+
   await protocore.setCoconsensus(config.contracts.coconsensus.address);
+
   return {
     genesisProtocoreData: genesis,
     protocore,
@@ -66,12 +70,14 @@ async function setProtocoreGenesisStorageData() {
 
 // Function to set origin observer contract genesis data.
 async function setOriginObserverGenesisStorageData() {
+
   const genesis = {};
   genesis.originBlockNumber = await Utils.getBlockNumber();
   genesis.originStateRoot = Utils.getRandomHash();
   genesis.maxStateRootLimitCount = new BN(100);
 
   const originObserver = await OriginObserver.new();
+
   await originObserver.setGenesisStorageVariables(
     genesis.originBlockNumber,
     genesis.originStateRoot,
@@ -87,9 +93,11 @@ async function setOriginObserverGenesisStorageData() {
 }
 
 contract('Coconsensus::setup', (accounts) => {
+
   const accountProvider = new AccountProvider(accounts);
 
   beforeEach(async () => {
+
     // Setup params/
     config.setupParams = {};
     config.setupParams.coconsensus = accountProvider.get();
@@ -105,21 +113,26 @@ contract('Coconsensus::setup', (accounts) => {
     config.genesis.protocores = [];
     config.genesis.protocoreData = {};
     config.genesis.observerData = {};
+
     // eslint-disable-next-line prefer-destructuring
     config.genesis.originMetachainId = config.genesis.metachainIds[0];
 
     // eslint-disable-next-line prefer-destructuring
     config.genesis.auxiliaryMetachainId = config.genesis.metachainIds[1];
 
+    /* eslint-disable no-await-in-loop */
     for (let i = 0; i < 5; i += 1) {
-      // eslint-disable-next-line no-await-in-loop
-      const { genesisProtocoreData, protocore } = await setProtocoreGenesisStorageData();
+
+      const {
+        genesisProtocoreData,
+        protocore,
+      } = await setProtocoreGenesisStorageData();
+
       const metachainId = genesisProtocoreData.auxiliaryMetachainId;
       config.genesis.metachainIds.push(metachainId);
       config.genesis.protocores.push(protocore.address);
       config.genesis.protocoreData[metachainId] = genesisProtocoreData;
 
-      // eslint-disable-next-line no-await-in-loop
       const {
         genesisOriginObserverData,
         originObserver,
@@ -136,56 +149,75 @@ contract('Coconsensus::setup', (accounts) => {
     );
   });
 
+  contract('Negetive Tests', async () => {
+    it('should fail when setup is called more than once', async () => {
+      // Call setup function.
+      await config.contracts.coconsensus.setup();
+
+      await Utils.expectRevert(
+        config.contracts.coconsensus.setup(),
+        'Coconsensus contract is already initialized.',
+      );
+    });
+  });
   contract('Positive Tests', async () => {
     it('should initialize the coconsensus contract', async () => {
 
+      const { coconsensus } = config.contracts.coconsensus;
       // Call setup function.
-      await config.contracts.coconsensus.setup();
+      await coconsensus.setup();
 
       for (let index = 0; index < config.genesis.metachainIds.length; index += 1) {
         const metachainId = config.genesis.metachainIds[index];
 
-        // eslint-disable-next-line no-await-in-loop
-        const protocoreAddress = await config.contracts.coconsensus.protocores(metachainId);
+        const protocoreAddress = await coconsensus.protocores(metachainId);
         assert.strictEqual(
           protocoreAddress,
           config.genesis.protocores[index],
           'Protocore address is not set.',
         );
 
-        // eslint-disable-next-line no-await-in-loop
-        const observersAddress = await config.contracts.coconsensus.observers(metachainId);
+        const observersAddress = await coconsensus.observers(metachainId);
         assert.strictEqual(
           observersAddress,
           config.genesis.observers[index],
           'Observer address is not set.',
         );
 
-        // eslint-disable-next-line no-await-in-loop
-        const domainSeparator = await config.contracts.coconsensus.domainSeparators(metachainId);
+        const domainSeparator = await coconsensus.domainSeparators(metachainId);
         assert.strictEqual(
           domainSeparator,
           config.genesis.protocoreData[metachainId].domainSeparator,
           'Domain separator is not set.',
         );
 
-        // eslint-disable-next-line no-await-in-loop
-        const blockTips = await config.contracts.coconsensus.blockTips(metachainId);
+        const blockTips = await coconsensus.blockTips(metachainId);
+        
+        const expectedTip = config
+          .genesis
+          .protocoreData[metachainId]
+          .auxiliaryTargetBlockNumber;
+
         assert.strictEqual(
-          blockTips.eq(config.genesis.protocoreData[metachainId].auxiliaryTargetBlockNumber),
+          blockTips.eq(expectedTip),
           true,
           'Block tip is not set.',
         );
 
-        // eslint-disable-next-line no-await-in-loop
-        const blockchains = await config.contracts.coconsensus.blockchains(metachainId, blockTips);
+        const blockchains = await coconsensus.blockchains(metachainId, blockTips);
         assert.strictEqual(
           blockchains.blockHash,
           config.genesis.protocoreData[metachainId].auxiliaryTargetBlockHash,
           'Blockhash is not set.',
         );
+
+        const expectedDynasty = config
+          .genesis
+          .protocoreData[metachainId]
+          .metablockHeight;
+
         assert.strictEqual(
-          blockchains.statusDynasty.eq(config.genesis.protocoreData[metachainId].metablockHeight),
+          blockchains.statusDynasty.eq(expectedDynasty),
           true,
           'Dynasty is not set.',
         );

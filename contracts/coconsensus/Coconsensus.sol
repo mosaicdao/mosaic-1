@@ -57,8 +57,16 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
 
     /* Storage */
 
+    /** Metachain id of the origin chain. */
+    bytes32 public originMetachainId;
+
+    /** Metachain id of the auxiliary chain. */
+    bytes32 public auxiliaryMetachainId;
+
     /** Mapping to track the blocks for each metachain. */
-    mapping (bytes32 /* metachainId */ => mapping(uint256 /* blocknumber */ => Block)) public blockchains;
+    mapping (bytes32 /* metachainId */ =>
+        mapping(uint256 /* blocknumber */ => Block)
+    ) public blockchains;
 
     /**
      * Mapping of metachain id to latest block number(tip) stored
@@ -76,15 +84,24 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     mapping (bytes32 /* metachainId */ => bytes32 /* domain separator */) public domainSeparators;
 
 
-    event Debug(bytes32 currentMetachainId, ProtocoreI protocore);
-    /* Public Functions */
+    /* Special Functions */
 
     /**
-     * Setup function does the initialization of all the mosaic contracts on the auxiliary chain.
+     * @notice Setup function does the initialization of all the mosaic
+     *         contracts on the auxiliary chain.
      *
      * @dev This function can be called only once.
      */
     function setup() public {
+
+        require(
+            originMetachainId == bytes32(0),
+            "Coconsensus contract is already initialized."
+        );
+
+        originMetachainId = genesisOriginMetachainId;
+        auxiliaryMetachainId = genesisAuxiliaryMetachainId;
+
         bytes32 currentMetachainId = genesisMetachainIds[SENTINEL_METACHAIN_ID];
 
         // Loop through the genesis metachainId link list.
@@ -107,6 +124,7 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     /**
      * @notice Do the initial setup of protocore contract and initialize the
      *         storage of coconsensus contract.
+     *
      * @param _metachainId Metachain id
      *
      * /pre `protocoreAddress` is not 0
@@ -138,7 +156,11 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
         domainSeparators[_metachainId] = protocore.domainSeparator();
 
         // Get metablock height, block number and block hash of the genesis link.
-        (uint256 metablockHeight, uint256 blockNumber, bytes32 blockHash) = protocore.latestFinalizedBlock();
+        (
+            uint256 metablockHeight,
+            uint256 blockNumber,
+            bytes32 blockHash
+        ) = protocore.latestFinalizedBlock();
 
         // Store the block informations in blockchains mapping.
         blockchains[_metachainId][blockNumber] = Block(
@@ -154,6 +176,7 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     /**
      * @notice Do the initial setup of observer contract and initialize the
      *         storage of coconsensus contract.
+     *
      * @param _metachainId Metachain id
      *
      * /pre `observerAddress` is not 0
