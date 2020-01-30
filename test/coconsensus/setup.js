@@ -27,7 +27,6 @@ const config = {};
 
 // Function to do set the genesis data for protocore contracts.
 async function setProtocoreGenesisStorageData() {
-
   const genesis = {};
   genesis.auxiliaryParentVoteMessageHash = Utils.getRandomHash();
   genesis.auxiliarySourceTransitionHash = Utils.getRandomHash();
@@ -70,7 +69,6 @@ async function setProtocoreGenesisStorageData() {
 
 // Function to set origin observer contract genesis data.
 async function setOriginObserverGenesisStorageData() {
-
   const genesis = {};
   genesis.originBlockNumber = await Utils.getBlockNumber();
   genesis.originStateRoot = Utils.getRandomHash();
@@ -93,7 +91,6 @@ async function setOriginObserverGenesisStorageData() {
 }
 
 contract('Coconsensus::setup', (accounts) => {
-
   const accountProvider = new AccountProvider(accounts);
 
   beforeEach(async () => {
@@ -122,7 +119,6 @@ contract('Coconsensus::setup', (accounts) => {
 
     /* eslint-disable no-await-in-loop */
     for (let i = 0; i < 5; i += 1) {
-
       const {
         genesisProtocoreData,
         protocore,
@@ -149,7 +145,7 @@ contract('Coconsensus::setup', (accounts) => {
     );
   });
 
-  contract('Negetive Tests', async () => {
+  contract('Negative Tests', async () => {
     it('should fail when setup is called more than once', async () => {
       // Call setup function.
       await config.contracts.coconsensus.setup();
@@ -160,9 +156,9 @@ contract('Coconsensus::setup', (accounts) => {
       );
     });
   });
+
   contract('Positive Tests', async () => {
     it('should initialize the coconsensus contract', async () => {
-
       const { coconsensus } = config.contracts.coconsensus;
       // Call setup function.
       await coconsensus.setup();
@@ -192,7 +188,7 @@ contract('Coconsensus::setup', (accounts) => {
         );
 
         const blockTips = await coconsensus.blockTips(metachainId);
-        
+
         const expectedTip = config
           .genesis
           .protocoreData[metachainId]
