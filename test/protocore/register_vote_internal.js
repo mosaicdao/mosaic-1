@@ -650,6 +650,97 @@ contract('Protocore::registerVoteInternal', () => {
       await run(cfg, config.protocore, config.coconsensus);
     });
     it('checks that a vote of a validator is not double-counting', async () => {
+      const justifiedParentVoteMessageHash = await proposeAndJustifyLink(
+        config.protocore,
+        config.coconsensus,
+        config.genesisVoteMessageHash,
+      );
+
+      const linkId = Utils.getRandomHash();
+
+      const cfg = {
+        state: {
+          vs: [
+            { fvsBeginDelta: 1, fvsEndDelta: 1 },
+            { fvsBeginDelta: 1, fvsEndDelta: 1 },
+            { fvsBeginDelta: 1, fvsEndDelta: 1 },
+            { fvsBeginDelta: 1, fvsEndDelta: 2 },
+            { fvsBeginDelta: 1, fvsEndDelta: 2 },
+            { fvsBeginDelta: 2, fvsEndDelta: 2 },
+          ],
+        },
+        behaviour: [
+          {
+            type: OPEN_KERNEL_TYPE,
+          },
+          {
+            type: PROPOSE_LINK_TYPE,
+            linkId,
+            parentVoteMessageHash: justifiedParentVoteMessageHash,
+            isFinalisation: true,
+          },
+          {
+            type: VOTE_TYPE,
+            linkId,
+            validatorIndex: 0,
+          },
+          {
+            type: CHECK_TYPE,
+            linkId,
+            checkTargetIsJustified: false,
+            checkSourceIsFinalised: false,
+          },
+          {
+            type: VOTE_TYPE,
+            linkId,
+            validatorIndex: 3,
+          },
+          {
+            type: CHECK_TYPE,
+            linkId,
+            checkTargetIsJustified: false,
+            checkSourceIsFinalised: false,
+          },
+          {
+            type: OPEN_KERNEL_TYPE,
+          },
+          {
+            type: VOTE_TYPE,
+            linkId,
+            validatorIndex: 5,
+          },
+          {
+            type: CHECK_TYPE,
+            linkId,
+            checkTargetIsJustified: false,
+            checkSourceIsFinalised: false,
+          },
+          {
+            type: VOTE_TYPE,
+            linkId,
+            validatorIndex: 3,
+          },
+          {
+            type: CHECK_TYPE,
+            linkId,
+            checkTargetIsJustified: false,
+            checkSourceIsFinalised: false,
+          },
+          {
+            type: VOTE_TYPE,
+            linkId,
+            validatorIndex: 1,
+          },
+          {
+            type: CHECK_TYPE,
+            linkId,
+            checkTargetIsJustified: true,
+            checkSourceIsFinalised: true,
+          },
+        ],
+      };
+
+      await run(cfg, config.protocore, config.coconsensus);
     });
   });
 });
