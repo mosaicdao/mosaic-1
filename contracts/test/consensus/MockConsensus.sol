@@ -170,7 +170,12 @@ contract MockConsensus is ConsensusI, ReputationI {
 
     function newMetaChain()
         external
-        returns (bytes32 metachainId_, address anchor_)
+        returns (
+            bytes32 metachainId_,
+            address anchor_,
+            string memory mosaicVersion_,
+            address consensusGateway_
+        )
     {
         // do nothing for now
     }

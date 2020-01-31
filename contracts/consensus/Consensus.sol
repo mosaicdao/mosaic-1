@@ -890,11 +890,18 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      *
      * @return metachainId_ Metachain id.
      * @return anchor_ Address of anchor.
+     * @return mosaicVersion_ Mosaic Version.
+     * @return consensusGateway_ Address of ConsensusGateway.
      */
     function newMetaChain()
         external
         onlyAxiom
-        returns (bytes32 metachainId_, address anchor_)
+        returns (
+            bytes32 metachainId_,
+            address anchor_,
+            string memory mosaicVersion_,
+            address consensusGateway_
+        )
     {
 
         bytes memory anchorSetupCallData = anchorSetupData(
@@ -920,9 +927,11 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
         bytes memory consensusGatewaySetupCallData = consensusGatewaySetupData();
 
+        address core;
+
         (
-            address core,
-            address consensusGateway
+            core,
+            consensusGateway_
         ) = axiom.deployMetachainProxies(
                 coreSetupCallData,
                 consensusGatewaySetupCallData
@@ -930,9 +939,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
         assignments[metachainId_] = CoreI(core);
         anchors[metachainId_] = anchor;
-        consensusGateways[metachainId_] = ConsensusGatewayI(consensusGateway);
+        consensusGateways[metachainId_] = ConsensusGatewayI(consensusGateway_);
 
         coreLifetimes[core] = CoreLifetime.creation;
+        mosaicVersion_ = DOMAIN_SEPARATOR_VERSION;
 
         emit CoreLifetimeUpdated(
             address(core),

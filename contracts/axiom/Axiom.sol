@@ -31,7 +31,12 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
     /* Events */
 
     /** Emitted when new metachain is created */
-    event MetachainCreated(bytes32 metachainId, address anchor);
+    event MetachainCreated(
+        bytes32 metachainId,
+        address anchor,
+        string mosaicVersion,
+        address consensusGateway
+    );
 
 
     /* Constants */
@@ -75,7 +80,7 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
     /** Core master copy contract address */
     address public coreMasterCopy;
 
-    /** Committeee master copy contract address */
+    /** Committee master copy contract address */
     address public committeeMasterCopy;
 
     /** Reputation master copy contract address */
@@ -290,10 +295,22 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
         returns(bytes32 metachainId_)
     {
         address anchor;
+        string memory mosaicVersion;
+        address consensusGateway;
 
-        (metachainId_, anchor) = consensus.newMetaChain();
+        (
+            metachainId_,
+            anchor,
+            mosaicVersion,
+            consensusGateway
+        ) = consensus.newMetaChain();
 
-        emit MetachainCreated(metachainId_, anchor);
+        emit MetachainCreated(
+            metachainId_,
+            anchor,
+            mosaicVersion,
+            consensusGateway
+        );
     }
 
     /**
