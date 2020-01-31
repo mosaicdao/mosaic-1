@@ -18,25 +18,12 @@
 const BN = require('bn.js');
 
 const TestProtocore = artifacts.require('TestProtocore');
+const SpyCoconsensus = artifacts.require('SpyCoConsensus');
 
 const ProtocoreUtils = require('./utils.js');
-const { AccountProvider } = require('../test_lib/utils.js');
 const Utils = require('../test_lib/utils.js');
 
 const config = {};
-
-
-async function createValidators(
-  validatorCount,
-) {
-  const validators = [];
-  for (let i = 0; i < validatorCount; i += 1) {
-    const v = await ProtocoreUtils.Validator.create();
-    validators.push(v);
-  }
-
-  return validators;
-}
 
 async function addToFVS(
   protocore,
@@ -48,17 +35,13 @@ async function addToFVS(
   }
 }
 
-async function incrementMetablockHeight(
+async function openKernel(
   protocore,
-  coconsensusAddress,
+  coconsensus,
 ) {
-  const openKernelHeight = await protocore.openKernelHeight();
-  const nextKernelHeight = openKernelHeight.addn(1);
-
-  await config.protocore.openKernel(
-    nextKernelHeight,
-    Utils.getRandomHash(), // next kernel hash
-    { from: coconsensusAddress },
+  await coconsensus.openKernel(
+    protocore.address,
+    Utils.getRandomHash(),
   );
 }
 
@@ -66,13 +49,13 @@ function isObject(obj) {
   return typeof obj === 'object' && obj !== null;
 }
 
-const INCREMENT_METABLOCK_TYPE = 'increment-metablock';
+const OPEN_KERNEL_TYPE = 'open-kernel';
 const PROPOSE_LINK_TYPE = 'propose-link';
 const VOTE_TYPE = 'vote';
 const CHECK_TYPE = 'check';
 
 function isSupportedBehaviourType(type) {
-  return type === INCREMENT_METABLOCK_TYPE
+  return type === OPEN_KERNEL_TYPE
   || type === PROPOSE_LINK_TYPE
   || type === VOTE_TYPE
   || type === CHECK_TYPE;
@@ -93,7 +76,7 @@ const debugMode = false;
  * @param {Object[]} cfg.behaviour - Defines steps to be taken in the test.
  * @param {Object} cfg.behaviour[] - Step to be done.
  * @param {string} cfg.behaviour[].type - Defines a type:
- *                                          - "increment-metablock"
+ *                                          - "open-kernel"
  *                                          - "propose-link"
  *                                          - "vote"
  *                                          - "check"
@@ -123,7 +106,7 @@ const debugMode = false;
 async function run(
   cfg,
   protocore,
-  coconsensusAddress,
+  coconsensus,
 ) {
   if (debugMode) {
     console.log('------- Start -------');
@@ -165,12 +148,12 @@ async function run(
     const { type } = behaviour;
     assert(isSupportedBehaviourType(type));
 
-    if (type === INCREMENT_METABLOCK_TYPE) {
+    if (type === OPEN_KERNEL_TYPE) {
       if (debugMode) {
-        console.log(`step = ${i}, type: ${INCREMENT_METABLOCK_TYPE}`);
+        console.log(`step = ${i}, type: ${OPEN_KERNEL_TYPE}`);
       }
 
-      await incrementMetablockHeight(protocore, coconsensusAddress);
+      await openKernel(protocore, coconsensus);
 
       if (debugMode) {
         const openKernelHeight = await protocore.openKernelHeight();
@@ -337,7 +320,7 @@ async function run(
 
 async function proposeAndJustifyLink(
   protocore,
-  coconsensusAddress,
+  coconsensus,
   parentVoteMessageHash,
 ) {
   const linkId = Utils.getRandomHash();
@@ -351,10 +334,10 @@ async function proposeAndJustifyLink(
     },
     behaviour: [
       {
-        type: INCREMENT_METABLOCK_TYPE,
+        type: OPEN_KERNEL_TYPE,
       },
       {
-        type: INCREMENT_METABLOCK_TYPE,
+        type: OPEN_KERNEL_TYPE,
       },
       {
         type: PROPOSE_LINK_TYPE,
@@ -392,7 +375,7 @@ async function proposeAndJustifyLink(
 
   const {
     voteMessageHashes,
-  } = await run(cfg, protocore, coconsensusAddress);
+  } = await run(cfg, protocore, coconsensus);
 
   assert(Object.hasOwnProperty.call(voteMessageHashes, linkId));
   assert(voteMessageHashes[linkId] !== '');
@@ -401,11 +384,9 @@ async function proposeAndJustifyLink(
 }
 
 
-contract('Protocore::registerVoteInternal', (accounts) => {
-  const accountProvider = new AccountProvider(accounts);
-
+contract('Protocore::registerVoteInternal', () => {
   beforeEach(async () => {
-    config.coconsensusAddress = accountProvider.get();
+    config.coconsensus = await SpyCoconsensus.new();
     config.domainSeparator = Utils.getRandomHash();
     config.epochLength = new BN(100);
     config.metachainId = Utils.getRandomHash();
@@ -429,7 +410,7 @@ contract('Protocore::registerVoteInternal', (accounts) => {
     config.genesisProposedMetablockHeight = new BN(1);
 
     config.protocore = await TestProtocore.new(
-      config.coconsensusAddress,
+      config.coconsensus.address,
       config.metachainId,
       config.domainSeparator,
       config.epochLength,
@@ -469,8 +450,8 @@ contract('Protocore::registerVoteInternal', (accounts) => {
         config.genesisVoteMessageHash,
       );
 
-      await incrementMetablockHeight(config.protocore, config.coconsensusAddress);
-      await incrementMetablockHeight(config.protocore, config.coconsensusAddress);
+      await openKernel(config.protocore, config.coconsensus);
+      await openKernel(config.protocore, config.coconsensus);
 
       const sig = await v.ecsign(voteMessageHash);
 
@@ -489,7 +470,7 @@ contract('Protocore::registerVoteInternal', (accounts) => {
       const v = await ProtocoreUtils.Validator.create();
       await addToFVS(config.protocore, [v], nextMetablockHeight);
 
-      await incrementMetablockHeight(config.protocore, config.coconsensusAddress);
+      await openKernel(config.protocore, config.coconsensus);
 
       const {
         voteMessageHash,
@@ -519,7 +500,7 @@ contract('Protocore::registerVoteInternal', (accounts) => {
     it('checks that if a quorum reached a link is justified', async () => {
       const justifiedParentVoteMessageHash = await proposeAndJustifyLink(
         config.protocore,
-        config.coconsensusAddress,
+        config.coconsensus,
         config.genesisVoteMessageHash,
       );
 
@@ -536,10 +517,10 @@ contract('Protocore::registerVoteInternal', (accounts) => {
         },
         behaviour: [
           {
-            type: INCREMENT_METABLOCK_TYPE,
+            type: OPEN_KERNEL_TYPE,
           },
           {
-            type: INCREMENT_METABLOCK_TYPE,
+            type: OPEN_KERNEL_TYPE,
           },
           {
             type: PROPOSE_LINK_TYPE,
@@ -589,14 +570,14 @@ contract('Protocore::registerVoteInternal', (accounts) => {
         ],
       };
 
-      await run(cfg, config.protocore, config.coconsensusAddress);
+      await run(cfg, config.protocore, config.coconsensus);
     });
     // Instead of coconsensus address, mocked coconsensus should be passed.
-    it.skip('checks that if a quorum reached for a finalisation link '
+    it('checks that if a quorum reached for a finalisation link '
     + 'its source is finalised', async () => {
       const justifiedParentVoteMessageHash = await proposeAndJustifyLink(
         config.protocore,
-        config.coconsensusAddress,
+        config.coconsensus,
         config.genesisVoteMessageHash,
       );
 
@@ -613,10 +594,10 @@ contract('Protocore::registerVoteInternal', (accounts) => {
         },
         behaviour: [
           {
-            type: INCREMENT_METABLOCK_TYPE,
+            type: OPEN_KERNEL_TYPE,
           },
           {
-            type: INCREMENT_METABLOCK_TYPE,
+            type: OPEN_KERNEL_TYPE,
           },
           {
             type: PROPOSE_LINK_TYPE,
@@ -666,7 +647,7 @@ contract('Protocore::registerVoteInternal', (accounts) => {
         ],
       };
 
-      await run(cfg, config.protocore, config.coconsensusAddress);
+      await run(cfg, config.protocore, config.coconsensus);
     });
     it('checks that a vote of a validator is not double-counting', async () => {
     });
