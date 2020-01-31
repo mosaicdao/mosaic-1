@@ -127,7 +127,8 @@ contract('SelfProtocore::upsertValidator', (accounts) => {
         `Expected validator end height is ${Utils.MAX_UINT256} but got ${actualValidatorEndHeight}`,
       );
 
-      await config.selfProtocore.setOpenKernelHeight(config.openKernelHeight.addn(1));
+      config.openKernelHeight = validator.endHeight.subn(1);
+      await config.selfProtocore.setOpenKernelHeight(config.openKernelHeight);
       await config.selfProtocore.upsertValidator(
         validator.address,
         validator.endHeight,
