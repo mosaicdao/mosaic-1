@@ -426,7 +426,6 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
         if (quorumReached) {
             justifyLink(_voteMessageHash, link);
         }
-
     }
 
 
@@ -471,7 +470,7 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
                 _voteMessageHash,
                 previousHeight,
                 _validator)) {
-                _link.fvsVoteCount[openKernelHeight] = _link.fvsVoteCount[previousHeight].add(1);
+                _link.fvsVoteCount[previousHeight] = _link.fvsVoteCount[previousHeight].add(1);
             }
 
             quorumRearValidatorSet = _link.fvsVoteCount[previousHeight] >= fvsQuorums[previousHeight];

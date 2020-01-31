@@ -221,4 +221,43 @@ contract TestProtocore is Protocore {
     {
         return links[_voteMessageHash].targetFinalisation;
     }
+
+    function getSourceFinalisation(
+        bytes32 _voteMessageHash
+    )
+        external
+        view
+        returns (CheckpointFinalisationStatus)
+    {
+        Link storage link = links[_voteMessageHash];
+        Link storage parentLink = links[link.parentVoteMessageHash];
+
+        return parentLink.targetFinalisation;
+    }
+
+    function isFinalisationLink(
+        bytes32 _voteMessageHash
+    )
+        external
+        view
+        returns (bool)
+    {
+        Link storage link = links[_voteMessageHash];
+
+        Link storage parentLink = links[link.parentVoteMessageHash];
+
+        return link.targetBlockNumber.sub(parentLink.targetBlockNumber) == epochLength;
+    }
+
+    function getVoteCount(
+        bytes32 _voteMessageHash,
+        uint256 _height
+    )
+        external
+        view
+        returns (uint256)
+    {
+        Link storage link = links[_voteMessageHash];
+        return link.fvsVoteCount[_height];
+    }
 }

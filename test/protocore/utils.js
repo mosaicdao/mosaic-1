@@ -112,7 +112,7 @@ async function proposeFinalisationLinkInternal(
 
   const epochLength = await protocore.epochLength();
 
-  const targetBlockNumber = parentLink.targetBlockNumber + epochLength;
+  const targetBlockNumber = parentLink.targetBlockNumber.add(epochLength);
 
   const { voteMessageHash } = await proposeLinkInternal(
     protocore,
@@ -140,7 +140,7 @@ async function proposeNonFinalisationLinkInternal(
 
   const epochLength = await protocore.epochLength();
 
-  const targetBlockNumber = parentLink.targetBlockNumber + 2 * epochLength;
+  const targetBlockNumber = parentLink.targetBlockNumber.add(epochLength.muln(2));
 
   const { voteMessageHash } = await proposeLinkInternal(
     protocore,
