@@ -18,7 +18,7 @@
 const BN = require('bn.js');
 
 const TestProtocore = artifacts.require('TestProtocore');
-const SpyCoconsensus = artifacts.require('SpyCoConsensus');
+const SpyCoconsensus = artifacts.require('SpyCoconsensus');
 
 const ProtocoreUtils = require('./utils.js');
 const Utils = require('../test_lib/utils.js');
