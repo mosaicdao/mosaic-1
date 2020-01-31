@@ -41,7 +41,7 @@ contract SpyConsensus is MasterCopyNonUpgradable, ConsensusI {
         return reservedStorageSlotForProxy;
     }
 
-    function newMetaChain()
+    function newMetachain()
         external
         returns (
             bytes32 metachainId_,

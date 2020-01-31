@@ -891,9 +891,9 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      * @return metachainId_ Metachain id.
      * @return anchor_ Address of anchor.
      * @return mosaicVersion_ Mosaic Version.
-     * @return consensusGateway_ Address of ConsensusGateway.
+     * @return consensusGateway_ Address of Consensus Gateway.
      */
-    function newMetaChain()
+    function newMetachain()
         external
         onlyAxiom
         returns (

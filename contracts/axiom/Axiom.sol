@@ -289,7 +289,7 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
      *
      * @return metachainId_ Metachain id.
      */
-    function newMetaChain()
+    function newMetachain()
         external
         onlyTechGov
         returns(bytes32 metachainId_)
@@ -303,7 +303,7 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
             anchor,
             mosaicVersion,
             consensusGateway
-        ) = consensus.newMetaChain();
+        ) = consensus.newMetachain();
 
         emit MetachainCreated(
             metachainId_,

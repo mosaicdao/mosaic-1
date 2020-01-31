@@ -68,7 +68,7 @@ interface ConsensusI {
      * @return mosaicVersion_ Mosaic Version.
      * @return consensusGateway_ Address of ConsensusGateway.
      */
-    function newMetaChain()
+    function newMetachain()
         external
         returns (
             bytes32 metachainId_,
