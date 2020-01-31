@@ -178,11 +178,11 @@ contract('Protocore::registerVoteInternal', (accounts) => {
   });
 
   contract('Positive Tests', async () => {
-    it('checks that a vote of a validator is not double-counting', async () => {
+    it.skip('checks that a vote of a validator is not double-counting', async () => {
     });
-    it('checks that if a quorum reached link is justified', async () => {
+    it.skip('checks that if a quorum reached link is justified', async () => {
     });
-    it('checks that if a quorum reached a finalisation link is marked as finalised '
+    it.skip('checks that if a quorum reached a finalisation link is marked as finalised '
       + 'and coconsensus is notified', async () => {
     });
   });

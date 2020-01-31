@@ -137,8 +137,8 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
     /* Public Functions */
 
     /**
-     * @notice inForwardValidatorSet() function delegates the call to
-     *         the stored self protocore contract.
+     * @notice inForwardValidatorSet() function calls on SelfProtocore contract
+     *         to query the forward validator set.
      */
     function inForwardValidatorSet(address _validator, uint256 _height)
         public
@@ -153,8 +153,8 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
     }
 
     /**
-     * @notice forwardValidatorCount() function delegates the call to
-     *         the stored self protocore contract.
+     * @notice forwardValidatorCount() function calls on SelfProtocore contract
+     *         to query the forward validator set.
      */
     function forwardValidatorCount(uint256 _height)
         public

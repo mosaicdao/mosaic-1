@@ -44,6 +44,8 @@ contract ForwardValidatorSetAbstract {
      *
      * @param _height A metablock height.
      *
+     * \pre _height must be less than the active height.
+     *
      * @return Returns a count of forward validators for the given metablock
      *         height.
      */
