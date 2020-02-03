@@ -145,6 +145,7 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Validat
      *          - source origin observation must not be 0.
      *          - source committee lock must not be 0.
      *          - open kernel hash must be same as source kernel hash.
+     *          - source dynasty must be equal to current open kernel height.
      *
      * @param _parentVoteMessageHash Vote message hash of the parent link.
      * @param _targetBlockHash Blockhash of the target checkpoint.
@@ -190,7 +191,7 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Validat
         );
         require(
             _sourceDynasty == openKernelHeight,
-            "source dynasty must be equal to current open kernel height"
+            "Source dynasty must be equal to current open kernel height."
         );
 
         bytes32 sourceTransitionHash = hashTransition(
