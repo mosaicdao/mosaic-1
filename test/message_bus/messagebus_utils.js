@@ -17,10 +17,9 @@
 const utils = require('../test_lib/utils');
 const web3 = require('../test_lib/web3.js');
 
-const MessageInbox = artifacts.require('MessageInbox');
 const MessageOutboxDouble = artifacts.require('MessageOutboxDouble');
 
-let messageInbox, messageOutbox;
+let messageOutbox;
 
 async function deployMessageOutbox() {
   messageOutbox = await MessageOutboxDouble.new();

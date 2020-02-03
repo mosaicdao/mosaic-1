@@ -68,5 +68,4 @@ contract MessageOutboxDouble is MessageOutbox {
             _sender
         );
     }
-
 }

@@ -49,14 +49,11 @@ contract('MessageOutbox::outboxMessageHash', (accounts) => {
         config.outbox.address,
         config.OutboxMessageHashArgs.inboxAddress
       );
-    console.log('wwwwwwwwww', config.OutboxMessageHashArgs.calculatedChannelIdentifier)
 
     await config.outbox.setupMessageOutboxDouble(
       config.OutboxMessageHashArgs.metachainId,
       config.OutboxMessageHashArgs.inboxAddress
     )
-
-    console.log('wwwwwwwwww', await config.outbox.outboundChannelIdentifier())
   });
 
   contract('Positive Tests', async () => {
@@ -69,9 +66,6 @@ contract('MessageOutbox::outboxMessageHash', (accounts) => {
         config.OutboxMessageHashArgs.sender
       );
 
-      console.log('ssssssssssssss')
-      console.log(newMessageHash)
-
       const expectedMessageHash = await MessageBusUtils.hashMessage(
         config.OutboxMessageHashArgs.intentHash,
         config.OutboxMessageHashArgs.nonce,
@@ -81,14 +75,10 @@ contract('MessageOutbox::outboxMessageHash', (accounts) => {
         config.OutboxMessageHashArgs.calculatedChannelIdentifier
       );
 
-      console.log('xxxxxxxxxxxxxx')
-      console.log(expectedMessageHash)
-
-
-          assert.strictEqual(
-            newMessageHash,
-            expectedMessageHash
-          );
+      assert.strictEqual(
+        newMessageHash,
+        expectedMessageHash
+      );
     });
   });
 });
