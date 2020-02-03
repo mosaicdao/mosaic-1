@@ -89,6 +89,7 @@ async function deployOriginProtocore(
   config.genesis.originMetachainId = Utils.getRandomHash();
   config.genesis.domainSeparator = Utils.getRandomHash();
   config.genesis.epochLength = new BN(100);
+  config.genesis.dynasty = new BN(0);
   config.genesis.metablockHeight = new BN(Utils.getRandomNumber(1000));
   config.genesis.selfProtocore = selfProtocoreAddress;
 
@@ -109,6 +110,7 @@ async function deployOriginProtocore(
     config.genesis.originMetachainId,
     config.genesis.domainSeparator,
     config.genesis.epochLength,
+    config.genesis.dynasty,
     config.genesis.metablockHeight,
     config.genesis.selfProtocore,
     config.genesis.originParentVoteMessageHash,

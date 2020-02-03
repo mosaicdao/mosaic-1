@@ -21,7 +21,7 @@ const Utils = require('../test_lib/utils.js');
 
 const CoconsensusUtils = require('./utils');
 
-contract('Coconsensus::setup', (accounts) => {
+contract('Coconsensus::observeBlock', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
 
   const config = {};
