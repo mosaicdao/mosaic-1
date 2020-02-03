@@ -25,7 +25,7 @@ contract ValidatorSetDouble is ValidatorSet {
 
     /* External Functions */
 
-    function setupValidator()
+    function setupValidatorSetDouble()
         external
     {
         ValidatorSet.setupValidatorSet();
