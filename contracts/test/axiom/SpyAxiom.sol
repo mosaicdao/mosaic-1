@@ -46,12 +46,12 @@ contract SpyAxiom is AxiomI{
         return mockedCommitteeAddress;
     }
 
-    function callNewMetaChainOnConsensus(
+    function callNewMetachainOnConsensus(
         Consensus _consensus
     )
         external
     {
-        _consensus.newMetaChain();
+        _consensus.newMetachain();
     }
 
     function deployMetachainProxies(

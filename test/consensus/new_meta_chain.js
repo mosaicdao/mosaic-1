@@ -22,7 +22,7 @@ const axiomUtil = require('../axiom/utils');
 const SpyAxiom = artifacts.require('SpyAxiom');
 const Consensus = artifacts.require('Consensus');
 
-contract('Consensus::newMetaChain', (accounts) => {
+contract('Consensus::newMetachain', (accounts) => {
   const accountProvider = new Utils.AccountProvider(accounts);
   let contracts = {};
   let inputParams = {};
@@ -38,10 +38,10 @@ contract('Consensus::newMetaChain', (accounts) => {
     const anchor = accountProvider.get();
 
     const mockedAnchorAddress = await contracts.SpyAxiom.mockedAnchorAddress.call();
-    const hashedMetaChain = await contracts.Consensus.hashMetachainId.call(mockedAnchorAddress);
+    const hashedMetachain = await contracts.Consensus.hashMetachainId.call(mockedAnchorAddress);
     inputParams = {
       consensus: contracts.Consensus.address,
-      metachainId: hashedMetaChain,
+      metachainId: hashedMetachain,
       epochLength: 100,
       source: Utils.ZERO_BYTES32,
       sourceBlockHeight: 0,
@@ -53,7 +53,7 @@ contract('Consensus::newMetaChain', (accounts) => {
   contract('Negative Tests', async () => {
     it('should fail when caller is not axiom contract address', async () => {
       await Utils.expectRevert(
-        contracts.Consensus.newMetaChain(
+        contracts.Consensus.newMetachain(
           {
             from: accountProvider.get(),
           },
@@ -65,11 +65,11 @@ contract('Consensus::newMetaChain', (accounts) => {
 
   contract('Positive Tests', () => {
     it('should pass when called with correct params', async () => {
-      await consensusUtil.callNewMetaChainOnConsensus(contracts.SpyAxiom, inputParams);
+      await consensusUtil.callNewMetachainOnConsensus(contracts.SpyAxiom, inputParams);
     });
 
     it('should set core address in assignments mapping', async () => {
-      await consensusUtil.callNewMetaChainOnConsensus(contracts.SpyAxiom, inputParams);
+      await consensusUtil.callNewMetachainOnConsensus(contracts.SpyAxiom, inputParams);
       const assignedCoreId = await contracts.Consensus.assignments.call(inputParams.metachainId);
       const mockedCoreAddress = await contracts.SpyAxiom.mockedCoreAddress.call();
       assert.strictEqual(
@@ -89,7 +89,7 @@ contract('Consensus::newMetaChain', (accounts) => {
     });
 
     it('should set chain id in anchors mapping', async () => {
-      await consensusUtil.callNewMetaChainOnConsensus(contracts.SpyAxiom, inputParams);
+      await consensusUtil.callNewMetachainOnConsensus(contracts.SpyAxiom, inputParams);
       const mockedAnchorAddress = await contracts.SpyAxiom.mockedAnchorAddress.call();
       const anchorAddress = await contracts.Consensus.anchors.call(inputParams.metachainId);
       assert.strictEqual(
@@ -100,7 +100,7 @@ contract('Consensus::newMetaChain', (accounts) => {
     });
 
     it('should verify data from spy contract', async () => {
-      await consensusUtil.callNewMetaChainOnConsensus(contracts.SpyAxiom, inputParams);
+      await consensusUtil.callNewMetachainOnConsensus(contracts.SpyAxiom, inputParams);
       const newCoreCallData = await contracts.SpyAxiom.spyNewCoreCallData.call();
 
       /*
