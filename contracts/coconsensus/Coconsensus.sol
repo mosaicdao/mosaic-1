@@ -172,7 +172,7 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
         ( uint256 blockNumber, bytes32 blockHash ) = protocore.latestFinalizedCheckpoint();
 
         // Get the dynasty from self protocore contract.
-        ProtocoreI selfProtocore = ProtocoreI(genesisProtocores[_metachainId]);
+        ProtocoreI selfProtocore = ProtocoreI(genesisProtocores[auxiliaryMetachainId]);
         uint256 dynasty = selfProtocore.dynasty();
 
         // Store the block informations in blockchains mapping.
