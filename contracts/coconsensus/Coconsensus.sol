@@ -14,18 +14,36 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
 import "../coconsensus/GenesisCoconsensus.sol";
+import "../consensus-gateway/ConsensusCogatewayI.sol";
+import "../kernel/Kernel.sol";
 import "../observer/ObserverI.sol";
 import "../protocore/ProtocoreI.sol";
+import "../protocore/SelfProtocoreI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
-import "../version/MosaicVersion.sol";
 import "../reputation/CoreputationI.sol";
+import "../version/MosaicVersion.sol";
+import "../vote-message/VoteMessage.sol";
+
 
 /**
  * @title Coconsensus contract - This mirrors the consensus contract on
  *        the auxiliary chain.
  */
-contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersion {
+contract Coconsensus is 
+    MasterCopyNonUpgradable,
+    GenesisCoconsensus,
+    Kernel,
+    VoteMessage,
+    MosaicVersion 
+{
+
+    /* Usings */
+
+    using SafeMath for uint256;
+
 
     /* Enums */
 
@@ -84,7 +102,9 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     /** Mapping of metachain id to the domain separators. */
     mapping (bytes32 /* metachainId */ => bytes32 /* domain separator */) public domainSeparators;
 
-    CoreputationI coreputation;
+    CoreputationI public coreputation;
+
+    ConsensusCogatewayI public consensusCogateway;
 
     /* Special Functions */
 
@@ -123,8 +143,8 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     function commitCheckpoint(
         bytes32 _metachainId,
         uint256 _kernelHeight,
-        address[] _updatedValidators,
-        uint256[] _updatedReputation,
+        address[] calldata _updatedValidators,
+        uint256[] calldata _updatedReputation,
         uint256 _gasTarget,
         bytes32 _transitionHash,
         bytes32 _source,
@@ -134,48 +154,82 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     )
         external
     {
+        require(
+            _metachainId != bytes32(0),
+            "Metachain id must not be null."
+        );
+        require(
+            _source != bytes32(0),
+            "Source blockhash must not be null."
+        );
+        require(
+            _target != bytes32(0),
+            "Target blockhash must not be null."
+        );
+
+        ProtocoreI protocore = protocores[_metachainId];
+        uint256 epochLength = protocore.epochLength();
+        require(
+            _sourceBlockNumber % epochLength == 0,
+            "Source block number must be a checkpoint."
+        );
+        require(
+            _targetBlockNumber % epochLength == 0,
+            "Target block number must be a checkpoint."
+        );
+        require(
+            _targetBlockNumber > _sourceBlockNumber ,
+            "Target block number must be greater than source block number."
+        );
 
         Block storage blockStatus = blockchains[_metachainId][_sourceBlockNumber];
         require(
-            blockStatus == CheckpointCommitStatus.Finalized,
+            blockStatus.commitStatus == CheckpointCommitStatus.Finalized,
             "Source checkpoint must be finalized."
         );
 
-        bytes32 metablockHash = hashVoteMessage(
+        blockStatus.commitStatus = CheckpointCommitStatus.Committed;
+
+        bytes32 domainSeparator = protocore.domainSeparators(_metachainId);
+        bytes32 metablockHash = VoteMessage.hashVoteMessage(
             _transitionHash,
             _source,
             _target,
             _sourceBlockNumber,
-            _targetBlockNumber
+            _targetBlockNumber,
+            domainSeparator
         );
         
-        bytes32 calculatedKernelHash = hashKernel(
+        bytes32 calculatedKernelHash = Kernel.hashKernel(
             _kernelHeight,
             metablockHash,
             _updatedValidators,
             _updatedReputation,
-            _gasTarget
+            _gasTarget,
+            domainSeparator
         );
 
-        bytes32 openKernelHash = ConsensusCogateway.getOpenKernelHash(_kernelHeight);
+        bytes32 openKernelHash = consensusCogateway.getOpenKernelHash(_kernelHeight);
 
         require(
             calculatedKernelHash == openKernelHash,
             "Calculated kernel hash is not equal to open kernel hash."
         );
 
-
-        Block storage blockStatus = blockchains[_metachainId][_sourceBlockNumber];
-        assert(blockStatus.commitStatus == CheckpointCommitStatus.Finalized);
-        blockStatus.commitStatus = CheckpointCommitStatus.Committed;
-
-        ProtocoreI protocore = protocores[_metachainId];
+        SelfProtocoreI selfProtocore = SelfProtocoreI(address(protocore));
         for (uint256 i = 0; i < _updatedValidators.length; i = i.add(1)) {
-            coreputation.upsertValidator(_updatedValidators[i], _updatedReputation[i])
-            // update validators in protocores.
+            address validator = _updatedValidators[i];
+            uint256 reputation = _updatedReputation[i];
+            coreputation.upsertValidator(validator, reputation);
+            
+            selfProtocore.upsertValidator(
+                validator,
+                _kernelHeight,
+                reputation
+            );
         }
 
-        // Protocore:openMetablock(_kernelHeight, openKernelHash);
+        selfProtocore.openMetablock(_kernelHeight, openKernelHash);
     }
 
     /* Private Functions */

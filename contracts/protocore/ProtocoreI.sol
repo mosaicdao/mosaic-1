@@ -25,6 +25,8 @@ interface ProtocoreI {
     /** @notice Function to get the domain separator. */
     function domainSeparator() external returns (bytes32);
 
+    function epochLength() external returns (uint256);
+
     /**
      * @notice Function to return the metablock height, block number
      *         and block hash of the finalized checkpoint.
@@ -37,4 +39,6 @@ interface ProtocoreI {
             uint256 blockNumber_,
             bytes32 blockHash_
         );
+
+    function domainSeparators(bytes32 _metachainId) external returns (bytes32);
 }

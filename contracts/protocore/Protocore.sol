@@ -18,12 +18,13 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "../consensus/CoconsensusModule.sol";
 import "../version/MosaicVersion.sol";
+import "../kernel/Kernel.sol";
 
 /**
  * @title Protocore abstract contract acting as a base contract for
  *        OriginProtocore and SelfProtocore contracts.
  */
-contract Protocore is MosaicVersion, CoconsensusModule {
+contract Protocore is MosaicVersion, CoconsensusModule, Kernel {
 
     /* Usings */
 
