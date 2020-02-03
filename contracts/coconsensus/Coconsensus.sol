@@ -196,7 +196,7 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
         );
 
         // Store the finalised block in the mapping.
-        BlockStatus storage finalisedBlock = blockchains[_metachainId][_blockNumber];
+        Block storage finalisedBlock = blockchains[_metachainId][_blockNumber];
         finalisedBlock.blockHash = _blockHash;
         finalisedBlock.commitStatus = CheckpointCommitStatus.Finalized;
 
