@@ -15,7 +15,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 import "../anchor/ObserverI.sol";
-import "../block/Block.sol";
+import "../block/BlockHeader.sol";
 import "../coconsensus/GenesisCoconsensus.sol";
 import "../protocore/ProtocoreI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
@@ -40,7 +40,7 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     /* Structs */
 
     /** Struct to track dynasty and checkpoint commit status of a block. */
-    struct BlockStatus {
+    struct Block {
         bytes32 blockHash;
         CheckpointCommitStatus commitStatus;
         uint256 statusDynasty;
@@ -66,7 +66,7 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
 
     /** Mapping to track the blocks for each metachain. */
     mapping (bytes32 /* metachainId */ =>
-        mapping(uint256 /* blocknumber */ => BlockStatus)
+        mapping(uint256 /* blocknumber */ => Block)
     ) public blockchains;
 
     /**
@@ -238,9 +238,9 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
         );
 
         // Decode the rlp encoded block header.
-        Block.Header memory blockHeader = Block.decodeHeader(_rlpBlockHeader);
+        BlockHeader.Header memory blockHeader = BlockHeader.decodeHeader(_rlpBlockHeader);
 
-        BlockStatus memory blockStatus = blockchains[_metachainId][blockHeader.height];
+        Block memory blockStatus = blockchains[_metachainId][blockHeader.height];
 
         require(
             blockStatus.blockHash == blockHeader.blockHash,
@@ -308,11 +308,11 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
         ( uint256 blockNumber, bytes32 blockHash ) = protocore.latestFinalizedCheckpoint();
 
         // Get the dynasty from self protocore contract.
-        ProtocoreI selfProtocore = ProtocoreI(genesisProtocores[_metachainId]);
+        ProtocoreI selfProtocore = ProtocoreI(genesisProtocores[auxiliaryMetachainId]);
         uint256 dynasty = selfProtocore.dynasty();
 
         // Store the block informations in blockchains mapping.
-        blockchains[_metachainId][blockNumber] = BlockStatus(
+        blockchains[_metachainId][blockNumber] = Block(
             blockHash,
             CheckpointCommitStatus.Finalized,
             dynasty

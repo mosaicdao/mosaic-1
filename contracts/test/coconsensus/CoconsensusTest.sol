@@ -58,7 +58,7 @@ contract CoconsensusTest is Coconsensus {
     )
         external
     {
-        blockchains[_metachainId][_blockNumber] = BlockStatus(
+        blockchains[_metachainId][_blockNumber] = Block(
             _blockHash,
             CheckpointCommitStatus.Finalized,
             _dynasty
