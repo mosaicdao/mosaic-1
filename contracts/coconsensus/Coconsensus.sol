@@ -137,7 +137,6 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
      *
      * \post Sets the `blockchains` mapping.
      * \post Sets the `blockTips` mapping.
-     *
      */
     function finaliseCheckpoint(
         bytes32 _metachainId,
@@ -172,7 +171,7 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
         uint256 lastFinalisedBlockNumber = blockTips[_metachainId];
         require(
             _blockNumber > lastFinalisedBlockNumber,
-            "The block number of the checkpoint must be greater than the block number of last finalised checkpoint ."
+            "The block number of the checkpoint must be greater than the block number of last finalised checkpoint."
         );
 
         // Check if the block number is multiple of epoch length.
@@ -183,10 +182,12 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
         );
 
         // Store the finalised block in the mapping.
-        Block storage finalisedBlock = blockchains[_metachainId][_blockNumber];
+        BlockStatus storage finalisedBlock = blockchains[_metachainId][_blockNumber];
         finalisedBlock.blockHash = _blockHash;
         finalisedBlock.commitStatus = CheckpointCommitStatus.Finalized;
-        finalisedBlock.statusDynasty = protocore.dynasty();
+
+        ProtocoreI selfProtocore = protocores[auxiliaryMetachainId];
+        finalisedBlock.statusDynasty = selfProtocore.dynasty();
 
         // Store the tip.
         blockTips[_metachainId] = _blockNumber;

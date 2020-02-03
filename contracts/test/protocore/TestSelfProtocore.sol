@@ -67,7 +67,27 @@ contract TestSelfProtocore is SelfProtocore {
         return coconsensus;
     }
 
+    /** @notice Set the dynasty for the testing purpose */
     function setDynasty(uint256 _dynasty) external {
         dynasty = _dynasty;
+    }
+
+    /**
+     * @notice This function is used to test the
+     *         `Coconsensus::finaliseCheckpoint`, the msg.sender for the
+     *         `Coconsensus::finaliseCheckpoint` can only be protocore.
+     */
+    function testFinaliseCheckpoint(
+        bytes32 _metachainId,
+        uint256 _blockNumber,
+        bytes32 _blockHash
+    )
+        external
+    {
+        getCoconsensus().finaliseCheckpoint(
+            _metachainId,
+            _blockNumber,
+            _blockHash
+        );
     }
 }
