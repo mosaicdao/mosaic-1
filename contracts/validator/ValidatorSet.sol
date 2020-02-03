@@ -57,7 +57,7 @@ contract ValidatorSet {
     /**
      * @notice It initializes validators set.
      */
-    function setup()
+    function setupValidatorSet()
         internal
     {
         validators[SENTINEL_VALIDATORS] = SENTINEL_VALIDATORS;
@@ -138,7 +138,6 @@ contract ValidatorSet {
      * @notice It is for removing validators from the validator set.
      *
      * @dev Function requires :
-     *          - Validator address must not be 0.
      *          - Validator begin height must be less than end height.
      *          - Validator end height must be equal to MAX_FUTURE_END_HEIGHT.
      *

@@ -23,11 +23,11 @@ interface CoreI {
 
     function joinBeforeOpen(address _validator)
         external
-        returns(uint256 validatorCount_, uint256 minValidatorCount_);
+        returns(uint256 validatorCount_, uint256 minValidatorCount_, uint256 beginHeight_);
 
-    function join(address _validator) external;
+    function join(address _validator) external returns (uint256);
 
-    function logout(address _validator) external;
+    function logout(address _validator) external returns (uint256);
 
     function openMetablock(
         uint256 _committedDynasty,
