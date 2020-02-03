@@ -25,25 +25,11 @@ const SelfProtocoreUtils = require('./utils.js');
 const TestSelfProtocore = artifacts.require('TestSelfProtocore');
 
 contract('SelfProtocore::proposeLink', (accounts) => {
-  const config = {};
+  let config = {};
   const accountProvider = new AccountProvider(accounts);
 
   beforeEach(async () => {
-    config.coconsensusAddress = accountProvider.get();
-    config.domainSeparator = Utils.getRandomHash();
-    config.epochLength = new BN(5);
-    config.metachainId = Utils.getRandomHash();
-    config.metablockHeight = new BN(10);
-    config.accumulatedGas = new BN(10);
-
-    config.genesisKernelHeight = new BN(1);
-    config.genesisKernelHash = Utils.getRandomHash();
-    config.genesisParentVoteMessageHash = Utils.getRandomHash();
-    config.genesisSourceTransitionHash = Utils.getRandomHash();
-    config.genesisSourceBlockHash = Utils.getRandomHash();
-    config.genesisTargetBlockHash = Utils.getRandomHash();
-    config.genesisSourceBlockNumber = new BN(0);
-    config.genesisTargetBlockNumber = new BN(config.epochLength);
+    config = SelfProtocoreUtils.setupInitialConfig(accountProvider);
 
     config.genesisVoteMessageHash = ProtocoreUtils.hashVoteMessage(
       config.domainSeparator,
@@ -53,26 +39,10 @@ contract('SelfProtocore::proposeLink', (accounts) => {
       config.genesisSourceBlockNumber,
       config.genesisTargetBlockNumber,
     );
-    config.genesisProposedMetablockHeight = new BN(1);
 
     config.selfProtocore = await TestSelfProtocore.new();
     await config.selfProtocore.setCoconsensus(config.coconsensusAddress);
-    await config.selfProtocore.setGenesisStorage(
-      config.genesisParentVoteMessageHash,
-      config.genesisSourceTransitionHash,
-      config.genesisSourceBlockHash,
-      config.genesisSourceBlockNumber,
-      config.genesisTargetBlockHash,
-      config.genesisTargetBlockNumber,
-      config.accumulatedGas,
-    );
-
-    await config.selfProtocore.setup(
-      config.metachainId,
-      config.domainSeparator,
-      config.epochLength,
-      config.metablockHeight,
-    );
+    await SelfProtocoreUtils.setupSelfProtocore(config);
 
     config.sourceKernelHash = Utils.getRandomHash();
     await config.selfProtocore.setOpenKernelHash(config.sourceKernelHash);
@@ -88,7 +58,7 @@ contract('SelfProtocore::proposeLink', (accounts) => {
       const targetBlockNumber = config.epochLength.muln(currentBlockNumber);
 
       const sourceOriginObservation = Utils.getRandomHash();
-      const sourceDynasty = new BN(10);
+      const sourceDynasty = config.openKernelHeight;
       const sourceAccumulatedGas = new BN(10000);
       const sourceCommitteeLock = Utils.getRandomHash();
 
@@ -142,17 +112,39 @@ contract('SelfProtocore::proposeLink', (accounts) => {
         'Incorrect target block hash',
       );
 
-      assert.isOk(targetBlockNumber.eq(voteMessageObject.targetBlockNumber));
+      assert.isOk(
+        targetBlockNumber.eq(voteMessageObject.targetBlockNumber),
+        `Expected target block number is ${targetBlockNumber} `
+        + `but got ${voteMessageObject.targetBlockNumber}`,
+      );
 
-      assert.isOk(config.openKernelHeight.eq(voteMessageObject.proposedMetablockHeight));
+      assert.isOk(
+        config.openKernelHeight.eq(voteMessageObject.proposedMetablockHeight),
+        `Expected target block number is ${config.openKernelHeight} `
+         + `but got ${voteMessageObject.proposedMetablockHeight}`,
+      );
 
-      assert.isOk(voteMessageObject.forwardVoteCount.eqn(0));
+      assert.isOk(
+        voteMessageObject.forwardVoteCount.eqn(0),
+        `Expected forward vote count is 0 but got ${voteMessageObject.forwardVoteCount}`,
+      );
 
-      assert.isOk(voteMessageObject.forwardVoteCountNextHeight.eqn(0));
+      assert.isOk(
+        voteMessageObject.forwardVoteCountNextHeight.eqn(0),
+        'Expected forward vote count height is 0 '
+        + `but got ${voteMessageObject.forwardVoteCountNextHeight}`,
+      );
 
-      assert.isOk(voteMessageObject.forwardVoteCountPreviousHeight.eqn(0));
+      assert.isOk(
+        voteMessageObject.forwardVoteCountPreviousHeight.eqn(0),
+        'Expected forward vote count previous height is 0 '
+        + `but got ${voteMessageObject.forwardVoteCountNextHeight}`,
+      );
 
-      assert.isOk(ProtocoreUtils.isRegistered(voteMessageObject.targetFinalisation));
+      assert.isOk(
+        ProtocoreUtils.isRegistered(voteMessageObject.targetFinalisation),
+        'Target finalisation status must be registered',
+      );
     });
   });
 });

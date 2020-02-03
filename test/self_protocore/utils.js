@@ -14,9 +14,10 @@
 
 'use strict';
 
+const BN = require('bn.js');
 const web3 = require('../test_lib/web3.js');
+const Utils = require('../test_lib/utils.js');
 
-const SOURCE_TRANSITION_TYPEHASH = web3.utils.soliditySha3('Source(bytes32 kernelHash,bytes32 originObservation,uint256 dynasty,uint256 accumulatedGas,bytes32 committeeLock)');
 
 function hashSourceTransition(
   domainSeparator,
@@ -30,7 +31,7 @@ function hashSourceTransition(
     web3.eth.abi.encodeParameters(
       ['bytes32', 'bytes32', 'bytes32', 'uint256', 'uint256', 'bytes32'],
       [
-        SOURCE_TRANSITION_TYPEHASH,
+        Utils.TRANSITION_TYPEHASH,
         sourceKernelHash,
         sourceOriginObservation,
         sourceDynasty.toString(10),
@@ -52,6 +53,52 @@ function hashSourceTransition(
   return sourceTransitionHash;
 }
 
+function setupInitialConfig(
+  accountProvider,
+  epochLength = new BN(5),
+  metablockHeight = new BN(10),
+  accumulatedGas = new BN(10),
+  genesisSourceBlockNumber = new BN(0),
+) {
+  const config = {};
+  config.coconsensusAddress = accountProvider.get();
+  config.domainSeparator = Utils.getRandomHash();
+  config.epochLength = epochLength;
+  config.metachainId = Utils.getRandomHash();
+  config.metablockHeight = metablockHeight;
+  config.accumulatedGas = accumulatedGas;
+
+  config.genesisParentVoteMessageHash = Utils.getRandomHash();
+  config.genesisSourceTransitionHash = Utils.getRandomHash();
+  config.genesisSourceBlockHash = Utils.getRandomHash();
+  config.genesisTargetBlockHash = Utils.getRandomHash();
+  config.genesisSourceBlockNumber = genesisSourceBlockNumber;
+  config.genesisTargetBlockNumber = new BN(config.epochLength);
+
+  return config;
+}
+
+async function setupSelfProtocore(config) {
+  await config.selfProtocore.setGenesisStorage(
+    config.genesisParentVoteMessageHash,
+    config.genesisSourceTransitionHash,
+    config.genesisSourceBlockHash,
+    config.genesisSourceBlockNumber,
+    config.genesisTargetBlockHash,
+    config.genesisTargetBlockNumber,
+    config.accumulatedGas,
+  );
+
+  await config.selfProtocore.setup(
+    config.metachainId,
+    config.domainSeparator,
+    config.epochLength,
+    config.metablockHeight,
+  );
+}
+
 module.exports = {
   hashSourceTransition,
+  setupInitialConfig,
+  setupSelfProtocore,
 };

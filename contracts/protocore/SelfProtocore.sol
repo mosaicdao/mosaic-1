@@ -21,7 +21,7 @@ import "../validator/ValidatorSet.sol";
 
 
 /**
- * @title SelfProtocore - This contract finalizes the proposed blocks of auxiliary chain.
+ * @title Self Protocore - This contract finalizes the proposed blocks of auxiliary chain.
  */
 contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, ValidatorSet, Protocore {
 
@@ -41,8 +41,9 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Validat
 
     /* Constants */
 
-    bytes32 public constant SOURCE_TRANSITION_TYPEHASH = keccak256(
-        "Source(bytes32 kernelHash,bytes32 originObservation,uint256 dynasty,uint256 accumulatedGas,bytes32 committeeLock)"
+    /** EIP-712 type hash for a Transition. */
+    bytes32 public constant TRANSITION_TYPEHASH = keccak256(
+        "Transition(bytes32 kernelHash,bytes32 originObservation,uint256 dynasty,uint256 accumulatedGas,bytes32 committeeLock)"
     );
 
 
@@ -142,19 +143,18 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Validat
      *          - parent vote messagehash must not be 0.
      *          - target block hash must not be 0.
      *          - source origin observation must not be 0.
-     *          - source kernel hash must not be 0.
-     *          - source kernel hash must not be 0.
      *          - source committee lock must not be 0.
      *          - open kernel hash must be same as source kernel hash.
      *
-     * @param _parentVoteMessageHash Vote message message of the parent metablock.
-     * @param _targetBlockHash Hash of block at target chain.
-     * @param _targetBlockNumber Block number at target.
+     * @param _parentVoteMessageHash Vote message hash of the parent link.
+     * @param _targetBlockHash Blockhash of the target checkpoint.
+     * @param _targetBlockNumber Block number of target checkpoint.
      * @param _sourceOriginObservation Observation of the origin chain.
-     * @param _sourceKernelHash Hash of kernel at origin chain.
-     * @param _sourceDynasty Dynasty of origin chain.
-     * @param _sourceAccumulatedGas Accumulated gas at origin chain.
-     * @param _sourceCommitteeLock Committee lock at source.
+     * @param _sourceKernelHash Open kernel hash.
+     * @param _sourceDynasty Metablock dynasty at origin chain.
+     * @param _sourceAccumulatedGas Total gas consumed till target block number.
+     * @param _sourceCommitteeLock The committee lock that hashes the
+     *                             transaction root on the auxiliary chain.
      */
     function proposeLink(
         bytes32 _parentVoteMessageHash,
@@ -170,15 +170,11 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Validat
     {
         require(
             _parentVoteMessageHash != bytes32(0),
-            "Vote message hash of parent must not be 0."
+            "Parent vote message hash must not be 0."
         );
         require(
             _targetBlockHash != bytes32(0),
             "Target blockhash must not be 0."
-        );
-        require(
-            _sourceKernelHash != bytes32(0),
-            "Origin observation must not be 0."
         );
         require(
             _sourceOriginObservation != bytes32(0),
@@ -190,10 +186,14 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Validat
         );
         require(
             _sourceKernelHash == openKernelHash,
-            "Source kernel hash must match with already opened kernel hash."
+            "Source kernel hash must be equal to the open kernel hash."
+        );
+        require(
+            _sourceDynasty == openKernelHeight,
+            "source dynasty must be equal to current open kernel height"
         );
 
-        bytes32 sourceTransitionHash = hashSourceTransition(
+        bytes32 sourceTransitionHash = hashTransition(
             _sourceKernelHash,
             _sourceOriginObservation,
             _sourceDynasty,
@@ -227,17 +227,17 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Validat
      * @notice Takes the parameters of an source transition object and returns the
      *         typed hash of it.
      *
-     * @param _kernelHash Kernel hash.
+     * @param _kernelHash Kernel hash
      * @param _originObservation Observation of the origin chain.
      * @param _dynasty The dynasty number where the meta-block closes
      *                 on the auxiliary chain.
-     * @param _accumulatedGas The total consumed gas on auxiliary within a
+     * @param _accumulatedGas The total consumed gas on auxiliary within this
      *                        meta-block.
      * @param _committeeLock The committee lock that hashes the transaction
      *                       root on the auxiliary chain.
-     * @return sourceTransitionHash_ The hash of source transition object.
+     * @return hash_ The hash of source transition object.
      */
-    function hashSourceTransition(
+    function hashTransition(
         bytes32 _kernelHash,
         bytes32 _originObservation,
         uint256 _dynasty,
@@ -246,11 +246,11 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Validat
     )
         private
         view
-        returns (bytes32 sourceTransitionHash_)
+        returns (bytes32 hash_)
     {
-        bytes32 typedSourceTransitionHash = keccak256(
+        bytes32 typedTransitionHash = keccak256(
             abi.encode(
-                SOURCE_TRANSITION_TYPEHASH,
+                TRANSITION_TYPEHASH,
                 _kernelHash,
                 _originObservation,
                 _dynasty,
@@ -259,12 +259,12 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Validat
             )
         );
 
-        sourceTransitionHash_ = keccak256(
+        hash_ = keccak256(
             abi.encodePacked(
                 byte(0x19),
                 byte(0x01),
                 domainSeparator,
-                typedSourceTransitionHash
+                typedTransitionHash
             )
         );
     }
