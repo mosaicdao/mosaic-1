@@ -48,7 +48,7 @@ contract('Coconsensus::setup', (accounts) => {
 
       // Set the current dynasty in the self protocore.
       let currentDynasty = 2;
-      await selfProtocore.setCurrentDynasty(currentDynasty);
+      await selfProtocore.setDynasty(currentDynasty);
 
       // Finalize the checkpoint.
       await coconsensus.setFinaliseCheckpoint(
@@ -60,7 +60,7 @@ contract('Coconsensus::setup', (accounts) => {
 
       // Increament the dynasty.
       currentDynasty = 3;
-      await selfProtocore.setCurrentDynasty(currentDynasty);
+      await selfProtocore.setDynasty(currentDynasty);
 
       await coconsensus.observeBlock(
         originMetachainId,
@@ -90,7 +90,7 @@ contract('Coconsensus::setup', (accounts) => {
 
       // Set the current dynasty in the self protocore.
       let currentDynasty = 2;
-      await selfProtocore.setCurrentDynasty(currentDynasty);
+      await selfProtocore.setDynasty(currentDynasty);
 
       // Finalize the checkpoint.
       await coconsensus.setFinaliseCheckpoint(
@@ -102,7 +102,7 @@ contract('Coconsensus::setup', (accounts) => {
 
       // Increament the dynasty.
       currentDynasty = 3;
-      await selfProtocore.setCurrentDynasty(currentDynasty);
+      await selfProtocore.setDynasty(currentDynasty);
 
       await coconsensus.observeBlock(
         originMetachainId,
