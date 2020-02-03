@@ -19,6 +19,7 @@ import "../observer/ObserverI.sol";
 import "../protocore/ProtocoreI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../version/MosaicVersion.sol";
+import "../reputation/CoreputationI.sol";
 
 /**
  * @title Coconsensus contract - This mirrors the consensus contract on
@@ -83,6 +84,7 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     /** Mapping of metachain id to the domain separators. */
     mapping (bytes32 /* metachainId */ => bytes32 /* domain separator */) public domainSeparators;
 
+    CoreputationI coreputation;
 
     /* Special Functions */
 
@@ -118,6 +120,63 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
         }
     }
 
+    function commitCheckpoint(
+        bytes32 _metachainId,
+        uint256 _kernelHeight,
+        address[] _updatedValidators,
+        uint256[] _updatedReputation,
+        uint256 _gasTarget,
+        bytes32 _transitionHash,
+        bytes32 _source,
+        bytes32 _target,
+        uint256 _sourceBlockNumber,
+        uint256 _targetBlockNumber
+    )
+        external
+    {
+
+        Block storage blockStatus = blockchains[_metachainId][_sourceBlockNumber];
+        require(
+            blockStatus == CheckpointCommitStatus.Finalized,
+            "Source checkpoint must be finalized."
+        );
+
+        bytes32 metablockHash = hashVoteMessage(
+            _transitionHash,
+            _source,
+            _target,
+            _sourceBlockNumber,
+            _targetBlockNumber
+        );
+        
+        bytes32 calculatedKernelHash = hashKernel(
+            _kernelHeight,
+            metablockHash,
+            _updatedValidators,
+            _updatedReputation,
+            _gasTarget
+        );
+
+        bytes32 openKernelHash = ConsensusCogateway.getOpenKernelHash(_kernelHeight);
+
+        require(
+            calculatedKernelHash == openKernelHash,
+            "Calculated kernel hash is not equal to open kernel hash."
+        );
+
+
+        Block storage blockStatus = blockchains[_metachainId][_sourceBlockNumber];
+        assert(blockStatus.commitStatus == CheckpointCommitStatus.Finalized);
+        blockStatus.commitStatus = CheckpointCommitStatus.Committed;
+
+        ProtocoreI protocore = protocores[_metachainId];
+        for (uint256 i = 0; i < _updatedValidators.length; i = i.add(1)) {
+            coreputation.upsertValidator(_updatedValidators[i], _updatedReputation[i])
+            // update validators in protocores.
+        }
+
+        // Protocore:openMetablock(_kernelHeight, openKernelHash);
+    }
 
     /* Private Functions */
 
