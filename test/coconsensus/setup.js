@@ -35,6 +35,7 @@ async function setProtocoreGenesisStorageData() {
   genesis.auxiliaryAccumulatedGas = new BN(1000000);
   genesis.auxiliaryMetachainId = Utils.getRandomHash();
   genesis.domainSeparator = Utils.getRandomHash();
+  genesis.dynasty = new BN(0);
   genesis.epochLength = new BN(100);
   genesis.metablockHeight = new BN(Utils.getRandomNumber(1000));
   genesis.auxiliarySourceBlockNumber = new BN(
@@ -50,6 +51,7 @@ async function setProtocoreGenesisStorageData() {
     genesis.domainSeparator,
     genesis.epochLength,
     genesis.metablockHeight,
+    genesis.dynasty,
     genesis.auxiliaryParentVoteMessageHash,
     genesis.auxiliarySourceTransitionHash,
     genesis.auxiliarySourceBlockHash,

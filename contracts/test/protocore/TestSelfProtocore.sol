@@ -31,6 +31,7 @@ contract TestSelfProtocore is SelfProtocore {
         bytes32 _genesisAuxiliaryMetachainId,
         bytes32 _genesisDomainSeparator,
         uint256 _genesisEpochLength,
+        uint256 _genesisDynasty,
         uint256 _genesisMetablockHeight,
         bytes32 _genesisAuxiliaryParentVoteMessageHash,
         bytes32 _genesisAuxiliarySourceTransitionHash,
@@ -45,6 +46,7 @@ contract TestSelfProtocore is SelfProtocore {
         genesisAuxiliaryMetachainId = _genesisAuxiliaryMetachainId;
         genesisDomainSeparator = _genesisDomainSeparator;
         genesisEpochLength = _genesisEpochLength;
+        genesisDynasty = _genesisDynasty;
         genesisMetablockHeight = _genesisMetablockHeight;
         genesisAuxiliaryParentVoteMessageHash = _genesisAuxiliaryParentVoteMessageHash;
         genesisAuxiliarySourceTransitionHash = _genesisAuxiliarySourceTransitionHash;

@@ -26,15 +26,19 @@ interface ProtocoreI {
     function domainSeparator() external returns (bytes32);
 
     /**
-     * @notice Function to return the metablock height, block number
+     * @notice Function to return block number
      *         and block hash of the finalized checkpoint.
      */
-    function latestFinalizedBlock()
+    function latestFinalizedCheckpoint()
         external
         view
         returns (
-            uint256 metablockHeight_,
             uint256 blockNumber_,
             bytes32 blockHash_
         );
+
+    /**
+     * @notice function to get the dynasty.
+     */
+    function dynasty() external returns (uint256);
 }
