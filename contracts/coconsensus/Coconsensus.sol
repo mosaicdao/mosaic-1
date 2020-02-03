@@ -85,6 +85,19 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     mapping (bytes32 /* metachainId */ => bytes32 /* domain separator */) public domainSeparators;
 
 
+    /* Modifiers */
+
+    modifier onlyRunningProtocore(bytes32 _metachainId)
+    {
+        require(
+            msg.sender == address(protocores[_metachainId]),
+            "Protocore is not available for the given metachain id."
+        );
+
+        _;
+    }
+
+
     /* Special Functions */
 
     /**
@@ -158,6 +171,7 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
         bytes32 _blockHash
     )
         external
+        onlyRunningProtocore(_metachainId)
     {
         // Check if the metachain id is not null.
         require(
@@ -171,13 +185,6 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
             "Blockhash must not be null."
         );
 
-        // Check if the caller is correct protocore contract address
-        ProtocoreI protocore = protocores[_metachainId];
-        require(
-            msg.sender == address(protocore),
-            "Only protocore contract can call this function."
-        );
-
         /*
          * Check if the new block number is greater than the last
          * finalised block number.
@@ -189,6 +196,7 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
         );
 
         // Check if the block number is multiple of epoch length.
+        ProtocoreI protocore = protocores[_metachainId];
         uint256 epochLength = protocore.epochLength();
         require(
             (_blockNumber % epochLength) == 0,

@@ -54,7 +54,19 @@ contract('Coconsensus::finaliseCheckpoint', (accounts) => {
           config.params.finalisationBlockNumber,
           config.params.finalisationBlockhash,
         ),
-        'Only protocore contract can call this function.',
+        'Protocore is not available for the given metachain id.',
+      );
+    });
+
+    it('should revert when the protocore is not available for given metachain', async () => {
+      const { selfProtocore } = config.contracts;
+      await Utils.expectRevert(
+        selfProtocore.testFinaliseCheckpoint(
+          Utils.getRandomHash(),
+          config.params.finalisationBlockNumber,
+          config.params.finalisationBlockhash,
+        ),
+        'Protocore is not available for the given metachain id.',
       );
     });
 
