@@ -25,6 +25,18 @@ contract GenesisSelfProtocore {
 
     /* Storage */
 
+    /** Metachain id of the auxiliary chain. */
+    bytes32 public genesisAuxiliaryMetachainId;
+
+    /** Epoch length. */
+    uint256 public genesisEpochLength;
+
+    /** Initial metablock height. */
+    uint256 public genesisMetablockHeight;
+
+    /** Domain separator. */
+    bytes32 public genesisDomainSeparator;
+
     /** Block hash of source checkpoint */
     bytes32 public genesisAuxiliarySourceBlockHash;
 

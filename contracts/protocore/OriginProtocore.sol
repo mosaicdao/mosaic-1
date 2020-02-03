@@ -51,46 +51,21 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
      * @dev These input params will be provided by the coconsensus contract.
      *      This can be called only by the coconsensus contract once.
      *
-     * @param _metachainId Metachain id.
-     * @param _domainSeparator Domain separator.
-     * @param _epochLength Epoch length.
-     * @param _metablockHeight Metablock height.
-     * @param _selfProtocore SelfProtocore contract address.
-     *
-     * \pre `_metachainId` is not 0.
-     * \pre `_domainSeparator` is not 0.
-     * \pre `_epochLength` is not 0.
-     * \pre `_selfProtocore` is not 0.
-     *
      * \post Sets `selfProtocore` to the given value.
      * \post Sets `domainSeparator` to the given value.
      * \post Sets `epochLength` to the given value.
      * \post Sets `metachainId` to the given value.
      * \post Sets genesis link.
      */
-    function setup(
-        bytes32 _metachainId,
-        bytes32 _domainSeparator,
-        uint256 _epochLength,
-        uint256 _metablockHeight,
-        address _selfProtocore
-    )
-        external
-        onlyCoconsensus
-    {
-        require(
-            _selfProtocore != address(0),
-            "Self protocore contract address is null."
-        );
-
-        selfProtocore = _selfProtocore;
+    function setup() external onlyCoconsensus {
+        selfProtocore = genesisSelfProtocore;
 
         // The source transition hash should be zero for origin protocore.
-        Protocore.setup(
-            _metachainId,
-            _domainSeparator,
-            _epochLength,
-            _metablockHeight,
+        Protocore.setupProtocore(
+            genesisOriginMetachainId,
+            genesisDomainSeparator,
+            genesisEpochLength,
+            genesisMetablockHeight,
             genesisOriginParentVoteMessageHash,
             bytes32(0),
             genesisOriginSourceBlockHash,

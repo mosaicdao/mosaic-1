@@ -32,6 +32,10 @@ contract TestSelfProtocore is SelfProtocore {
     }
 
     function setGenesisStorage(
+        bytes32 _genesisAuxiliaryMetachainId,
+        bytes32 _genesisDomainSeparator,
+        uint256 _genesisEpochLength,
+        uint256 _genesisMetablockHeight,
         bytes32 _genesisAuxiliaryParentVoteMessageHash,
         bytes32 _genesisAuxiliarySourceTransitionHash,
         bytes32 _genesisAuxiliarySourceBlockHash,
@@ -42,6 +46,10 @@ contract TestSelfProtocore is SelfProtocore {
     )
         external
     {
+        genesisAuxiliaryMetachainId = _genesisAuxiliaryMetachainId;
+        genesisDomainSeparator = _genesisDomainSeparator;
+        genesisEpochLength = _genesisEpochLength;
+        genesisMetablockHeight = _genesisMetablockHeight;
         genesisAuxiliaryParentVoteMessageHash = _genesisAuxiliaryParentVoteMessageHash;
         genesisAuxiliarySourceTransitionHash = _genesisAuxiliarySourceTransitionHash;
         genesisAuxiliarySourceBlockHash = _genesisAuxiliarySourceBlockHash;
@@ -57,5 +65,9 @@ contract TestSelfProtocore is SelfProtocore {
 		returns (CoconsensusI)
 	{
         return coconsensus;
+    }
+
+    function setDynasty(uint256 _dynasty) external {
+        dynasty = _dynasty;
     }
 }

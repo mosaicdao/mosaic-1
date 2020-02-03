@@ -19,13 +19,27 @@ pragma solidity >=0.5.0 <0.6.0;
  */
 interface ProtocoreI {
 
+    /** @notice setup() function initializes the protocore contract. */
+    function setup() external;
+
+    /** @notice Function to get the domain separator. */
+    function domainSeparator() external returns (bytes32);
+
     /**
-     * @notice setup() function initializes the protocore contract.
-     *
-     * @param _metachainId Metachain id.
-     * @param _domainSeparator Domain separator.
-     * @param _epochLength Epoch length.
-     * @param _metablockHeight Metablock height.
+     * @notice Function to return the metablock height, block number
+     *         and block hash of the finalized checkpoint.
+     */
+    function latestFinalizedBlock()
+        external
+        view
+        returns (
+            uint256 metablockHeight_,
+            uint256 blockNumber_,
+            bytes32 blockHash_
+        );
+
+    /**
+     * @notice Function to get the current dynasty.
      */
     function setup(
         bytes32 _metachainId,
