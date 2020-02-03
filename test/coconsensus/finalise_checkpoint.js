@@ -31,7 +31,7 @@ contract('Coconsensus::finaliseCheckpoint', (accounts) => {
     Object.assign(config, await deployCoconsensus(accountProvider));
 
     const { selfProtocore } = config.contracts;
-    const lastFinalizedBlock = await selfProtocore.latestFinalizedBlock();
+    const lastFinalizedBlock = await selfProtocore.latestFinalizedCheckpoint();
     const epochLength = await selfProtocore.epochLength();
 
     // Input params.
