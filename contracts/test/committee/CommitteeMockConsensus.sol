@@ -64,9 +64,14 @@ contract CommitteeMockConsensus is ConsensusI {
     {
     }
 
-    function newMetaChain()
+    function newMetachain()
         external
-        returns(bytes32 metachainId_)
+        returns (
+            bytes32 metachainId_,
+            address anchor_,
+            string memory mosaicVersion_,
+            address consensusGateway_
+        )
     {
     }
 
