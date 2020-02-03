@@ -47,9 +47,9 @@ contract('MessageOutbox::declareMessage', (accounts) => {
         config.declareMessageArgs.metachainId,
         config.outbox.address,
         config.declareMessageArgs.inboxAddress
-			);
+      );
 
-		//for initializing outboundChannelIdentifier
+    //for initializing outboundChannelIdentifier
     await config.outbox.setupMessageOutboxDouble(
       config.declareMessageArgs.metachainId,
       config.declareMessageArgs.inboxAddress
