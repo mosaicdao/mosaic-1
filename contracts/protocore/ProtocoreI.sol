@@ -34,4 +34,10 @@ interface ProtocoreI {
         uint256 _metablockHeight
     )
         external;
+
+    /**  @notice epochLength() function returns the epoch length. */
+    function epochLength() external returns (uint256);
+
+    /**  @notice dynasty() function returns the latest dynasty. */
+    function dynasty() external returns (uint256);
 }
