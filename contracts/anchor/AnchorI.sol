@@ -35,7 +35,6 @@ interface AnchorI {
      */
     function getStateRoot(uint256 _blockHeight)
         external
-        view
         returns (bytes32 stateRoot_);
 
     /**
