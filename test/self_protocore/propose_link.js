@@ -125,23 +125,6 @@ contract('SelfProtocore::proposeLink', (accounts) => {
       );
 
       assert.isOk(
-        voteMessageObject.forwardVoteCount.eqn(0),
-        `Expected forward vote count is 0 but got ${voteMessageObject.forwardVoteCount}`,
-      );
-
-      assert.isOk(
-        voteMessageObject.forwardVoteCountNextHeight.eqn(0),
-        'Expected forward vote count height is 0 '
-        + `but got ${voteMessageObject.forwardVoteCountNextHeight}`,
-      );
-
-      assert.isOk(
-        voteMessageObject.forwardVoteCountPreviousHeight.eqn(0),
-        'Expected forward vote count previous height is 0 '
-        + `but got ${voteMessageObject.forwardVoteCountNextHeight}`,
-      );
-
-      assert.isOk(
         ProtocoreUtils.isRegistered(voteMessageObject.targetFinalisation),
         'Target finalisation status must be registered',
       );
