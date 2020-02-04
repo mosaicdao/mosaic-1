@@ -109,4 +109,38 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protoco
             }
         }
     }
+
+    /**
+     * @notice Registers a vote for a link specified by vote message hash.
+     *
+     * @dev Satisfies \pre and \post conditions of Protocore::registerVoteInternal().
+     *
+     * \pre If a link (specified by `_voteMessageHash`) length is equal to one
+     *      epoch length (finalisation link) the inclusion principle should
+     *      be satisfied:
+     *      - current block number is strictly less than
+     *        target block height + epoch length
+     */
+    function registerVote(
+        bytes32 _voteMessageHash,
+        bytes32 _r,
+        bytes32 _s,
+        uint8 _v
+    )
+        external
+    {
+        Link storage link = links[_voteMessageHash];
+
+        require(
+            block.number < link.targetBlockNumber.add(epochLength),
+            "Current blockNumber should be less than sum of targetBlockNumber,epochLength"
+        );
+
+        Protocore.registerVoteInternal(
+            _voteMessageHash,
+            _r,
+            _s,
+            _v
+        );
+    }
 }

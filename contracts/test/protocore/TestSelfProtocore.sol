@@ -69,4 +69,15 @@ contract TestSelfProtocore is SelfProtocore {
     {
         return links[_voteMessageHash].fvsVoteCount[_height];
     }
+    function setLink(
+        bytes32 _voteMessageHash,
+        uint256 _targetBlockNumber,
+        uint256 _epochLength
+    )
+        external
+    {
+        Link storage link = links[_voteMessageHash];
+        link.targetBlockNumber = _targetBlockNumber;
+        epochLength = _epochLength;
+    }
 }
