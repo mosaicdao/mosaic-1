@@ -1,6 +1,6 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-// Copyright 2019 OpenST Ltd.
+// Copyright 2020 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,11 +14,24 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import "../../protocore/ProtocoreI.sol";
+
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
 contract SpyCoconsensus {
+
+    /* Usings */
+
+    using SafeMath for uint256;
+
+
+    /* Storage */
 
     mapping(bytes32 => address) public anchors;
 
     bytes32 public spyMetachainId;
+
+    /* Functions */
 
     function setAnchorAddress(bytes32 _metachainId, address anchor) public {
         anchors[_metachainId] = anchor;
@@ -28,5 +41,29 @@ contract SpyCoconsensus {
         spyMetachainId = _metachainId;
         return anchors[_metachainId];
     }
+
+    function openKernel(
+        ProtocoreI _protocore,
+        bytes32 _kernelHash
+    )
+        external
+    {
+        uint256 openKernelHeight = _protocore.openKernelHeight();
+        _protocore.openKernel(
+            openKernelHeight.add(1),
+            _kernelHash
+        );
+    }
+
+    function finaliseCheckpoint(
+        bytes32 metachainId,
+        uint256 blockNumber,
+        bytes32 blockHash
+    )
+        external
+    {
+    }
+
+
 }
 
