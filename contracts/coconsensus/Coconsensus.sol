@@ -14,8 +14,6 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-
 import "../coconsensus/GenesisCoconsensus.sol";
 import "../consensus-gateway/ConsensusCogatewayI.sol";
 import "../kernel/Kernel.sol";
@@ -27,6 +25,7 @@ import "../reputation/CoreputationI.sol";
 import "../version/MosaicVersion.sol";
 import "../vote-message/VoteMessage.sol";
 
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
  * @title Coconsensus contract - This mirrors the consensus contract on
@@ -37,7 +36,7 @@ contract Coconsensus is
     GenesisCoconsensus,
     Kernel,
     VoteMessage,
-    MosaicVersion 
+    MosaicVersion
 {
 
     /* Usings */
@@ -71,7 +70,9 @@ contract Coconsensus is
      * Sentinel pointer for marking the ending of circular,
      * linked-list of genesis metachain ids.
      */
-    bytes32 public constant SENTINEL_METACHAIN_ID = bytes32(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+    bytes32 public constant SENTINEL_METACHAIN_ID = bytes32(
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    );
 
 
     /* Storage */
@@ -102,9 +103,16 @@ contract Coconsensus is
     /** Mapping of metachain id to the domain separators. */
     mapping (bytes32 /* metachainId */ => bytes32 /* domain separator */) public domainSeparators;
 
-    CoreputationI public coreputation;
+    /** Coreputation contract address. */
+    CoreputationI private COREPUTATION = address(
+        0x0000000000000000000000000000000000004D01
+    );
 
-    ConsensusCogatewayI public consensusCogateway;
+    /** Consensus cogateway contract address. */
+    ConsensusCogatewayI private CONSENSUS_COGATEWAY = address(
+        0x0000000000000000000000000000000000004D02
+    );
+
 
     /* Special Functions */
 
@@ -264,6 +272,26 @@ contract Coconsensus is
         selfProtocore.openMetablock(_kernelHeight, openKernelHash);
     }
 
+
+    /* Internal Functions */
+
+    /** @notice Get the coreputation contract address. */
+    function getCoreputation()
+        internal
+        view
+        returns (address)
+    {
+        return COREPUTATION;
+    }
+
+    /** @notice Get the consensus cogateway contract address. */
+    function getConsensusCogateway()
+        internal
+        view
+        return (address)
+    {
+        return CONSENSUS_COGATEWAY;
+    }
 
     /* Private Functions */
 
