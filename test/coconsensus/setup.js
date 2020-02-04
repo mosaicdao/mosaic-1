@@ -35,6 +35,7 @@ async function setProtocoreGenesisStorageData() {
   genesis.auxiliaryAccumulatedGas = new BN(1000000);
   genesis.auxiliaryMetachainId = Utils.getRandomHash();
   genesis.domainSeparator = Utils.getRandomHash();
+  genesis.dynasty = new BN(0);
   genesis.epochLength = new BN(100);
   genesis.metablockHeight = new BN(Utils.getRandomNumber(1000));
   genesis.auxiliarySourceBlockNumber = new BN(
@@ -50,6 +51,7 @@ async function setProtocoreGenesisStorageData() {
     genesis.domainSeparator,
     genesis.epochLength,
     genesis.metablockHeight,
+    genesis.dynasty,
     genesis.auxiliaryParentVoteMessageHash,
     genesis.auxiliarySourceTransitionHash,
     genesis.auxiliarySourceBlockHash,
@@ -111,12 +113,6 @@ contract('Coconsensus::setup', (accounts) => {
     config.genesis.protocoreData = {};
     config.genesis.observerData = {};
 
-    // eslint-disable-next-line prefer-destructuring
-    config.genesis.originMetachainId = config.genesis.metachainIds[0];
-
-    // eslint-disable-next-line prefer-destructuring
-    config.genesis.auxiliaryMetachainId = config.genesis.metachainIds[1];
-
     /* eslint-disable no-await-in-loop */
     for (let i = 0; i < 5; i += 1) {
       const {
@@ -137,6 +133,12 @@ contract('Coconsensus::setup', (accounts) => {
       config.genesis.observers.push(originObserver.address);
       config.genesis.observerData[metachainId] = genesisOriginObserverData;
     }
+
+    // eslint-disable-next-line prefer-destructuring
+    config.genesis.originMetachainId = config.genesis.metachainIds[0];
+
+    // eslint-disable-next-line prefer-destructuring
+    config.genesis.auxiliaryMetachainId = config.genesis.metachainIds[1];
 
     await config.contracts.coconsensus.setGenesisStorage(
       config.genesis.metachainIds,
@@ -163,6 +165,12 @@ contract('Coconsensus::setup', (accounts) => {
 
       // Call setup function.
       await coconsensus.setup();
+
+      const selfProtocoreAddress = await coconsensus.protocores(
+        config.genesis.auxiliaryMetachainId,
+      );
+      const selfProtocore = await SelfProtocore.at(selfProtocoreAddress);
+      const selfProtocoreDynasty = await selfProtocore.dynasty();
 
       for (let index = 0; index < config.genesis.metachainIds.length; index += 1) {
         const metachainId = config.genesis.metachainIds[index];
@@ -208,13 +216,8 @@ contract('Coconsensus::setup', (accounts) => {
           'Blockhash is not set.',
         );
 
-        const expectedDynasty = config
-          .genesis
-          .protocoreData[metachainId]
-          .metablockHeight;
-
         assert.strictEqual(
-          blockchains.statusDynasty.eq(expectedDynasty),
+          blockchains.statusDynasty.eq(selfProtocoreDynasty),
           true,
           'Dynasty is not set.',
         );

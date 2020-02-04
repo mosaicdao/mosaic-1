@@ -35,6 +35,7 @@ contract TestSelfProtocore is SelfProtocore {
         bytes32 _genesisAuxiliaryMetachainId,
         bytes32 _genesisDomainSeparator,
         uint256 _genesisEpochLength,
+        uint256 _genesisDynasty,
         uint256 _genesisMetablockHeight,
         bytes32 _genesisAuxiliaryParentVoteMessageHash,
         bytes32 _genesisAuxiliarySourceTransitionHash,
@@ -49,6 +50,7 @@ contract TestSelfProtocore is SelfProtocore {
         genesisAuxiliaryMetachainId = _genesisAuxiliaryMetachainId;
         genesisDomainSeparator = _genesisDomainSeparator;
         genesisEpochLength = _genesisEpochLength;
+        genesisDynasty = _genesisDynasty;
         genesisMetablockHeight = _genesisMetablockHeight;
         genesisAuxiliaryParentVoteMessageHash = _genesisAuxiliaryParentVoteMessageHash;
         genesisAuxiliarySourceTransitionHash = _genesisAuxiliarySourceTransitionHash;
@@ -65,5 +67,29 @@ contract TestSelfProtocore is SelfProtocore {
 		returns (CoconsensusI)
 	{
         return coconsensus;
+    }
+
+    /** @notice Set the dynasty for the testing purpose */
+    function setDynasty(uint256 _dynasty) external {
+        dynasty = _dynasty;
+    }
+
+    /**
+     * @notice This function is used to test the
+     *         `Coconsensus::finaliseCheckpoint`, the msg.sender for the
+     *         `Coconsensus::finaliseCheckpoint` can only be protocore.
+     */
+    function testFinaliseCheckpoint(
+        bytes32 _metachainId,
+        uint256 _blockNumber,
+        bytes32 _blockHash
+    )
+        external
+    {
+        getCoconsensus().finaliseCheckpoint(
+            _metachainId,
+            _blockNumber,
+            _blockHash
+        );
     }
 }

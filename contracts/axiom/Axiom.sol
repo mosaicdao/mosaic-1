@@ -16,7 +16,6 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "./AxiomI.sol";
 import "../anchor/Anchor.sol"; // TASK: change this to factory, when new anchor is implemented.
-import "../block/Block.sol";
 import "../consensus/ConsensusI.sol";
 import "../proxies/ProxyFactory.sol";
 

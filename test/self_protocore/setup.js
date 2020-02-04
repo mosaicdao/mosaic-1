@@ -37,10 +37,11 @@ contract('SelfProtocore::setup', (accounts) => {
     config.genesis.auxiliaryMetachainId = Utils.getRandomHash();
     config.genesis.domainSeparator = Utils.getRandomHash();
     config.genesis.epochLength = new BN(100);
+    config.genesis.dynasty = new BN(0);
     config.genesis.metablockHeight = new BN(Utils.getRandomNumber(1000));
 
     config.setupParams = {};
-    
+
     config.setupParams.coconsensus = accountProvider.get();
 
     config.genesis.auxiliarySourceBlockNumber = new BN(
@@ -59,6 +60,7 @@ contract('SelfProtocore::setup', (accounts) => {
       config.genesis.auxiliaryMetachainId,
       config.genesis.domainSeparator,
       config.genesis.epochLength,
+      config.genesis.dynasty,
       config.genesis.metablockHeight,
       config.genesis.auxiliaryParentVoteMessageHash,
       config.genesis.auxiliarySourceTransitionHash,

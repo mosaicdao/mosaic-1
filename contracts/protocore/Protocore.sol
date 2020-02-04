@@ -91,6 +91,9 @@ contract Protocore is MosaicVersion, CoconsensusModule, Kernel {
     /** Epoch length */
     uint256 public epochLength;
 
+    /** Current dynasty */
+    uint256 public dynasty;
+
 
     /* Special Functions */
 
@@ -101,6 +104,7 @@ contract Protocore is MosaicVersion, CoconsensusModule, Kernel {
      * @param _metachainId Metachain Id.
      * @param _domainSeparator Domain separator.
      * @param _epochLength Epoch length.
+     * @param _dynasty Dynasty number.
      * @param _metablockHeight Metablock height.
      * @param _genesisParentVoteMessageHash Parent vote message hash for the genesis link.
      * @param _genesisSourceTransitionHash Source transition hash for the genesis link.
@@ -117,6 +121,7 @@ contract Protocore is MosaicVersion, CoconsensusModule, Kernel {
      * \pre `_genesisTargetBlockHash` must not be 0.
      * \pre `_genesisTargetBlockNumber` must be greater than or equal to `_genesisSourceBlockNumber`.
      *
+     * \post Sets `dynasty` to the given value.
      * \post Sets `domainSeparator` to the given value.
      * \post Sets `epochLength` to the given value.
      * \post Sets `metachainId` to the given value.
@@ -126,6 +131,7 @@ contract Protocore is MosaicVersion, CoconsensusModule, Kernel {
         bytes32 _metachainId,
         bytes32 _domainSeparator,
         uint256 _epochLength,
+        uint256 _dynasty,
         uint256 _metablockHeight,
         bytes32 _genesisParentVoteMessageHash,
         bytes32 _genesisSourceTransitionHash,
@@ -170,6 +176,8 @@ contract Protocore is MosaicVersion, CoconsensusModule, Kernel {
         domainSeparator = _domainSeparator;
 
         epochLength = _epochLength;
+
+        dynasty = _dynasty;
 
         // Generate the genesis vote message hash.
         bytes32 genesisVoteMessageHash = hashVoteMessage(
@@ -237,14 +245,13 @@ contract Protocore is MosaicVersion, CoconsensusModule, Kernel {
     }
 
     /**
-     * @notice Function to return the metablock height, block number
+     * @notice Function to return the block number
      *         and block hash of the finalized checkpoint.
      */
-    function latestFinalizedBlock()
+    function latestFinalizedCheckpoint()
         external
         view
         returns (
-            uint256 metablockHeight_,
             uint256 blockNumber_,
             bytes32 blockHash_
         )
@@ -252,7 +259,6 @@ contract Protocore is MosaicVersion, CoconsensusModule, Kernel {
         // Get the latest finalized link.
         Link storage finalizedLink = links[latestFinalizedVoteMessageHash];
 
-        metablockHeight_ = finalizedLink.proposedMetablockHeight;
         blockNumber_ = finalizedLink.targetBlockNumber;
         blockHash_ = finalizedLink.targetBlockHash;
     }

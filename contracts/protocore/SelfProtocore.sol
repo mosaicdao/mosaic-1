@@ -42,6 +42,7 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Validat
             genesisAuxiliaryMetachainId,
             genesisDomainSeparator,
             genesisEpochLength,
+            genesisDynasty,
             genesisMetablockHeight,
             genesisAuxiliaryParentVoteMessageHash,
             genesisAuxiliarySourceTransitionHash,
