@@ -64,10 +64,10 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     bytes32 public selfMetachainId;
 
     /**
-     * Relative dynasty of self protocore. This will be incremented when the
+     * Relative self dynasty of self protocore. This will be incremented when the
      * self protocore contract will call `finalizeCheckpoint`
      */
-    uint256 public relativeDynasty;
+    uint256 public relativeSelfDynasty;
 
     /** Mapping to track the finalised blocks of each metachain. */
     mapping (bytes32 /* metachainId */ =>
@@ -109,7 +109,7 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
 
         selfMetachainId = genesisSelfMetachainId;
 
-        relativeDynasty = uint256(0);
+        relativeSelfDynasty = uint256(0);
 
         bytes32 currentMetachainId = genesisMetachainIds[SENTINEL_METACHAIN_ID];
 
@@ -169,7 +169,7 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
         blockchains[_metachainId][blockNumber] = Block(
             blockHash,
             CheckpointCommitStatus.Finalized,
-            relativeDynasty
+            relativeSelfDynasty
         );
 
         // Store the blocknumber as tip.

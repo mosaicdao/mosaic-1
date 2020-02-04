@@ -166,7 +166,7 @@ contract('Coconsensus::setup', (accounts) => {
       // Call setup function.
       await coconsensus.setup();
 
-      const relativeDynasty = await coconsensus.relativeDynasty();
+      const relativeDynasty = await coconsensus.relativeSelfDynasty();
 
       for (let index = 0; index < config.genesis.metachainIds.length; index += 1) {
         const metachainId = config.genesis.metachainIds[index];
