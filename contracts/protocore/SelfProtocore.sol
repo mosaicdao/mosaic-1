@@ -151,7 +151,7 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protoco
      * @param _targetBlockNumber Block number of target checkpoint.
      * @param _sourceOriginObservation Observation of the origin chain.
      * @param _sourceKernelHash Open kernel hash.
-     * @param _sourceDynasty Metablock dynasty at origin chain.
+     * @param _sourceDynasty Metablock dynasty.
      * @param _sourceAccumulatedGas Total gas consumed till target block number.
      * @param _sourceCommitteeLock The committee lock that hashes the
      *                             transaction root on the auxiliary chain.
