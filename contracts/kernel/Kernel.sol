@@ -14,6 +14,9 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/**
+ * @title A kernel contract that provides functions related to kernel.
+ */
 contract Kernel {
 
     /** EIP-712 type hash for Kernel. */

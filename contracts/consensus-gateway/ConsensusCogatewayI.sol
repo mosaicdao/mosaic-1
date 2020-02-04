@@ -14,8 +14,20 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/**
+ * @title An interface for consensus cogateway contract.
+ */
 interface ConsensusCogatewayI {
 
+    /* External functions */
+
+    /**
+     * @notice Get the open kernel hash for a given kernel height.
+     *
+     * @param _kernelHeight Kernel height.
+     *
+     * @return Open kernel hash.
+     */
     function getOpenKernelHash(uint256 _kernelHeight)
         external
         returns (bytes32);
