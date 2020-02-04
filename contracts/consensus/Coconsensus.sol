@@ -14,7 +14,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../coconsensus/GenesisCoconsensus.sol";
+import "../consensus/GenesisCoconsensus.sol";
 import "../observer/ObserverI.sol";
 import "../protocore/ProtocoreI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";

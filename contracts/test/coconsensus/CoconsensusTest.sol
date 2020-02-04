@@ -16,7 +16,7 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
-import "../../coconsensus/Coconsensus.sol";
+import "../../consensus/Coconsensus.sol";
 
 contract CoconsensusTest is Coconsensus {
 
