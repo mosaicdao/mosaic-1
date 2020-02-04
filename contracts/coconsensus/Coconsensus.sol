@@ -249,6 +249,7 @@ contract Coconsensus is
             domainSeparator
         );
 
+        ConsensusCogatewayI consensusCogateway = getConsensusCogateway();
         bytes32 openKernelHash = consensusCogateway.getOpenKernelHash(_kernelHeight);
 
         require(
@@ -256,7 +257,9 @@ contract Coconsensus is
             "Calculated kernel hash is not equal to open kernel hash."
         );
 
-        SelfProtocoreI selfProtocore = SelfProtocoreI(address(protocore));
+        SelfProtocoreI selfProtocore = SelfProtocoreI(address(protocore));        
+        CoreputationI coreputation = getCoreputation();
+
         for (uint256 i = 0; i < _updatedValidators.length; i = i.add(1)) {
             address validator = _updatedValidators[i];
             uint256 reputation = _updatedReputation[i];
@@ -279,18 +282,18 @@ contract Coconsensus is
     function getCoreputation()
         internal
         view
-        returns (address)
+        returns (CoreputationI)
     {
-        return COREPUTATION;
+        return CoreputationI(COREPUTATION);
     }
 
     /** @notice Get the consensus cogateway contract address. */
     function getConsensusCogateway()
         internal
         view
-        return (address)
+        return (ConsensusCogatewayI)
     {
-        return CONSENSUS_COGATEWAY;
+        return ConsensusCogatewayI(CONSENSUS_COGATEWAY);
     }
 
     /* Private Functions */
