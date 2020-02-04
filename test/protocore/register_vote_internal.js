@@ -391,6 +391,7 @@ contract('Protocore::registerVoteInternal', () => {
     config.epochLength = new BN(100);
     config.metachainId = Utils.getRandomHash();
 
+    config.genesisDynasty = new BN(0);
     config.genesisKernelHeight = new BN(1);
     config.genesisKernelHash = Utils.getRandomHash();
     config.genesisParentVoteMessageHash = Utils.getRandomHash();
@@ -414,6 +415,7 @@ contract('Protocore::registerVoteInternal', () => {
       config.metachainId,
       config.domainSeparator,
       config.epochLength,
+      config.genesisDynasty,
       config.genesisKernelHeight,
       config.genesisKernelHash,
       config.genesisParentVoteMessageHash,

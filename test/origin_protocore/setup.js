@@ -158,7 +158,7 @@ contract('OriginProtocore::setup', (accounts) => {
       assert.isOk(
         (await originProtocore.fvsVoteCount(
           genesisVoteMessageHash,
-          config.setupParams.metablockHeight,
+          config.genesis.metablockHeight,
         )).eqn(0),
       );
       assert.strictEqual(

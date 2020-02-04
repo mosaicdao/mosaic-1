@@ -155,7 +155,7 @@ contract('SelfProtocore::setup', (accounts) => {
       assert.isOk(
         (await selfProtocore.fvsVoteCount(
           genesisVoteMessageHash,
-          config.setupParams.metablockHeight,
+          config.genesis.metablockHeight,
         )).eqn(0),
       );
       assert.strictEqual(
