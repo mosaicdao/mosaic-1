@@ -140,6 +140,38 @@ contract Coconsensus is
         }
     }
 
+
+    /* External Functions */
+
+    /**
+     * @notice Updates the validator set and its reputations with opening of
+     *         a new metablock.
+     *
+     * @param _metachainId Metachain Id.
+     * @param _kernelHeight New kernel height
+     * @param _updatedValidators  The array of addresses of the updated validators.
+     * @param _updatedReputation The array of reputation that corresponds to
+     *                        the updated validators.
+     * @param _gasTarget The gas target for this metablock
+     * @param _transitionHash Transition hash.
+     * @param _source Blockhash of source checkpoint.
+     * @param _target Blockhash of target checkpoint.
+     * @param _sourceBlockNumber Block number of source checkpoint.
+     * @param _targetBlockNumber Block number af target checkpoint.
+     *
+     * \pre `_metachainId` is not 0.
+     * \pre `_source` is not 0.
+     * \pre `_target` is not 0.
+     * \pre `_sourceBlockNumber` is a checkpoint.
+     * \pre `_targetBlockNumber` is a checkpoint.
+     * \pre `_targetBlockNumber` is greater than `_sourceBlockNumber`.
+     * \pre Source checkpoint must be finalized.
+     *
+     * \pre Open kernel hash must exist in `ConsensusCogateway` contract.
+     * \post Update the validator set in self protocore.
+     * \post Update the reputation of validators.
+     * \post Open a new metablock in self protocore.
+     */
     function commitCheckpoint(
         bytes32 _metachainId,
         uint256 _kernelHeight,
@@ -178,7 +210,7 @@ contract Coconsensus is
             "Target block number must be a checkpoint."
         );
         require(
-            _targetBlockNumber > _sourceBlockNumber ,
+            _targetBlockNumber > _sourceBlockNumber,
             "Target block number must be greater than source block number."
         );
 
@@ -199,7 +231,7 @@ contract Coconsensus is
             _targetBlockNumber,
             domainSeparator
         );
-        
+
         bytes32 calculatedKernelHash = Kernel.hashKernel(
             _kernelHeight,
             metablockHash,
@@ -221,7 +253,7 @@ contract Coconsensus is
             address validator = _updatedValidators[i];
             uint256 reputation = _updatedReputation[i];
             coreputation.upsertValidator(validator, reputation);
-            
+
             selfProtocore.upsertValidator(
                 validator,
                 _kernelHeight,
@@ -231,6 +263,7 @@ contract Coconsensus is
 
         selfProtocore.openMetablock(_kernelHeight, openKernelHash);
     }
+
 
     /* Private Functions */
 
