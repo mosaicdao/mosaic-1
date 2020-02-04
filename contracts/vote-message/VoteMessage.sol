@@ -16,15 +16,20 @@ pragma solidity >=0.5.0 <0.6.0;
 
 contract VoteMessage {
 
+    /* Constants */
+
     /** EIP-712 type hash for a Vote Message */
     bytes32 public constant VOTE_MESSAGE_TYPEHASH = keccak256(
         "VoteMessage(bytes32 transitionHash,bytes32 source,bytes32 target,uint256 sourceBlockHeight,uint256 targetBlockHeight)"
     );
 
-   /**
-    * @notice Takes the VoteMessage parameters and returns
-    *        the typed VoteMessage hash.
-    */
+
+    /* Internal Functions */
+
+    /**
+     * @notice Takes the VoteMessage parameters and returns
+     *        the typed VoteMessage hash.
+     */
     function hashVoteMessage(
         bytes32 _transitionHash,
         bytes32 _source,
@@ -34,7 +39,7 @@ contract VoteMessage {
         bytes32 _domainSeparator
     )
         internal
-        view
+        pure
         returns (bytes32 hash_)
     {
         bytes32 typedVoteMessageHash = keccak256(

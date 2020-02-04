@@ -19,10 +19,14 @@ pragma solidity >=0.5.0 <0.6.0;
  */
 contract Kernel {
 
+    /* Constants */
+
     /** EIP-712 type hash for Kernel. */
     bytes32 public constant KERNEL_TYPEHASH = keccak256(
         "Kernel(uint256 height,bytes32 parent,address[] updatedValidators,uint256[] updatedReputation,uint256 gasTarget,uint256 gasPrice)"
     );
+
+    /* Internal Functions */
 
     /**
      * @notice Takes the parameters of a kernel object and returns the
@@ -47,7 +51,7 @@ contract Kernel {
         bytes32 _domainSeparator
     )
         internal
-        view
+        pure
         returns (bytes32 hash_)
     {
         bytes32 typedKernelHash = keccak256(
