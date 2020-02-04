@@ -62,4 +62,15 @@ contract TestOriginProtocore is OriginProtocore {
 	{
         return coconsensus;
     }
+
+    function fvsVoteCount(
+        bytes32 _voteMessageHash,
+        uint256 _height
+    )
+        external
+        view
+        returns (uint256)
+    {
+        return links[_voteMessageHash].fvsVoteCount[_height];
+    }
 }

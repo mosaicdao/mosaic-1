@@ -41,4 +41,14 @@ interface ProtocoreI {
      * @notice function to get the dynasty.
      */
     function dynasty() external returns (uint256);
+
+    function openKernelHeight()
+        external
+        returns (uint256);
+
+    function openKernel(
+        uint256 _kernelHeight,
+        bytes32 _kernelHash
+    )
+        external;
 }
