@@ -14,19 +14,23 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-
 import "../consensus/CoconsensusModule.sol";
 import "../validator/ForwardValidatorSetAbstract.sol";
 import "../validator/ValidatorSet.sol";
 import "../version/MosaicVersion.sol";
-import "../kernel/Kernel.sol";
+import "../vote-message/VoteMessage.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
  * @title Protocore abstract contract acting as a base contract for
  *        OriginProtocore and SelfProtocore contracts.
  */
-contract Protocore is MosaicVersion, CoconsensusModule, Kernel, ForwardValidatorSetAbstract {
+contract Protocore is
+    MosaicVersion,
+    CoconsensusModule,
+    VoteMessage,
+    ForwardValidatorSetAbstract
+{
 
     /* Usings */
 
@@ -82,11 +86,6 @@ contract Protocore is MosaicVersion, CoconsensusModule, Kernel, ForwardValidator
 
     /** Sentinel pointer for marking end of linked-list of validators */
     address public constant SENTINEL_VALIDATORS = address(0x1);
-
-    /** EIP-712 type hash for a Vote Message */
-    bytes32 public constant VOTE_MESSAGE_TYPEHASH = keccak256(
-        "VoteMessage(bytes32 transitionHash,bytes32 sourceBlockHash,bytes32 targetBlockHash,uint256 sourceBlockNumber,uint256 targetBlockNumber)"
-    );
 
 
     /* Storage */
@@ -205,12 +204,13 @@ contract Protocore is MosaicVersion, CoconsensusModule, Kernel, ForwardValidator
         dynasty = _dynasty;
 
         // Generate the genesis vote message hash.
-        bytes32 genesisVoteMessageHash = hashVoteMessage(
+        bytes32 genesisVoteMessageHash = VoteMessage.hashVoteMessage(
             _genesisSourceTransitionHash,
             _genesisSourceBlockHash,
             _genesisTargetBlockHash,
             _genesisSourceBlockNumber,
-            _genesisTargetBlockNumber
+            _genesisTargetBlockNumber,
+            domainSeparator
         );
 
         // Store the genesis link.
@@ -343,12 +343,13 @@ contract Protocore is MosaicVersion, CoconsensusModule, Kernel, ForwardValidator
             "Target block number of the proposed link should be bigger than parent one."
         );
 
-        bytes32 voteMessageHash = hashVoteMessage(
+        bytes32 voteMessageHash = VoteMessage.hashVoteMessage(
             _sourceTransitionHash,
             parentLink.targetBlockHash,
             _targetBlockHash,
             parentLink.targetBlockNumber,
-            _targetBlockNumber
+            _targetBlockNumber,
+            domainSeparator
         );
 
         require(
@@ -586,47 +587,5 @@ contract Protocore is MosaicVersion, CoconsensusModule, Kernel, ForwardValidator
                 );
             }
         }
-    }
-
-    /**
-     * @notice Takes vote message parameters and returns the typed vote
-     *         message hash.
-     *
-     * @param _transitionHash Transition hash.
-     * @param _sourceBlockHash Blockhash of source chain.
-     * @param _targetBlockHash Blockhash of target chain.
-     * @param _sourceBlockNumber Block number at source.
-     * @param _targetBlockNumber Block number at target.
-     */
-    function hashVoteMessage(
-        bytes32 _transitionHash,
-        bytes32 _sourceBlockHash,
-        bytes32 _targetBlockHash,
-        uint256 _sourceBlockNumber,
-        uint256 _targetBlockNumber
-    )
-        private
-        view
-        returns (bytes32 voteMessageHash_)
-    {
-        bytes32 typedVoteMessageHash = keccak256(
-            abi.encode(
-                VOTE_MESSAGE_TYPEHASH,
-                _transitionHash,
-                _sourceBlockHash,
-                _targetBlockHash,
-                _sourceBlockNumber,
-                _targetBlockNumber
-            )
-        );
-
-        voteMessageHash_ = keccak256(
-            abi.encodePacked(
-                byte(0x19),
-                byte(0x01),
-                domainSeparator,
-                typedVoteMessageHash
-            )
-        );
     }
 }

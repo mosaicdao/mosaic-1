@@ -18,7 +18,6 @@ import "../anchor/ObserverI.sol";
 import "../block/BlockHeader.sol";
 import "../coconsensus/GenesisCoconsensus.sol";
 import "../consensus-gateway/ConsensusCogatewayI.sol";
-import "../kernel/Kernel.sol";
 import "../protocore/ProtocoreI.sol";
 import "../protocore/SelfProtocoreI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
@@ -35,7 +34,6 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 contract Coconsensus is
     MasterCopyNonUpgradable,
     GenesisCoconsensus,
-    Kernel,
     VoteMessage,
     MosaicVersion
 {
@@ -66,6 +64,11 @@ contract Coconsensus is
 
 
     /* Constants */
+
+    /** EIP-712 type hash for Kernel. */
+    bytes32 public constant KERNEL_TYPEHASH = keccak256(
+        "Kernel(uint256 height,bytes32 parent,address[] updatedValidators,uint256[] updatedReputation,uint256 gasTarget,uint256 gasPrice)"
+    );
 
     /**
      * Sentinel pointer for marking the ending of circular,
@@ -432,6 +435,52 @@ contract Coconsensus is
         return ConsensusCogatewayI(CONSENSUS_COGATEWAY);
     }
 
+    /**
+     * @notice Takes the parameters of a kernel object and returns the
+     *         typed hash of it.
+     *
+     * @param _height The height of meta-block.
+     * @param _parent The hash of this block's parent.
+     * @param _updatedValidators  The array of addresses of the updated validators.
+     * @param _updatedReputation The array of reputation that corresponds to
+     *                        the updated validators.
+     * @param _gasTarget The gas target for this metablock.
+     * @param _domainSeparator Domain separator.
+     *
+     * @return hash_ The hash of kernel.
+     */
+    function hashKernel(
+        uint256 _height,
+        bytes32 _parent,
+        address[] memory _updatedValidators,
+        uint256[] memory _updatedReputation,
+        uint256 _gasTarget,
+        bytes32 _domainSeparator
+    )
+        internal
+        pure
+        returns (bytes32 hash_)
+    {
+        bytes32 typedKernelHash = keccak256(
+            abi.encode(
+                KERNEL_TYPEHASH,
+                _height,
+                _parent,
+                _updatedValidators,
+                _updatedReputation,
+                _gasTarget
+            )
+        );
+
+        hash_ = keccak256(
+            abi.encodePacked(
+                byte(0x19),
+                byte(0x01),
+                _domainSeparator,
+                typedKernelHash
+            )
+        );
+    }
 
     /* Private Functions */
 
@@ -563,7 +612,7 @@ contract Coconsensus is
         );
 
         // Generate the kernel hash from the input params.
-        kernelHash_ = Kernel.hashKernel(
+        kernelHash_ = hashKernel(
             _kernelHeight,
             metablockHash,
             _updatedValidators,
