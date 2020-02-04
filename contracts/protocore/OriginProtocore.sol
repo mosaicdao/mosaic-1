@@ -14,8 +14,8 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../protocore/Protocore.sol";
 import "../protocore/GenesisOriginProtocore.sol";
+import "../protocore/Protocore.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 
 /**
@@ -109,6 +109,8 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
      *
      * @dev Satisfies \pre and \post conditions of
      *      Protocore::proposeLinkInternal().
+     *
+     * \post Emits LinkProposed event.
      */
     function proposeLink(
         bytes32 _parentVoteMessageHash,
@@ -128,6 +130,40 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
             _parentVoteMessageHash,
             _targetBlockHash,
             _targetBlockNumber
+        );
+    }
+
+
+    /* Public Functions */
+
+    /**
+     * @notice inForwardValidatorSet() function calls on SelfProtocore contract
+     *         to query the forward validator set.
+     */
+    function inForwardValidatorSet(address _validator, uint256 _height)
+        public
+        view
+        returns (bool)
+    {
+        assert(selfProtocore != address(0));
+        return ForwardValidatorSetAbstract(selfProtocore).inForwardValidatorSet(
+            _validator,
+            _height
+        );
+    }
+
+    /**
+     * @notice forwardValidatorCount() function calls on SelfProtocore contract
+     *         to query the forward validator set.
+     */
+    function forwardValidatorCount(uint256 _height)
+        public
+        view
+        returns (uint256)
+    {
+        assert(selfProtocore != address(0));
+        return ForwardValidatorSetAbstract(selfProtocore).forwardValidatorCount(
+            _height
         );
     }
 }

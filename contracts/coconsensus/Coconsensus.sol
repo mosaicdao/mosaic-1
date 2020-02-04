@@ -51,7 +51,7 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     /** Mapping to track the blocks for each metachain. */
     mapping (bytes32 /* metachainId */ => mapping(uint256 /* blocknumber */ => Block)) blockchains;
 
-    /** 
+    /**
      * Mapping of metachain id to latest block number(tip) stored
      * in blockchains.
      */
