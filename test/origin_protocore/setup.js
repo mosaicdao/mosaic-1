@@ -168,20 +168,11 @@ contract('OriginProtocore::setup', (accounts) => {
         `Proposed metablock height from contract ${genesisLink.proposedMetablockHeight.toString(10)} `
         + `must be equal to ${config.setupParams.metablockHeight.toString(10)}.`,
       );
-      assert.strictEqual(
-        genesisLink.forwardVoteCount.eqn(0),
-        true,
-        'Forward vote count in genesis link must be zero.',
-      );
-      assert.strictEqual(
-        genesisLink.forwardVoteCountNextHeight.eqn(0),
-        true,
-        'Forward vote count next height in genesis link must be zero.',
-      );
-      assert.strictEqual(
-        genesisLink.forwardVoteCountPreviousHeight.eqn(0),
-        true,
-        'Forward vote count previous height in genesis link must be zero.',
+      assert.isOk(
+        (await originProtocore.fvsVoteCount(
+          genesisVoteMessageHash,
+          config.setupParams.metablockHeight,
+        )).eqn(0),
       );
       assert.strictEqual(
         genesisLink.targetFinalisation.eqn(ProtocoreUtils.CheckpointFinalisationStatus.Finalised),
