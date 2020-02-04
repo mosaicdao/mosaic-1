@@ -112,8 +112,6 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
         )
     ) public fvsVotes;
 
-    /** Current dynasty */
-    uint256 public dynasty;
 
     /* Special Functions */
 
@@ -124,7 +122,6 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
      * @param _metachainId Metachain Id.
      * @param _domainSeparator Domain separator.
      * @param _epochLength Epoch length.
-     * @param _dynasty Dynasty number.
      * @param _metablockHeight Metablock height.
      * @param _genesisParentVoteMessageHash Parent vote message hash for the genesis link.
      * @param _genesisSourceTransitionHash Source transition hash for the genesis link.
@@ -140,18 +137,17 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
      * \pre `_genesisTargetBlockNumber` must be multiple of `_epochLength`.
      * \pre `_genesisTargetBlockHash` must not be 0.
      * \pre `_genesisTargetBlockNumber` must be greater than or equal to `_genesisSourceBlockNumber`.
+     * \pre This function can be called only once.
      *
-     * \post Sets `dynasty` to the given value.
-     * \post Sets `domainSeparator` to the given value.
-     * \post Sets `epochLength` to the given value.
-     * \post Sets `metachainId` to the given value.
-     * \post Sets genesis link.
+     * \post Sets domainSeparator storage variable to the given value.
+     * \post Sets epochLength storage variable to the given value.
+     * \post Sets metachainId storage variable to the given value.
+     * \post Adds a genesis link in link storage variable.
      */
     function setupProtocore(
         bytes32 _metachainId,
         bytes32 _domainSeparator,
         uint256 _epochLength,
-        uint256 _dynasty,
         uint256 _metablockHeight,
         bytes32 _genesisParentVoteMessageHash,
         bytes32 _genesisSourceTransitionHash,
@@ -196,8 +192,6 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
         domainSeparator = _domainSeparator;
 
         epochLength = _epochLength;
-
-        dynasty = _dynasty;
 
         // Generate the genesis vote message hash.
         bytes32 genesisVoteMessageHash = hashVoteMessage(
@@ -268,8 +262,8 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
      * @notice proposeLinkInternal() function proposes a valid link to be
      *         voted later by active validators.
      *
-     * \pre `parentVoteMessageHash` is not 0.
-     * \pre `parentVoteMessageHash` refers to an already proposed link which
+     * \pre `_parentVoteMessageHash` is not 0.
+     * \pre `_parentVoteMessageHash` refers to an already proposed link which
      *      `targetFinalisation` is at least justified.
      * \pre `targetBlockHash` is not 0
      * \pre `targetBlockNumber` is a multiple of the epoch length.

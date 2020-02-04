@@ -32,7 +32,6 @@ contract('Protocore::openKernel', (accounts) => {
     config.metachainId = Utils.getRandomHash();
     config.epochLength = new BN(100);
 
-    config.genesisDynasty = new BN(0);
     config.genesisKernelHeight = new BN(1);
     config.genesisKernelHash = Utils.getRandomHash();
     config.genesisParentVoteMessageHash = Utils.getRandomHash();
@@ -50,7 +49,6 @@ contract('Protocore::openKernel', (accounts) => {
       config.metachainId,
       config.domainSeparator,
       config.epochLength,
-      config.genesisDynasty,
       config.genesisKernelHeight,
       config.genesisKernelHash,
       config.genesisParentVoteMessageHash,

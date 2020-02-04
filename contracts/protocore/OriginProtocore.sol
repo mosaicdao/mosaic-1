@@ -71,7 +71,6 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
             genesisOriginMetachainId,
             genesisDomainSeparator,
             genesisEpochLength,
-            genesisDynasty,
             genesisProposedMetablockHeight,
             genesisOriginParentVoteMessageHash,
             bytes32(0),

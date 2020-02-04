@@ -101,7 +101,7 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     function setup() public {
 
         require(
-            originMetachainId == bytes32(0),
+            selfMetachainId == bytes32(0),
             "Coconsensus contract is already initialized."
         );
 

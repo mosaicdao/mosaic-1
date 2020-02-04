@@ -31,7 +31,6 @@ contract TestOriginProtocore is OriginProtocore {
         bytes32 _genesisOriginMetachainId,
         bytes32 _genesisDomainSeparator,
         uint256 _genesisEpochLength,
-        uint256 _genesisDynasty,
         uint256 _genesisProposedMetablockHeight,
         address _genesisSelfProtocore,
         bytes32 _genesisOriginParentVoteMessageHash,
@@ -45,7 +44,6 @@ contract TestOriginProtocore is OriginProtocore {
         genesisOriginMetachainId = _genesisOriginMetachainId;
         genesisDomainSeparator = _genesisDomainSeparator;
         genesisEpochLength = _genesisEpochLength;
-        genesisDynasty = _genesisDynasty;
         genesisProposedMetablockHeight = _genesisProposedMetablockHeight;
         genesisSelfProtocore = _genesisSelfProtocore;
         genesisOriginSourceBlockHash = _genesisOriginSourceBlockHash;
