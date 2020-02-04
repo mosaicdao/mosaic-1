@@ -60,10 +60,16 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     /** Metachain id of the origin chain. */
     bytes32 public originMetachainId;
 
-    /** Metachain id of the auxiliary chain. */
-    bytes32 public auxiliaryMetachainId;
+    /** Metachain id of the auxiliary chain (self). */
+    bytes32 public selfMetachainId;
 
-    /** Mapping to track the blocks for each metachain. */
+    /**
+     * Relative dynasty of self protocore. This will be incremented when the
+     * self protocore contract will call `finalizeCheckpoint`
+     */
+    uint256 public relativeDynasty;
+
+    /** Mapping to track the finalised blocks of each metachain. */
     mapping (bytes32 /* metachainId */ =>
         mapping(uint256 /* blocknumber */ => Block)
     ) public blockchains;
@@ -100,28 +106,18 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
         );
 
         originMetachainId = genesisOriginMetachainId;
-        auxiliaryMetachainId = genesisAuxiliaryMetachainId;
 
-        /*
-         * Setup self protocore contract first. All other protocores need the
-         * dynasty from the self protocore while storing the value of
-         * Block.statusDynasty in blockchains mapping
-         */
-        setupProtocore(auxiliaryMetachainId);
+        selfMetachainId = genesisSelfMetachainId;
+
+        relativeDynasty = uint256(0);
 
         bytes32 currentMetachainId = genesisMetachainIds[SENTINEL_METACHAIN_ID];
 
         // Loop through the genesis metachainId link list.
         while (currentMetachainId != SENTINEL_METACHAIN_ID) {
-            /*
-             * The setup of self protocore is already done as a first step so
-             * skip the protocore setup if the current metachain id is equal to
-             * the auxiliary metachain id.
-             */
-            if (currentMetachainId != auxiliaryMetachainId) {
-                // Setup protocore contract for the given metachain id.
-                setupProtocore(currentMetachainId);
-            }
+
+            // Setup protocore contract for the given metachain id.
+            setupProtocore(currentMetachainId);
 
             // Setup observer contract for the given metachain id.
             setupObserver(currentMetachainId);
@@ -161,7 +157,7 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
 
         // Setup protocore.
         ProtocoreI protocore = ProtocoreI(protocoreAddress);
-        protocore.setup();
+        ( bytes32 blockHash, uint256 blockNumber ) = protocore.setup();
 
         // Store the protocore address in protocores mapping.
         protocores[_metachainId] = protocore;
@@ -169,18 +165,11 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
         // Get the domain separator and store it in domainSeparators mapping.
         domainSeparators[_metachainId] = protocore.domainSeparator();
 
-        // Get block number and block hash of the genesis link.
-        ( uint256 blockNumber, bytes32 blockHash ) = protocore.latestFinalizedCheckpoint();
-
-        // Get the dynasty from self protocore contract.
-        ProtocoreI selfProtocore = ProtocoreI(genesisProtocores[auxiliaryMetachainId]);
-        uint256 dynasty = selfProtocore.dynasty();
-
         // Store the block informations in blockchains mapping.
         blockchains[_metachainId][blockNumber] = Block(
             blockHash,
             CheckpointCommitStatus.Finalized,
-            dynasty
+            relativeDynasty
         );
 
         // Store the blocknumber as tip.
@@ -203,16 +192,13 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
 
         // Get the observer contract address from the genesis storage.
         address observerAddress = genesisObservers[_metachainId];
-        require(
-            observerAddress != address(0),
-            "Observer address must not be null."
-        );
+        if(observerAddress != address(0)) {
+            // Call the setup function.
+            ObserverI observer = ObserverI(observerAddress);
+            observer.setup();
 
-        // Call the setup function.
-        ObserverI observer = ObserverI(observerAddress);
-        observer.setup();
-
-        // Update the observers mapping.
-        observers[_metachainId] = observer;
+            // Update the observers mapping.
+            observers[_metachainId] = observer;
+        }
     }
 }

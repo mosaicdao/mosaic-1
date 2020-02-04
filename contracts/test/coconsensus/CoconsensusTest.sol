@@ -30,7 +30,7 @@ contract CoconsensusTest is Coconsensus {
         external
     {
         genesisOriginMetachainId = _metachainIds[0];
-        genesisAuxiliaryMetachainId = _metachainIds[1];
+        genesisSelfMetachainId = _metachainIds[1];
 
         genesisMetachainIds[SENTINEL_METACHAIN_ID] = SENTINEL_METACHAIN_ID;
         for (uint256 i = 0; i < _metachainIds.length; i = i.add(1)) {

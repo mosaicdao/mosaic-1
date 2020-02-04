@@ -96,9 +96,6 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
     /** Epoch length */
     uint256 public epochLength;
 
-    /** Vote message hash of the latest finalized link */
-    bytes32 public latestFinalizedVoteMessageHash;
-
     /** EIP-712 domain separator. */
     bytes32 public domainSeparator;
 
@@ -219,8 +216,6 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
         genesisLink.sourceTransitionHash = _genesisSourceTransitionHash;
         genesisLink.proposedMetablockHeight = _metablockHeight;
         genesisLink.targetFinalisation = CheckpointFinalisationStatus.Finalised;
-
-        latestFinalizedVoteMessageHash = genesisVoteMessageHash;
     }
 
 
@@ -266,24 +261,6 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
         emit KernelOpened(openKernelHeight, openKernelHash);
     }
 
-    /**
-     * @notice Function to return the block number
-     *         and block hash of the finalized checkpoint.
-     */
-    function latestFinalizedCheckpoint()
-        external
-        view
-        returns (
-            uint256 blockNumber_,
-            bytes32 blockHash_
-        )
-    {
-        // Get the latest finalized link.
-        Link storage finalizedLink = links[latestFinalizedVoteMessageHash];
-
-        blockNumber_ = finalizedLink.targetBlockNumber;
-        blockHash_ = finalizedLink.targetBlockHash;
-    }
 
     /** Internal Functions */
 
