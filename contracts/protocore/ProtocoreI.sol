@@ -42,4 +42,14 @@ interface ProtocoreI {
             uint256 blockNumber_,
             bytes32 blockHash_
         );
+
+    function openKernelHeight()
+        external
+        returns (uint256);
+
+    function openKernel(
+        uint256 _kernelHeight,
+        bytes32 _kernelHash
+    )
+        external;
 }

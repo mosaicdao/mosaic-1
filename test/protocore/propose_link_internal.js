@@ -37,7 +37,7 @@ contract('Protocore::proposeLinkInternal', (accounts) => {
     config.genesisDynasty = new BN(0);
     config.genesisKernelHeight = new BN(1);
     config.genesisKernelHash = Utils.getRandomHash();
-    config.genesisParentVoteMessageHash = Utils.getRandomHash();    
+    config.genesisParentVoteMessageHash = Utils.getRandomHash();
     config.genesisSourceTransitionHash = Utils.getRandomHash();
     config.genesisSourceBlockHash = Utils.getRandomHash();
     config.genesisTargetBlockHash = Utils.getRandomHash();
@@ -228,30 +228,6 @@ contract('Protocore::proposeLinkInternal', (accounts) => {
 
       assert.isOk(
         actualProposedMetablockHeight.eq(config.genesisKernelHeight),
-      );
-
-      const actualForwardVoteCount = await config.protocore.getForwardVoteCount.call(
-        voteMessageHash,
-      );
-
-      assert.isOk(
-        actualForwardVoteCount.eqn(0),
-      );
-
-      const actualForwardVoteCountNextHeight = await config.protocore.getForwardVoteCountNextHeight.call(
-        voteMessageHash,
-      );
-
-      assert.isOk(
-        actualForwardVoteCountNextHeight.eqn(0),
-      );
-
-      const actualForwardVoteCountPreviousHeight = await config.protocore.getForwardVoteCountPreviousHeight.call(
-        voteMessageHash,
-      );
-
-      assert.isOk(
-        actualForwardVoteCountPreviousHeight.eqn(0),
       );
 
       const actualTargetFinalisation = await config.protocore.getTargetFinalisation.call(
