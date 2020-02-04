@@ -141,9 +141,11 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
      *      Protocore::registerVoteInternal.
      *
      * @param _voteMessageHash Message hash of a vote.
-     * @param _r First 64-bytes of the signature i.e (0,63)
-     * @param _s 64-bytes in the siganture starting from 64 to 128
-     * @param _v public key recovery value.
+     * @param _r It is of type bytes32. Hence, it's first 32 bytes of
+     *           ECDSA signature.
+     * @param _s It is of type bytes32. Hence, it's second 32 bytes of
+     *           ECDSA signature.
+     * @param _v It's recover id/value of ECDSA signature.
      */
     function registerVote(
         bytes32 _voteMessageHash,
