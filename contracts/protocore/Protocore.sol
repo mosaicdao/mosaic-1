@@ -262,8 +262,8 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
      * @notice proposeLinkInternal() function proposes a valid link to be
      *         voted later by active validators.
      *
-     * \pre `_parentVoteMessageHash` is not 0.
-     * \pre `_parentVoteMessageHash` refers to an already proposed link which
+     * \pre `parentVoteMessageHash` is not 0.
+     * \pre `parentVoteMessageHash` refers to an already proposed link which
      *      `targetFinalisation` is at least justified.
      * \pre `targetBlockHash` is not 0
      * \pre `targetBlockNumber` is a multiple of the epoch length.
