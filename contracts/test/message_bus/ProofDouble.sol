@@ -20,7 +20,7 @@ import "../../lib/CircularBufferUint.sol";
 
 contract ProofDouble is Proof {
 
-    function setupProofTest(
+    function setupProofDouble(
         address _storageAccount,
         StateRootI _stateRootProvider,
         uint256 _maxStorageRootItems
@@ -32,5 +32,60 @@ contract ProofDouble is Proof {
             _stateRootProvider,
             _maxStorageRootItems
         );
+    }
+
+
+    function proveStorageAccountDouble(
+        uint256 _blockHeight,
+        bytes calldata _rlpAccount,
+        bytes calldata _rlpParentNodes
+    )
+        external
+    {
+        Proof.proveStorageAccount(
+            _blockHeight,
+            _rlpAccount,
+            _rlpParentNodes
+        );
+    }
+
+    function proveStorageExistenceDouble(
+        bytes calldata _path,
+        bytes32 _value,
+        uint256 _blockHeight,
+        bytes calldata _rlpParentNodes
+    )
+        external
+        view
+    {
+        Proof.proveStorageExistence(
+            _path,
+            _value,
+            _blockHeight,
+            _rlpParentNodes
+        );
+    }
+
+    function storagePathDouble(
+        uint8 _index,
+        bytes32 _key
+    )
+        external
+        pure
+        returns(bytes memory storagePath_)
+    {
+        storagePath_ = Proof.storagePath(
+            _index,
+            _key
+        );
+    }
+
+    function setStorageRoot(
+        uint256 _blockHeight,
+        bytes32 _storageRoot
+    )
+        external
+    {
+        Proof.storageRoots[_blockHeight] = _storageRoot;
     }
 }

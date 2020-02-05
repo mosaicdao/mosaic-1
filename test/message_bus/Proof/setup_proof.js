@@ -34,22 +34,22 @@ contract('Proof::proveStorageAccount', (accounts) => {
     };
   });
 
-  contract('Positive Tests', async () =>{
+  contract('Positive Tests', async () => {
     it('should do setup successfully', async () => {
-      await proof.setupProofTest(
+      await proof.setupProofDouble(
         setupParams.storageAccount,
         setupParams.stateRootProvider,
         setupParams.maxStorageRootItems
       );
-      const storageAccount = await proof.storageAccount.call();
-      const stateRootProvider = await proof.stateRootProvider.call();
 
+      const storageAccount = await proof.storageAccount.call();
       assert.strictEqual(
         setupParams.storageAccount,
         storageAccount,
         "Storage account address must match with the storage adress provided.",
       );
 
+      const stateRootProvider = await proof.stateRootProvider.call();
       assert.strictEqual(
         setupParams.stateRootProvider,
         stateRootProvider,

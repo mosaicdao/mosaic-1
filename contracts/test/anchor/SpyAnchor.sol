@@ -11,7 +11,6 @@ contract SpyAnchor is MasterCopyNonUpgradable, AnchorI{
     uint256 public spyMaxStateRoot;
     address public spyConsensus;
 
-
     function setup(
         uint256 _maxStateRoots,
         ConsensusI _consensus
@@ -30,12 +29,15 @@ contract SpyAnchor is MasterCopyNonUpgradable, AnchorI{
         require(false, 'SpyAnchor::getLatestStateRootBlockHeight should not be called.');
     }
 
+    /**
+    * @dev _blockheight is not assigned to spyBlockHeight
+    *       variable because it is view in it's function signature
+    */
+
     function getStateRoot(uint256 _blockHeight)
         external
         returns (bytes32)
     {
-        // require(false, 'SpyAnchor::getStateRoot should not be called.');
-        spyBlockHeight = _blockHeight;
         return spyStateRoot;
     }
 
