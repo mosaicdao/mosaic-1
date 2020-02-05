@@ -17,8 +17,7 @@ pragma solidity >=0.5.0 <0.6.0;
 /**
  * @title Genesis origin protocore contract is a storage contract that holds
  *        the initial values required by the contract that were written in the
- *        genesis block. It stores the target checkpoint and parent vote
- *        message hash.
+ *        genesis block.
  */
 contract GenesisOriginProtocore {
 
