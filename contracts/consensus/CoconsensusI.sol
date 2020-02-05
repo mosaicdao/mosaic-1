@@ -15,9 +15,10 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 /**
- * @title CoconsensusI.
+ * @title Interface of Coconsensus contract.
  *
- * @notice Interface for Coconsensus contract.
+ * @notice Specifies Coconsensus external interfaces to be called from
+ *         other parts.
  */
 interface CoconsensusI {
 
@@ -26,19 +27,20 @@ interface CoconsensusI {
     /**
      * @notice Gets the anchor address for a metachain id.
      *
-     * @param _metachainId Metachain id.
+     * @param _metachainId A metachain id of an anchor to retrieve.
      *
-     * @return Anchor contract address.
+     * @return anchor_ An anchor contract's address matching to the
+     *                 given metachain id.
      */
-    function getAnchor(bytes32 _metachainId) external returns (address);
+    function getAnchor(bytes32 _metachainId) external returns (address anchor_);
 
     /**
-     * @notice finaliseCheckpoint() function finalises a checkpoint at
+     * @notice finaliseCheckpoint() function finalises a checkpoint of
      *         a metachain.
      *
-     * @param _metachainId A metachain id to finalise a checkpoint.
-     * @param _blockNumber A block number of a checkpoint.
-     * @param _blockHash A block hash of a checkpoint.
+     * @param _metachainId A metachain id to finalize a checkpoint.
+     * @param _blockNumber A block number of a checkpoint to finalize.
+     * @param _blockHash A block hash of a checkpoint to finalize.
      */
     function finaliseCheckpoint(
         bytes32 _metachainId,
@@ -46,46 +48,4 @@ interface CoconsensusI {
         bytes32 _blockHash
     )
         external;
-
-    /**
-     * @notice Commits the checkpoint.
-     *
-     * @param _metachainId A metachain id to finalise a checkpoint.
-     * @param _kernelHeight Kernel height.
-     * @param _updatedValidators Array of updated validators.
-     * @param _updatedReputation Array of updated reputation.
-     * @param _gasTarget Gas target.
-     * @param _transitionHash Transition hash.
-     * @param _source Source block hash.
-     * @param _target Target block hash.
-     * @param _sourceBlockNumber Source block number.
-     * @param _targetBlockNumber Target block number.
-     */
-    function commitCheckpoint(
-        bytes32 _metachainId,
-        uint256 _kernelHeight,
-        address[] calldata _updatedValidators,
-        uint256[] calldata _updatedReputation,
-        uint256 _gasTarget,
-        bytes32 _transitionHash,
-        bytes32 _source,
-        bytes32 _target,
-        uint256 _sourceBlockNumber,
-        uint256 _targetBlockNumber
-    )
-        external;
-
-    /**
-     * @notice Decodes the RLP encoded bytes to extract the block number
-     *         and state root. Calls anchorStateRoot to store state root.
-     *
-     * @param _metachainId Metachain id.
-     * @param _rlpBlockHeader RLP encoded block header.
-     */
-    function observeBlock(
-        bytes32 _metachainId,
-        bytes calldata _rlpBlockHeader
-    )
-        external;
-
 }
