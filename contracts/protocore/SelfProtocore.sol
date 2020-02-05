@@ -113,13 +113,18 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protoco
     /**
      * @notice Registers a vote for a link specified by vote message hash.
      *
-     * @dev Satisfies \pre and \post conditions of Protocore::registerVoteInternal().
      *
-     * \pre If a link (specified by `_voteMessageHash`) length is equal to one
-     *      epoch length (finalisation link) the inclusion principle should
-     *      be satisfied:
-     *      - current block number is strictly less than
-     *        target block height + epoch length
+     * \pre A link should exist in the links mapping for the given _voteMessageHash.
+     * \pre The current block number must be less than the sum of the target
+     *      block number of link and epoch length.
+     * \pre Satisfy the \pre conditions of Protocore::registerVoteInternal().
+     *
+     * \post Satisfy the \post conditions of Protocore::registerVoteInternal()
+     *
+     * @param _voteMessageHash Message hash of a vote.
+     * @param _r The first 32 bytes of ECDSA signature of a validator.
+     * @param _s The second 32 bytes of ECDSA signature of a validator.
+     * @param _v The recovery id/value of ECDSA signature of a validator.
      */
     function registerVote(
         bytes32 _voteMessageHash,
@@ -133,7 +138,7 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protoco
 
         require(
             block.number < link.targetBlockNumber.add(epochLength),
-            "Current blockNumber should be less than sum of targetBlockNumber,epochLength"
+            "Current block number should be less than the sum of the target block number and epoch length"
         );
 
         Protocore.registerVoteInternal(

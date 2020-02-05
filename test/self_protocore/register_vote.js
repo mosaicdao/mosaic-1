@@ -38,17 +38,18 @@ contract('SelfProtocore::registerVote', (accounts) => {
   });
 
   contract('Negative Tests', async () =>{
-    it('should revert if current block number is less than targetBlockNumber+epochLength', async () => {
+    it('should revert if current block number is greater than target block '
+    +'number and epoch length.', async () => {
       let block = await Utils.getBlockNumber();
       const targetBlockNumber = block.add(config.epochLength);
 
       await config.selfProtocore.setLink(
         config.voteMessageHash,
-        targetBlockNumber.toNumber(),
+        targetBlockNumber,
         config.epochLength
       );
 
-      await Utils.advanceBlocks(300);
+      await Utils.advanceBlocks(config.epochLength.muln(2));
 
       await Utils.expectRevert(
         config.selfProtocore.registerVote(
@@ -57,7 +58,8 @@ contract('SelfProtocore::registerVote', (accounts) => {
           config.sig.s,
           config.sig.v,
         ),
-        'Current blockNumber should be less than sum of targetBlockNumber,epochLength',
+        'Current block number should be less than the sum of the target '
+        +'block number and epoch length',
       );
     });
   });
