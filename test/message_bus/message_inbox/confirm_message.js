@@ -46,6 +46,11 @@ contract('MessageInbox::confirmMessage', (accounts) => {
     messageInbox = await MessageInbox.new();
     consensusGatewayBase = await ConsensusGatewayBase.new();
 
+    setupParams.intentHash = await consensusGatewayBase.hashKernelIntent(
+      setupParams.kernelHeight,
+      setupParams.kernelHash,
+    );
+
     await messageInbox.setStorageRoots(
       setupParams.blockHeight,
       ConfirmMessageIntentHash.storageHash,
@@ -60,15 +65,36 @@ contract('MessageInbox::confirmMessage', (accounts) => {
     );
   });
 
-  contract('Positive Tests', async () => {
-    it('Should be able to set parameters', async () => {
-      const kernelIntentHash = await consensusGatewayBase.hashKernelIntent(
-        setupParams.kernelHeight,
-        setupParams.kernelHash,
+  contract('Negative Tests', async () => {
+    it('Should fail when Message Hash already exists in inbox mapping', async () => {
+      await messageInbox.confirmMessageDouble(
+        setupParams.intentHash,
+        setupParams.nonce,
+        setupParams.feeGasPrice,
+        setupParams.feeGasLimit,
+        setupParams.sender,
+        setupParams.blockHeight,
+        setupParams.rlpParentNodes,
       );
 
+      await Utils.expectRevert(
+        messageInbox.confirmMessageDouble(
+          setupParams.intentHash,
+          setupParams.nonce,
+          setupParams.feeGasPrice,
+          setupParams.feeGasLimit,
+          setupParams.sender,
+          setupParams.blockHeight,
+          setupParams.rlpParentNodes,
+        ),
+        'Message already exists in the inbox.',
+      );
+    });
+  });
+  contract('Positive Tests', async () => {
+    it('Should be able to set parameters', async () => {
       const messageHash = await messageInbox.confirmMessageDouble.call(
-        kernelIntentHash,
+        setupParams.intentHash,
         setupParams.nonce,
         setupParams.feeGasPrice,
         setupParams.feeGasLimit,
@@ -95,7 +121,7 @@ contract('MessageInbox::confirmMessage', (accounts) => {
           ],
           [
             MESSAGE_TYPEHASH,
-            kernelIntentHash,
+            setupParams.intentHash,
             setupParams.nonce.toNumber(),
             setupParams.feeGasPrice.toNumber(),
             setupParams.feeGasLimit.toNumber(),
@@ -118,7 +144,7 @@ contract('MessageInbox::confirmMessage', (accounts) => {
       );
 
       await messageInbox.confirmMessageDouble(
-        kernelIntentHash,
+        setupParams.intentHash,
         setupParams.nonce,
         setupParams.feeGasPrice,
         setupParams.feeGasLimit,
@@ -133,7 +159,6 @@ contract('MessageInbox::confirmMessage', (accounts) => {
         inboxMapping,
         'Message Hash is not present in the mapping',
       );
-
     });
   });
 });

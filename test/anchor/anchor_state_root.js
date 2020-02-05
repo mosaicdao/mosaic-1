@@ -24,7 +24,7 @@ let anchor;
 let config = {};
 
 
-contract('Anchor::anchorStateRoot', (accounts) => { 
+contract('Anchor::anchorStateRoot', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
   beforeEach(async () => {
     config = {

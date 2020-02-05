@@ -140,7 +140,7 @@ contract('Reputation::decreaseReputation', (accounts) => {
       delta,
       { from: constructorArgs.consensus },
     ),
-      'Validator is not active.');
+    'Validator is not active.');
   });
 
   it('should fail if transaction is done by account other than consensus', async () => {
@@ -152,7 +152,7 @@ contract('Reputation::decreaseReputation', (accounts) => {
       delta,
       { from: otherAccount },
     ),
-      'Only the consensus contract can call this function.');
+    'Only the consensus contract can call this function.');
   });
 
   it('should fail for logged out validator', async () => {
@@ -164,7 +164,7 @@ contract('Reputation::decreaseReputation', (accounts) => {
       delta,
       { from: constructorArgs.consensus },
     ),
-      'Validator is not active.');
+    'Validator is not active.');
   });
 
   it('should fail for withdraw-ed validator', async () => {
@@ -179,6 +179,6 @@ contract('Reputation::decreaseReputation', (accounts) => {
       delta,
       { from: constructorArgs.consensus },
     ),
-      'Validator is not active.');
+    'Validator is not active.');
   });
 });

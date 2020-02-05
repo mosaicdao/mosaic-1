@@ -36,6 +36,70 @@ contract('MessageInbox::setupMessageInbox', (accounts) => {
     messageInbox = await MessageInbox.new();
   });
 
+  contract('Negative Tests', async () => {
+    it('Should fail when metachain ID is 0', async () => {
+      const metachainId = '0x0000000000000000000000000000000000000000000000000000000000000000';
+
+      await Utils.expectRevert(
+        messageInbox.setupMessageInboxDouble(
+          metachainId,
+          setupParams.messageOutbox,
+          setupParams.outboxStorageIndex,
+          setupParams.stateRootI,
+          setupParams.maxStorageRootItems,
+        ),
+        'metachain id is 0.',
+      );
+    });
+
+    it('Should fail when message outbox is 0', async () => {
+      const messageOutbox = '0x0000000000000000000000000000000000000000';
+
+      await Utils.expectRevert(
+        messageInbox.setupMessageInboxDouble(
+          setupParams.metachainId,
+          messageOutbox,
+          setupParams.outboxStorageIndex,
+          setupParams.stateRootI,
+          setupParams.maxStorageRootItems,
+        ),
+        'Outbox address is 0.',
+      );
+    });
+
+    it('Should fail when stateRoot Provider is 0', async () => {
+      const stateRootProvider = '0x0000000000000000000000000000000000000000';
+
+      await Utils.expectRevert(
+        messageInbox.setupMessageInboxDouble(
+          setupParams.metachainId,
+          setupParams.messageOutbox,
+          setupParams.outboxStorageIndex,
+          stateRootProvider,
+          setupParams.maxStorageRootItems,
+        ),
+        'State root provider address is 0.',
+      );
+    });
+
+    it('Should fail when inbound channel identifier is 0', async () => {
+      await messageInbox.setInboundChannelIdentifier(
+        '0x0000000000000000000000000000000000000000000000000000000000000001',
+      );
+
+      await Utils.expectRevert(
+        messageInbox.setupMessageInboxDouble(
+          setupParams.metachainId,
+          setupParams.messageOutbox,
+          setupParams.outboxStorageIndex,
+          setupParams.stateRootI,
+          setupParams.maxStorageRootItems,
+        ),
+        'Message inbox is already setup.',
+      );
+    });
+  });
+
   contract('Positive Tests', async () => {
     it('Should set the parameters', async () => {
       await messageInbox.setupMessageInboxDouble(

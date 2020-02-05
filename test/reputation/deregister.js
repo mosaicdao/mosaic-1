@@ -113,7 +113,7 @@ contract('Reputation::deregister', (accounts) => {
       unknownValidator,
       { from: constructorArgs.consensus },
     ),
-      'Validator is not active.');
+    'Validator is not active.');
   });
 
   it('should fail if transaction is done by account other than consensus', async () => {
@@ -123,7 +123,7 @@ contract('Reputation::deregister', (accounts) => {
       validator.address,
       { from: otherAccount },
     ),
-      'Only the consensus contract can call this function.');
+    'Only the consensus contract can call this function.');
   });
 
   it('should fail for deregistered validator', async () => {
@@ -133,7 +133,7 @@ contract('Reputation::deregister', (accounts) => {
       validator.address,
       { from: constructorArgs.consensus },
     ),
-      'Validator is not active.');
+    'Validator is not active.');
   });
 
   it('should fail for withdraw-ed validator', async () => {
@@ -145,6 +145,6 @@ contract('Reputation::deregister', (accounts) => {
       validator.address,
       { from: constructorArgs.consensus },
     ),
-      'Validator is not active.');
+    'Validator is not active.');
   });
 });
