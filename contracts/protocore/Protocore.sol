@@ -562,10 +562,10 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
      *         message hash.
      *
      * @param _transitionHash Transition hash.
-     * @param _sourceBlockHash Blockhash of source chain.
-     * @param _targetBlockHash Blockhash of target chain.
-     * @param _sourceBlockNumber Block number at source.
-     * @param _targetBlockNumber Block number at target.
+     * @param _sourceBlockHash Blockhash of source checkpoint.
+     * @param _targetBlockHash Blockhash of target checkpoint.
+     * @param _sourceBlockNumber Block number of source checkpoint.
+     * @param _targetBlockNumber Block number of target checkpoint.
      */
     function hashVoteMessage(
         bytes32 _transitionHash,
