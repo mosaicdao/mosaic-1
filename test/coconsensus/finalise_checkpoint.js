@@ -31,18 +31,15 @@ contract('Coconsensus::finaliseCheckpoint', (accounts) => {
     Object.assign(config, await deployCoconsensus(accountProvider));
 
     const { selfProtocore } = config.contracts;
-    const lastFinalizedBlock = await selfProtocore.latestFinalizedCheckpoint();
+    const blockNumber = await selfProtocore.genesisAuxiliaryTargetBlockNumber();
     const epochLength = await selfProtocore.epochLength();
 
     // Input params.
     config.params = {};
     config.params.metachainId = await selfProtocore.metachainId();
-    config.params.finalisationBlockNumber = epochLength.add(lastFinalizedBlock.blockNumber_);
+    config.params.finalisationBlockNumber = epochLength.add(blockNumber);
     config.params.finalisationBlockhash = Utils.getRandomHash();
-    config.params.expectedDynasty = new BN(4);
-
-    // Set the dynsaty number for testing purpose.
-    await selfProtocore.setDynasty(config.params.expectedDynasty);
+    config.params.relativeDynasty = new BN(0);
   });
 
   contract('Negative Tests', async () => {
@@ -51,18 +48,6 @@ contract('Coconsensus::finaliseCheckpoint', (accounts) => {
       await Utils.expectRevert(
         coconsensus.finaliseCheckpoint(
           config.params.metachainId,
-          config.params.finalisationBlockNumber,
-          config.params.finalisationBlockhash,
-        ),
-        'Protocore is not available for the given metachain id.',
-      );
-    });
-
-    it('should revert when the protocore is not available for given metachain', async () => {
-      const { selfProtocore } = config.contracts;
-      await Utils.expectRevert(
-        selfProtocore.testFinaliseCheckpoint(
-          Utils.getRandomHash(),
           config.params.finalisationBlockNumber,
           config.params.finalisationBlockhash,
         ),
@@ -96,7 +81,7 @@ contract('Coconsensus::finaliseCheckpoint', (accounts) => {
   });
 
   contract('Positive Tests', async () => {
-    it('should finalize the checkpoint', async () => {
+    it('should finalize the checkpoint for self protocore', async () => {
       const { selfProtocore, coconsensus } = config.contracts;
       /*
        * The msg.sender for Coconsensus::finaliseCheckpoint must be the
@@ -134,11 +119,85 @@ contract('Coconsensus::finaliseCheckpoint', (accounts) => {
         true,
         'The commit status in the blockchain mapping must be Finalized.',
       );
+
+      const expectedRelativeDynasty = config.params.relativeDynasty.addn(1);
       assert.strictEqual(
-        blockchain.statusDynasty.eq(config.params.expectedDynasty),
+        blockchain.statusDynasty.eq(expectedRelativeDynasty),
         true,
         'The status dynasty in the blockchain must be '
-        + ` ${config.params.expectedDynasty.toString(10)}`,
+        + ` ${expectedRelativeDynasty.toString(10)}`,
+      );
+    });
+
+    it('should increment the relativeSelfDynasty by one when checkpoint is'
+       + 'finalized for self protocore', async () => {
+      const { selfProtocore, coconsensus } = config.contracts;
+      const epochLength = await selfProtocore.epochLength();
+
+      await selfProtocore.testFinaliseCheckpoint(
+        config.params.metachainId,
+        config.params.finalisationBlockNumber,
+        config.params.finalisationBlockhash,
+      );
+
+      let expectedRelativeDynasty = config.params.relativeDynasty.addn(1);
+      let relativeSelfDynasty = await coconsensus.relativeSelfDynasty();
+      assert.strictEqual(
+        relativeSelfDynasty.eq(expectedRelativeDynasty),
+        true,
+        `The relative self dynasty must be ${expectedRelativeDynasty.toString(10)}`,
+      );
+
+      const nextBlockHash = Utils.getRandomHash();
+      const nextBlockNumber = config.params.finalisationBlockNumber.add(epochLength);
+      await selfProtocore.testFinaliseCheckpoint(
+        config.params.metachainId,
+        nextBlockNumber,
+        nextBlockHash,
+      );
+
+      expectedRelativeDynasty = expectedRelativeDynasty.addn(1);
+      relativeSelfDynasty = await coconsensus.relativeSelfDynasty();
+      assert.strictEqual(
+        relativeSelfDynasty.eq(expectedRelativeDynasty),
+        true,
+        `The relative self dynasty must be ${expectedRelativeDynasty.toString(10)}`,
+      );
+    });
+
+    it('relativeDynasty must not change when checkpoint is'
+       + 'finalized for origin protocore', async () => {
+      const { originProtocore, coconsensus } = config.contracts;
+      const epochLength = await originProtocore.epochLength();
+      const originMetachainId = await originProtocore.metachainId();
+
+      await originProtocore.testFinaliseCheckpoint(
+        originMetachainId,
+        config.params.finalisationBlockNumber,
+        config.params.finalisationBlockhash,
+      );
+
+      const expectedRelativeDynasty = config.params.relativeDynasty;
+      let relativeSelfDynasty = await coconsensus.relativeSelfDynasty();
+      assert.strictEqual(
+        relativeSelfDynasty.eq(expectedRelativeDynasty),
+        true,
+        `The relative self dynasty must be ${expectedRelativeDynasty.toString(10)}`,
+      );
+
+      const nextBlockHash = Utils.getRandomHash();
+      const nextBlockNumber = config.params.finalisationBlockNumber.add(epochLength);
+      await originProtocore.testFinaliseCheckpoint(
+        originMetachainId,
+        nextBlockNumber,
+        nextBlockHash,
+      );
+
+      relativeSelfDynasty = await coconsensus.relativeSelfDynasty();
+      assert.strictEqual(
+        relativeSelfDynasty.eq(expectedRelativeDynasty),
+        true,
+        `The relative self dynasty must be ${expectedRelativeDynasty.toString(10)}`,
       );
     });
   });

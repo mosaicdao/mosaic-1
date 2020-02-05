@@ -31,8 +31,8 @@ contract GenesisSelfProtocore {
     /** Epoch length. */
     uint256 public genesisEpochLength;
 
-    /** Initial metablock height. */
-    uint256 public genesisMetablockHeight;
+    /** Proposed metablock height. */
+    uint256 public genesisProposedMetablockHeight;
 
     /** Initial dynasty number */
     uint256 public genesisDynasty;

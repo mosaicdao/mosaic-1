@@ -96,9 +96,6 @@ contract Protocore is
     /** Epoch length */
     uint256 public epochLength;
 
-    /** Vote message hash of the latest finalized link */
-    bytes32 public latestFinalizedVoteMessageHash;
-
     /** EIP-712 domain separator. */
     bytes32 public domainSeparator;
 
@@ -115,8 +112,6 @@ contract Protocore is
         )
     ) public fvsVotes;
 
-    /** Current dynasty */
-    uint256 public dynasty;
 
 
     /* Special Functions */
@@ -128,7 +123,6 @@ contract Protocore is
      * @param _metachainId Metachain Id.
      * @param _domainSeparator Domain separator.
      * @param _epochLength Epoch length.
-     * @param _dynasty Dynasty number.
      * @param _metablockHeight Metablock height.
      * @param _genesisParentVoteMessageHash Parent vote message hash for the genesis link.
      * @param _genesisSourceTransitionHash Source transition hash for the genesis link.
@@ -144,18 +138,17 @@ contract Protocore is
      * \pre `_genesisTargetBlockNumber` must be multiple of `_epochLength`.
      * \pre `_genesisTargetBlockHash` must not be 0.
      * \pre `_genesisTargetBlockNumber` must be greater than or equal to `_genesisSourceBlockNumber`.
+     * \pre This function can be called only once.
      *
-     * \post Sets `dynasty` to the given value.
-     * \post Sets `domainSeparator` to the given value.
-     * \post Sets `epochLength` to the given value.
-     * \post Sets `metachainId` to the given value.
-     * \post Sets genesis link.
+     * \post Sets domainSeparator storage variable to the given value.
+     * \post Sets epochLength storage variable to the given value.
+     * \post Sets metachainId storage variable to the given value.
+     * \post Adds a genesis link in link storage variable.
      */
     function setupProtocore(
         bytes32 _metachainId,
         bytes32 _domainSeparator,
         uint256 _epochLength,
-        uint256 _dynasty,
         uint256 _metablockHeight,
         bytes32 _genesisParentVoteMessageHash,
         bytes32 _genesisSourceTransitionHash,
@@ -201,8 +194,6 @@ contract Protocore is
 
         epochLength = _epochLength;
 
-        dynasty = _dynasty;
-
         // Generate the genesis vote message hash.
         bytes32 genesisVoteMessageHash = VoteMessage.hashVoteMessage(
             _genesisSourceTransitionHash,
@@ -221,8 +212,6 @@ contract Protocore is
         genesisLink.sourceTransitionHash = _genesisSourceTransitionHash;
         genesisLink.proposedMetablockHeight = _metablockHeight;
         genesisLink.targetFinalisation = CheckpointFinalisationStatus.Finalised;
-
-        latestFinalizedVoteMessageHash = genesisVoteMessageHash;
     }
 
 
@@ -268,24 +257,6 @@ contract Protocore is
         emit KernelOpened(openKernelHeight, openKernelHash);
     }
 
-    /**
-     * @notice Function to return the block number
-     *         and block hash of the finalized checkpoint.
-     */
-    function latestFinalizedCheckpoint()
-        external
-        view
-        returns (
-            uint256 blockNumber_,
-            bytes32 blockHash_
-        )
-    {
-        // Get the latest finalized link.
-        Link storage finalizedLink = links[latestFinalizedVoteMessageHash];
-
-        blockNumber_ = finalizedLink.targetBlockNumber;
-        blockHash_ = finalizedLink.targetBlockHash;
-    }
 
     /** Internal Functions */
 

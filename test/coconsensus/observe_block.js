@@ -38,17 +38,14 @@ contract('Coconsensus::observeBlock', (accounts) => {
 
   contract('Negative Tests', async () => {
     it('should revert when called more than once with same params', async () => {
-      const {
-        selfProtocore,
-        coconsensus,
-      } = config.contracts;
+      const { coconsensus } = config.contracts;
 
       const { metachainIds } = config.genesis;
       const originMetachainId = metachainIds[0];
 
       // Set the current dynasty in the self protocore.
       let currentDynasty = 2;
-      await selfProtocore.setDynasty(currentDynasty);
+      await coconsensus.setRelativeSelfDynasty(currentDynasty);
 
       // Finalize the checkpoint.
       await coconsensus.setFinaliseCheckpoint(
@@ -60,7 +57,7 @@ contract('Coconsensus::observeBlock', (accounts) => {
 
       // Increament the dynasty.
       currentDynasty = 3;
-      await selfProtocore.setDynasty(currentDynasty);
+      await coconsensus.setRelativeSelfDynasty(currentDynasty);
 
       await coconsensus.observeBlock(
         originMetachainId,
@@ -80,7 +77,6 @@ contract('Coconsensus::observeBlock', (accounts) => {
   contract('Positive Tests', async () => {
     it('should observe block by anchoring the state root in the origin observer contract', async () => {
       const {
-        selfProtocore,
         originObserver,
         coconsensus,
       } = config.contracts;
@@ -90,7 +86,7 @@ contract('Coconsensus::observeBlock', (accounts) => {
 
       // Set the current dynasty in the self protocore.
       let currentDynasty = 2;
-      await selfProtocore.setDynasty(currentDynasty);
+      await coconsensus.setRelativeSelfDynasty(currentDynasty);
 
       // Finalize the checkpoint.
       await coconsensus.setFinaliseCheckpoint(
@@ -102,7 +98,7 @@ contract('Coconsensus::observeBlock', (accounts) => {
 
       // Increament the dynasty.
       currentDynasty = 3;
-      await selfProtocore.setDynasty(currentDynasty);
+      await coconsensus.setRelativeSelfDynasty(currentDynasty);
 
       await coconsensus.observeBlock(
         originMetachainId,
