@@ -25,6 +25,10 @@ import "../validator-set/ValidatorSet.sol";
  */
 contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protocore, ValidatorSet {
 
+    /* Usings */
+    using SafeMath for uint256;
+
+
     /* Events */
 
     event LinkProposed(
@@ -91,7 +95,7 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protoco
             genesisAuxiliaryTargetBlockHash,
             genesisAuxiliaryTargetBlockNumber
         );
-        ValidatorSet.setupValidatorSet(openKernelHeight); // todo: validate this
+        ValidatorSet.setupValidatorSet(openKernelHeight.add(1));
     }
 
 

@@ -193,6 +193,7 @@ contract ValidatorSet {
         return fvsCount[_height];
     }
 
+
     /* Internal Functions  */
 
     /**
@@ -202,7 +203,7 @@ contract ValidatorSet {
      *
      * @param _nextHeight Incremented height equaling active height plus one.
      */
-    function incrementActiveHeight(uint256 _nextHeight)
+    function incrementActiveHeightInternal(uint256 _nextHeight)
         internal
     {
         assert(_nextHeight == activeHeight.add(1));

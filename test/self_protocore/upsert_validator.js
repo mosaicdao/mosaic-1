@@ -73,7 +73,6 @@ contract('SelfProtocore::upsertValidator', (accounts) => {
     config.openKernelHeight = new BN(20);
     validator.address = accountProvider.get();
     validator.beginHeight = config.openKernelHeight.addn(1);
-    validator.endHeight = new BN(100);
     validator.reputation = new BN(500);
 
     await config.selfProtocore.setCoconsensus(config.coconsensusAddress);
@@ -117,18 +116,16 @@ contract('SelfProtocore::upsertValidator', (accounts) => {
           from: config.coconsensusAddress,
         },
       );
-      const actualValidatorEndHeight = await config.selfProtocore.validatorEndHeight.call(
-        validator.address,
+
+      await config.selfProtocore.setOpenKernelHeight(config.openKernelHeight.addn(1));
+      const currentActiveHeight = await config.selfProtocore.activeHeight.call();
+
+      await config.selfProtocore.incrementActiveHeight(
+        currentActiveHeight.addn(1),
       );
 
-      assert.strictEqual(
-        actualValidatorEndHeight.eq(Utils.MAX_UINT256),
-        true,
-        `Expected validator end height is ${Utils.MAX_UINT256} but got ${actualValidatorEndHeight}`,
-      );
+      validator.endHeight = config.openKernelHeight.addn(2);
 
-      config.openKernelHeight = validator.endHeight.subn(1);
-      await config.selfProtocore.setOpenKernelHeight(config.openKernelHeight);
       await config.selfProtocore.upsertValidator(
         validator.address,
         validator.endHeight,
