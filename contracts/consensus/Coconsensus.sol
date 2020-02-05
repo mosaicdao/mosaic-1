@@ -38,8 +38,8 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     /** Enum for status of committed checkpoint. */
     enum CheckpointCommitStatus {
         Undefined,
-        Committed,
-        Finalized
+        Finalized,
+        Committed
     }
 
 
@@ -128,8 +128,6 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
         originMetachainId = genesisOriginMetachainId;
 
         selfMetachainId = genesisSelfMetachainId;
-
-        relativeSelfDynasty = uint256(0);
 
         bytes32 currentMetachainId = genesisMetachainIds[SENTINEL_METACHAIN_ID];
 
@@ -238,7 +236,7 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
      * \pre A block must exist in `blockchains` storage for the given
      *      `_metachainid` and block number from the decoded `_rlpBlockHeader`.
      * \pre The commit status of the block must be at least `Finalized`.
-     * \pre The status dynasty of the block less than `relativeSelfDynasty`.
+     * \pre The status dynasty of the block is less than `relativeSelfDynasty`.
      *
      * \post Anchors the state root in the observer contract.
      */
@@ -299,10 +297,11 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
      *
      * @param _metachainId Metachain id.
      *
-     * \pre Protocore contract must exist for given metachain id.
+     * \pre Protocore contract must exist for the given metachain id in
+     *      the genesisProtocores storage variable.
      *
      * \post Adds newly setup protocore's address into protocores storage variable.
-     * \post Adds newly setup protocore's domain separator into domainSeparators.
+     * \post Adds newly setup protocore's domain separator into domainSeparators
      *       storage variable.
      * \post Adds a new Block into blockchain storage variable.
      * \post Updates blockTips storage variable with the latest finalized
@@ -318,12 +317,13 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
             "Protocore address must not be null."
         );
 
-        // Setup protocore.
         ProtocoreI protocore = ProtocoreI(protocoreAddress);
-        ( bytes32 blockHash, uint256 blockNumber ) = protocore.setup();
 
         // Store the protocore address in protocores mapping.
         protocores[_metachainId] = protocore;
+
+        // Setup protocore.
+        ( bytes32 blockHash, uint256 blockNumber ) = protocore.setup();
 
         // Get the domain separator and store it in domainSeparators mapping.
         domainSeparators[_metachainId] = protocore.domainSeparator();
@@ -345,22 +345,22 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
      *
      * @param _metachainId Metachain id
      *
-     * \pre Observer contract address must exists for given metachain id in
-     *      genesisObservers storage.
-     *
-     * \post Adds newly setup observer's address into observers storage variable.
+     * \post If observer contract address exists for the given metachain id
+     *       then it adds newly setup observer's address into observers
+     *       storage variable, otherwise does nothing.
      */
     function setupObserver(bytes32 _metachainId) private {
 
         // Get the observer contract address from the genesis storage.
         address observerAddress = genesisObservers[_metachainId];
         if(observerAddress != address(0)) {
-            // Call the setup function.
             ObserverI observer = ObserverI(observerAddress);
-            observer.setup();
 
             // Update the observers mapping.
             observers[_metachainId] = observer;
+
+            // Call the setup function.
+            observer.setup();
         }
     }
 }
