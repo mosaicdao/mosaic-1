@@ -16,7 +16,7 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "../anchor/ObserverI.sol";
 import "../block/BlockHeader.sol";
-import "../coconsensus/GenesisCoconsensus.sol";
+import "../consensus/GenesisCoconsensus.sol";
 import "../protocore/ProtocoreI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../version/MosaicVersion.sol";
@@ -61,10 +61,16 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     /** Metachain id of the origin chain. */
     bytes32 public originMetachainId;
 
-    /** Metachain id of the auxiliary chain. */
-    bytes32 public auxiliaryMetachainId;
+    /** Metachain id of the auxiliary chain (self). */
+    bytes32 public selfMetachainId;
 
-    /** Mapping to track the blocks for each metachain. */
+    /**
+     * Relative self dynasty of self protocore. This will be incremented when the
+     * self protocore contract will call `finalizeCheckpoint`
+     */
+    uint256 public relativeSelfDynasty;
+
+    /** Mapping to track the finalised blocks of each metachain. */
     mapping (bytes32 /* metachainId */ =>
         mapping(uint256 /* blocknumber */ => Block)
     ) public blockchains;
@@ -96,36 +102,26 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     function setup() public {
 
         require(
-            originMetachainId == bytes32(0),
+            selfMetachainId == bytes32(0),
             "Coconsensus contract is already initialized."
         );
 
         originMetachainId = genesisOriginMetachainId;
-        auxiliaryMetachainId = genesisAuxiliaryMetachainId;
 
-        /*
-         * Setup self protocore contract first. All other protocores will
-         * require the dynasty from the self protocore to finalise the genesis
-         * checkpoint.
-         */
-        setupProtocores(auxiliaryMetachainId);
+        selfMetachainId = genesisSelfMetachainId;
+
+        relativeSelfDynasty = uint256(0);
 
         bytes32 currentMetachainId = genesisMetachainIds[SENTINEL_METACHAIN_ID];
 
         // Loop through the genesis metachainId link list.
         while (currentMetachainId != SENTINEL_METACHAIN_ID) {
-            /*
-             * The setup of self protocore is already done as a first step so
-             * skip the protocore setup if the current metachain id is equal to
-             * the auxiliary metachain id.
-             */
-            if (currentMetachainId != auxiliaryMetachainId) {
-                // Setup protocore contract for the given metachain id.
-                setupProtocores(currentMetachainId);
-            }
+
+            // Setup protocore contract for the given metachain id.
+            setupProtocore(currentMetachainId);
 
             // Setup observer contract for the given metachain id.
-            setupObservers(currentMetachainId);
+            setupObserver(currentMetachainId);
 
             // Traverse to next metachain id from the link list mapping.
             currentMetachainId = genesisMetachainIds[currentMetachainId];
@@ -180,13 +176,9 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
             "Block must be at least finalized."
         );
 
-        // Get the current dynasty from the self protocore.
-        ProtocoreI protocore = protocores[auxiliaryMetachainId];
-        uint256 currentDynasty = protocore.dynasty();
-
         require(
-            currentDynasty > blockStatus.statusDynasty,
-            "Block dynasty must be less than current dynasty."
+            relativeSelfDynasty > blockStatus.statusDynasty,
+            "Relative self dynasty must be greater than the status dynasty."
         );
 
         // Get the observer contract.
@@ -204,15 +196,16 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
      *
      * @param _metachainId Metachain id.
      *
-     * /pre `protocoreAddress` is not 0
+     * \pre Protocore contract must exist for given metachain id.
      *
-     * /post Setup protocore contract.
-     * /post Set `protocores` mapping with the protocore address.
-     * /post Set `domainSeparators` mapping with domain separator.
-     * /post Set `blockchains` mapping with Block object.
-     * /post Set `blockTips` mapping with the block number.
+     * \post Adds newly setup protocore's address into protocores storage variable.
+     * \post Adds newly setup protocore's domain separator into domainSeparators.
+     *       storage variable.
+     * \post Adds a new Block into blockchain storage variable.
+     * \post Updates blockTips storage variable with the latest finalized
+     *       checkpoint's block number of the newly setup protocore.
      */
-    function setupProtocores(bytes32 _metachainId) private {
+    function setupProtocore(bytes32 _metachainId) private {
 
         // Get the protocore contract address from the genesis storage.
         address protocoreAddress = genesisProtocores[_metachainId];
@@ -224,7 +217,7 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
 
         // Setup protocore.
         ProtocoreI protocore = ProtocoreI(protocoreAddress);
-        protocore.setup();
+        ( bytes32 blockHash, uint256 blockNumber ) = protocore.setup();
 
         // Store the protocore address in protocores mapping.
         protocores[_metachainId] = protocore;
@@ -232,18 +225,11 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
         // Get the domain separator and store it in domainSeparators mapping.
         domainSeparators[_metachainId] = protocore.domainSeparator();
 
-        // Get block number and block hash of the genesis link.
-        ( uint256 blockNumber, bytes32 blockHash ) = protocore.latestFinalizedCheckpoint();
-
-        // Get the dynasty from self protocore contract.
-        ProtocoreI selfProtocore = ProtocoreI(genesisProtocores[auxiliaryMetachainId]);
-        uint256 dynasty = selfProtocore.dynasty();
-
         // Store the block informations in blockchains mapping.
         blockchains[_metachainId][blockNumber] = Block(
             blockHash,
             CheckpointCommitStatus.Finalized,
-            dynasty
+            relativeSelfDynasty
         );
 
         // Store the blocknumber as tip.
@@ -256,12 +242,14 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
      *
      * @param _metachainId Metachain id
      *
-     * /pre `observerAddress` is not 0
+     * /pre Observer contract address must exists for given metachain id in
+     *      genesisObservers storage.
      *
      * /post Setup observer contract.
-     * /post Set `observers` mapping with the observer address.
+     * /post Adds newly setup observer's address into observers storage variable.
      */
-    function setupObservers(bytes32 _metachainId) private {
+    function setupObserver(bytes32 _metachainId) private {
+
         // Get the observer contract address from the genesis storage.
         address observerAddress = genesisObservers[_metachainId];
         if(observerAddress != address(0)) {

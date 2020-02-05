@@ -166,11 +166,7 @@ contract('Coconsensus::setup', (accounts) => {
       // Call setup function.
       await coconsensus.setup();
 
-      const selfProtocoreAddress = await coconsensus.protocores(
-        config.genesis.auxiliaryMetachainId,
-      );
-      const selfProtocore = await SelfProtocore.at(selfProtocoreAddress);
-      const selfProtocoreDynasty = await selfProtocore.dynasty();
+      const relativeDynasty = await coconsensus.relativeSelfDynasty();
 
       for (let index = 0; index < config.genesis.metachainIds.length; index += 1) {
         const metachainId = config.genesis.metachainIds[index];
@@ -217,7 +213,7 @@ contract('Coconsensus::setup', (accounts) => {
         );
 
         assert.strictEqual(
-          blockchains.statusDynasty.eq(selfProtocoreDynasty),
+          blockchains.statusDynasty.eq(relativeDynasty),
           true,
           'Dynasty is not set.',
         );

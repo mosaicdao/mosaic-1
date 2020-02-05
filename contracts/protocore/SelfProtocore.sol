@@ -24,6 +24,12 @@ import "../validator/ValidatorSet.sol";
  */
 contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protocore, ValidatorSet {
 
+    /* Storage */
+
+    /** Current dynasty */
+    uint256 public dynasty;
+
+
     /* Special Functions */
 
     /**
@@ -32,18 +38,26 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protoco
      * @dev These input params will be provided by the coconsensus contract.
      *      This can be called only by the coconsensus contract once.
      *
+     * @return Block hash and block number of finalized genesis checkpoint.
+     *
+     * \post Sets `dynasty` to the given value.
      * \post Sets `domainSeparator` to the given value.
      * \post Sets `epochLength` to the given value.
      * \post Sets `metachainId` to the given value.
      * \post Sets genesis link.
      */
-    function setup() external onlyCoconsensus {
+    function setup()
+        external
+        onlyCoconsensus
+        returns (bytes32, uint256)
+    {
+        dynasty = genesisDynasty;
+
         Protocore.setupProtocore(
             genesisAuxiliaryMetachainId,
             genesisDomainSeparator,
             genesisEpochLength,
-            genesisDynasty,
-            genesisMetablockHeight,
+            genesisProposedMetablockHeight,
             genesisAuxiliaryParentVoteMessageHash,
             genesisAuxiliarySourceTransitionHash,
             genesisAuxiliarySourceBlockHash,
@@ -51,7 +65,13 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protoco
             genesisAuxiliaryTargetBlockHash,
             genesisAuxiliaryTargetBlockNumber
         );
+
         ValidatorSet.setupValidatorSet();
+
+        return (
+            genesisAuxiliaryTargetBlockHash,
+            genesisAuxiliaryTargetBlockNumber
+        );
     }
 
 
