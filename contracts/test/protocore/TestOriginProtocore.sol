@@ -28,6 +28,11 @@ contract TestOriginProtocore is OriginProtocore {
     }
 
     function setGenesisStorage(
+        bytes32 _genesisMetachainId,
+        bytes32 _genesisDomainSeparator,
+        uint256 _genesisEpochLength,
+        uint256 _genesisProposedMetablockHeight,
+        address _genesisSelfProtocore,
         bytes32 _genesisOriginParentVoteMessageHash,
         bytes32 _genesisOriginSourceBlockHash,
         uint256 _genesisOriginSourceBlockNumber,
@@ -36,6 +41,11 @@ contract TestOriginProtocore is OriginProtocore {
     )
         external
     {
+        genesisMetachainId = _genesisMetachainId;
+        genesisDomainSeparator = _genesisDomainSeparator;
+        genesisEpochLength = _genesisEpochLength;
+        genesisProposedMetablockHeight = _genesisProposedMetablockHeight;
+        genesisSelfProtocore = _genesisSelfProtocore;
         genesisOriginSourceBlockHash = _genesisOriginSourceBlockHash;
         genesisOriginSourceBlockNumber = _genesisOriginSourceBlockNumber;
         genesisOriginTargetBlockHash = _genesisOriginTargetBlockHash;
@@ -49,5 +59,35 @@ contract TestOriginProtocore is OriginProtocore {
 		returns (CoconsensusI)
 	{
         return coconsensus;
+    }
+
+    function fvsVoteCount(
+        bytes32 _voteMessageHash,
+        uint256 _height
+    )
+        external
+        view
+        returns (uint256)
+    {
+        return links[_voteMessageHash].fvsVoteCount[_height];
+    }
+
+    /**
+     * @notice This function is used to test the
+     *         `Coconsensus::finaliseCheckpoint`, the msg.sender for the
+     *         `Coconsensus::finaliseCheckpoint` can only be protocore.
+     */
+    function testFinaliseCheckpoint(
+        bytes32 _metachainId,
+        uint256 _blockNumber,
+        bytes32 _blockHash
+    )
+        external
+    {
+        getCoconsensus().finaliseCheckpoint(
+            _metachainId,
+            _blockNumber,
+            _blockHash
+        );
     }
 }
