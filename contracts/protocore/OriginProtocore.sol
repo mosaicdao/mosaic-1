@@ -14,14 +14,23 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../protocore/Protocore.sol";
 import "../protocore/GenesisOriginProtocore.sol";
+import "../protocore/Protocore.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 
 /**
  * @title Origin protocore - This contract finalizes the proposed blocks of origin chain.
  */
 contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Protocore {
+
+    /* Events */
+
+    event LinkProposed(
+        bytes32 parentVoteMessageHash,
+        bytes32 targetBlockHash,
+        uint256 targetBlockNumber
+    );
+
 
     /* Storage */
 
@@ -39,19 +48,7 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
     /**
      * @notice setup() function initializes the current contract.
      *
-     * @dev These input params will be provided by the coconsensus contract.
-     *      This can be called only by the coconsensus contract once.
-     *
-     * @param _metachainId Metachain id.
-     * @param _domainSeparator Domain separator.
-     * @param _epochLength Epoch length.
-     * @param _metablockHeight Metablock height.
-     * @param _selfProtocore SelfProtocore contract address.
-     *
-     * \pre `_metachainId` is not 0.
-     * \pre `_domainSeparator` is not 0.
-     * \pre `_epochLength` is not 0.
-     * \pre `_selfProtocore` is not 0.
+     * @return Block hash and block number of finalized genesis checkpoint.
      *
      * \post Sets `selfProtocore` to the given value.
      * \post Sets `domainSeparator` to the given value.
@@ -59,35 +56,126 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
      * \post Sets `metachainId` to the given value.
      * \post Sets genesis link.
      */
-    function setup(
-        bytes32 _metachainId,
-        bytes32 _domainSeparator,
-        uint256 _epochLength,
-        uint256 _metablockHeight,
-        address _selfProtocore
-    )
+    function setup()
         external
         onlyCoconsensus
+        returns (
+            bytes32 finalizedBlockHash_,
+            uint256 finalizedBlockNumber_
+        )
     {
-        require(
-            _selfProtocore != address(0),
-            "Self protocore contract address is null."
-        );
-
-        selfProtocore = _selfProtocore;
+        selfProtocore = genesisSelfProtocore;
 
         // The source transition hash should be zero for origin protocore.
-        Protocore.setup(
-            _metachainId,
-            _domainSeparator,
-            _epochLength,
-            _metablockHeight,
+        Protocore.setupProtocore(
+            genesisMetachainId,
+            genesisDomainSeparator,
+            genesisEpochLength,
+            genesisProposedMetablockHeight,
             genesisOriginParentVoteMessageHash,
             bytes32(0),
             genesisOriginSourceBlockHash,
             genesisOriginSourceBlockNumber,
             genesisOriginTargetBlockHash,
             genesisOriginTargetBlockNumber
+        );
+
+        finalizedBlockHash_ = genesisOriginTargetBlockHash;
+        finalizedBlockNumber_ = genesisOriginTargetBlockNumber;
+    }
+
+
+    /* External Functions */
+
+    /**
+     * @notice proposeLink() function proposes a valid link to be voted later by
+     *         active validators.
+     *
+     * @dev Satisfies \pre and \post conditions of
+     *      Protocore::proposeLinkInternal().
+     *
+     * \post Emits LinkProposed event.
+     */
+    function proposeLink(
+        bytes32 _parentVoteMessageHash,
+        bytes32 _targetBlockHash,
+        uint256 _targetBlockNumber
+    )
+        external
+    {
+        Protocore.proposeLinkInternal(
+            _parentVoteMessageHash,
+            bytes32(0),
+            _targetBlockHash,
+            _targetBlockNumber
+        );
+
+        emit LinkProposed(
+            _parentVoteMessageHash,
+            _targetBlockHash,
+            _targetBlockNumber
+        );
+    }
+
+    /**
+     * @notice It registers a vote for a link specified by vote message hash.
+     *         Validators sign a vote message and provides the signature.
+     *
+     * @dev It must satify pre and post conditions of
+     *      Protocore::registerVoteInternal.
+     *
+     * @param _voteMessageHash Message hash of a vote.
+     * @param _r The first 32 bytes of ECDSA signature of a validator.
+     * @param _s The second 32 bytes of ECDSA signature of a validator.
+     * @param _v The recovery id/value of ECDSA signature of a validator.
+     */
+    function registerVote(
+        bytes32 _voteMessageHash,
+        bytes32 _r,
+        bytes32 _s,
+        uint8 _v
+    )
+        external
+    {
+        Protocore.registerVoteInternal(
+            _voteMessageHash,
+            _r,
+            _s,
+            _v
+        );
+    }
+
+
+    /* Public Functions */
+
+    /**
+     * @notice inForwardValidatorSet() function calls on SelfProtocore contract
+     *         to query the forward validator set.
+     */
+    function inForwardValidatorSet(address _validator, uint256 _height)
+        public
+        view
+        returns (bool)
+    {
+        assert(selfProtocore != address(0));
+        return ForwardValidatorSetAbstract(selfProtocore).inForwardValidatorSet(
+            _validator,
+            _height
+        );
+    }
+
+    /**
+     * @notice forwardValidatorCount() function calls on SelfProtocore contract
+     *         to query the forward validator set.
+     */
+    function forwardValidatorCount(uint256 _height)
+        public
+        view
+        returns (uint256)
+    {
+        assert(selfProtocore != address(0));
+        return ForwardValidatorSetAbstract(selfProtocore).forwardValidatorCount(
+            _height
         );
     }
 }

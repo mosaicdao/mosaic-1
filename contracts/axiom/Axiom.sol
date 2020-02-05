@@ -16,7 +16,6 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "./AxiomI.sol";
 import "../anchor/Anchor.sol"; // TASK: change this to factory, when new anchor is implemented.
-import "../block/Block.sol";
 import "../consensus/ConsensusI.sol";
 import "../proxies/ProxyFactory.sol";
 
@@ -30,8 +29,13 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
 
     /* Events */
 
-    /* Emitted when new metachain is created */
-    event MetachainCreated(bytes32 metachainId);
+    /** Emitted when new metachain is created */
+    event MetachainCreated(
+        bytes32 metachainId,
+        address anchor,
+        string mosaicVersion,
+        address consensusGateway
+    );
 
 
     /* Constants */
@@ -75,7 +79,7 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
     /** Core master copy contract address */
     address public coreMasterCopy;
 
-    /** Committeee master copy contract address */
+    /** Committee master copy contract address */
     address public committeeMasterCopy;
 
     /** Reputation master copy contract address */
@@ -265,7 +269,8 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
      * @notice Deploy Committee proxy contract. This can be called only by consensus
      *         contract.
      * @param _data Setup function call data.
-     * @return Deployed contract address.
+     *
+     * @return deployedAddress_ Deployed contract address.
      */
     function newCommittee(
         bytes calldata _data
@@ -280,16 +285,31 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
     /**
      * @notice Setup a new metachain. Only technical governance address can
      *         call this function.
+     *
+     * @return metachainId_ Metachain id.
      */
-    function newMetaChain()
+    function newMetachain()
         external
         onlyTechGov
         returns(bytes32 metachainId_)
     {
+        address anchor;
+        string memory mosaicVersion;
+        address consensusGateway;
 
-        metachainId_ = consensus.newMetaChain();
+        (
+            metachainId_,
+            anchor,
+            mosaicVersion,
+            consensusGateway
+        ) = consensus.newMetachain();
 
-        emit MetachainCreated(metachainId_);
+        emit MetachainCreated(
+            metachainId_,
+            anchor,
+            mosaicVersion,
+            consensusGateway
+        );
     }
 
     /**

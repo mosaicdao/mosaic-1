@@ -27,6 +27,7 @@ contract('ValidatorSet::removeValidator', (accounts) => {
   let account;
   beforeEach(async () => {
     validatorSet = await ValidatorSet.new();
+    await validatorSet.setupValidatorSetDouble();
     account = accountProvider.get();
     await validatorSet.insertValidator(account, beginHeight);
     // TODO: validator set is not initialised.
