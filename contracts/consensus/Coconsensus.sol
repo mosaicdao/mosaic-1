@@ -142,7 +142,7 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
      * \pre A block must exist in `blockchains` storage for the given
      *      `_metachainid` and block number from the decoded `_rlpBlockHeader`.
      * \pre The commit status of the block must be at least `Finalized`.
-     * \pre The status dynasty of the block less than `relativeSelfDynasty`.
+     * \pre The status dynasty of the block is less than `relativeSelfDynasty`.
      *
      * \post Anchors the state root in the observer contract.
      */
