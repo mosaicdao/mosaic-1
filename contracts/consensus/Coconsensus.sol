@@ -14,8 +14,9 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import "../anchor/ObserverI.sol";
+import "../block/BlockHeader.sol";
 import "../consensus/GenesisCoconsensus.sol";
-import "../observer/ObserverI.sol";
 import "../protocore/ProtocoreI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../version/MosaicVersion.sol";
@@ -125,6 +126,73 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
         }
     }
 
+
+    /* External Functions */
+
+    /**
+     * @notice Observes the given block by anchoring its state root into the
+     *         corresponding observer.
+     *
+     * @param _metachainId Metachain id.
+     * @param _rlpBlockHeader RLP encoded block header.
+     *
+     * \pre `_metachainId` is not 0.
+     * \pre `_rlpBlockHeader` is not 0.
+     * \pre `_metachainId` is not `selfMetachainId`.
+     * \pre A block must exist in `blockchains` storage for the given
+     *      `_metachainid` and block number from the decoded `_rlpBlockHeader`.
+     * \pre The commit status of the block must be at least `Finalized`.
+     * \pre The status dynasty of the block is less than `relativeSelfDynasty`.
+     *
+     * \post Anchors the state root in the observer contract.
+     */
+    function observeBlock(
+        bytes32 _metachainId,
+        bytes calldata _rlpBlockHeader
+    )
+        external
+    {
+        require(
+            _metachainId != bytes32(0),
+            "Metachain id must not be null."
+        );
+
+        require(
+            _rlpBlockHeader.length != 0,
+            "RLP block header must not be null."
+        );
+
+        require(
+            _metachainId != selfMetachainId,
+            "Metachain id must not be self metachain id."
+        );
+
+        // Decode the rlp encoded block header.
+        BlockHeader.Header memory blockHeader = BlockHeader.decodeHeader(_rlpBlockHeader);
+
+        Block memory finalizedBlock = blockchains[_metachainId][blockHeader.height];
+
+        require(
+            finalizedBlock.blockHash == blockHeader.blockHash,
+            "Provided block header is not valid."
+        );
+
+        require(
+            finalizedBlock.commitStatus >= CheckpointCommitStatus.Finalized,
+            "Block must be at least finalized."
+        );
+
+        require(
+            relativeSelfDynasty > finalizedBlock.statusDynasty,
+            "Relative self dynasty must be greater than the status dynasty."
+        );
+
+        // Get the observer contract.
+        ObserverI observer = observers[_metachainId];
+
+        // Anchor the state root.
+        observer.anchorStateRoot(blockHeader.height, blockHeader.stateRoot);
+    }
 
     /* Private Functions */
 

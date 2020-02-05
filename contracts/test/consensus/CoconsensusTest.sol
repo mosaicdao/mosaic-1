@@ -14,14 +14,16 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-
 import "../../consensus/Coconsensus.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract CoconsensusTest is Coconsensus {
 
     using SafeMath for uint256;
 
+    /**
+     * @notice This function stores the genesis data.
+     */
     function setGenesisStorage(
         bytes32[] calldata _metachainIds,
         address[] calldata _protocores,
@@ -43,4 +45,33 @@ contract CoconsensusTest is Coconsensus {
             genesisObservers[currentMetachainId] = _observers[i];
         }
     }
+
+    /**
+     * @notice This function is used to set the finalize checkpoint.
+     */
+    function setFinaliseCheckpoint(
+        bytes32 _metachainId,
+        uint256 _blockNumber,
+        bytes32 _blockHash,
+        uint256 _dynasty
+    )
+        external
+    {
+        blockchains[_metachainId][_blockNumber] = Block(
+            _blockHash,
+            CheckpointCommitStatus.Finalized,
+            _dynasty
+        );
+
+        // Store the blocknumber as tip.
+        blockTips[_metachainId] = _blockNumber;
+    }
+
+    /**
+     * @notice This function sets the relative self dynasty for testing purpose.
+     */
+    function setRelativeSelfDynasty(uint256 _dynasty) external {
+        relativeSelfDynasty = _dynasty;
+    }
+
 }

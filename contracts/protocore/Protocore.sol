@@ -113,6 +113,7 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
     ) public fvsVotes;
 
 
+
     /* Special Functions */
 
     /**
