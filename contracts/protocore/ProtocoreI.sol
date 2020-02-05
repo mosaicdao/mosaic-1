@@ -20,7 +20,7 @@ pragma solidity >=0.5.0 <0.6.0;
 interface ProtocoreI {
 
     /** @notice setup() function initializes the protocore contract. */
-    function setup() external;
+    function setup() external returns (bytes32, uint256);
 
     /** @notice Function to get the domain separator. */
     function domainSeparator() external returns (bytes32);
@@ -39,9 +39,6 @@ interface ProtocoreI {
 
     /**  @notice epochLength() function returns the epoch length. */
     function epochLength() external returns (uint256);
-
-    /**  @notice dynasty() function returns the latest dynasty. */
-    function dynasty() external returns (uint256);
 
     function openKernelHeight()
         external

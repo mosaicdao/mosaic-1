@@ -14,8 +14,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../../coconsensus/Coconsensus.sol";
-
+import "../../consensus/Coconsensus.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract CoconsensusTest is Coconsensus {
@@ -33,7 +32,7 @@ contract CoconsensusTest is Coconsensus {
         external
     {
         genesisOriginMetachainId = _metachainIds[0];
-        genesisAuxiliaryMetachainId = _metachainIds[1];
+        genesisSelfMetachainId = _metachainIds[1];
 
         genesisMetachainIds[SENTINEL_METACHAIN_ID] = SENTINEL_METACHAIN_ID;
         for (uint256 i = 0; i < _metachainIds.length; i = i.add(1)) {
@@ -67,4 +66,12 @@ contract CoconsensusTest is Coconsensus {
         // Store the blocknumber as tip.
         blockTips[_metachainId] = _blockNumber;
     }
+
+    /**
+     * @notice This function sets the relative self dynasty for testing purpose.
+     */
+    function setRelativeSelfDynasty(uint256 _dynasty) external {
+        relativeSelfDynasty = _dynasty;
+    }
+
 }

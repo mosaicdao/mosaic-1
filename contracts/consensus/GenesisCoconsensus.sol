@@ -32,7 +32,7 @@ contract GenesisCoconsensus {
     bytes32 public genesisOriginMetachainId;
 
     /** Metachain id of the auxiliary chain. */
-    bytes32 public genesisAuxiliaryMetachainId;
+    bytes32 public genesisSelfMetachainId;
 
     /** Link list of metachain ids (for all protocores). */
     mapping(bytes32 => bytes32) public genesisMetachainIds;

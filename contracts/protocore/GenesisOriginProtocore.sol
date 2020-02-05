@@ -30,11 +30,8 @@ contract GenesisOriginProtocore {
     /** Epoch length. */
     uint256 public genesisEpochLength;
 
-    /** Initial metablock height. */
-    uint256 public genesisMetablockHeight;
-
-    /** Initial dynasty number */
-    uint256 public genesisDynasty;
+    /** Proposed metablock height. */
+    uint256 public genesisProposedMetablockHeight;
 
     /** Domain separator. */
     bytes32 public genesisDomainSeparator;
