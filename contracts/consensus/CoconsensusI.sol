@@ -33,7 +33,8 @@ interface CoconsensusI {
     function getAnchor(bytes32 _metachainId) external returns (address);
 
     /**
-     * @notice It finalises a checkpoint.
+     * @notice finaliseCheckpoint() function finalises a checkpoint at
+     *         a metachain.
      *
      * @param _metachainId A metachain id to finalise a checkpoint.
      * @param _blockNumber A block number of a checkpoint.

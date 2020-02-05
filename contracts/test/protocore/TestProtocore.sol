@@ -16,6 +16,7 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "../../consensus/CoconsensusI.sol";
 import "../../protocore/Protocore.sol";
+import "../../validator/ValidatorSet.sol";
 
 contract TestProtocore is Protocore {
 
@@ -23,8 +24,11 @@ contract TestProtocore is Protocore {
 
     CoconsensusI public coconsensus;
 
+    mapping(uint256 /* metablock height */ => mapping(address /* validator */ => bool)) fvs;
+    mapping(uint256 /* metablock height */ => uint256 /* fvs count */) fvsCounts;
 
-    /* Special Functions */
+
+    /* Functions */
 
     constructor(
         CoconsensusI _coconsensus,
@@ -55,7 +59,7 @@ contract TestProtocore is Protocore {
 
         coconsensus = _coconsensus;
 
-        Protocore.setup(
+        Protocore.setupProtocore(
             _metachainId,
             _domainSeparator,
             _epochLength,
@@ -69,15 +73,54 @@ contract TestProtocore is Protocore {
         );
     }
 
-
-    /* External Functions */
-
     function getCoconsensus()
-		public
-		view
-		returns (CoconsensusI)
-	{
+        public
+        view
+        returns (CoconsensusI)
+    {
         return coconsensus;
+    }
+
+    function addToFVS(address _validator, uint256 _height)
+        external
+    {
+        assert(_validator != address(0));
+        assert(fvs[_height][_validator] == false);
+
+        fvs[_height][_validator] = true;
+        fvsCounts[_height] = fvsCounts[_height].add(1);
+    }
+
+    function inForwardValidatorSet(address _validator, uint256 _height)
+        public
+        view
+        returns (bool)
+    {
+        return fvs[_height][_validator];
+    }
+
+    function forwardValidatorCount(uint256 _height)
+        public
+        view
+        returns (uint256)
+    {
+        return fvsCounts[_height];
+    }
+
+    function registerVote(
+        bytes32 _voteMessageHash,
+        bytes32 _r,
+        bytes32 _s,
+        uint8 _v
+    )
+        external
+    {
+        return Protocore.registerVoteInternal(
+            _voteMessageHash,
+            _r,
+            _s,
+            _v
+        );
     }
 
     function proposeLink(
@@ -147,33 +190,26 @@ contract TestProtocore is Protocore {
     }
 
     function getForwardVoteCount(
-        bytes32 _voteMessageHash
+        bytes32 _voteMessageHash,
+        uint256 _height
     )
         external
         view
         returns (uint256)
     {
-        return links[_voteMessageHash].forwardVoteCount;
+        return links[_voteMessageHash].fvsVoteCount[_height];
     }
 
-    function getForwardVoteCountNextHeight(
-        bytes32 _voteMessageHash
+    function hasVoted(
+        bytes32 _voteMessageHash,
+        uint256 _height,
+        address _validator
     )
         external
         view
-        returns (uint256)
+        returns (bool)
     {
-        return links[_voteMessageHash].forwardVoteCountNextHeight;
-    }
-
-    function getForwardVoteCountPreviousHeight(
-        bytes32 _voteMessageHash
-    )
-        external
-        view
-        returns (uint256)
-    {
-        return links[_voteMessageHash].forwardVoteCountPreviousHeight;
+        return fvsVotes[_voteMessageHash][_height][_validator] != address(0);
     }
 
     function getTargetFinalisation(
@@ -184,5 +220,44 @@ contract TestProtocore is Protocore {
         returns (CheckpointFinalisationStatus)
     {
         return links[_voteMessageHash].targetFinalisation;
+    }
+
+    function getSourceFinalisation(
+        bytes32 _voteMessageHash
+    )
+        external
+        view
+        returns (CheckpointFinalisationStatus)
+    {
+        Link storage link = links[_voteMessageHash];
+        Link storage parentLink = links[link.parentVoteMessageHash];
+
+        return parentLink.targetFinalisation;
+    }
+
+    function isFinalisationLink(
+        bytes32 _voteMessageHash
+    )
+        external
+        view
+        returns (bool)
+    {
+        Link storage link = links[_voteMessageHash];
+
+        Link storage parentLink = links[link.parentVoteMessageHash];
+
+        return link.targetBlockNumber.sub(parentLink.targetBlockNumber) == epochLength;
+    }
+
+    function getVoteCount(
+        bytes32 _voteMessageHash,
+        uint256 _height
+    )
+        external
+        view
+        returns (uint256)
+    {
+        Link storage link = links[_voteMessageHash];
+        return link.fvsVoteCount[_height];
     }
 }

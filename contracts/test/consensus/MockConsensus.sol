@@ -95,12 +95,14 @@ contract MockConsensus is ConsensusI, ReputationI {
 
     function stake(address _validator, address _withdrawalAddress)
         external
+        returns (uint256)
     {
         // do nothing for now
     }
 
     function deregister(address _validator)
         external
+        returns (uint256)
     {
         // do nothing for now
     }
@@ -166,9 +168,14 @@ contract MockConsensus is ConsensusI, ReputationI {
         // do nothing for now
     }
 
-    function newMetaChain()
+    function newMetachain()
         external
-        returns(bytes32 metachainId_)
+        returns (
+            bytes32 metachainId_,
+            address anchor_,
+            string memory mosaicVersion_,
+            address consensusGateway_
+        )
     {
         // do nothing for now
     }

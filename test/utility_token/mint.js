@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const UtilityToken = artifacts.require('UtilityToken');
+const UtilityToken = artifacts.require('UtilityTokenTest');
 const BN = require('bn.js');
 
 contract('UtilityToken::mint', (accounts) => {
@@ -30,7 +30,7 @@ contract('UtilityToken::mint', (accounts) => {
     utilityToken = await UtilityToken.new();
     amount = new BN('100');
 
-    await utilityToken.setup(
+    await utilityToken.setupToken(
       TOKEN_SYMBOL,
       TOKEN_NAME,
       TOKEN_DECIMALS,

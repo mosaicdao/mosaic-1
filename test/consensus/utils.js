@@ -66,8 +66,8 @@ async function joinDuringCreation(consensus, joinParams) {
   );
 }
 
-async function callNewMetaChainOnConsensus(spyAxiom, params) {
-  await spyAxiom.callNewMetaChainOnConsensus(
+async function callNewMetachainOnConsensus(spyAxiom, params) {
+  await spyAxiom.callNewMetachainOnConsensus(
     params.consensus,
   );
 }
@@ -125,7 +125,7 @@ module.exports = {
   getDislocation,
   join,
   joinDuringCreation,
-  callNewMetaChainOnConsensus,
+  callNewMetachainOnConsensus,
   commit,
   hashMetachainId,
   METACHAIN_ID_TYPEHASH,
