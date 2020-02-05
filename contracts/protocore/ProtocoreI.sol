@@ -25,19 +25,6 @@ interface ProtocoreI {
     /** @notice Function to get the domain separator. */
     function domainSeparator() external returns (bytes32);
 
-    /**
-     * @notice Function to return block number
-     *         and block hash of the finalized checkpoint.
-     */
-    function latestFinalizedCheckpoint()
-        external
-        view
-        returns (
-            uint256 blockNumber_,
-            bytes32 blockHash_
-        );
-
-
     function openKernelHeight()
         external
         returns (uint256);
