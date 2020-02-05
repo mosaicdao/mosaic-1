@@ -16,14 +16,14 @@
 
 const Proof = artifacts.require('ProofDouble');
 
+const BN = require('bn.js');
 const utils = require('../../test_lib/utils.js');
 const web3 = require('../../test_lib/web3.js');
 
-const BN = require('bn.js');
 const { AccountProvider } = require('../../test_lib/utils.js');
 const ProveStorageExistence = require('./prove_storage_existence_proof.json');
 
-contract('Proof:proveStorageExistence', async (accounts) => {
+contract('Proof::proveStorageExistence', async (accounts) => {
   const accountProvider = new AccountProvider(accounts);
   let path;
   let proof;
@@ -35,34 +35,74 @@ contract('Proof:proveStorageExistence', async (accounts) => {
     setupParams = {
       storageAccount: ProveStorageExistence.address,
       stateRootProvider: accountProvider.get(),
-      maxStorageRootItems: new BN(100)
+      maxStorageRootItems: new BN(100),
     };
 
     await proof.setupProofDouble(
       setupParams.storageAccount,
       setupParams.stateRootProvider,
-      setupParams.maxStorageRootItems
+      setupParams.maxStorageRootItems,
     );
 
-    await proof.setStorageRoot(
+    await proof.setStorageRootDouble(
       ProveStorageExistence.blockNumber,
-      ProveStorageExistence.storageHash
+      ProveStorageExistence.storageHash,
+    );
+
+    path = await proof.storagePathDouble(
+      new BN(1),
+      ProveStorageExistence.messageHash,
     );
   });
 
-  it('should pass when existence account proof matches', async () => {
-    path = await proof.storagePathDouble(
-      new BN(1),
-      ProveStorageExistence.messageHash
-    );
 
-    const value = web3.utils.soliditySha3(true);
+  contract('Negative Tests', async () => {
+    it('should fail when storage root is zero', async () => {
+      const storageRoot = '0x';
+      const value = web3.utils.soliditySha3(true);
 
-    await proof.proveStorageExistenceDouble(
-      path,
-      value,
-      ProveStorageExistence.blockNumber,
-      ProveStorageExistence.serializedStorageProof
-    );
+      await proof.setStorageRootDouble(
+        ProveStorageExistence.blockNumber,
+        storageRoot,
+      );
+      await utils.expectRevert(
+        proof.proveStorageExistenceDouble(
+          path,
+          value,
+          ProveStorageExistence.blockNumber,
+          ProveStorageExistence.serializedStorageProof,
+        ),
+        'Storage root must not be zero',
+      );
+    });
+
+
+    it('should fail when a single parameter to proveStorageExistence is wrong/empty', async () => {
+      path = '0x';
+      const value = web3.utils.soliditySha3(true);
+
+      await utils.expectRevert(
+        proof.proveStorageExistenceDouble(
+          path,
+          value,
+          ProveStorageExistence.blockNumber,
+          ProveStorageExistence.serializedStorageProof,
+        ),
+        'Merkle proof verification failed.',
+      );
+    });
+  });
+
+
+  contract('Positive Tests', async () => {
+    it('should pass when existence account proof matches', async () => {
+      const value = web3.utils.soliditySha3(true);
+      await proof.proveStorageExistenceDouble(
+        path,
+        value,
+        ProveStorageExistence.blockNumber,
+        ProveStorageExistence.serializedStorageProof,
+      );
+    });
   });
 });

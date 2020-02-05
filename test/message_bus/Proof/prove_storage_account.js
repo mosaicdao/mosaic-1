@@ -17,14 +17,13 @@
 const Proof = artifacts.require('ProofDouble');
 const SpyAnchor = artifacts.require('SpyAnchor');
 
-const utils = require('../../test_lib/utils.js');
-const web3 = require('../../test_lib/web3.js');
-
 const BN = require('bn.js');
+const utils = require('../../test_lib/utils.js');
+
 const { AccountProvider } = require('../../test_lib/utils.js');
 const ProveStorageAccount = require('./prove_storage_account_proof.json');
 
-contract('Proof:proveStorageAccount', async (accounts) => {
+contract('Proof::proveStorageAccount', async (accounts) => {
   const accountProvider = new AccountProvider(accounts);
   let proof;
   let spyAnchor;
@@ -40,50 +39,94 @@ contract('Proof:proveStorageAccount', async (accounts) => {
     setupParams = {
       storageAccount: ProveStorageAccount.address,
       stateRootProvider: spyAnchor.address,
-      maxStorageRootItems: new BN(100)
+      maxStorageRootItems: new BN(100),
     };
 
     await proof.setupProofDouble(
       setupParams.storageAccount,
       setupParams.stateRootProvider,
-      setupParams.maxStorageRootItems
+      setupParams.maxStorageRootItems,
     );
 
-    // spyAnchor setup
     consensus = accountProvider.get();
     await spyAnchor.setup(
       setupParams.maxStorageRootItems,
-      consensus
+      consensus,
     );
 
-    // setting anchor state root in spyAnchor
     await spyAnchor.anchorStateRoot(
       ProveStorageAccount.blockNumber,
-      ProveStorageAccount.stateRoot
+      ProveStorageAccount.stateRoot,
     );
-
-    console.log('Actual state root :-' + ProveStorageAccount.stateRoot);
-    console.log('State root from spyAnchor :-' + await spyAnchor.spyStateRoot.call());
-    console.log('BlockHeight from spyAnchor :-', await spyAnchor.spyBlockHeight.call());
   });
 
+
+  contract('Negative Tests', async () => {
+    it('should fail when rlpAccount length is zero', async () => {
+      const failRlpAccount = '0x';
+      await utils.expectRevert(
+        proof.proveStorageAccountDouble(
+          new BN(ProveStorageAccount.blockNumber),
+          failRlpAccount,
+          ProveStorageAccount.rlpParentNodes,
+        ),
+        'Length of RLP account must not be 0.',
+      );
+    });
+
+
+    it('should fail when rlpParentNodes length is zero', async () => {
+      const failRlpParentNodes = '0x';
+      await spyAnchor.anchorStateRoot(
+        new BN(ProveStorageAccount.blockNumber),
+        ProveStorageAccount.stateRoot,
+      );
+      await utils.expectRevert(
+        proof.proveStorageAccountDouble(
+          new BN(ProveStorageAccount.blockNumber),
+          ProveStorageAccount.rlpAccountNode,
+          failRlpParentNodes,
+        ),
+        'Length of RLP parent nodes is 0.',
+      );
+    });
+
+
+    it('should fail when state root is null', async () => {
+      const stateRoot = '0x';
+      await spyAnchor.anchorStateRoot(
+        ProveStorageAccount.blockNumber,
+        stateRoot,
+      );
+
+      await utils.expectRevert(
+        proof.proveStorageAccountDouble(
+          new BN(ProveStorageAccount.blockNumber),
+          ProveStorageAccount.rlpAccountNode,
+          ProveStorageAccount.rlpParentNodes,
+        ),
+        'State root must not be zero.',
+      );
+    });
+  });
+
+
   contract('Positive Tests', async () => {
-    it('should pass when account storage root proof matches', async() => {
+    it('should pass when account storage root proof matches', async () => {
       await proof.proveStorageAccountDouble(
         new BN(ProveStorageAccount.blockNumber),
         ProveStorageAccount.rlpAccountNode,
-        ProveStorageAccount.rlpParentNodes
+        ProveStorageAccount.rlpParentNodes,
       );
 
       ExpectedStorageRoot = await proof.storageRoots.call(ProveStorageAccount.blockNumber);
-      console.log('Storage root :-', ExpectedStorageRoot);
 
       CalculatedStorageRoot = ProveStorageAccount.storageHash;
 
       assert.strictEqual(
         ExpectedStorageRoot,
         CalculatedStorageRoot,
-        "Storage root/hash generated must match with storage root calculated.",
+        'Storage root/hash generated must match with storage root calculated.',
       );
     });
   });

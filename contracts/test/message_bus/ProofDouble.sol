@@ -80,7 +80,7 @@ contract ProofDouble is Proof {
         );
     }
 
-    function setStorageRoot(
+    function setStorageRootDouble(
         uint256 _blockHeight,
         bytes32 _storageRoot
     )

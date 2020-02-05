@@ -18,6 +18,7 @@ const Proof = artifacts.require('ProofDouble');
 const BN = require('bn.js');
 
 const { AccountProvider } = require('../../test_lib/utils.js');
+const Utils = require('../../test_lib/utils.js');
 
 contract('Proof::proveStorageAccount', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
@@ -30,30 +31,74 @@ contract('Proof::proveStorageAccount', (accounts) => {
     setupParams = {
       storageAccount: accountProvider.get(),
       stateRootProvider: accountProvider.get(),
-      maxStorageRootItems: new BN(100)
+      maxStorageRootItems: new BN(100),
     };
   });
+
+
+  contract('Negative Tests', async () => {
+    it('should fail when stateRootProvider address is empty', async () => {
+      await proof.setupProofDouble(
+        setupParams.storageAccount,
+        setupParams.stateRootProvider,
+        setupParams.maxStorageRootItems,
+      );
+      await Utils.expectRevert(
+        proof.setupProofDouble(
+          setupParams.storageAccount,
+          setupParams.stateRootProvider,
+          setupParams.maxStorageRootItems,
+        ),
+        'Setup is already done.',
+      );
+    });
+
+
+    it('should fail when storageAccount address is 0', async () => {
+      await Utils.expectRevert(
+        proof.setupProofDouble(
+          Utils.NULL_ADDRESS,
+          setupParams.stateRootProvider,
+          setupParams.maxStorageRootItems,
+        ),
+        'Storage account address is 0.',
+      );
+    });
+
+
+    it('should fail when stateRootProvider address is 0', async () => {
+      await Utils.expectRevert(
+        proof.setupProofDouble(
+          setupParams.storageAccount,
+          Utils.NULL_ADDRESS,
+          setupParams.maxStorageRootItems,
+        ),
+        'State root provider address is 0.',
+      );
+    });
+  });
+
 
   contract('Positive Tests', async () => {
     it('should do setup successfully', async () => {
       await proof.setupProofDouble(
         setupParams.storageAccount,
         setupParams.stateRootProvider,
-        setupParams.maxStorageRootItems
+        setupParams.maxStorageRootItems,
       );
 
       const storageAccount = await proof.storageAccount.call();
       assert.strictEqual(
         setupParams.storageAccount,
         storageAccount,
-        "Storage account address must match with the storage adress provided.",
+        'Storage account address must match with the storage adress provided.',
       );
 
       const stateRootProvider = await proof.stateRootProvider.call();
       assert.strictEqual(
         setupParams.stateRootProvider,
         stateRootProvider,
-        "State root provider address must match with the state root adress provided.",
+        'State root provider address must match with the state root adress provided.',
       );
     });
   });
