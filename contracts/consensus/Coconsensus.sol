@@ -182,11 +182,10 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
      *
      * @param _metachainId Metachain id
      *
-     * /pre Observer contract address must exists for given metachain id in
+     * \pre Observer contract address must exists for given metachain id in
      *      genesisObservers storage.
      *
-     * /post Setup observer contract.
-     * /post Adds newly setup observer's address into observers storage variable.
+     * \post Adds newly setup observer's address into observers storage variable.
      */
     function setupObserver(bytes32 _metachainId) private {
 
