@@ -66,4 +66,12 @@ contract CoconsensusTest is Coconsensus {
         // Store the blocknumber as tip.
         blockTips[_metachainId] = _blockNumber;
     }
+
+    /**
+     * @notice This function sets the relative self dynasty for testing purpose.
+     */
+    function setRelativeSelfDynasty(uint256 _dynasty) external {
+        relativeSelfDynasty = _dynasty;
+    }
+
 }

@@ -165,10 +165,9 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
         );
 
         require(
-            _metachainId == selfMetachainId,
+            _metachainId != selfMetachainId,
             "Metachain id must not be self metachain id."
         );
-
 
         // Decode the rlp encoded block header.
         BlockHeader.Header memory blockHeader = BlockHeader.decodeHeader(_rlpBlockHeader);

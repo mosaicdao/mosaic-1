@@ -69,10 +69,6 @@ contract TestSelfProtocore is SelfProtocore {
         return coconsensus;
     }
 
-    function setDynasty(uint256 _dynasty) external {
-        dynasty = _dynasty;
-    }
-
     function fvsVoteCount(
         bytes32 _voteMessageHash,
         uint256 _height
