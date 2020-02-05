@@ -23,10 +23,10 @@ const ValidatorSet = artifacts.require('ValidatorSetDouble');
 contract('ValidatorSet::insertValidator', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
   let validatorSet;
-  const beginHeight = new BN(100);
+  const beginHeight = new BN(1);
   beforeEach(async () => {
     validatorSet = await ValidatorSet.new();
-    await validatorSet.setupValidatorSetDouble();
+    await validatorSet.setupValidatorSetDouble(beginHeight);
   });
 
   contract('Positive Tests', () => {

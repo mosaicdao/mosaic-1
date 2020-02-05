@@ -16,7 +16,7 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "../../consensus/CoconsensusI.sol";
 import "../../protocore/Protocore.sol";
-import "../../validator/ValidatorSet.sol";
+import "../../validator-set/ValidatorSet.sol";
 
 contract TestProtocore is Protocore {
 

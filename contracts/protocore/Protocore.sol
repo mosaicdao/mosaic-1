@@ -18,7 +18,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "../consensus/CoconsensusModule.sol";
 import "../validator/ForwardValidatorSetAbstract.sol";
-import "../validator/ValidatorSet.sol";
+import "../validator-set/ValidatorSet.sol";
 import "../version/MosaicVersion.sol";
 
 /**

@@ -35,6 +35,13 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
     /** Emitted when new metablock is proposed */
     event MetablockProposed(bytes32 proposal);
 
+    /** Emitted when core status is changed. */
+    event CoreStatusUpdated(CoreStatus status);
+
+    /**  */
+    event GenesisOriginObservationStored();
+
+
     /* Structs */
 
     /** The kernel of a meta-block header */

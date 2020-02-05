@@ -14,7 +14,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../../validator/ValidatorSet.sol";
+import "../../validator-set/ValidatorSet.sol";
 
 /**
  * @title ValidatorSetDouble contract.
@@ -25,10 +25,10 @@ contract ValidatorSetDouble is ValidatorSet {
 
     /* External Functions */
 
-    function setupValidatorSetDouble()
+    function setupValidatorSetDouble(uint256 _activeHeight)
         external
     {
-        ValidatorSet.setupValidatorSet();
+        ValidatorSet.setupValidatorSet(_activeHeight);
     }
 
     /**
