@@ -188,22 +188,11 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
         );
 
         /*
-         * Check if the new block number is greater than the last
+         * Assert that the new block number is greater than the last
          * finalised block number.
          */
         uint256 lastFinalisedBlockNumber = blockTips[_metachainId];
-        require(
-            _blockNumber > lastFinalisedBlockNumber,
-            "The block number of the checkpoint must be greater than the block number of last finalised checkpoint."
-        );
-
-        // Check if the block number is multiple of epoch length.
-        ProtocoreI protocore = protocores[_metachainId];
-        uint256 epochLength = protocore.epochLength();
-        require(
-            (_blockNumber % epochLength) == 0,
-            "Block number must be a checkpoint."
-        );
+        assert(_blockNumber > lastFinalisedBlockNumber);
 
         /*
          * If the `_metachainId` is `selfMetachainId`, increment the

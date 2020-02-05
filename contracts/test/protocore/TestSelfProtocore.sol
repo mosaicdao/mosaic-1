@@ -92,11 +92,6 @@ contract TestSelfProtocore is SelfProtocore {
         return coconsensus;
     }
 
-    /** @notice Set the dynasty for the testing purpose */
-    function setDynasty(uint256 _dynasty) external {
-        dynasty = _dynasty;
-    }
-
     /**
      * @notice This function is used to test the
      *         `Coconsensus::finaliseCheckpoint`, the msg.sender for the

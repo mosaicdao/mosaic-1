@@ -25,9 +25,6 @@ interface ProtocoreI {
     /** @notice Function to get the domain separator. */
     function domainSeparator() external returns (bytes32);
 
-    /**  @notice epochLength() function returns the epoch length. */
-    function epochLength() external returns (uint256);
-
     function openKernelHeight()
         external
         returns (uint256);
