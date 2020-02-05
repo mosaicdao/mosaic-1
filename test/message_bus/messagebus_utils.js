@@ -14,10 +14,25 @@
 
 'use strict';
 
-const utils = require('../test_lib/utils');
 const web3 = require('../test_lib/web3.js');
 
 const MessageOutboxDouble = artifacts.require('MessageOutboxDouble');
+
+const MESSAGE_TYPEHASH = web3.utils.keccak256(
+  'Message(bytes32 intentHash,uint256 nonce,uint256 feeGasPrice,uint256 feeGasLimit,address sender)',
+);
+
+const MMB_CHANNEL_TYPEHASH = web3.utils.keccak256(
+  'MosaicMessageBusChannel(address outbox, address inbox)',
+);
+
+const MMB_DOMAIN_SEPARATOR_TYPEHASH = web3.utils.keccak256(
+  'MosaicMessageBus(string name,string version,bytes32 metachainId,bytes32 channelSeparator)',
+);
+
+const MMB_DOMAIN_SEPARATOR_NAME = 'Mosaic-Bus';
+
+const MMB_DOMAIN_SEPARATOR_VERSION = '0';
 
 let messageOutbox;
 
@@ -26,19 +41,14 @@ async function deployMessageOutbox() {
   return messageOutbox;
 }
 
-async function hashMessage(
+function hashMessage(
   intentHash,
   nonce,
   feeGasPrice,
   feeGasLimit,
   sender,
-  channelIdentifier
+  channelIdentifier,
 ) {
-
-  const MESSAGE_TYPEHASH = web3.utils.keccak256(
-    "Message(bytes32 intentHash,uint256 nonce,uint256 feeGasPrice,uint256 feeGasLimit,address sender)"
-  );
-
   const typedMessageHash = web3.utils.keccak256(
     web3.eth.abi.encodeParameters(
       [
@@ -47,7 +57,7 @@ async function hashMessage(
         'uint256',
         'uint256',
         'uint256',
-        'address'
+        'address',
       ],
       [
         MESSAGE_TYPEHASH,
@@ -71,34 +81,22 @@ async function hashMessage(
   return messageHash_;
 }
 
-async function hashChannelIdentifier(
+function hashChannelIdentifier(
   metachainId,
   outbox,
-  inbox
+  inbox,
 ) {
-  const MMB_CHANNEL_TYPEHASH = web3.utils.keccak256(
-    "MosaicMessageBusChannel(address outbox, address inbox)"
-  );
-
-  const MMB_DOMAIN_SEPARATOR_TYPEHASH = web3.utils.keccak256(
-    "MosaicMessageBus(string name,string version,bytes32 metachainId,bytes32 channelSeparator)"
-  );
-
-  const MMB_DOMAIN_SEPARATOR_NAME = "Mosaic-Bus";
-
-  const MMB_DOMAIN_SEPARATOR_VERSION = "0";
-
   const channelSeparator = web3.utils.keccak256(
     web3.eth.abi.encodeParameters(
       [
         'bytes32',
         'address',
-        'address'
+        'address',
       ],
       [
         MMB_CHANNEL_TYPEHASH,
         outbox,
-        inbox
+        inbox,
       ],
     ),
   );
@@ -110,14 +108,14 @@ async function hashChannelIdentifier(
         'string',
         'string',
         'bytes32',
-        'bytes32'
+        'bytes32',
       ],
       [
         MMB_DOMAIN_SEPARATOR_TYPEHASH,
         MMB_DOMAIN_SEPARATOR_NAME,
         MMB_DOMAIN_SEPARATOR_VERSION,
         metachainId,
-        channelSeparator
+        channelSeparator,
       ],
     ),
   );
@@ -128,5 +126,5 @@ async function hashChannelIdentifier(
 module.exports = {
   deployMessageOutbox,
   hashChannelIdentifier,
-  hashMessage
-}
+  hashMessage,
+};

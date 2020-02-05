@@ -19,7 +19,6 @@ const BN = require('bn.js');
 const { AccountProvider } = require('../../test_lib/utils');
 const MessageBusUtils = require('../messagebus_utils');
 const Utils = require('../../test_lib/utils');
-const web3 = require('../../test_lib/web3');
 
 const config = {};
 
@@ -28,17 +27,14 @@ contract('MessageOutbox::outboxMessageHash', (accounts) => {
 
   beforeEach(async () => {
     config.OutboxMessageHashArgs = {
-      intentHash: web3.utils.soliditySha3({
-        type: 'bytes32',
-        value: 'intent',
-      }),
+      intentHash: Utils.getRandomHash(),
       nonce: new BN(1),
       feeGasPrice: new BN(5),
       feeGasLimit: new BN(20),
       sender: accountProvider.get(),
       metachainId: Utils.getRandomHash(),
       inboxAddress: accountProvider.get(),
-      calculatedChannelIdentifier: ''
+      calculatedChannelIdentifier: '',
     };
 
 
@@ -47,23 +43,23 @@ contract('MessageOutbox::outboxMessageHash', (accounts) => {
       await MessageBusUtils.hashChannelIdentifier(
         config.OutboxMessageHashArgs.metachainId,
         config.outbox.address,
-        config.OutboxMessageHashArgs.inboxAddress
+        config.OutboxMessageHashArgs.inboxAddress,
       );
 
     await config.outbox.setupMessageOutboxDouble(
       config.OutboxMessageHashArgs.metachainId,
-      config.OutboxMessageHashArgs.inboxAddress
-    )
+      config.OutboxMessageHashArgs.inboxAddress,
+    );
   });
 
   contract('Positive Tests', async () => {
     it('should return a outbox message hash', async () => {
-      const newMessageHash = await config.outbox.outboxMessageHash(
+      const actualMessageHash = await config.outbox.outboxMessageHash(
         config.OutboxMessageHashArgs.intentHash,
         config.OutboxMessageHashArgs.nonce,
         config.OutboxMessageHashArgs.feeGasPrice,
         config.OutboxMessageHashArgs.feeGasLimit,
-        config.OutboxMessageHashArgs.sender
+        config.OutboxMessageHashArgs.sender,
       );
 
       const expectedMessageHash = await MessageBusUtils.hashMessage(
@@ -72,12 +68,13 @@ contract('MessageOutbox::outboxMessageHash', (accounts) => {
         config.OutboxMessageHashArgs.feeGasPrice,
         config.OutboxMessageHashArgs.feeGasLimit,
         config.OutboxMessageHashArgs.sender,
-        config.OutboxMessageHashArgs.calculatedChannelIdentifier
+        config.OutboxMessageHashArgs.calculatedChannelIdentifier,
       );
 
       assert.strictEqual(
-        newMessageHash,
-        expectedMessageHash
+        actualMessageHash,
+        expectedMessageHash,
+        'outboxMessageHash should be same as expected messageHash.',
       );
     });
   });

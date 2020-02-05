@@ -22,34 +22,35 @@ import "../../message-bus/MessageOutbox.sol";
  * @notice It is used for testing MessageOutbox contract.
  */
 contract MessageOutboxDouble is MessageOutbox {
+
     /* External Functions */
 
     /**
-    * @notice It is used to setup message outbox.
-    *
-    * @param _metachainId Validator address.
-    * @param _messageInbox Begin height for the validator.
-    */
+     * @notice It is used to setup message outbox.
+     *
+     * @param _metachainId Metahchain Id.
+     * @param _messageInbox Address of message inbox.
+     */
     function setupMessageOutboxDouble(
         bytes32 _metachainId,
         address _messageInbox
     )
         external
     {
-        setupMessageOutbox(_metachainId, _messageInbox);
+        MessageOutbox.setupMessageOutbox(_metachainId, _messageInbox);
     }
 
     /**
-    * @notice It is used to declare message at outbox.
-    *
-    * @param _intentHash Intent hash of message.
-    * @param _nonce Nonce of sender.
-    * @param _feeGasPrice Fee gas price.
-    * @param _feeGasLimit Fee gas limit.
-    * @param _sender Sender address.
-    *
-    * @return messageHash_ Message hash
-    */
+     * @notice It is used to declare message at outbox.
+     *
+     * @param _intentHash Intent hash of message.
+     * @param _nonce Nonce of sender.
+     * @param _feeGasPrice Fee gas price.
+     * @param _feeGasLimit Fee gas limit.
+     * @param _sender Sender address.
+     *
+     * @return messageHash_ Message hash
+     */
     function declareMessageDouble(
         bytes32 _intentHash,
         uint256 _nonce,
@@ -60,7 +61,7 @@ contract MessageOutboxDouble is MessageOutbox {
         external
         returns (bytes32 messageHash_)
     {
-        messageHash_ = declareMessage(
+        messageHash_ = MessageOutbox.declareMessage(
             _intentHash,
             _nonce,
             _feeGasPrice,

@@ -19,7 +19,6 @@ const BN = require('bn.js');
 const { AccountProvider } = require('../../test_lib/utils.js');
 const MessageBusUtils = require('../messagebus_utils.js');
 const Utils = require('../../test_lib/utils.js');
-const web3 = require('../../test_lib/web3.js');
 
 const config = {};
 
@@ -28,17 +27,14 @@ contract('MessageOutbox::declareMessage', (accounts) => {
 
   beforeEach(async () => {
     config.declareMessageArgs = {
-      intentHash: web3.utils.soliditySha3({
-        type: 'bytes32',
-        value: 'intent',
-      }),
+      intentHash: Utils.getRandomHash(),
       nonce: new BN(1),
       feeGasPrice: new BN(5),
       feeGasLimit: new BN(20),
       sender: accountProvider.get(),
       metachainId: Utils.getRandomHash(),
       inboxAddress: accountProvider.get(),
-      calculatedChannelIdentifier : ''
+      calculatedChannelIdentifier: '',
     };
 
     config.outbox = await MessageBusUtils.deployMessageOutbox();
@@ -46,24 +42,23 @@ contract('MessageOutbox::declareMessage', (accounts) => {
       await MessageBusUtils.hashChannelIdentifier(
         config.declareMessageArgs.metachainId,
         config.outbox.address,
-        config.declareMessageArgs.inboxAddress
+        config.declareMessageArgs.inboxAddress,
       );
 
-    //for initializing outboundChannelIdentifier
     await config.outbox.setupMessageOutboxDouble(
       config.declareMessageArgs.metachainId,
-      config.declareMessageArgs.inboxAddress
+      config.declareMessageArgs.inboxAddress,
     );
   });
 
   contract('Negative Tests', async () => {
-    it('should revert if outbox for message hash is already true', async () => {
+    it('should fail if message hash in outbox is already present', async () => {
       await config.outbox.declareMessageDouble(
         config.declareMessageArgs.intentHash,
         config.declareMessageArgs.nonce,
         config.declareMessageArgs.feeGasPrice,
         config.declareMessageArgs.feeGasLimit,
-        config.declareMessageArgs.sender
+        config.declareMessageArgs.sender,
       );
 
       await Utils.expectRevert(
@@ -72,7 +67,7 @@ contract('MessageOutbox::declareMessage', (accounts) => {
           config.declareMessageArgs.nonce,
           config.declareMessageArgs.feeGasPrice,
           config.declareMessageArgs.feeGasLimit,
-          config.declareMessageArgs.sender
+          config.declareMessageArgs.sender,
         ),
         'Message already exists in the outbox.',
       );
@@ -81,26 +76,42 @@ contract('MessageOutbox::declareMessage', (accounts) => {
 
   contract('Positive Tests', async () => {
     it('should declare a new message', async () => {
-      const newMessageHash = await config.outbox.declareMessageDouble.call(
-        config.declareMessageArgs.intentHash,
-        config.declareMessageArgs.nonce,
-        config.declareMessageArgs.feeGasPrice,
-        config.declareMessageArgs.feeGasLimit,
-        config.declareMessageArgs.sender
-      );
-
-      const calculatedMessageHash = await MessageBusUtils.hashMessage(
+      const actualMessageHash = await config.outbox.declareMessageDouble.call(
         config.declareMessageArgs.intentHash,
         config.declareMessageArgs.nonce,
         config.declareMessageArgs.feeGasPrice,
         config.declareMessageArgs.feeGasLimit,
         config.declareMessageArgs.sender,
-        config.declareMessageArgs.calculatedChannelIdentifier
+      );
+
+      const expectedMessageHash = await MessageBusUtils.hashMessage(
+        config.declareMessageArgs.intentHash,
+        config.declareMessageArgs.nonce,
+        config.declareMessageArgs.feeGasPrice,
+        config.declareMessageArgs.feeGasLimit,
+        config.declareMessageArgs.sender,
+        config.declareMessageArgs.calculatedChannelIdentifier,
       );
 
       assert.strictEqual(
-        calculatedMessageHash,
-        newMessageHash
+        expectedMessageHash,
+        actualMessageHash,
+        'actualMessageHash should be equal to expectedMessageHash',
+      );
+
+      await config.outbox.declareMessageDouble(
+        config.declareMessageArgs.intentHash,
+        config.declareMessageArgs.nonce,
+        config.declareMessageArgs.feeGasPrice,
+        config.declareMessageArgs.feeGasLimit,
+        config.declareMessageArgs.sender,
+      );
+
+      const outboxMapping = await config.outbox.outbox.call(actualMessageHash);
+
+      assert.ok(
+        outboxMapping,
+        'message hash in outbox is absent',
       );
     });
   });
