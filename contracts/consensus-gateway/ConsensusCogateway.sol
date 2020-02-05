@@ -151,8 +151,8 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
         );
 
         require(
-            ERC20I(address(most)).burnFrom(msg.sender, _amount),
-            "utMOST burnFrom must succeed."
+            ERC20I(most).burnFrom(msg.sender, _amount),
+            "Utmost burnFrom must succeed."
         );
     }
 }
