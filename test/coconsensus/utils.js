@@ -23,6 +23,13 @@ const OriginProtocore = artifacts.require('TestOriginProtocore');
 const OriginObserver = artifacts.require('OriginObserverTest');
 const SelfProtocore = artifacts.require('TestSelfProtocore');
 
+const CheckpointCommitStatus = {
+  Undefined: 0,
+  Finalized: 1,
+  Committed: 2,
+};
+Object.freeze(CheckpointCommitStatus);
+
 // Deploy self protocore contract
 async function deploySelfProtocore(coconsensusAddress) {
   const config = {};
@@ -226,5 +233,6 @@ async function deployCoconsensus(accountProvider) {
 }
 
 module.exports = {
+  CheckpointCommitStatus,
   deployCoconsensus,
 };
