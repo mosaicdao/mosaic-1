@@ -48,9 +48,6 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
     /**
      * @notice setup() function initializes the current contract.
      *
-     * @dev These input params will be provided by the coconsensus contract.
-     *      This can be called only by the coconsensus contract once.
-     *
      * @return Block hash and block number of finalized genesis checkpoint.
      *
      * \post Sets `selfProtocore` to the given value.
@@ -62,13 +59,16 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
     function setup()
         external
         onlyCoconsensus
-        returns (bytes32, uint256)
+        returns (
+            bytes32 finalizedBlockHash_,
+            uint256 finalizedBlockNumber_
+        )
     {
         selfProtocore = genesisSelfProtocore;
 
         // The source transition hash should be zero for origin protocore.
         Protocore.setupProtocore(
-            genesisOriginMetachainId,
+            genesisMetachainId,
             genesisDomainSeparator,
             genesisEpochLength,
             genesisProposedMetablockHeight,
@@ -80,10 +80,8 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
             genesisOriginTargetBlockNumber
         );
 
-        return (
-            genesisOriginTargetBlockHash,
-            genesisOriginTargetBlockNumber
-        );
+        finalizedBlockHash_ = genesisOriginTargetBlockHash;
+        finalizedBlockNumber_ = genesisOriginTargetBlockNumber;
     }
 
 

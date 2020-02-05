@@ -32,7 +32,7 @@ contract TestSelfProtocore is SelfProtocore {
     }
 
     function setGenesisStorage(
-        bytes32 _genesisAuxiliaryMetachainId,
+        bytes32 _genesisMetachainId,
         bytes32 _genesisDomainSeparator,
         uint256 _genesisEpochLength,
         uint256 _genesisDynasty,
@@ -47,7 +47,7 @@ contract TestSelfProtocore is SelfProtocore {
     )
         external
     {
-        genesisAuxiliaryMetachainId = _genesisAuxiliaryMetachainId;
+        genesisMetachainId = _genesisMetachainId;
         genesisDomainSeparator = _genesisDomainSeparator;
         genesisEpochLength = _genesisEpochLength;
         genesisDynasty = _genesisDynasty;

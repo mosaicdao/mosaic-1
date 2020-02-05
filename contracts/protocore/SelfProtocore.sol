@@ -35,9 +35,6 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protoco
     /**
      * @notice setup() function initializes the current contract.
      *
-     * @dev These input params will be provided by the coconsensus contract.
-     *      This can be called only by the coconsensus contract once.
-     *
      * @return Block hash and block number of finalized genesis checkpoint.
      *
      * \post Sets `dynasty` to the given value.
@@ -49,12 +46,15 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protoco
     function setup()
         external
         onlyCoconsensus
-        returns (bytes32, uint256)
+        returns (
+            bytes32 finalizedBlockHash_,
+            uint256 finalizedBlockNumber_
+        )
     {
         dynasty = genesisDynasty;
 
         Protocore.setupProtocore(
-            genesisAuxiliaryMetachainId,
+            genesisMetachainId,
             genesisDomainSeparator,
             genesisEpochLength,
             genesisProposedMetablockHeight,
@@ -68,10 +68,8 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protoco
 
         ValidatorSet.setupValidatorSet();
 
-        return (
-            genesisAuxiliaryTargetBlockHash,
-            genesisAuxiliaryTargetBlockNumber
-        );
+        finalizedBlockHash_ = genesisAuxiliaryTargetBlockHash;
+        finalizedBlockNumber_ = genesisAuxiliaryTargetBlockNumber;
     }
 
 

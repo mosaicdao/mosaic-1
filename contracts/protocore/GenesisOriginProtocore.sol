@@ -25,7 +25,7 @@ contract GenesisOriginProtocore {
     /* Storage */
 
     /** Metachain id of the origin chain. */
-    bytes32 public genesisOriginMetachainId;
+    bytes32 public genesisMetachainId;
 
     /** Epoch length. */
     uint256 public genesisEpochLength;
