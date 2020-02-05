@@ -116,7 +116,7 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
     /* Special Functions */
 
     /**
-     * @notice setup() function initializes the current contract.
+     * @notice setupProtocore() function initializes the current contract.
      *         The function will be called by inherited contracts.
      *
      * @param _metachainId Metachain Id.
@@ -137,13 +137,14 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
      * \pre `_genesisTargetBlockNumber` must be multiple of `_epochLength`.
      * \pre `_genesisTargetBlockHash` must not be 0.
      * \pre `_genesisTargetBlockNumber` must be greater than or equal to `_genesisSourceBlockNumber`.
+     * \pre This function can be called only once.
      *
-     * \post Sets `domainSeparator` to the given value.
-     * \post Sets `epochLength` to the given value.
-     * \post Sets `metachainId` to the given value.
-     * \post Sets genesis link.
+     * \post Sets domainSeparator storage variable to the given value.
+     * \post Sets epochLength storage variable to the given value.
+     * \post Sets metachainId storage variable to the given value.
+     * \post Adds a genesis link in link storage variable.
      */
-    function setup(
+    function setupProtocore(
         bytes32 _metachainId,
         bytes32 _domainSeparator,
         uint256 _epochLength,

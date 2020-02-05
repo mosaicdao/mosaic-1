@@ -32,12 +32,12 @@ contract('SelfProtocore::proposeLink', (accounts) => {
     config = SelfProtocoreUtils.setupInitialConfig(accountProvider);
 
     config.genesisVoteMessageHash = ProtocoreUtils.hashVoteMessage(
-      config.domainSeparator,
-      config.genesisSourceTransitionHash,
-      config.genesisSourceBlockHash,
-      config.genesisTargetBlockHash,
-      config.genesisSourceBlockNumber,
-      config.genesisTargetBlockNumber,
+      config.genesis.domainSeparator,
+      config.genesis.sourceTransitionHash,
+      config.genesis.sourceBlockHash,
+      config.genesis.targetBlockHash,
+      config.genesis.sourceBlockNumber,
+      config.genesis.targetBlockNumber,
     );
 
     config.selfProtocore = await TestSelfProtocore.new();
@@ -55,7 +55,7 @@ contract('SelfProtocore::proposeLink', (accounts) => {
     it('should propose a valid link', async () => {
       const targetBlockHash = Utils.getRandomHash();
       const currentBlockNumber = await web3.eth.getBlockNumber();
-      const targetBlockNumber = config.epochLength.muln(currentBlockNumber);
+      const targetBlockNumber = config.genesis.epochLength.muln(currentBlockNumber);
 
       const sourceOriginObservation = Utils.getRandomHash();
       const sourceDynasty = config.openKernelHeight;
@@ -73,7 +73,7 @@ contract('SelfProtocore::proposeLink', (accounts) => {
         sourceCommitteeLock,
       );
       const sourceTransitionHash = SelfProtocoreUtils.hashSourceTransition(
-        config.domainSeparator,
+        config.genesis.domainSeparator,
         config.sourceKernelHash,
         sourceOriginObservation,
         sourceDynasty,
@@ -82,11 +82,11 @@ contract('SelfProtocore::proposeLink', (accounts) => {
       );
 
       const voteMessageHash = ProtocoreUtils.hashVoteMessage(
-        config.domainSeparator,
+        config.genesis.domainSeparator,
         sourceTransitionHash,
-        config.genesisTargetBlockHash,
+        config.genesis.targetBlockHash,
         targetBlockHash,
-        config.genesisTargetBlockNumber,
+        config.genesis.targetBlockNumber,
         targetBlockNumber,
       );
 

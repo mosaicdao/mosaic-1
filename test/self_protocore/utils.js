@@ -62,39 +62,41 @@ function setupInitialConfig(
 ) {
   const config = {};
   config.coconsensusAddress = accountProvider.get();
-  config.domainSeparator = Utils.getRandomHash();
-  config.epochLength = epochLength;
-  config.metachainId = Utils.getRandomHash();
-  config.metablockHeight = metablockHeight;
-  config.accumulatedGas = accumulatedGas;
 
-  config.genesisParentVoteMessageHash = Utils.getRandomHash();
-  config.genesisSourceTransitionHash = Utils.getRandomHash();
-  config.genesisSourceBlockHash = Utils.getRandomHash();
-  config.genesisTargetBlockHash = Utils.getRandomHash();
-  config.genesisSourceBlockNumber = genesisSourceBlockNumber;
-  config.genesisTargetBlockNumber = new BN(config.epochLength);
+  config.genesis = {};
+  config.genesis.domainSeparator = Utils.getRandomHash();
+  config.genesis.metachainId = Utils.getRandomHash();
+  config.genesis.epochLength = epochLength;
+  config.genesis.dynasty = new BN(0);
+  config.genesis.metablockHeight = metablockHeight;
+  config.genesis.parentVoteMessageHash = Utils.getRandomHash();
+  config.genesis.sourceTransitionHash = Utils.getRandomHash();
+  config.genesis.sourceBlockHash = Utils.getRandomHash();
+  config.genesis.targetBlockHash = Utils.getRandomHash();
+  config.genesis.sourceBlockNumber = genesisSourceBlockNumber;
+  config.genesis.targetBlockNumber = new BN(config.epochLength);
+  config.genesis.accumulatedGas = accumulatedGas;
 
   return config;
 }
 
 async function setupSelfProtocore(config) {
   await config.selfProtocore.setGenesisStorage(
-    config.genesisParentVoteMessageHash,
-    config.genesisSourceTransitionHash,
-    config.genesisSourceBlockHash,
-    config.genesisSourceBlockNumber,
-    config.genesisTargetBlockHash,
-    config.genesisTargetBlockNumber,
-    config.accumulatedGas,
+    config.genesis.metachainId,
+    config.genesis.domainSeparator,
+    config.genesis.epochLength,
+    config.genesis.dynasty,
+    config.genesis.metablockHeight,
+    config.genesis.parentVoteMessageHash,
+    config.genesis.sourceTransitionHash,
+    config.genesis.sourceBlockHash,
+    config.genesis.sourceBlockNumber,
+    config.genesis.targetBlockHash,
+    config.genesis.targetBlockNumber,
+    config.genesis.accumulatedGas,
   );
 
-  await config.selfProtocore.setup(
-    config.metachainId,
-    config.domainSeparator,
-    config.epochLength,
-    config.metablockHeight,
-  );
+  await config.selfProtocore.setup();
 }
 
 module.exports = {

@@ -59,7 +59,7 @@ contract TestProtocore is Protocore {
 
         coconsensus = _coconsensus;
 
-        Protocore.setup(
+        Protocore.setupProtocore(
             _metachainId,
             _domainSeparator,
             _epochLength,
