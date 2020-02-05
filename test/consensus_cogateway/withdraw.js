@@ -31,20 +31,20 @@ contract('ConsensusCogateway::withdraw', (accounts) => {
   let consensusCogateway;
   beforeEach(async () => {
     consensusCogateway = await ConsensusCogateway.new();
-    const owner = accountProvider.get();
-    utmost = await MockToken.new(18, { from: owner });
     param = {
       metachainId: Utils.getRandomHash(),
-      utmostAddress: utmost.address,
-      owner,
+      owner: accountProvider.get(),
       consensusGateway: accountProvider.get(),
       stateRootProvider: accountProvider.get(),
       maxStorageRootItems: new BN(100),
       amount: new BN(100),
       beneficiary: accountProvider.get(),
       feeGasPrice: new BN(1),
-      feeGasLimit: new BN(1)
+      feeGasLimit: new BN(1),
     };
+
+    utmost = await MockToken.new(18, { from: param.owner });
+    param.utmostAddress = utmost.address;
 
     const consensusConfig = {
       metachainId: param.metachainId,
@@ -79,7 +79,7 @@ contract('ConsensusCogateway::withdraw', (accounts) => {
       param.consensusGateway,
       new BN(4),
       param.maxStorageRootItems,
-      new BN(1)
+      new BN(1),
     );
   });
 

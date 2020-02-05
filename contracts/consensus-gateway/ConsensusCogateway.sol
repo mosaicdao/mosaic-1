@@ -22,7 +22,6 @@ import "../consensus-gateway/ERC20GatewayBase.sol";
 import "../message-bus/MessageBus.sol";
 import "../message-bus/StateRootI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
-import "../utility-token/UtilityTokenInterface.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 
@@ -96,19 +95,20 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
     }
 
     /**
-     * @notice It allows to withdraw utMOST tokens. Withdrawer needs to approve
-     *         ConsensusCoGateway contract for amount to be withdrawn.
+     * @notice It allows withdrawing Utmost tokens. Withdrawer needs to
+     *         approve consensus cogateway contract for the amount to
+     *         be withdrawn.
      *
      * @dev Function requires :
      *          - Amount must not be 0.
      *          - Beneficiary must not be 0.
-     *          - Amount must be greater than gas price and gas limit.
-     *
+     *          - Withdrawal amount must be greater than multiplication of
+     *            gas price and gas limit.
      * @param _amount Amount of tokens to be redeemed.
      * @param _beneficiary The address in the origin chain where the value
-     *                     where the tokens will be released.
-     * @param _feeGasPrice Fee gas price at which reward will be calculated.
-     * @param _feeGasLimit Fee gas limit at which reward will be calculated.
+     *                     where the tokens will be withdrawn.
+     * @param _feeGasPrice Fee gas price for the reward calculation.
+     * @param _feeGasLimit Fee gas limit for the reward calculation.
      *
      * @return messageHash_ Message hash.
      */
@@ -134,7 +134,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
             "Withdrawal amount should be greater than max reward."
         );
 
-        bytes32 hashWithdrawIntent = hashWithdrawIntent(
+        bytes32 withdrawIntentHash = hashWithdrawIntent(
             _amount,
             _beneficiary
         );
@@ -143,7 +143,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
         nonces[msg.sender] = nonce.add(1);
 
         messageHash_ = MessageOutbox.declareMessage(
-            hashWithdrawIntent,
+            withdrawIntentHash,
             nonce,
             _feeGasPrice,
             _feeGasLimit,
@@ -151,7 +151,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
         );
 
         require(
-            UtilityTokenInterface(address(most)).burnFrom(msg.sender, _amount),
+            ERC20I(address(most)).burnFrom(msg.sender, _amount),
             "utMOST burnFrom must succeed."
         );
     }
