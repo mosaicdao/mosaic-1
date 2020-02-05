@@ -46,12 +46,6 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protoco
     );
 
 
-    /* Storage */
-
-    /** Current dynasty */
-    uint256 public dynasty;
-
-
     /* Special Functions */
 
     /**
@@ -59,7 +53,6 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protoco
      *
      * @return Block hash and block number of finalized genesis checkpoint.
      *
-     * \post Sets `dynasty` to the given value.
      * \post Sets `domainSeparator` to the given value.
      * \post Sets `epochLength` to the given value.
      * \post Sets `metachainId` to the given value.
@@ -73,8 +66,6 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protoco
             uint256 finalizedBlockNumber_
         )
     {
-        dynasty = genesisDynasty;
-
         Protocore.setupProtocore(
             genesisMetachainId,
             genesisDomainSeparator,

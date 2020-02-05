@@ -182,9 +182,6 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
      *
      * @param _metachainId Metachain id
      *
-     * \pre Observer contract address may exists for given metachain id in
-     *      genesisObservers storage.
-     *
      * \post If observer contract address exists for the given metachain id
      *       then it adds newly setup observer's address into observers
      *       storage variable, otherwise does nothing.
