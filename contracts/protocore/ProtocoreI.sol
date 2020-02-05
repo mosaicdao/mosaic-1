@@ -28,21 +28,6 @@ interface ProtocoreI {
     /**  @notice epochLength() function returns the epoch length. */
     function epochLength() external returns (uint256);
 
-    /**  @notice dynasty() function returns the latest dynasty. */
-    function dynasty() external returns (uint256);
-
-    /**
-     * @notice Function to return block number
-     *         and block hash of the finalized checkpoint.
-     */
-    function latestFinalizedCheckpoint()
-        external
-        view
-        returns (
-            uint256 blockNumber_,
-            bytes32 blockHash_
-        );
-
     function openKernelHeight()
         external
         returns (uint256);

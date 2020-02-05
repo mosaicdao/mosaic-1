@@ -54,35 +54,13 @@ contract('Coconsensus::finaliseCheckpoint', (accounts) => {
         'Protocore is not available for the given metachain id.',
       );
     });
-
-    it('should revert when called more than once with same params', async () => {
-      const { selfProtocore } = config.contracts;
-      /*
-       * The msg.sender for Coconsensus::finaliseCheckpoint must be the
-       * protocore contract address. So for the testing purpose call
-       * `testFinaliseCheckpoint` function which will internally call the
-       * Coconsensus::finaliseCheckpoint.
-       */
-      await selfProtocore.testFinaliseCheckpoint(
-        config.params.metachainId,
-        config.params.finalisationBlockNumber,
-        config.params.finalisationBlockhash,
-      );
-      await Utils.expectRevert(
-        selfProtocore.testFinaliseCheckpoint(
-          config.params.metachainId,
-          config.params.finalisationBlockNumber,
-          config.params.finalisationBlockhash,
-        ),
-        'The block number of the checkpoint must be greater than the block '
-        + 'number of last finalised checkpoint.',
-      );
-    });
   });
 
   contract('Positive Tests', async () => {
     it('should finalize the checkpoint for self protocore', async () => {
       const { selfProtocore, coconsensus } = config.contracts;
+      const { CheckpointCommitStatus } = CoconsensusUtils;
+      
       /*
        * The msg.sender for Coconsensus::finaliseCheckpoint must be the
        * protocore contract address. So for the testing purpose call
@@ -115,7 +93,7 @@ contract('Coconsensus::finaliseCheckpoint', (accounts) => {
         'The proposed block hash must be set in the blockchains mapping.',
       );
       assert.strictEqual(
-        blockchain.commitStatus.eqn(2),
+        blockchain.commitStatus.eqn(CheckpointCommitStatus.Finalized),
         true,
         'The commit status in the blockchain mapping must be Finalized.',
       );
