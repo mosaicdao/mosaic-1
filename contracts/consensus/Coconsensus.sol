@@ -164,8 +164,10 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
      * \pre `_blockNumber` must be multiple of epoch length.
      * \pre `_blockNumber` must be greater than the last finalized block number.
      *
-     * \post Sets the `blockchains` mapping.
-     * \post Sets the `blockTips` mapping.
+     * \post Increment the `relativeSelfDynasty` storage value by one if the
+     *       `msg.sender` is self protocore contract address.
+     * \post Adds a new `Block` in the `blockchains` mapping.
+     * \post Updates the `blockTips` mapping with provided `_blockNumber`.
      */
     function finaliseCheckpoint(
         bytes32 _metachainId,
