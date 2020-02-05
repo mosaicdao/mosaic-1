@@ -132,18 +132,21 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     /* External Functions */
 
     /**
-     * @notice Anchor the state root in to the observer contracts.
+     * @notice Observes the given block by anchoring its state root into the
+     *         corresponding observer.
      *
      * @param _metachainId Metachain id.
      * @param _rlpBlockHeader RLP encoded block header.
      *
-     * /pre `_metachainId` is not 0.
-     * /pre `_rlpBlockHeader` is not 0.
-     * /pre `blockHash` should exist in blockchains.
-     * /pre The dynasty of the reported block should be less than current dynasty.
-     * /pre The reported block should be finalized.
+     * \pre `_metachainId` is not 0.
+     * \pre `_rlpBlockHeader` is not 0.
+     * \pre `_metachainId` is not `selfMetachainId`.
+     * \pre A block must exist in `blockchains` storage for the given
+     *      `_metachainid` and block number from the decoded `_rlpBlockHeader`.
+     * \pre The commit status of the block must be at least `Finalized`.
+     * \pre The status dynasty of the block less than `relativeSelfDynasty`.
      *
-     * /post Anchor the state root in the observer contract.
+     * \post Anchors the state root in the observer contract.
      */
     function observeBlock(
         bytes32 _metachainId,
@@ -161,23 +164,29 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
             "RLP block header must not be null."
         );
 
+        require(
+            _metachainId == selfMetachainId,
+            "Metachain id must not be self metachain id."
+        );
+
+
         // Decode the rlp encoded block header.
         BlockHeader.Header memory blockHeader = BlockHeader.decodeHeader(_rlpBlockHeader);
 
-        Block memory blockStatus = blockchains[_metachainId][blockHeader.height];
+        Block memory finalizedBlock = blockchains[_metachainId][blockHeader.height];
 
         require(
-            blockStatus.blockHash == blockHeader.blockHash,
+            finalizedBlock.blockHash == blockHeader.blockHash,
             "Provided block header is not valid."
         );
 
         require(
-            blockStatus.commitStatus > CheckpointCommitStatus.Committed,
+            finalizedBlock.commitStatus >= CheckpointCommitStatus.Finalized,
             "Block must be at least finalized."
         );
 
         require(
-            relativeSelfDynasty > blockStatus.statusDynasty,
+            relativeSelfDynasty > finalizedBlock.statusDynasty,
             "Relative self dynasty must be greater than the status dynasty."
         );
 
