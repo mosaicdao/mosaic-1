@@ -12,7 +12,7 @@
     "test": "npm run test:contracts",
     "test:contracts": "truffle test",
     "test:integration": "cd test_integration && tsc && ./main.sh",
-    "test:dev": "truffle test test/self_protocore/propose_link.js",
+    "test:dev": "truffle test test/coconsensus/finalise_checkpoint.js",
     "ganache-cli": "./tools/run_ganache_cli.sh",
     "make:all": "lint:sol:solium && lint:js && compile:all && test:contracts",
     "clean": "rm -r contract_build/contracts.json interacts/* build/* 2> /dev/null || true",

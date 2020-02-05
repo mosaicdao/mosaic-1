@@ -20,12 +20,18 @@ import "../consensus/GenesisCoconsensus.sol";
 import "../protocore/ProtocoreI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../version/MosaicVersion.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
  * @title Coconsensus contract - This mirrors the consensus contract on
  *        the auxiliary chain.
  */
 contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersion {
+
+    /* Usings */
+
+    using SafeMath for uint256;
+
 
     /* Enums */
 
@@ -91,6 +97,19 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     mapping (bytes32 /* metachainId */ => bytes32 /* domain separator */) public domainSeparators;
 
 
+    /* Modifiers */
+
+    modifier onlyRunningProtocore(bytes32 _metachainId)
+    {
+        require(
+            msg.sender == address(protocores[_metachainId]),
+            "Protocore is not available for the given metachain id."
+        );
+
+        _;
+    }
+
+
     /* Special Functions */
 
     /**
@@ -128,6 +147,70 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
 
 
     /* External Functions */
+
+    /**
+     * @notice finaliseCheckpoint() function finalizes a checkpoint at
+     *         a metachain.
+     *
+     * @param _metachainId A metachain id to finalize a checkpoint.
+     * @param _blockNumber A block number of a checkpoint.
+     * @param _blockHash A block hash of a checkpoint.
+     *
+     * \pre `_metachainId` is not 0.
+     * \pre `_blockHash` is not 0.
+     * \pre `msg.sender` should be the protocore contract.
+     * \pre `_blockNumber` must be multiple of epoch length.
+     * \pre `_blockNumber` must be greater than the last finalized block number.
+     *
+     * \post Increment the `relativeSelfDynasty` storage value by one if the
+     *       `msg.sender` is self protocore contract address.
+     * \post Adds a new `Block` in the `blockchains` mapping.
+     * \post Updates the `blockTips` mapping with provided `_blockNumber`.
+     */
+    function finaliseCheckpoint(
+        bytes32 _metachainId,
+        uint256 _blockNumber,
+        bytes32 _blockHash
+    )
+        external
+        onlyRunningProtocore(_metachainId)
+    {
+        // Check if the metachain id is not null.
+        require(
+            _metachainId != bytes32(0),
+            "Metachain id must not be null."
+        );
+
+        // Check if the blockhash is not null.
+        require(
+            _blockHash != bytes32(0),
+            "Blockhash must not be null."
+        );
+
+        /*
+         * Assert that the new block number is greater than the last
+         * finalised block number.
+         */
+        uint256 lastFinalisedBlockNumber = blockTips[_metachainId];
+        assert(_blockNumber > lastFinalisedBlockNumber);
+
+        /*
+         * If the `_metachainId` is `selfMetachainId`, increment the
+         * `relativeSelfDynasty` by one.
+         */
+        if(_metachainId == selfMetachainId) {
+            relativeSelfDynasty = relativeSelfDynasty.add(1);
+        }
+
+        // Store the finalised block in the mapping.
+        Block storage finalisedBlock = blockchains[_metachainId][_blockNumber];
+        finalisedBlock.blockHash = _blockHash;
+        finalisedBlock.commitStatus = CheckpointCommitStatus.Finalized;
+        finalisedBlock.statusDynasty = relativeSelfDynasty;
+
+        // Store the tip.
+        blockTips[_metachainId] = _blockNumber;
+    }
 
     /**
      * @notice Observes the given block by anchoring its state root into the
@@ -193,6 +276,7 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
         // Anchor the state root.
         observer.anchorStateRoot(blockHeader.height, blockHeader.stateRoot);
     }
+
 
     /* Private Functions */
 
