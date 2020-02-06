@@ -59,7 +59,7 @@ contract TestProtocore is Protocore {
 
         coconsensus = _coconsensus;
 
-        Protocore.setup(
+        Protocore.setupProtocore(
             _metachainId,
             _domainSeparator,
             _epochLength,
@@ -115,7 +115,7 @@ contract TestProtocore is Protocore {
     )
         external
     {
-        return Protocore.registerVoteInternal(
+        Protocore.registerVoteInternal(
             _voteMessageHash,
             _r,
             _s,
