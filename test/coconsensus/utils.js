@@ -17,6 +17,7 @@
 const BN = require('bn.js');
 
 const Utils = require('../test_lib/utils.js');
+const web3 = require('../test_lib/web3.js');
 
 const Coconsensus = artifacts.require('CoconsensusTest');
 const OriginProtocore = artifacts.require('TestOriginProtocore');
@@ -29,6 +30,92 @@ const CheckpointCommitStatus = {
   Committed: 2,
 };
 Object.freeze(CheckpointCommitStatus);
+
+function hashTransition(
+  kernelHash,
+  originObservation,
+  dynasty,
+  accumulatedGas,
+  committeeLock,
+  domainSeparator,
+) {
+  const TRANSITION_TYPEHASH = web3.utils.keccak256(
+    'Transition(bytes32 kernelHash,bytes32 originObservation,uint256 dynasty,'
+     + 'uint256 accumulatedGas,bytes32 committeeLock)',
+  );
+
+  const typedTransitionHash = web3.utils.keccak256(
+    web3.eth.abi.encodeParameters(
+      [
+        'bytes32',
+        'bytes32',
+        'bytes32',
+        'uint256',
+        'uint256',
+        'bytes32',
+      ],
+      [
+        TRANSITION_TYPEHASH,
+        kernelHash,
+        originObservation,
+        dynasty,
+        accumulatedGas,
+        committeeLock,
+      ],
+    ),
+  );
+
+  const hash = web3.utils.soliditySha3(
+    { t: 'bytes1', v: '0x19' },
+    { t: 'bytes1', v: '0x01' },
+    { t: 'bytes32', v: domainSeparator },
+    { t: 'bytes32', v: typedTransitionHash },
+  );
+  return hash;
+}
+
+function hashKernel(
+  height,
+  parent,
+  updatedValidators,
+  updatedReputation,
+  gasTarget,
+  domainSeparator,
+) {
+  const KERNEL_TYPEHASH = web3.utils.keccak256(
+    'Kernel(uint256 height,bytes32 parent,address[] updatedValidators,'
+    + 'uint256[] updatedReputation,uint256 gasTarget,uint256 gasPrice)',
+  );
+
+  const typedKernelHash = web3.utils.keccak256(
+    web3.eth.abi.encodeParameters(
+      [
+        'bytes32',
+        'uint256',
+        'bytes32',
+        'address[] memory',
+        'uint256[] memory',
+        'uint256',
+      ],
+      [
+        KERNEL_TYPEHASH,
+        height.toNumber(),
+        parent,
+        updatedValidators,
+        updatedReputation,
+        gasTarget.toNumber(),
+      ],
+    ),
+  );
+
+  const hash = web3.utils.soliditySha3(
+    { t: 'bytes1', v: '0x19' },
+    { t: 'bytes1', v: '0x01' },
+    { t: 'bytes32', v: domainSeparator },
+    { t: 'bytes32', v: typedKernelHash },
+  );
+  return hash;
+}
 
 // Deploy self protocore contract
 async function deploySelfProtocore(coconsensusAddress) {
@@ -235,4 +322,6 @@ async function deployCoconsensus(accountProvider) {
 module.exports = {
   CheckpointCommitStatus,
   deployCoconsensus,
+  hashKernel,
+  hashTransition,
 };

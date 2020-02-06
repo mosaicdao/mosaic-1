@@ -14,18 +14,23 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-
 import "../consensus/CoconsensusModule.sol";
 import "../validator-set/ForwardValidatorSetAbstract.sol";
 import "../validator-set/ValidatorSet.sol";
 import "../version/MosaicVersion.sol";
+import "../vote-message/VoteMessage.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
  * @title Protocore abstract contract acting as a base contract for
  *        OriginProtocore and SelfProtocore contracts.
  */
-contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstract {
+contract Protocore is
+    MosaicVersion,
+    CoconsensusModule,
+    VoteMessage,
+    ForwardValidatorSetAbstract
+{
 
     /* Usings */
 
@@ -81,11 +86,6 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
 
     /** Sentinel pointer for marking end of linked-list of validators */
     address public constant SENTINEL_VALIDATORS = address(0x1);
-
-    /** EIP-712 type hash for a Vote Message */
-    bytes32 public constant VOTE_MESSAGE_TYPEHASH = keccak256(
-        "VoteMessage(bytes32 transitionHash,bytes32 sourceBlockHash,bytes32 targetBlockHash,uint256 sourceBlockNumber,uint256 targetBlockNumber)"
-    );
 
 
     /* Storage */
@@ -195,7 +195,8 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
         epochLength = _epochLength;
 
         // Generate the genesis vote message hash.
-        bytes32 genesisVoteMessageHash = hashVoteMessage(
+        bytes32 genesisVoteMessageHash = VoteMessage.hashVoteMessage(
+            domainSeparator,
             _genesisSourceTransitionHash,
             _genesisSourceBlockHash,
             _genesisTargetBlockHash,
@@ -223,21 +224,20 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
      * @param _kernelHeight New kernel height.
      * @param _kernelHash New kernel hash.
      *
-     * \pre Only coconsensus can call.
      * \pre `_kernelHeight` is plus one of the current kernel height of
      *      the protocore.
      * \pre `_kernelHash` is not 0.
      *
      * \post Increments open kernel height.
      * \post Updates stored open kernel hash.
-     * \post Updates forward validator set quorum for the newly opened metablock height.
+     * \post Updates forward validator set quorum for the newly opened
+     *       metablock height.
      */
-    function openKernel(
+    function openKernelInternal(
         uint256 _kernelHeight,
         bytes32 _kernelHash
     )
-        external
-        onlyCoconsensus
+        internal
     {
         require(
             _kernelHeight == openKernelHeight.add(1),
@@ -313,7 +313,8 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
             "Target block number of the proposed link should be bigger than parent one."
         );
 
-        bytes32 voteMessageHash = hashVoteMessage(
+        bytes32 voteMessageHash = VoteMessage.hashVoteMessage(
+            domainSeparator,
             _sourceTransitionHash,
             parentLink.targetBlockHash,
             _targetBlockHash,
@@ -556,47 +557,5 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
                 );
             }
         }
-    }
-
-    /**
-     * @notice Takes vote message parameters and returns the typed vote
-     *         message hash.
-     *
-     * @param _transitionHash Transition hash.
-     * @param _sourceBlockHash Blockhash of source checkpoint.
-     * @param _targetBlockHash Blockhash of target checkpoint.
-     * @param _sourceBlockNumber Block number of source checkpoint.
-     * @param _targetBlockNumber Block number of target checkpoint.
-     */
-    function hashVoteMessage(
-        bytes32 _transitionHash,
-        bytes32 _sourceBlockHash,
-        bytes32 _targetBlockHash,
-        uint256 _sourceBlockNumber,
-        uint256 _targetBlockNumber
-    )
-        private
-        view
-        returns (bytes32 voteMessageHash_)
-    {
-        bytes32 typedVoteMessageHash = keccak256(
-            abi.encode(
-                VOTE_MESSAGE_TYPEHASH,
-                _transitionHash,
-                _sourceBlockHash,
-                _targetBlockHash,
-                _sourceBlockNumber,
-                _targetBlockNumber
-            )
-        );
-
-        voteMessageHash_ = keccak256(
-            abi.encodePacked(
-                byte(0x19),
-                byte(0x01),
-                domainSeparator,
-                typedVoteMessageHash
-            )
-        );
     }
 }

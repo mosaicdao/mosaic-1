@@ -17,16 +17,26 @@ pragma solidity >=0.5.0 <0.6.0;
 import "../anchor/ObserverI.sol";
 import "../block/BlockHeader.sol";
 import "../consensus/GenesisCoconsensus.sol";
+import "../consensus-gateway/ConsensusCogatewayI.sol";
 import "../protocore/ProtocoreI.sol";
+import "../protocore/SelfProtocoreI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
+import "../reputation/CoreputationI.sol";
 import "../version/MosaicVersion.sol";
+import "../vote-message/VoteMessage.sol";
+
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
  * @title Coconsensus contract - This mirrors the consensus contract on
  *        the auxiliary chain.
  */
-contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersion {
+contract Coconsensus is
+    MasterCopyNonUpgradable,
+    GenesisCoconsensus,
+    VoteMessage,
+    MosaicVersion
+{
 
     /* Usings */
 
@@ -55,11 +65,18 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
 
     /* Constants */
 
+    /** EIP-712 type hash for Kernel. */
+    bytes32 public constant KERNEL_TYPEHASH = keccak256(
+        "Kernel(uint256 height,bytes32 parent,address[] updatedValidators,uint256[] updatedReputation,uint256 gasTarget,uint256 gasPrice)"
+    );
+
     /**
      * Sentinel pointer for marking the ending of circular,
      * linked-list of genesis metachain ids.
      */
-    bytes32 public constant SENTINEL_METACHAIN_ID = bytes32(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+    bytes32 public constant SENTINEL_METACHAIN_ID = bytes32(
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    );
 
 
     /* Storage */
@@ -95,6 +112,16 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
 
     /** Mapping of metachain id to the domain separators. */
     mapping (bytes32 /* metachainId */ => bytes32 /* domain separator */) public domainSeparators;
+
+    /** Coreputation contract address. */
+    address private COREPUTATION = address(
+        0x0000000000000000000000000000000000004D01
+    );
+
+    /** Consensus cogateway contract address. */
+    address private CONSENSUS_COGATEWAY = address(
+        0x0000000000000000000000000000000000004d02
+    );
 
 
     /* Modifiers */
@@ -149,6 +176,91 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     /* External Functions */
 
     /**
+     * @notice Updates the validator set and its reputations with opening of
+     *         a new metablock.
+     *
+     * @param _metachainId Metachain Id.
+     * @param _kernelHeight New kernel height
+     * @param _updatedValidators  The array of addresses of the updated validators.
+     * @param _updatedReputation The array of reputation that corresponds to
+     *                        the updated validators.
+     * @param _gasTarget The gas target for the metablock
+     * @param _transitionHash Transition hash.
+     * @param _source Blockhash of source checkpoint.
+     * @param _target Blockhash of target checkpoint.
+     * @param _sourceBlockNumber Block number of source checkpoint.
+     * @param _targetBlockNumber Block number af target checkpoint.
+     *
+     * \pre `_metachainId` is self metachain id.
+     * \pre `_source` is not 0.
+     * \pre `_target` is not 0.
+     * \pre `_sourceBlockNumber` is a checkpoint.
+     * \pre `_targetBlockNumber` is a checkpoint.
+     * \pre `_targetBlockNumber` is greater than `_sourceBlockNumber`.
+     * \pre Source checkpoint is finalized.
+     * \pre Open kernel hash exists in `ConsensusCogateway` contract for the
+     *      given `_kernelHeight`.
+     *
+     * \post Updates the validator set in self protocore.
+     * \post Updates the reputation of validators.
+     * \post Opens a new metablock in self protocore.
+     */
+    function commitCheckpoint(
+        bytes32 _metachainId,
+        uint256 _kernelHeight,
+        address[] calldata _updatedValidators,
+        uint256[] calldata _updatedReputation,
+        uint256 _gasTarget,
+        bytes32 _transitionHash,
+        bytes32 _source,
+        bytes32 _target,
+        uint256 _sourceBlockNumber,
+        uint256 _targetBlockNumber
+    )
+        external
+    {
+        require(
+            _metachainId == selfMetachainId,
+            "Metachain id must be self metachain id."
+        );
+
+        // Change the status of source block to committed.
+        commitCheckpointInternal(_metachainId, _sourceBlockNumber);
+
+        // Assert that the kernel hash is opened.
+        bytes32 openKernelHash = assertOpenKernel(
+            _kernelHeight,
+            _updatedValidators,
+            _updatedReputation,
+            _gasTarget,
+            _transitionHash,
+            _source,
+            _target,
+            _sourceBlockNumber,
+            _targetBlockNumber
+        );
+
+        ProtocoreI protocore = protocores[_metachainId];
+
+        /*
+         * Update reputation of validators and update the validator set in self
+         * protocore contract.
+         */
+        updateValidatorSet(
+            address(protocore),
+            _kernelHeight,
+            _updatedValidators,
+            _updatedReputation
+        );
+
+        // Open new kernel on self protocore contract.
+        protocore.openKernel(
+            _kernelHeight,
+            openKernelHash
+        );
+    }
+
+    /**
      * @notice finaliseCheckpoint() function finalizes a checkpoint at
      *         a metachain.
      *
@@ -180,7 +292,6 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
             _metachainId != bytes32(0),
             "Metachain id must not be null."
         );
-
         // Check if the blockhash is not null.
         require(
             _blockHash != bytes32(0),
@@ -278,6 +389,74 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
     }
 
 
+    /* Internal Functions */
+
+    /** @notice Get the coreputation contract address. */
+    function getCoreputation()
+        internal
+        view
+        returns (CoreputationI)
+    {
+        return CoreputationI(COREPUTATION);
+    }
+
+    /** @notice Get the consensus cogateway contract address. */
+    function getConsensusCogateway()
+        internal
+        view
+        returns (ConsensusCogatewayI)
+    {
+        return ConsensusCogatewayI(CONSENSUS_COGATEWAY);
+    }
+
+    /**
+     * @notice Takes the parameters of a kernel object and returns the
+     *         typed hash of it.
+     *
+     * @param _domainSeparator Domain separator.
+     * @param _height The height of metablock.
+     * @param _parent The hash of this metablock's parent.
+     * @param _updatedValidators  The array of addresses of the updated validators.
+     * @param _updatedReputation The array of reputation that corresponds to
+     *                        the updated validators.
+     * @param _gasTarget The gas target for this metablock.
+     *
+     * @return hash_ The hash of kernel.
+     */
+    function hashKernel(
+        bytes32 _domainSeparator,
+        uint256 _height,
+        bytes32 _parent,
+        address[] memory _updatedValidators,
+        uint256[] memory _updatedReputation,
+        uint256 _gasTarget
+    )
+        internal
+        pure
+        returns (bytes32 hash_)
+    {
+        bytes32 typedKernelHash = keccak256(
+            abi.encode(
+                KERNEL_TYPEHASH,
+                _height,
+                _parent,
+                _updatedValidators,
+                _updatedReputation,
+                _gasTarget
+            )
+        );
+
+        hash_ = keccak256(
+            abi.encodePacked(
+                byte(0x19),
+                byte(0x01),
+                _domainSeparator,
+                typedKernelHash
+            )
+        );
+    }
+
+
     /* Private Functions */
 
     /**
@@ -350,6 +529,140 @@ contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersi
 
             // Call the setup function.
             observer.setup();
+        }
+    }
+
+    /**
+     * @notice Assert the opening of kernel in consensus cogateway.
+     *
+     * @param _kernelHeight New kernel height
+     * @param _updatedValidators  The array of addresses of the updated validators.
+     * @param _updatedReputation The array of reputation that corresponds to
+     *                        the updated validators.
+     * @param _gasTarget The gas target for this metablock
+     * @param _transitionHash Transition hash.
+     * @param _source Blockhash of source checkpoint.
+     * @param _target Blockhash of target checkpoint.
+     * @param _sourceBlockNumber Block number of source checkpoint.
+     * @param _targetBlockNumber Block number af target checkpoint.
+     *
+     * \pre Kernel hash generated from given input parameters is equal to the
+     *      kernel hash form consensus cogateway contract for the given
+     *      `_kernelHeight`.
+     *
+     * \post return the kernel hash.
+     */
+    function assertOpenKernel(
+        uint256 _kernelHeight,
+        address[] memory _updatedValidators,
+        uint256[] memory _updatedReputation,
+        uint256 _gasTarget,
+        bytes32 _transitionHash,
+        bytes32 _source,
+        bytes32 _target,
+        uint256 _sourceBlockNumber,
+        uint256 _targetBlockNumber
+    )
+        private
+        returns (bytes32 kernelHash_)
+    {
+        // Get the domain separator for the protocore.
+        bytes32 domainSeparator = domainSeparators[selfMetachainId];
+
+        /*
+         * Get the metablock hash from the input parameters. This will be the
+         * parent hash for the new kernel.
+         */
+        bytes32 metablockHash = VoteMessage.hashVoteMessage(
+            domainSeparator,
+            _transitionHash,
+            _source,
+            _target,
+            _sourceBlockNumber,
+            _targetBlockNumber
+        );
+
+        // Generate the kernel hash from the input params.
+        kernelHash_ = hashKernel(
+            domainSeparator,
+            _kernelHeight,
+            metablockHash,
+            _updatedValidators,
+            _updatedReputation,
+            _gasTarget
+        );
+
+        ConsensusCogatewayI consensusCogateway = getConsensusCogateway();
+
+        // Get the open kernel hash from the consensus cogateway contract.
+        bytes32 openKernelHash = consensusCogateway.getKernelHash(_kernelHeight);
+
+        require(
+            kernelHash_ == openKernelHash,
+            "Generated kernel hash is not equal to open kernel hash."
+        );
+    }
+
+    /**
+     * @notice Change the checkpoint commit status of the block to `Committed`.
+     *
+     * @param _metachainId Metachain id.
+     * @param _blockNumber block number.
+     *
+     * \pre The commit checkpoint status of Block at the given `_blockNumber`
+     *      is `Finalized`.
+     *
+     * \post The checkpoint commit status of the Block at the given
+     *       `_blockNumber` is changed to `Committed`.
+     */
+    function commitCheckpointInternal(
+        bytes32 _metachainId,
+        uint256 _blockNumber
+    )
+        private
+    {
+        Block storage finalizedBlock = blockchains[_metachainId][_blockNumber];
+        require(
+            finalizedBlock.commitStatus == CheckpointCommitStatus.Finalized,
+            "Source checkpoint must be finalized."
+        );
+        finalizedBlock.commitStatus = CheckpointCommitStatus.Committed;
+    }
+
+    /**
+     * @notice Add or update the reputation of the validators and also add or
+     *         update the validator set in the self protocore contract.
+     *
+     * @param _protocore Self protocore contract address.
+     * @param _kernelHeight Open kernel height.
+     * @param _updatedValidators  The array of addresses of the updated validators.
+     * @param _updatedReputation The array of reputation that corresponds to
+     *                        the updated validators.
+     *
+     * \post Adds or updates the reputation of validators in `Coreputation` contract.
+     * \post Adds or updates the validator set in `SelfProtocore` contract.
+     */
+    function updateValidatorSet(
+        address _protocore,
+        uint256 _kernelHeight,
+        address[] memory _updatedValidators,
+        uint256[] memory _updatedReputation
+    )
+        private
+    {
+        SelfProtocoreI selfProtocore = SelfProtocoreI(_protocore);
+        CoreputationI coreputation = getCoreputation();
+
+        for (uint256 i = 0; i < _updatedValidators.length; i = i.add(1)) {
+            address validator = _updatedValidators[i];
+            uint256 reputation = _updatedReputation[i];
+            coreputation.upsertValidator(validator, reputation);
+
+            selfProtocore.upsertValidator(
+                validator,
+                _kernelHeight,
+                reputation
+            );
         }
     }
 }

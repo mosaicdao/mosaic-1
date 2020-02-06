@@ -15,26 +15,20 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 /**
- * @title Protocore Interface
+ * @title An interface for consensus cogateway contract.
  */
-interface ProtocoreI {
+interface ConsensusCogatewayI {
 
-    /** @notice setup() function initializes the protocore contract. */
-    function setup() external returns (bytes32, uint256);
+    /* External Functions */
 
-    /** @notice Function to get the domain separator. */
-    function domainSeparator() external returns (bytes32);
-
-    /**  @notice epochLength() function returns the epoch length. */
-    function epochLength() external returns (uint256);
-
-    function openKernelHeight()
+    /**
+     * @notice Get the kernel hash for a given kernel height.
+     *
+     * @param _kernelHeight Kernel height.
+     *
+     * @return kernelHash_ Returns the kernel hash.
+     */
+    function getKernelHash(uint256 _kernelHeight)
         external
-        returns (uint256);
-
-    function openKernel(
-        uint256 _kernelHeight,
-        bytes32 _kernelHash
-    )
-        external;
+        returns (bytes32 kernelHash_);
 }

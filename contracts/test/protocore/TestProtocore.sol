@@ -81,6 +81,15 @@ contract TestProtocore is Protocore {
         return coconsensus;
     }
 
+    function openKernel(
+        uint256 _kernelHeight,
+        bytes32 _kernelHash
+    )
+        external
+    {
+        Protocore.openKernelInternal(_kernelHeight, _kernelHash);
+    }
+
     function addToFVS(address _validator, uint256 _height)
         external
     {
