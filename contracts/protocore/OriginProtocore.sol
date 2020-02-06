@@ -81,7 +81,7 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
         );
 
         finalizedBlockHash_ = genesisOriginTargetBlockHash;
-        finalizedBlockNumber_ = genesisOriginTargetBlockNumber;        
+        finalizedBlockNumber_ = genesisOriginTargetBlockNumber;
     }
 
 

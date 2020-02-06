@@ -26,7 +26,7 @@ interface ConsensusCogatewayI {
      *
      * @param _kernelHeight Kernel height.
      *
-     * @return kernel hash.
+     * @return kernelHash_ Returns the kernel hash.
      */
     function getKernelHash(uint256 _kernelHeight)
         external

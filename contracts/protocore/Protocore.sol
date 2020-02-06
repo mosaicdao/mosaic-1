@@ -196,12 +196,12 @@ contract Protocore is
 
         // Generate the genesis vote message hash.
         bytes32 genesisVoteMessageHash = VoteMessage.hashVoteMessage(
+            domainSeparator,
             _genesisSourceTransitionHash,
             _genesisSourceBlockHash,
             _genesisTargetBlockHash,
             _genesisSourceBlockNumber,
-            _genesisTargetBlockNumber,
-            domainSeparator
+            _genesisTargetBlockNumber
         );
 
         // Store the genesis link.
@@ -315,12 +315,12 @@ contract Protocore is
         );
 
         bytes32 voteMessageHash = VoteMessage.hashVoteMessage(
+            domainSeparator,
             _sourceTransitionHash,
             parentLink.targetBlockHash,
             _targetBlockHash,
             parentLink.targetBlockNumber,
-            _targetBlockNumber,
-            domainSeparator
+            _targetBlockNumber
         );
 
         require(

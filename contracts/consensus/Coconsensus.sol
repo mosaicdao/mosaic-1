@@ -223,36 +223,12 @@ contract Coconsensus is
             _metachainId == selfMetachainId,
             "Metachain id must be self metachain id."
         );
-        require(
-            _source != bytes32(0),
-            "Source blockhash must not be null."
-        );
-        require(
-            _target != bytes32(0),
-            "Target blockhash must not be null."
-        );
-
-        ProtocoreI protocore = protocores[_metachainId];
-        uint256 epochLength = protocore.epochLength();
-        require(
-            _sourceBlockNumber % epochLength == 0,
-            "Source block number must be a checkpoint."
-        );
-        require(
-            _targetBlockNumber % epochLength == 0,
-            "Target block number must be a checkpoint."
-        );
-        require(
-            _targetBlockNumber > _sourceBlockNumber,
-            "Target block number must be greater than source block number."
-        );
 
         // Change the status of source block to committed.
         commitCheckpointInternal(_metachainId, _sourceBlockNumber);
 
         // Assert that the kernel hash is opened.
         bytes32 openKernelHash = assertOpenKernel(
-            protocore,
             _kernelHeight,
             _updatedValidators,
             _updatedReputation,
@@ -263,6 +239,8 @@ contract Coconsensus is
             _sourceBlockNumber,
             _targetBlockNumber
         );
+
+        ProtocoreI protocore = protocores[_metachainId];
 
         /*
          * Update reputation of validators and update the validator set in self
@@ -435,23 +413,23 @@ contract Coconsensus is
      * @notice Takes the parameters of a kernel object and returns the
      *         typed hash of it.
      *
-     * @param _height The height of meta-block.
-     * @param _parent The hash of this block's parent.
+     * @param _domainSeparator Domain separator.
+     * @param _height The height of metablock.
+     * @param _parent The hash of this metablock's parent.
      * @param _updatedValidators  The array of addresses of the updated validators.
      * @param _updatedReputation The array of reputation that corresponds to
      *                        the updated validators.
      * @param _gasTarget The gas target for this metablock.
-     * @param _domainSeparator Domain separator.
      *
      * @return hash_ The hash of kernel.
      */
     function hashKernel(
+        bytes32 _domainSeparator,
         uint256 _height,
         bytes32 _parent,
         address[] memory _updatedValidators,
         uint256[] memory _updatedReputation,
-        uint256 _gasTarget,
-        bytes32 _domainSeparator
+        uint256 _gasTarget
     )
         internal
         pure
@@ -557,7 +535,6 @@ contract Coconsensus is
     /**
      * @notice Assert the opening of kernel in consensus cogateway.
      *
-     * @param _protocore Protocore contract address.
      * @param _kernelHeight New kernel height
      * @param _updatedValidators  The array of addresses of the updated validators.
      * @param _updatedReputation The array of reputation that corresponds to
@@ -576,7 +553,6 @@ contract Coconsensus is
      * \post return the kernel hash.
      */
     function assertOpenKernel(
-        ProtocoreI _protocore,
         uint256 _kernelHeight,
         address[] memory _updatedValidators,
         uint256[] memory _updatedReputation,
@@ -591,29 +567,29 @@ contract Coconsensus is
         returns (bytes32 kernelHash_)
     {
         // Get the domain separator for the protocore.
-        bytes32 domainSeparator = _protocore.domainSeparator();
+        bytes32 domainSeparator = domainSeparators[selfMetachainId];
 
         /*
          * Get the metablock hash from the input parameters. This will be the
          * parent hash for the new kernel.
          */
         bytes32 metablockHash = VoteMessage.hashVoteMessage(
+            domainSeparator,
             _transitionHash,
             _source,
             _target,
             _sourceBlockNumber,
-            _targetBlockNumber,
-            domainSeparator
+            _targetBlockNumber
         );
 
         // Generate the kernel hash from the input params.
         kernelHash_ = hashKernel(
+            domainSeparator,
             _kernelHeight,
             metablockHash,
             _updatedValidators,
             _updatedReputation,
-            _gasTarget,
-            domainSeparator
+            _gasTarget
         );
 
         ConsensusCogatewayI consensusCogateway = getConsensusCogateway();
@@ -645,12 +621,12 @@ contract Coconsensus is
     )
         private
     {
-        Block storage blockStatus = blockchains[_metachainId][_blockNumber];
+        Block storage finalizedBlock = blockchains[_metachainId][_blockNumber];
         require(
-            blockStatus.commitStatus == CheckpointCommitStatus.Finalized,
+            finalizedBlock.commitStatus == CheckpointCommitStatus.Finalized,
             "Source checkpoint must be finalized."
         );
-        blockStatus.commitStatus = CheckpointCommitStatus.Committed;
+        finalizedBlock.commitStatus = CheckpointCommitStatus.Committed;
     }
 
     /**

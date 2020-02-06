@@ -31,12 +31,12 @@ contract VoteMessage {
      *        the typed VoteMessage hash.
      */
     function hashVoteMessage(
+        bytes32 _domainSeparator
         bytes32 _transitionHash,
         bytes32 _source,
         bytes32 _target,
         uint256 _sourceBlockNumber,
-        uint256 _targetBlockNumber,
-        bytes32 _domainSeparator
+        uint256 _targetBlockNumber
     )
         internal
         pure

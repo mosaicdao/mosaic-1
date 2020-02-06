@@ -467,12 +467,12 @@ contract Core is
         );
 
         proposal_ = VoteMessage.hashVoteMessage(
+            domainSeparator,
             transitionHash,
             _source,
             _target,
             _sourceBlockHeight,
-            _targetBlockHeight,
-            domainSeparator
+            _targetBlockHeight
         );
 
         // insert proposal, reverts if proposal already inserted
@@ -599,12 +599,12 @@ contract Core is
         );
 
         metablockHash_ = VoteMessage.hashVoteMessage(
+            domainSeparator,
             transitionHash,
             _source,
             _target,
             _sourceBlockHeight,
-            _targetBlockHeight,
-            domainSeparator
+            _targetBlockHeight
         );
     }
 
