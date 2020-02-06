@@ -247,8 +247,6 @@ contract Coconsensus is
             "Target block number must be greater than source block number."
         );
 
-        //TODO:  Should the transition hash be verified in the link?
-
         // Change the status of source block to committed.
         commitCheckpointInternal(_metachainId, _sourceBlockNumber);
 
