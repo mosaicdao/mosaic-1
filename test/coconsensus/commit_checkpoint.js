@@ -45,7 +45,7 @@ contract('Coconsensus::commitCheckpoint', (accounts) => {
   });
 
   contract('Positive Tests', async () => {
-    it('should finalize the checkpoint for self protocore', async () => {
+    it('should commit the checkpoint and update the open kernel hash and open kernel height', async () => {
       const { coconsensus, selfProtocore, consensusCogatewaySpy } = config.contracts;
 
       const data = config.genesis.protocoreData[config.genesis.auxiliaryMetachainId].genesis;
