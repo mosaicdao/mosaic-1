@@ -99,7 +99,7 @@ contract TestProtocore is Protocore {
         return fvs[_height][_validator];
     }
 
-    function forwardValidatorCount(uint256 _height)
+    function forwardValidatorSetCount(uint256 _height)
         public
         view
         returns (uint256)

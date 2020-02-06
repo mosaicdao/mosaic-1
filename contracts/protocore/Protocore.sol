@@ -250,7 +250,7 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
         openKernelHash = _kernelHash;
 
         fvsQuorums[openKernelHeight] = calculateQuorum(
-            forwardValidatorCount(openKernelHeight)
+            forwardValidatorSetCount(openKernelHeight)
         );
 
         emit KernelOpened(openKernelHeight, openKernelHash);

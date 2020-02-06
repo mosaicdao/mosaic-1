@@ -165,16 +165,16 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
     }
 
     /**
-     * @notice forwardValidatorCount() function calls on SelfProtocore contract
+     * @notice forwardValidatorSetCount() function calls on SelfProtocore contract
      *         to query the forward validator set.
      */
-    function forwardValidatorCount(uint256 _height)
+    function forwardValidatorSetCount(uint256 _height)
         public
         view
         returns (uint256)
     {
         assert(selfProtocore != address(0));
-        return ForwardValidatorSetAbstract(selfProtocore).forwardValidatorCount(
+        return ForwardValidatorSetAbstract(selfProtocore).forwardValidatorSetCount(
             _height
         );
     }

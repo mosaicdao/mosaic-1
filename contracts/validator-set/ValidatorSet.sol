@@ -32,8 +32,7 @@ contract ValidatorSet is ForwardValidatorSetAbstract {
     /* Constants */
 
     /** Maximum future end height, set for all active validators. */
-    uint256 public constant MAX_FUTURE_END_HEIGHT =
-        uint256(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+    uint256 public constant MAX_FUTURE_END_HEIGHT = uint256(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
 
     /** Sentinel pointer for marking start and end of linked-list of validators. */
     address public constant SENTINEL_VALIDATORS = address(0x1);
@@ -110,12 +109,6 @@ contract ValidatorSet is ForwardValidatorSetAbstract {
         internal
     {
         activeHeight = _activeHeight;
-        // redundantly initialise the count values to zero,
-        // simply for readability
-        validatorCount[activeHeight] = uint256(0);
-        validatorCount[activeHeight.add(1)] = uint256(0);
-        fvsCount[activeHeight] = uint256(0);
-
         validators[SENTINEL_VALIDATORS] = SENTINEL_VALIDATORS;
     }
 
