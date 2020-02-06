@@ -38,7 +38,7 @@ contract ForwardValidatorSetAbstract {
         returns (bool);
 
     /**
-     * @notice forwardValidatorCount() function returns a count of validators
+     * @notice forwardValidatorSetCount() function returns a count of validators
      *         included in a forward validator set for the given metablock
      *         height.
      *
@@ -49,7 +49,7 @@ contract ForwardValidatorSetAbstract {
      * @return Returns a count of forward validators for the given metablock
      *         height.
      */
-    function forwardValidatorCount(uint256 _height)
+    function forwardValidatorSetCount(uint256 _height)
         public
         view
         returns (uint256);

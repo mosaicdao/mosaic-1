@@ -1,0 +1,355 @@
+pragma solidity >=0.5.0 <0.6.0;
+
+// Copyright 2020 OpenST Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+import "../anchor/ObserverI.sol";
+import "../block/BlockHeader.sol";
+import "../consensus/GenesisCoconsensus.sol";
+import "../protocore/ProtocoreI.sol";
+import "../proxies/MasterCopyNonUpgradable.sol";
+import "../version/MosaicVersion.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
+/**
+ * @title Coconsensus contract - This mirrors the consensus contract on
+ *        the auxiliary chain.
+ */
+contract Coconsensus is MasterCopyNonUpgradable, GenesisCoconsensus, MosaicVersion {
+
+    /* Usings */
+
+    using SafeMath for uint256;
+
+
+    /* Enums */
+
+    /** Enum for status of committed checkpoint. */
+    enum CheckpointCommitStatus {
+        Undefined,
+        Finalized,
+        Committed
+    }
+
+
+    /* Structs */
+
+    /** Struct to track dynasty and checkpoint commit status of a block. */
+    struct Block {
+        bytes32 blockHash;
+        CheckpointCommitStatus commitStatus;
+        uint256 statusDynasty;
+    }
+
+
+    /* Constants */
+
+    /**
+     * Sentinel pointer for marking the ending of circular,
+     * linked-list of genesis metachain ids.
+     */
+    bytes32 public constant SENTINEL_METACHAIN_ID = bytes32(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+
+
+    /* Storage */
+
+    /** Metachain id of the origin chain. */
+    bytes32 public originMetachainId;
+
+    /** Metachain id of the auxiliary chain (self). */
+    bytes32 public selfMetachainId;
+
+    /**
+     * Relative self dynasty of self protocore. This will be incremented when the
+     * self protocore contract will call `finalizeCheckpoint`
+     */
+    uint256 public relativeSelfDynasty;
+
+    /** Mapping to track the finalised blocks of each metachain. */
+    mapping (bytes32 /* metachainId */ =>
+        mapping(uint256 /* blocknumber */ => Block)
+    ) public blockchains;
+
+    /**
+     * Mapping of metachain id to latest block number(tip) stored
+     * in blockchains.
+     */
+    mapping (bytes32 /* metachainId */ => uint256 /* blocknumber */) public blockTips;
+
+    /** Mapping of metachain id to the protocore contract address. */
+    mapping (bytes32 /* metachainId */ => ProtocoreI) public protocores;
+
+    /** Mapping of metachain id to the observers contract address. */
+    mapping (bytes32 /* metachainId */ => ObserverI) public observers;
+
+    /** Mapping of metachain id to the domain separators. */
+    mapping (bytes32 /* metachainId */ => bytes32 /* domain separator */) public domainSeparators;
+
+
+    /* Modifiers */
+
+    modifier onlyRunningProtocore(bytes32 _metachainId)
+    {
+        require(
+            msg.sender == address(protocores[_metachainId]),
+            "Protocore is not available for the given metachain id."
+        );
+
+        _;
+    }
+
+
+    /* Special Functions */
+
+    /**
+     * @notice Setup function does the initialization of all the mosaic
+     *         contracts on the auxiliary chain.
+     *
+     * @dev This function can be called only once.
+     */
+    function setup() public {
+
+        require(
+            selfMetachainId == bytes32(0),
+            "Coconsensus contract is already initialized."
+        );
+
+        originMetachainId = genesisOriginMetachainId;
+
+        selfMetachainId = genesisSelfMetachainId;
+
+        bytes32 currentMetachainId = genesisMetachainIds[SENTINEL_METACHAIN_ID];
+
+        // Loop through the genesis metachainId link list.
+        while (currentMetachainId != SENTINEL_METACHAIN_ID) {
+
+            // Setup protocore contract for the given metachain id.
+            setupProtocore(currentMetachainId);
+
+            // Setup observer contract for the given metachain id.
+            setupObserver(currentMetachainId);
+
+            // Traverse to next metachain id from the link list mapping.
+            currentMetachainId = genesisMetachainIds[currentMetachainId];
+        }
+    }
+
+
+    /* External Functions */
+
+    /**
+     * @notice finaliseCheckpoint() function finalizes a checkpoint at
+     *         a metachain.
+     *
+     * @param _metachainId A metachain id to finalize a checkpoint.
+     * @param _blockNumber A block number of a checkpoint.
+     * @param _blockHash A block hash of a checkpoint.
+     *
+     * \pre `_metachainId` is not 0.
+     * \pre `_blockHash` is not 0.
+     * \pre `msg.sender` should be the protocore contract.
+     * \pre `_blockNumber` must be multiple of epoch length.
+     * \pre `_blockNumber` must be greater than the last finalized block number.
+     *
+     * \post Increment the `relativeSelfDynasty` storage value by one if the
+     *       `msg.sender` is self protocore contract address.
+     * \post Adds a new `Block` in the `blockchains` mapping.
+     * \post Updates the `blockTips` mapping with provided `_blockNumber`.
+     */
+    function finaliseCheckpoint(
+        bytes32 _metachainId,
+        uint256 _blockNumber,
+        bytes32 _blockHash
+    )
+        external
+        onlyRunningProtocore(_metachainId)
+    {
+        // Check if the metachain id is not null.
+        require(
+            _metachainId != bytes32(0),
+            "Metachain id must not be null."
+        );
+
+        // Check if the blockhash is not null.
+        require(
+            _blockHash != bytes32(0),
+            "Blockhash must not be null."
+        );
+
+        /*
+         * Assert that the new block number is greater than the last
+         * finalised block number.
+         */
+        uint256 lastFinalisedBlockNumber = blockTips[_metachainId];
+        assert(_blockNumber > lastFinalisedBlockNumber);
+
+        /*
+         * If the `_metachainId` is `selfMetachainId`, increment the
+         * `relativeSelfDynasty` by one.
+         */
+        if(_metachainId == selfMetachainId) {
+            relativeSelfDynasty = relativeSelfDynasty.add(1);
+        }
+
+        // Store the finalised block in the mapping.
+        Block storage finalisedBlock = blockchains[_metachainId][_blockNumber];
+        finalisedBlock.blockHash = _blockHash;
+        finalisedBlock.commitStatus = CheckpointCommitStatus.Finalized;
+        finalisedBlock.statusDynasty = relativeSelfDynasty;
+
+        // Store the tip.
+        blockTips[_metachainId] = _blockNumber;
+    }
+
+    /**
+     * @notice Observes the given block by anchoring its state root into the
+     *         corresponding observer.
+     *
+     * @param _metachainId Metachain id.
+     * @param _rlpBlockHeader RLP encoded block header.
+     *
+     * \pre `_metachainId` is not 0.
+     * \pre `_rlpBlockHeader` is not 0.
+     * \pre `_metachainId` is not `selfMetachainId`.
+     * \pre A block must exist in `blockchains` storage for the given
+     *      `_metachainid` and block number from the decoded `_rlpBlockHeader`.
+     * \pre The commit status of the block must be at least `Finalized`.
+     * \pre The status dynasty of the block is less than `relativeSelfDynasty`.
+     *
+     * \post Anchors the state root in the observer contract.
+     */
+    function observeBlock(
+        bytes32 _metachainId,
+        bytes calldata _rlpBlockHeader
+    )
+        external
+    {
+        require(
+            _metachainId != bytes32(0),
+            "Metachain id must not be null."
+        );
+
+        require(
+            _rlpBlockHeader.length != 0,
+            "RLP block header must not be null."
+        );
+
+        require(
+            _metachainId != selfMetachainId,
+            "Metachain id must not be self metachain id."
+        );
+
+        // Decode the rlp encoded block header.
+        BlockHeader.Header memory blockHeader = BlockHeader.decodeHeader(_rlpBlockHeader);
+
+        Block memory finalizedBlock = blockchains[_metachainId][blockHeader.height];
+
+        require(
+            finalizedBlock.blockHash == blockHeader.blockHash,
+            "Provided block header is not valid."
+        );
+
+        require(
+            finalizedBlock.commitStatus >= CheckpointCommitStatus.Finalized,
+            "Block must be at least finalized."
+        );
+
+        require(
+            relativeSelfDynasty > finalizedBlock.statusDynasty,
+            "Relative self dynasty must be greater than the status dynasty."
+        );
+
+        // Get the observer contract.
+        ObserverI observer = observers[_metachainId];
+
+        // Anchor the state root.
+        observer.anchorStateRoot(blockHeader.height, blockHeader.stateRoot);
+    }
+
+
+    /* Private Functions */
+
+    /**
+     * @notice Do the initial setup of protocore contract and initialize the
+     *         storage of coconsensus contract.
+     *
+     * @param _metachainId Metachain id.
+     *
+     * \pre Protocore contract must exist for the given metachain id in
+     *      the genesisProtocores storage variable.
+     *
+     * \post Adds newly setup protocore's address into protocores storage variable.
+     * \post Adds newly setup protocore's domain separator into domainSeparators
+     *       storage variable.
+     * \post Adds a new Block into blockchain storage variable.
+     * \post Updates blockTips storage variable with the latest finalized
+     *       checkpoint's block number of the newly setup protocore.
+     */
+    function setupProtocore(bytes32 _metachainId) private {
+
+        // Get the protocore contract address from the genesis storage.
+        address protocoreAddress = genesisProtocores[_metachainId];
+
+        require(
+            protocoreAddress != address(0),
+            "Protocore address must not be null."
+        );
+
+        ProtocoreI protocore = ProtocoreI(protocoreAddress);
+
+        // Store the protocore address in protocores mapping.
+        protocores[_metachainId] = protocore;
+
+        // Setup protocore.
+        ( bytes32 blockHash, uint256 blockNumber ) = protocore.setup();
+
+        // Get the domain separator and store it in domainSeparators mapping.
+        domainSeparators[_metachainId] = protocore.domainSeparator();
+
+        // Store the block informations in blockchains mapping.
+        blockchains[_metachainId][blockNumber] = Block(
+            blockHash,
+            CheckpointCommitStatus.Finalized,
+            relativeSelfDynasty
+        );
+
+        // Store the blocknumber as tip.
+        blockTips[_metachainId] = blockNumber;
+    }
+
+    /**
+     * @notice Do the initial setup of observer contract and initialize the
+     *         storage of coconsensus contract.
+     *
+     * @param _metachainId Metachain id
+     *
+     * \post If observer contract address exists for the given metachain id
+     *       then it adds newly setup observer's address into observers
+     *       storage variable, otherwise does nothing.
+     */
+    function setupObserver(bytes32 _metachainId) private {
+
+        // Get the observer contract address from the genesis storage.
+        address observerAddress = genesisObservers[_metachainId];
+        if(observerAddress != address(0)) {
+            ObserverI observer = ObserverI(observerAddress);
+
+            // Update the observers mapping.
+            observers[_metachainId] = observer;
+
+            // Call the setup function.
+            observer.setup();
+        }
+    }
+}

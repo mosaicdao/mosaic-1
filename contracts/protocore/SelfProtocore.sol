@@ -19,7 +19,6 @@ import "../protocore/GenesisSelfProtocore.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../validator-set/ValidatorSet.sol";
 
-
 /**
  * @title Self Protocore - This contract finalizes the proposed blocks of auxiliary chain.
  */
@@ -56,38 +55,26 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protoco
     /**
      * @notice setup() function initializes the current contract.
      *
-     * @dev These input params will be provided by the coconsensus contract.
-     *      This can be called only by the coconsensus contract once.
+     * @return Block hash and block number of finalized genesis checkpoint.
      *
-     * @param _metachainId Metachain id.
-     * @param _domainSeparator Domain separator.
-     * @param _epochLength Epoch length.
-     * @param _metablockHeight Metablock height.
-     *
-     * \pre `_metachainId` is not 0.
-     * \pre `_domainSeparator` is not 0.
-     * \pre `_epochLength` is not 0.
-     *
-     * \post Sets `selfProtocore` to the given value.
      * \post Sets `domainSeparator` to the given value.
      * \post Sets `epochLength` to the given value.
      * \post Sets `metachainId` to the given value.
      * \post Sets genesis link.
      */
-    function setup(
-        bytes32 _metachainId,
-        bytes32 _domainSeparator,
-        uint256 _epochLength,
-        uint256 _metablockHeight
-    )
+    function setup()
         external
         onlyCoconsensus
+        returns (
+            bytes32 finalizedBlockHash_,
+            uint256 finalizedBlockNumber_
+        )
     {
-        Protocore.setup(
-            _metachainId,
-            _domainSeparator,
-            _epochLength,
-            _metablockHeight,
+        Protocore.setupProtocore(
+            genesisMetachainId,
+            genesisDomainSeparator,
+            genesisEpochLength,
+            genesisProposedMetablockHeight,
             genesisAuxiliaryParentVoteMessageHash,
             genesisAuxiliarySourceTransitionHash,
             genesisAuxiliarySourceBlockHash,
@@ -95,7 +82,11 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protoco
             genesisAuxiliaryTargetBlockHash,
             genesisAuxiliaryTargetBlockNumber
         );
+
         ValidatorSet.setupValidatorSet(openKernelHeight.add(1));
+
+        finalizedBlockHash_ = genesisAuxiliaryTargetBlockHash;
+        finalizedBlockNumber_ = genesisAuxiliaryTargetBlockNumber;
     }
 
 
@@ -138,6 +129,45 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protoco
 
 
     /* External Functions. */
+
+    /**
+     * @notice Registers a vote for a link specified by vote message hash.
+     *
+     *
+     * \pre A link should exist in the links mapping for the given _voteMessageHash.
+     * \pre The current block number must be less than the sum of the target
+     *      block number of link and epoch length.
+     * \pre Satisfy the \pre conditions of Protocore::registerVoteInternal().
+     *
+     * \post Satisfy the \post conditions of Protocore::registerVoteInternal()
+     *
+     * @param _voteMessageHash Message hash of a vote.
+     * @param _r The first 32 bytes of ECDSA signature of a validator.
+     * @param _s The second 32 bytes of ECDSA signature of a validator.
+     * @param _v The recovery id/value of ECDSA signature of a validator.
+     */
+    function registerVote(
+        bytes32 _voteMessageHash,
+        bytes32 _r,
+        bytes32 _s,
+        uint8 _v
+    )
+        external
+    {
+        Link storage link = links[_voteMessageHash];
+
+        require(
+            block.number < link.targetBlockNumber.add(epochLength),
+            "Current block number should be less than the sum of the target block number and epoch length"
+        );
+
+        Protocore.registerVoteInternal(
+            _voteMessageHash,
+            _r,
+            _s,
+            _v
+        );
+    }
 
     /**
      * @notice It proposes a valid link to be voted later by active validators.

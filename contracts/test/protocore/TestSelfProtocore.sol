@@ -55,6 +55,11 @@ contract TestSelfProtocore is SelfProtocore {
     }
 
     function setGenesisStorage(
+        bytes32 _genesisMetachainId,
+        bytes32 _genesisDomainSeparator,
+        uint256 _genesisEpochLength,
+        uint256 _genesisDynasty,
+        uint256 _genesisProposedMetablockHeight,
         bytes32 _genesisAuxiliaryParentVoteMessageHash,
         bytes32 _genesisAuxiliarySourceTransitionHash,
         bytes32 _genesisAuxiliarySourceBlockHash,
@@ -65,6 +70,11 @@ contract TestSelfProtocore is SelfProtocore {
     )
         external
     {
+        genesisMetachainId = _genesisMetachainId;
+        genesisDomainSeparator = _genesisDomainSeparator;
+        genesisEpochLength = _genesisEpochLength;
+        genesisDynasty = _genesisDynasty;
+        genesisProposedMetablockHeight = _genesisProposedMetablockHeight;
         genesisAuxiliaryParentVoteMessageHash = _genesisAuxiliaryParentVoteMessageHash;
         genesisAuxiliarySourceTransitionHash = _genesisAuxiliarySourceTransitionHash;
         genesisAuxiliarySourceBlockHash = _genesisAuxiliarySourceBlockHash;
@@ -80,6 +90,25 @@ contract TestSelfProtocore is SelfProtocore {
 		returns (CoconsensusI)
 	{
         return coconsensus;
+    }
+
+    /**
+     * @notice This function is used to test the
+     *         `Coconsensus::finaliseCheckpoint`, the msg.sender for the
+     *         `Coconsensus::finaliseCheckpoint` can only be protocore.
+     */
+    function testFinaliseCheckpoint(
+        bytes32 _metachainId,
+        uint256 _blockNumber,
+        bytes32 _blockHash
+    )
+        external
+    {
+        getCoconsensus().finaliseCheckpoint(
+            _metachainId,
+            _blockNumber,
+            _blockHash
+        );
     }
 
     function fvsVoteCount(
@@ -106,8 +135,20 @@ contract TestSelfProtocore is SelfProtocore {
      *         active height.
      */
     function incrementActiveHeight(uint256 _nextHeight) external {
-
         ValidatorSet.incrementActiveHeightInternal(_nextHeight);
+    }
 
+    function setLink(
+        bytes32 _voteMessageHash,
+        uint256 _targetBlockNumber,
+        uint256 _epochLength
+    )
+        external
+    {
+        Link storage link = links[_voteMessageHash];
+        link.targetBlockNumber = _targetBlockNumber;
+        link.targetFinalisation = CheckpointFinalisationStatus.Registered;
+        link.proposedMetablockHeight = openKernelHeight;
+        epochLength = _epochLength;
     }
 }

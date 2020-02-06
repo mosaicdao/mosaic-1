@@ -59,7 +59,7 @@ contract TestProtocore is Protocore {
 
         coconsensus = _coconsensus;
 
-        Protocore.setup(
+        Protocore.setupProtocore(
             _metachainId,
             _domainSeparator,
             _epochLength,
@@ -99,7 +99,7 @@ contract TestProtocore is Protocore {
         return fvs[_height][_validator];
     }
 
-    function forwardValidatorCount(uint256 _height)
+    function forwardValidatorSetCount(uint256 _height)
         public
         view
         returns (uint256)
@@ -115,7 +115,7 @@ contract TestProtocore is Protocore {
     )
         external
     {
-        return Protocore.registerVoteInternal(
+        Protocore.registerVoteInternal(
             _voteMessageHash,
             _r,
             _s,

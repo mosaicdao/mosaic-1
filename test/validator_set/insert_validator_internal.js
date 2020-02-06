@@ -20,24 +20,27 @@ const Utils = require('../test_lib/utils.js');
 
 const ValidatorSet = artifacts.require('ValidatorSetDouble');
 
-contract('ValidatorSet::insertValidator', (accounts) => {
-  const accountProvider = new AccountProvider(accounts);
-  let validatorSet;
-  const beginHeight = new BN(1);
+const config = {};
+
+contract('ValidatorSet::insertValidatorInternal', (accounts) => {
   beforeEach(async () => {
-    validatorSet = await ValidatorSet.new();
-    await validatorSet.setupValidatorSetDouble(beginHeight);
+    config.activeHeight = new BN(1);
+    config.validatorSet = await ValidatorSet.new();
+    await config.validatorSet.setupValidatorSetDouble(config.activeHeight);
   });
 
   contract('Positive Tests', () => {
+    const accountProvider = new AccountProvider(accounts);
+
     it('should insert validators', async () => {
-      const account1 = accountProvider.get();
-      const account2 = accountProvider.get();
+      const beginHeight = config.activeHeight;
+      const v = accountProvider.get();
 
-      await validatorSet.insertValidator(account1, beginHeight);
+      await config.validatorSet.insertValidator(v, beginHeight);
 
-      const actualValidatorBeginHeight = await validatorSet.validatorBeginHeight.call(account1);
-      const actualValidatorEndHeight = await validatorSet.validatorEndHeight.call(account1);
+      const actualValidatorBeginHeight = await config.validatorSet.validatorBeginHeight.call(v);
+      const actualValidatorEndHeight = await config.validatorSet.validatorEndHeight.call(v);
+
       assert.isOk(
         beginHeight.eq(actualValidatorBeginHeight),
         `Expected validator begin height is ${beginHeight} but got ${actualValidatorBeginHeight}`,
@@ -49,30 +52,15 @@ contract('ValidatorSet::insertValidator', (accounts) => {
          + `but got ${actualValidatorEndHeight}`,
       );
 
-      // Inserting another validator.
-      await validatorSet.insertValidator(
-        account2,
-        beginHeight,
-      );
+      const nextValidatorInLinkedList = await config.validatorSet.validators.call(v);
 
-      const addressAtAccount1 = await validatorSet.validators.call(
-        account1,
-      );
-
+      // Checking that the validator exists in the linked list of validators
+      // by querying the next validator (pointed by the validator) and asserting
+      // that its not NULL (it should be either sentinel or another validator address).
       assert.notStrictEqual(
-        addressAtAccount1,
+        nextValidatorInLinkedList,
         Utils.NULL_ADDRESS,
-        'Invalid address in the linked list',
-      );
-
-      const addressAtAccount2 = await validatorSet.validators.call(
-        account2,
-      );
-
-      assert.notStrictEqual(
-        addressAtAccount2,
-        Utils.NULL_ADDRESS,
-        'Invalid address in the linked list',
+        'The next validator address in the linked list of validators pointed by the v1 is null.',
       );
     });
   });

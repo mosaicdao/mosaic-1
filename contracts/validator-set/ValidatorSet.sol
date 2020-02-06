@@ -14,6 +14,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import "./ForwardValidatorSetAbstract.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
@@ -21,7 +22,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
  *
  * @notice It contains methods to maintain validators for a metablock.
  */
-contract ValidatorSet {
+contract ValidatorSet is ForwardValidatorSetAbstract {
 
     /* Usings */
 
@@ -31,8 +32,7 @@ contract ValidatorSet {
     /* Constants */
 
     /** Maximum future end height, set for all active validators. */
-    uint256 public constant MAX_FUTURE_END_HEIGHT =
-        uint256(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+    uint256 public constant MAX_FUTURE_END_HEIGHT = uint256(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
 
     /** Sentinel pointer for marking start and end of linked-list of validators. */
     address public constant SENTINEL_VALIDATORS = address(0x1);
@@ -66,7 +66,7 @@ contract ValidatorSet {
      * where J_h is the number of validators joining at height h, and
      * L_(h-1) is the number of validators that logged out at h-1 (equals their end-height).
      */
-    mapping(uint256 /* metablock height */ => uint256 /* validator count */) public validatorCount;
+    mapping(uint256 /* metablock height */ => uint256 /* validator count */) private validatorCount;
 
     /**
      * Forward validator set (FVS) count per height.
@@ -74,7 +74,7 @@ contract ValidatorSet {
      * the number of validators at that height, N_h, minus the validators that have logged out at h:
      *     F_h = N_h - L_h
      */
-    mapping(uint256 /* metablock height */ => uint256 /* FVS count */) fvsCount;
+    mapping(uint256 /* metablock height */ => uint256 /* FVS count */) private fvsCount;
 
     /**
      * Active height constrains the insertion and removal of validators
@@ -85,7 +85,7 @@ contract ValidatorSet {
      * Active height is introduced to the calculation of the forward validator set count
      * to a sliding-window calculation.
      */
-    uint256 public activeHeight;
+    uint256 private activeHeight;
 
 
     /* Modifiers */
@@ -109,12 +109,6 @@ contract ValidatorSet {
         internal
     {
         activeHeight = _activeHeight;
-        // redundantly initialise the count values to zero,
-        // simply for readability
-        validatorCount[activeHeight] = uint256(0);
-        validatorCount[activeHeight.add(1)] = uint256(0);
-        fvsCount[activeHeight] = uint256(0);
-
         validators[SENTINEL_VALIDATORS] = SENTINEL_VALIDATORS;
     }
 
