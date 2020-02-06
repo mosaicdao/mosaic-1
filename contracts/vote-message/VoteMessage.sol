@@ -20,7 +20,7 @@ contract VoteMessage {
 
     /** EIP-712 type hash for a Vote Message */
     bytes32 public constant VOTE_MESSAGE_TYPEHASH = keccak256(
-        "VoteMessage(bytes32 transitionHash,bytes32 source,bytes32 target,uint256 sourceBlockHeight,uint256 targetBlockHeight)"
+        "VoteMessage(bytes32 transitionHash,bytes32 sourceBlockHash,bytes32 targetBlockHash,uint256 sourceBlockNumber,uint256 targetBlockNumber)"
     );
 
 
@@ -34,8 +34,8 @@ contract VoteMessage {
         bytes32 _transitionHash,
         bytes32 _source,
         bytes32 _target,
-        uint256 _sourceBlockHeight,
-        uint256 _targetBlockHeight,
+        uint256 _sourceBlockNumber,
+        uint256 _targetBlockNumber,
         bytes32 _domainSeparator
     )
         internal
@@ -48,8 +48,8 @@ contract VoteMessage {
                 _transitionHash,
                 _source,
                 _target,
-                _sourceBlockHeight,
-                _targetBlockHeight
+                _sourceBlockNumber,
+                _targetBlockNumber
             )
         );
 

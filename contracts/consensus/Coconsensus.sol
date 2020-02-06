@@ -43,11 +43,6 @@ contract Coconsensus is
     using SafeMath for uint256;
 
 
-    /* Usings */
-
-    using SafeMath for uint256;
-
-
     /* Enums */
 
     /** Enum for status of committed checkpoint. */
@@ -189,7 +184,7 @@ contract Coconsensus is
      * @param _updatedValidators  The array of addresses of the updated validators.
      * @param _updatedReputation The array of reputation that corresponds to
      *                        the updated validators.
-     * @param _gasTarget The gas target for this metablock
+     * @param _gasTarget The gas target for the metablock
      * @param _transitionHash Transition hash.
      * @param _source Blockhash of source checkpoint.
      * @param _target Blockhash of target checkpoint.
@@ -202,12 +197,13 @@ contract Coconsensus is
      * \pre `_sourceBlockNumber` is a checkpoint.
      * \pre `_targetBlockNumber` is a checkpoint.
      * \pre `_targetBlockNumber` is greater than `_sourceBlockNumber`.
-     * \pre Source checkpoint must be finalized.
+     * \pre Source checkpoint is finalized.
+     * \pre Open kernel hash exists in `ConsensusCogateway` contract for the
+     *      given `_kernelHeight`.
      *
-     * \pre Open kernel hash must exist in `ConsensusCogateway` contract.
-     * \post Update the validator set in self protocore.
-     * \post Update the reputation of validators.
-     * \post Open a new metablock in self protocore.
+     * \post Updates the validator set in self protocore.
+     * \post Updates the reputation of validators.
+     * \post Opens a new metablock in self protocore.
      */
     function commitCheckpoint(
         bytes32 _metachainId,
@@ -558,7 +554,7 @@ contract Coconsensus is
         }
     }
 
-        /**
+    /**
      * @notice Assert the opening of kernel in consensus cogateway.
      *
      * @param _protocore Protocore contract address.
@@ -573,10 +569,11 @@ contract Coconsensus is
      * @param _sourceBlockNumber Block number of source checkpoint.
      * @param _targetBlockNumber Block number af target checkpoint.
      *
-     * \pre Generated kernel hash must be equal to the open kernel hash form
-     *      consensus cogateway contract.
+     * \pre Kernel hash generated from given input parameters is equal to the
+     *      kernel hash form consensus cogateway contract for the given
+     *      `_kernelHeight`.
      *
-     * \post return the open kernel hash.
+     * \post return the kernel hash.
      */
     function assertOpenKernel(
         ProtocoreI _protocore,
@@ -622,7 +619,7 @@ contract Coconsensus is
         ConsensusCogatewayI consensusCogateway = getConsensusCogateway();
 
         // Get the open kernel hash from the consensus cogateway contract.
-        bytes32 openKernelHash = consensusCogateway.getOpenKernelHash(_kernelHeight);
+        bytes32 openKernelHash = consensusCogateway.getKernelHash(_kernelHeight);
         require(
             kernelHash_ == openKernelHash,
             "Generated kernel hash is not equal to open kernel hash."
@@ -635,9 +632,11 @@ contract Coconsensus is
      * @param _metachainId Metachain id.
      * @param _blockNumber block number.
      *
-     * \pre The current status of checkpoint commit is `Finalized`.
+     * \pre The commit checkpoint status of Block at the given `_blockNumber`
+     *      is `Finalized`.
      *
-     * \post The checkpoint commit status is changed to `Committed`.
+     * \post The checkpoint commit status of the Block at the given
+     *       `_blockNumber` is changed to `Committed`.
      */
     function commitCheckpointInternal(
         bytes32 _metachainId,
@@ -654,14 +653,17 @@ contract Coconsensus is
     }
 
     /**
-     * @notice Update the reputation of the validators and also update the
-     *         validator set in the self protocore contract.
+     * @notice Add or update the reputation of the validators and also add or
+     *         update the validator set in the self protocore contract.
      *
      * @param _protocore Self protocore contract address.
      * @param _kernelHeight Open kernel height.
      * @param _updatedValidators  The array of addresses of the updated validators.
      * @param _updatedReputation The array of reputation that corresponds to
      *                        the updated validators.
+     *
+     * \post Adds or updates the reputation of validators in `Coreputation` contract.
+     * \post Adds or updates the validator set in `SelfProtocore` contract.
      */
     function updateValidatorSet(
         address _protocore,

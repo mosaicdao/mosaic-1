@@ -1,6 +1,6 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-// Copyright 2019 OpenST Ltd.
+// Copyright 2020 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,16 +19,16 @@ pragma solidity >=0.5.0 <0.6.0;
  */
 interface ConsensusCogatewayI {
 
-    /* External functions */
+    /* External Functions */
 
     /**
-     * @notice Get the open kernel hash for a given kernel height.
+     * @notice Get the kernel hash for a given kernel height.
      *
      * @param _kernelHeight Kernel height.
      *
-     * @return Open kernel hash.
+     * @return kernel hash.
      */
-    function getOpenKernelHash(uint256 _kernelHeight)
+    function getKernelHash(uint256 _kernelHeight)
         external
-        returns (bytes32);
+        returns (bytes32 kernelHash_);
 }
