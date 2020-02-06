@@ -14,7 +14,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../../validator/ValidatorSet.sol";
+import "../../validator-set/ValidatorSet.sol";
 
 /**
  * @title ValidatorSetDouble contract.
@@ -25,29 +25,30 @@ contract ValidatorSetDouble is ValidatorSet {
 
     /* External Functions */
 
-    function setupValidatorSetDouble()
+    function setupValidatorSetDouble(uint256 _activeHeight)
         external
     {
-        ValidatorSet.setupValidatorSet();
+        ValidatorSet.setupValidatorSet(_activeHeight);
     }
 
     /**
-     * @notice It is used to insert validator.
-     *
-     * @param _validator Validator address.
-     * @param _beginHeight Begin height for the validator.
+     * \ref ValidatorSet.insertValidatorInternal(address,uint256).
      */
     function insertValidator(address _validator, uint256 _beginHeight) external {
-        insertValidatorInternal(_validator, _beginHeight);
+        ValidatorSet.insertValidatorInternal(_validator, _beginHeight);
     }
 
-   /**
-    * @notice It is used to remove validator.
-    *
-    * @param _validator Validator address.
-    * @param _endHeight End height for the validator.
-    */
+    /**
+     * \ref ValidatorSet.removeValidatorInternal(address,uint256).
+     */
     function removeValidator(address _validator, uint256 _endHeight) external {
-        removeValidatorInternal(_validator, _endHeight);
+        ValidatorSet.removeValidatorInternal(_validator, _endHeight);
+    }
+
+    /**
+     * \ref ValidatorSet.incrementActiveHeightInternal(uint256).
+     */
+    function incrementActiveHeight(uint256 _nextHeight) external {
+        ValidatorSet.incrementActiveHeightInternal(_nextHeight);
     }
 }

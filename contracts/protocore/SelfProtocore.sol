@@ -17,7 +17,7 @@ pragma solidity >=0.5.0 <0.6.0;
 import "../protocore/Protocore.sol";
 import "../protocore/GenesisSelfProtocore.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
-import "../validator/ValidatorSet.sol";
+import "../validator-set/ValidatorSet.sol";
 
 /**
  * @title Self Protocore - This contract finalizes the proposed blocks of auxiliary chain.
@@ -79,7 +79,7 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protoco
             genesisAuxiliaryTargetBlockNumber
         );
 
-        ValidatorSet.setupValidatorSet();
+        ValidatorSet.setupValidatorSet(openKernelHeight.add(1));
 
         finalizedBlockHash_ = genesisAuxiliaryTargetBlockHash;
         finalizedBlockNumber_ = genesisAuxiliaryTargetBlockNumber;

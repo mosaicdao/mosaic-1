@@ -16,7 +16,7 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "../../consensus/CoconsensusI.sol";
 import "../../protocore/Protocore.sol";
-import "../../validator/ValidatorSet.sol";
+import "../../validator-set/ValidatorSet.sol";
 
 contract TestProtocore is Protocore {
 
@@ -99,7 +99,7 @@ contract TestProtocore is Protocore {
         return fvs[_height][_validator];
     }
 
-    function forwardValidatorCount(uint256 _height)
+    function forwardValidatorSetCount(uint256 _height)
         public
         view
         returns (uint256)

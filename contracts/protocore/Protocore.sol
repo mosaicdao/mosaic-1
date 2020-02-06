@@ -15,8 +15,8 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 import "../consensus/CoconsensusModule.sol";
-import "../validator/ForwardValidatorSetAbstract.sol";
-import "../validator/ValidatorSet.sol";
+import "../validator-set/ForwardValidatorSetAbstract.sol";
+import "../validator-set/ValidatorSet.sol";
 import "../version/MosaicVersion.sol";
 import "../vote-message/VoteMessage.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
@@ -251,7 +251,7 @@ contract Protocore is
         openKernelHash = _kernelHash;
 
         fvsQuorums[openKernelHeight] = calculateQuorum(
-            forwardValidatorCount(openKernelHeight)
+            forwardValidatorSetCount(openKernelHeight)
         );
 
         emit KernelOpened(openKernelHeight, openKernelHash);
