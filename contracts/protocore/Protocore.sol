@@ -417,6 +417,11 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
         );
 
         require(
+            inValidatorSet(validator, openKernelHeight),
+            "Validator must be in current validator set."
+        );
+
+        require(
             fvsVotes[_voteMessageHash][openKernelHeight][validator] == address(0),
             "Validator vote cannot be registered twice in FVS votes at the same height."
         );
