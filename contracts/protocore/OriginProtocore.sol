@@ -88,6 +88,31 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
     /* External Functions */
 
     /**
+     * @notice openKernel() function marks the specified kernel
+     *         as opened.
+     *
+     * @param _kernelHeight New kernel height.
+     * @param _kernelHash New kernel hash.
+     *
+     * \pre Only coconsensus can call.
+     * \pre Satisfies all pre conditions of Protocore::openKernelInternal().
+     *
+     * \post Satisfies all the post conditions of Protocore::openKernelInternal().
+     */
+    function openKernel(
+        uint256 _kernelHeight,
+        bytes32 _kernelHash
+    )
+        external
+        onlyCoconsensus
+    {
+        Protocore.openKernelInternal(
+            _kernelHeight,
+            _kernelHash
+        );
+    }
+
+    /**
      * @notice proposeLink() function proposes a valid link to be voted later by
      *         active validators.
      *

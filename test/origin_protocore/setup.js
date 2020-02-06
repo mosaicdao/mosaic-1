@@ -118,9 +118,9 @@ contract('OriginProtocore::setup', (accounts) => {
       const genesisVoteMessageHash = ProtocoreUtils.hashVoteMessage(
         config.genesis.domainSeparator,
         Utils.ZERO_BYTES32,
-        Utils.ZERO_BYTES32,
+        config.genesis.originSourceBlockHash,
         config.genesis.originTargetBlockHash,
-        new BN(0),
+        config.genesis.originSourceBlockNumber,
         config.genesis.originTargetBlockNumber,
       );
 

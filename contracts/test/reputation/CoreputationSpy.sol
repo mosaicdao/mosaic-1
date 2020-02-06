@@ -14,27 +14,27 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/**
- * @title Protocore Interface
- */
-interface ProtocoreI {
+import "../../reputation/CoreputationI.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
-    /** @notice setup() function initializes the protocore contract. */
-    function setup() external returns (bytes32, uint256);
+contract CoreputationSpy is CoreputationI {
 
-    /** @notice Function to get the domain separator. */
-    function domainSeparator() external returns (bytes32);
+    using SafeMath for uint256;
 
-    /**  @notice epochLength() function returns the epoch length. */
-    function epochLength() external returns (uint256);
+    uint256 public upsertValidatorCallCount;
 
-    function openKernelHeight()
-        external
-        returns (uint256);
+    mapping(address => uint256) spyUpsertValidators;
 
-    function openKernel(
-        uint256 _kernelHeight,
-        bytes32 _kernelHash
+    /**
+     * @notice Spy the call of upsertValidator function.
+     */
+    function upsertValidator(
+        address _validator,
+        uint256 _reputation
     )
-        external;
+        external
+    {
+        upsertValidatorCallCount = upsertValidatorCallCount.add(1);
+        spyUpsertValidators[_validator] = _reputation;
+    }
 }

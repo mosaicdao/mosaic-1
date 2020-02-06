@@ -23,8 +23,17 @@ import "../validator-set/ValidatorSet.sol";
 import "../reputation/ReputationI.sol";
 import "../version/MosaicVersion.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
+import "../vote-message/VoteMessage.sol";
 
-contract Core is MasterCopyNonUpgradable, ConsensusModule, ValidatorSet, MosaicVersion, CoreStatusEnum, CoreI {
+contract Core is
+    MasterCopyNonUpgradable,
+    ConsensusModule,
+    ValidatorSet,
+    MosaicVersion,
+    CoreStatusEnum,
+    VoteMessage,
+    CoreI
+{
 
     /* Usings */
 
@@ -70,19 +79,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, ValidatorSet, MosaicV
         uint256 accumulatedGas;
         /** Committee lock is the hash of the accumulated transaction root */
         bytes32 committeeLock;
-    }
-
-    struct VoteMessage {
-        /** Transition hash */
-        bytes32 transitionHash;
-        /** Source block hash */
-        bytes32 source;
-        /** Target block hash */
-        bytes32 target;
-        /** Source block number */
-        uint256 sourceBlockNumber;
-        /** Target block number */
-        uint256 targetBlockNumber;
     }
 
     struct VoteCount {
@@ -465,7 +461,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, ValidatorSet, MosaicV
             _committeeLock
         );
 
-        proposal_ = hashVoteMessage(
+        proposal_ = VoteMessage.hashVoteMessage(
+            domainSeparator,
             transitionHash,
             _source,
             _target,
@@ -596,7 +593,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, ValidatorSet, MosaicV
             _committeeLock
         );
 
-        metablockHash_ = hashVoteMessage(
+        metablockHash_ = VoteMessage.hashVoteMessage(
+            domainSeparator,
             transitionHash,
             _source,
             _target,
@@ -1081,41 +1079,4 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, ValidatorSet, MosaicV
             )
         );
     }
-
-    /**
-    * @notice Takes the VoteMessage parameters and returns
-     *        the typed VoteMessage hash.
-     */
-    function hashVoteMessage(
-        bytes32 _transitionHash,
-        bytes32 _source,
-        bytes32 _target,
-        uint256 _sourceBlockNumber,
-        uint256 _targetBlockNumber
-    )
-        internal
-        view
-        returns (bytes32 hash_)
-    {
-        bytes32 typedVoteMessageHash = keccak256(
-            abi.encode(
-                VOTE_MESSAGE_TYPEHASH,
-                _transitionHash,
-                _source,
-                _target,
-                _sourceBlockNumber,
-                _targetBlockNumber
-            )
-        );
-
-        hash_ = keccak256(
-            abi.encodePacked(
-                byte(0x19),
-                byte(0x01),
-                domainSeparator,
-                typedVoteMessageHash
-            )
-        );
-    }
-
 }

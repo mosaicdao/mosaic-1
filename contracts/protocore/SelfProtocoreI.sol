@@ -15,26 +15,23 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 /**
- * @title Protocore Interface
+ * @title Self protocore interface
  */
-interface ProtocoreI {
+interface SelfProtocoreI {
 
-    /** @notice setup() function initializes the protocore contract. */
-    function setup() external returns (bytes32, uint256);
-
-    /** @notice Function to get the domain separator. */
-    function domainSeparator() external returns (bytes32);
-
-    /**  @notice epochLength() function returns the epoch length. */
-    function epochLength() external returns (uint256);
-
-    function openKernelHeight()
-        external
-        returns (uint256);
-
-    function openKernel(
-        uint256 _kernelHeight,
-        bytes32 _kernelHash
+    /**
+     * @notice Insert or remove validator. It inserts validator if not already
+     *         present and reputation is greater than 0. It removes validator
+     *         if it is present and reputation is 0.
+     *
+     * @param _validator Validator address to upsert.
+     * @param _height Validator start or end height to be updated.
+     * @param _reputation Validator's reputation value.
+     */
+    function upsertValidator(
+        address _validator,
+        uint256 _height,
+        uint256 _reputation
     )
         external;
 }
