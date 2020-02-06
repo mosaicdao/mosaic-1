@@ -15,41 +15,51 @@
 'use strict';
 
 const BN = require('bn.js');
+
 const { AccountProvider } = require('../test_lib/utils.js');
+const Utils = require('../test_lib/utils.js');
 
 const ValidatorSet = artifacts.require('ValidatorSetDouble');
 
+const config = {};
+
 contract('ValidatorSet::removeValidator', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
-  let validatorSet;
-  const beginHeight = new BN(1);
-  const endHeight = new BN(2);
-  let account;
+
   beforeEach(async () => {
-    validatorSet = await ValidatorSet.new();
-    await validatorSet.setupValidatorSetDouble();
-    account = accountProvider.get();
-    await validatorSet.insertValidator(account, beginHeight);
-    // TODO: validator set is not initialised.
+    config.activeHeight = new BN(1);
+    config.validatorSet = await ValidatorSet.new();
+    config.validatorSet.setupValidatorSetDouble(config.activeHeight);
+    config.validator = {
+      address: accountProvider.get(),
+      beginHeight: config.activeHeight,
+    };
+    await config.validatorSet.insertValidator(
+      config.validator.address, config.validator.beginHeight,
+    );
   });
 
   contract('Positive Tests', () => {
-    it.skip('should remove validator', async () => {
-      await validatorSet.removeValidator(account, endHeight);
-
-      const actualValidatorBeginHeight = await validatorSet.validatorBeginHeight.call(account);
-      const actualValidatorEndHeight = await validatorSet.validatorEndHeight.call(account);
-      assert.strictEqual(
-        beginHeight.eq(actualValidatorBeginHeight),
-        true,
-        `Expected validator begin height is ${beginHeight} but got ${actualValidatorBeginHeight}`,
+    it('should remove validator', async () => {
+      // Making sure validator is active.
+      let validatorActualEndHeight = await config.validatorSet.validatorEndHeight.call(
+        config.validator.address,
       );
+      assert.isOk(validatorActualEndHeight.eq(Utils.MAX_UINT256));
 
-      assert.strictEqual(
-        endHeight.eq(actualValidatorEndHeight),
-        true,
-        `Expected validator end height is ${endHeight} `
-        + `but got ${actualValidatorEndHeight}`,
+      const endHeight = config.activeHeight.addn(1);
+
+      config.activeHeight.iaddn(1);
+      await config.validatorSet.incrementActiveHeight(config.activeHeight);
+
+      await config.validatorSet.removeValidator(config.validator.address, endHeight);
+
+      validatorActualEndHeight = await config.validatorSet.validatorEndHeight.call(
+        config.validator.address,
+      );
+      assert.isOk(
+        endHeight.eq(validatorActualEndHeight),
+        `Expected validator end height is ${endHeight} but got ${validatorActualEndHeight}`,
       );
     });
   });
