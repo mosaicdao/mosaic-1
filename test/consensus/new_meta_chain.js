@@ -99,7 +99,7 @@ contract('Consensus::newMetachain', (accounts) => {
       );
     });
 
-    it('should verify data from spy contract', async () => {
+    it.skip('should verify data from spy contract', async () => {
       await consensusUtil.callNewMetachainOnConsensus(contracts.SpyAxiom, inputParams);
       const newCoreCallData = await contracts.SpyAxiom.spyNewCoreCallData.call();
 

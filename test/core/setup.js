@@ -110,28 +110,6 @@ contract('Core::setup', (accounts) => {
         'Reputation contract\'s address is null.',
       );
     });
-
-    it('should revert as height is 0 and parent is not', async () => {
-      const args = correctArgs;
-      args.height = 0;
-      args.parent = CoreUtils.randomSha3();
-
-      await Utils.expectRevert(
-        createCore(args, config.consensus),
-        'Height and parent can be 0 only together.',
-      );
-    });
-
-    it('should revert as parent is 0 and height is not', async () => {
-      const args = correctArgs;
-      args.height = 1;
-      args.parent = Utils.ZERO_BYTES32;
-
-      await Utils.expectRevert(
-        createCore(args, config.consensus),
-        'Height and parent can be 0 only together.',
-      );
-    });
   });
 
   contract('Positive Tests', async () => {
