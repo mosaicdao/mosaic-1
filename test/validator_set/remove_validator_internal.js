@@ -23,7 +23,7 @@ const ValidatorSet = artifacts.require('ValidatorSetDouble');
 
 const config = {};
 
-contract('ValidatorSet::removeValidator', (accounts) => {
+contract('ValidatorSet::removeValidatorInternal', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
 
   beforeEach(async () => {

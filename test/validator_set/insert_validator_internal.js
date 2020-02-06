@@ -22,7 +22,7 @@ const ValidatorSet = artifacts.require('ValidatorSetDouble');
 
 const config = {};
 
-contract('ValidatorSet::insertValidator', (accounts) => {
+contract('ValidatorSet::insertValidatorInternal', (accounts) => {
   beforeEach(async () => {
     config.activeHeight = new BN(1);
     config.validatorSet = await ValidatorSet.new();
