@@ -68,19 +68,6 @@ contract Core is
         uint256 gasTarget;
     }
 
-    struct Transition {
-        /** Kernel Hash */
-        bytes32 KernelHash;
-        /** Observation of the origin chain */
-        bytes32 originObservation;
-        /** Dynasty number of the metablockchain */
-        uint256 dynasty;
-        /** Accumulated gas on the metablockchain */
-        uint256 accumulatedGas;
-        /** Committee lock is the hash of the accumulated transaction root */
-        bytes32 committeeLock;
-    }
-
     struct VoteCount {
         /** Kernel height for proposed metablock */
         uint256 height;
@@ -187,12 +174,6 @@ contract Core is
 
     /** Committed sourceBlockNumber */
     uint256 public committedSourceBlockNumber;
-
-    // /** Closed transition object */
-    // Transition public closedTransition;
-
-    // /** Sealing vote message */
-    // VoteMessage public sealedVoteMessage;
 
     /** Map kernel height to linked list of proposals */
     mapping(uint256 => mapping(bytes32 => bytes32)) proposals;
