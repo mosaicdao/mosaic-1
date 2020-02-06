@@ -14,24 +14,27 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/**
- * @title Self protocore interface
- */
-interface SelfProtocoreI {
+import "../../reputation/CoreputationI.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
+contract CoreputationSpy is CoreputationI {
+
+    using SafeMath for uint256;
+
+    uint256 public upsertValidatorCallCount;
+
+    mapping(address => uint256) spyUpsertValidators;
 
     /**
-     * @notice Insert or remove validator. It inserts validator if not already
-     *         present and reputation is greater than 0. It removes validator
-     *         if it is present and reputation is 0.
-     *
-     * @param _validator Validator address to upsert.
-     * @param _height Validator start or end height to be updated.
-     * @param _reputation Validator's reputation value.
+     * @notice Spy the call of upsertValidator function.
      */
     function upsertValidator(
         address _validator,
-        uint256 _height,
         uint256 _reputation
     )
-        external;
+        external
+    {
+        upsertValidatorCallCount = upsertValidatorCallCount.add(1);
+        spyUpsertValidators[_validator] = _reputation;
+    }
 }

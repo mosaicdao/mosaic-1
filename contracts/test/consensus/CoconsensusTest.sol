@@ -21,6 +21,9 @@ contract CoconsensusTest is Coconsensus {
 
     using SafeMath for uint256;
 
+    address coreputation;
+    address consensusCogateway;
+
     /**
      * @notice This function stores the genesis data.
      */
@@ -74,4 +77,30 @@ contract CoconsensusTest is Coconsensus {
         relativeSelfDynasty = _dynasty;
     }
 
+
+    function setCoreputation(address _coreputation) external {
+        coreputation = _coreputation;
+    }
+
+    function setConsensusCogateway(address _consensusCogateway) external {
+        consensusCogateway = _consensusCogateway;
+    }
+
+     /** @notice Get the coreputation contract address. */
+    function getCoreputation()
+        internal
+        view
+        returns (CoreputationI)
+    {
+        return CoreputationI(coreputation);
+    }
+
+    /** @notice Get the consensus cogateway contract address. */
+    function getConsensusCogateway()
+        internal
+        view
+        returns (ConsensusCogatewayI)
+    {
+        return ConsensusCogatewayI(consensusCogateway);
+    }
 }

@@ -109,7 +109,9 @@ contract ValidatorSet is ForwardValidatorSetAbstract {
         view
         returns (uint256)
     {
-        revert("Implementation is missing.");
+        // TODO: This is a temporary code.
+        return 3;
+        //revert("Implementation is missing.");
     }
 
     /* Internal Functions  */

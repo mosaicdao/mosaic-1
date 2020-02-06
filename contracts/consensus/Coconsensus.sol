@@ -191,7 +191,7 @@ contract Coconsensus is
      * @param _sourceBlockNumber Block number of source checkpoint.
      * @param _targetBlockNumber Block number af target checkpoint.
      *
-     * \pre `_metachainId` is not 0.
+     * \pre `_metachainId` is self metachain id.
      * \pre `_source` is not 0.
      * \pre `_target` is not 0.
      * \pre `_sourceBlockNumber` is a checkpoint.
@@ -220,8 +220,8 @@ contract Coconsensus is
         external
     {
         require(
-            _metachainId != bytes32(0),
-            "Metachain id must not be null."
+            _metachainId == selfMetachainId,
+            "Metachain id must be self metachain id."
         );
         require(
             _source != bytes32(0),
@@ -246,6 +246,8 @@ contract Coconsensus is
             _targetBlockNumber > _sourceBlockNumber,
             "Target block number must be greater than source block number."
         );
+
+        //TODO:  Should the transition hash be verified in the link?
 
         // Change the status of source block to committed.
         commitCheckpointInternal(_metachainId, _sourceBlockNumber);
@@ -275,8 +277,8 @@ contract Coconsensus is
             _updatedReputation
         );
 
-        // Open new metablock on self protocore contract.
-        SelfProtocoreI(address(protocore)).openMetablock(
+        // Open new kernel on self protocore contract.
+        protocore.openKernel(
             _kernelHeight,
             openKernelHash
         );
@@ -620,6 +622,7 @@ contract Coconsensus is
 
         // Get the open kernel hash from the consensus cogateway contract.
         bytes32 openKernelHash = consensusCogateway.getKernelHash(_kernelHeight);
+
         require(
             kernelHash_ == openKernelHash,
             "Generated kernel hash is not equal to open kernel hash."

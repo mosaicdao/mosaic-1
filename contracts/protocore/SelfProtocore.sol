@@ -46,6 +46,15 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protoco
     );
 
 
+    /* Storage */
+
+    /** Current open kernel hash */
+    bytes32 public kernelHash;
+
+    /** Current metablock height */
+    uint256 public metablockHeight;
+
+
     /* Special Functions */
 
     /**
@@ -123,8 +132,18 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protoco
         }
     }
 
+    // TODO check what else has to be done here.
+    function openMetablock(
+        uint256 _kernelHeight,
+        bytes32 _kernelHash
+    )
+        external
+    {
+        assert(_kernelHeight == metablockHeight.add(1));
 
-    /* External Functions. */
+        metablockHeight = _kernelHeight;
+        kernelHash = _kernelHash;
+    }
 
     /**
      * @notice It proposes a valid link to be voted later by active validators.
