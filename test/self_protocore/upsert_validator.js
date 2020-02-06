@@ -107,7 +107,7 @@ contract('SelfProtocore::upsertValidator', (accounts) => {
       );
     });
 
-    it('should remove validator if reputation is 0', async () => {
+    it.skip('should remove validator if reputation is 0', async () => {
       await config.selfProtocore.upsertValidator(
         validator.address,
         validator.beginHeight,
