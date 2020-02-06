@@ -95,11 +95,9 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
      * @param _kernelHash New kernel hash.
      *
      * \pre Only coconsensus can call.
-     * \pre `_kernelHeight` is plus one of the current kernel height of
-     *      the protocore.
-     * \pre Satisfy all the pre conditions of openKernelInternal.
+     * \pre Satisfies all pre conditions of Protocore::openKernelInternal().
      *
-     * \post Satisfy all the post condition of openKernelInternal.
+     * \post Satisfies all the post conditions of Protocore::openKernelInternal().
      */
     function openKernel(
         uint256 _kernelHeight,
@@ -108,12 +106,7 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
         external
         onlyCoconsensus
     {
-        require(
-            _kernelHeight == openKernelHeight.add(1),
-            "The given kernel height should be plus 1 of the current one."
-        );
-
-        openKernelInternal(
+        Protocore.openKernelInternal(
             _kernelHeight,
             _kernelHash
         );

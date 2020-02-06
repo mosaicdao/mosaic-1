@@ -96,12 +96,10 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protoco
      * @param _kernelHash New kernel hash.
      *
      * \pre Only coconsensus can call.
-     * \pre `_kernelHeight` is plus one of the current kernel height of
-     *      the protocore.
-     * \pre Satisfy all the pre conditions of openKernelInternal.
+     * \pre Satisfies all pre conditions of Protocore::openKernelInternal().
      *
-     * \post Increments the active height of validator set.
-     * \post Satisfy all the post condition of openKernelInternal.
+     * \post Increments the active height of the validator set.
+     * \post Satisfies all the post conditions of Protocore::openKernelInternal().
      */
     function openKernel(
         uint256 _kernelHeight,
@@ -110,11 +108,6 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protoco
         external
         onlyCoconsensus
     {
-        require(
-            _kernelHeight == openKernelHeight.add(1),
-            "The given kernel height should be plus 1 of the current one."
-        );
-
         ValidatorSet.incrementActiveHeightInternal(_kernelHeight.add(1));
 
         openKernelInternal(
