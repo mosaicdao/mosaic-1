@@ -225,26 +225,18 @@ contract Protocore is
      * @param _kernelHash New kernel hash.
      *
      * \pre Only coconsensus can call.
-     * \pre `_kernelHeight` is plus one of the current kernel height of
-     *      the protocore.
      * \pre `_kernelHash` is not 0.
      *
      * \post Increments open kernel height.
      * \post Updates stored open kernel hash.
      * \post Updates forward validator set quorum for the newly opened metablock height.
      */
-    function openKernel(
+    function openKernelInternal(
         uint256 _kernelHeight,
         bytes32 _kernelHash
     )
-        external
-        onlyCoconsensus
+        internal
     {
-        require(
-            _kernelHeight == openKernelHeight.add(1),
-            "The given kernel height should be plus 1 of the current one."
-        );
-
         require(_kernelHash != bytes32(0), "The given kernel hash is 0.");
 
         openKernelHeight = _kernelHeight;

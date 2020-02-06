@@ -55,13 +55,13 @@ contract('Coconsensus::commitCheckpoint', (accounts) => {
       let targetBlockNumber = data.auxiliaryTargetBlockNumber;
       let updatedValidators = [];
       let updatedReputation = [];
-      let kernelHeight = new BN(-1);
+      let kernelHeight;
       let gasTarget = new BN(100);
       let transitionHash = data.auxiliarySourceTransitionHash;
 
       const finalizedCheckpoints = [];
 
-      for (let i = 0; i < 3; i += 1) {
+      for (let i = 0; i < 4; i += 1) {
         const parent = ProtocoreUtils.hashVoteMessage(
           data.domainSeparator,
           transitionHash,

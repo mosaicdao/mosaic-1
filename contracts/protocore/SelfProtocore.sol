@@ -89,6 +89,41 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protoco
     /* External Functions */
 
     /**
+     * @notice openKernel() function marks the specified kernel
+     *         as opened.
+     *
+     * @param _kernelHeight New kernel height.
+     * @param _kernelHash New kernel hash.
+     *
+     * \pre Only coconsensus can call.
+     * \pre `_kernelHeight` is plus one of the current kernel height of
+     *      the protocore.
+     * \pre Satisfy all the pre conditions of openKernelInternal.
+     *
+     * \post Increments the active height of validator set.
+     * \post Satisfy all the post condition of openKernelInternal.
+     */
+    function openKernel(
+        uint256 _kernelHeight,
+        bytes32 _kernelHash
+    )
+        external
+        onlyCoconsensus
+    {
+        require(
+            _kernelHeight == openKernelHeight.add(1),
+            "The given kernel height should be plus 1 of the current one."
+        );
+
+        ValidatorSet.incrementActiveHeightInternal(_kernelHeight.add(1));
+
+        openKernelInternal(
+            _kernelHeight,
+            _kernelHash
+        );
+    }
+
+    /**
      * @notice Insert or remove validator. It inserts validator if not already
      *         present and reputation is greater than 0. It removes validator
      *         if it is present and reputation is 0.
