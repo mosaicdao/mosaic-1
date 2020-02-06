@@ -31,7 +31,7 @@ contract VoteMessage {
      *        the typed VoteMessage hash.
      */
     function hashVoteMessage(
-        bytes32 _domainSeparator
+        bytes32 _domainSeparator,
         bytes32 _transitionHash,
         bytes32 _source,
         bytes32 _target,
