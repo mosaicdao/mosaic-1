@@ -63,4 +63,24 @@ contract('SelfProtocore::registerVote', (accounts) => {
       );
     });
   });
+
+  contract('Positive Tests', async () => {
+    it('should successfully register vote for given vote message hash', async () =>{
+      let block = await Utils.getBlockNumber();
+      const targetBlockNumber = block.add(config.epochLength);
+
+      await config.selfProtocore.setLink(
+        config.voteMessageHash,
+        targetBlockNumber,
+        config.epochLength,
+      );
+
+      await config.selfProtocore.registerVote(
+        config.voteMessageHash,
+        config.sig.r,
+        config.sig.s,
+        config.sig.v,
+      );
+    });
+  });
 });
