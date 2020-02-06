@@ -268,13 +268,11 @@ contract ValidatorSet is ForwardValidatorSetAbstract {
         internal
         onlyActiveHeight(_endHeight)
     {
+        assert(validatorEndHeight[_validator] == MAX_FUTURE_END_HEIGHT);
+
         require(
             validatorBeginHeight[_validator] < _endHeight,
             "End height must be strictly greater than the start height."
-        );
-
-        assert(
-            validatorEndHeight[_validator] == MAX_FUTURE_END_HEIGHT
         );
 
         validatorEndHeight[_validator] = _endHeight;
@@ -286,15 +284,4 @@ contract ValidatorSet is ForwardValidatorSetAbstract {
         validatorCount[nextHeight] = validatorCount[nextHeight].sub(1);
         fvsCount[activeHeight] = fvsCount[activeHeight].sub(1);
     }
-
-    /**
-     * @notice It returns current active height.
-     *
-     * @returns Value of active height.
-     */
-    function getActiveHeightInternal() internal view returns(uint256) {
-        return activeHeight;
-    }
-
-
 }

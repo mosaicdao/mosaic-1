@@ -122,14 +122,6 @@ contract TestSelfProtocore is SelfProtocore {
         return links[_voteMessageHash].fvsVoteCount[_height];
     }
 
-    function forwardValidatorCount(uint256 _height)
-        public
-        view
-        returns (uint256)
-    {
-        require(false, "This must not be called for unit tests.");
-    }
-
     /**
      * @notice It is used to call `incrementActiveHeightInternal`to increment
      *         active height.

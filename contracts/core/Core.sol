@@ -39,8 +39,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, ValidatorSet, MosaicV
     /** Emitted when core status is changed. */
     event CoreStatusUpdated(CoreStatus status);
 
-    /**  Emitted when core is opened. */
-    event GenesisOriginObservationStored(uint256 originObservationBlockNumber);
+    /**  Emitted when core is opened for a first time after creation. */
+    event GenesisOriginObservationStored(uint256 genesisOriginObservationBlockNumber);
 
 
     /* Structs */
@@ -214,10 +214,10 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, ValidatorSet, MosaicV
     uint256 public precommitClosureBlockNumber;
 
     /**
-     * Block number at which core status is changed to creation.
-     * It will be used by validators to create GenesisFile.
+     * Block number at which core status is changed from creation to opened.
+     * The initial validators are now known and they can create the genesis file.
      */
-    uint256 public rootOriginObservationBlockNumber;
+    uint256 public genesisOriginObservationBlockNumber;
 
 
     /* Modifiers */
@@ -317,11 +317,12 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, ValidatorSet, MosaicV
             "Reputation contract's address is null."
         );
 
-        require(
-            (_height == uint256(0) && _parent == bytes32(0))
-            || (_height != uint256(0) && _parent != bytes32(0)),
-            "Height and parent can be 0 only together."
-        );
+        // TODO: remove before committing
+        // require(
+        //     (_height == uint256(0) && _parent == bytes32(0))
+        //     || (_height != uint256(0) && _parent != bytes32(0)),
+        //     "Height and parent can be 0 only together."
+        // );
 
         domainSeparator = keccak256(
             abi.encode(
@@ -335,6 +336,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, ValidatorSet, MosaicV
 
         setupConsensus(_consensus);
 
+        setupValidatorSet(_height);
+
         coreStatus = CoreStatus.created;
 
         epochLength = _epochLength;
@@ -344,7 +347,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, ValidatorSet, MosaicV
         minimumValidatorCount = _minValidators;
         joinLimit = _joinLimit;
 
-        creationKernelHeight = getActiveHeightInternal();
+        creationKernelHeight = _height;
         openKernelHeight = _height;
 
         Kernel storage creationKernel = kernels[_height];
@@ -357,8 +360,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, ValidatorSet, MosaicV
         committedSourceBlockNumber = _sourceBlockNumber;
 
         emit CoreStatusUpdated(coreStatus);
-
-        ValidatorSet.setupValidatorSet(creationKernelHeight);
     }
 
 
@@ -715,9 +716,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, ValidatorSet, MosaicV
             uint256 minValidatorCount_,
             uint256 beginHeight_
         )
-    {   // change to blocknumber
+    {
         // during created state, validators join at creation kernel height
-        // insertValidator(_validator, creationKernelHeight);
         insertValidatorInternal(_validator, creationKernelHeight);
 
         Kernel storage creationKernel = kernels[creationKernelHeight];
@@ -725,6 +725,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, ValidatorSet, MosaicV
         // TASK: reputation can be uint64, and initial rep set properly
         creationKernel.updatedReputation.push(uint256(1));
         if (countValidators >= minimumValidatorCount) {
+            assert(countValidators == minimumValidatorCount);
             quorum = calculateQuorum(countValidators);
             precommitClosureBlockNumber = CORE_OPEN_VOTES_WINDOW;
             openKernelHash = hashKernel(
@@ -734,21 +735,20 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, ValidatorSet, MosaicV
                 creationKernel.updatedReputation,
                 creationKernel.gasTarget
             );
+            genesisOriginObservationBlockNumber = block.number;
+            // with the initial validator set determined, move the active height for joining up.
+            ValidatorSet.incrementActiveHeightInternal(creationKernelHeight.add(1));
+            emit GenesisOriginObservationStored(genesisOriginObservationBlockNumber);
+
             coreStatus = CoreStatus.opened;
-            // Core status would be changed to `opened`.
-            // So `rootOriginObservationBlockNumber` would be set once.
-            rootOriginObservationBlockNumber = block.number;
-            emit GenesisOriginObservationStored(rootOriginObservationBlockNumber);
+            emit CoreStatusUpdated(coreStatus);
 
             newProposalSet();
-
-            ValidatorSet.incrementActiveHeightInternal(creationKernelHeight.add(1));
-            emit CoreStatusUpdated(coreStatus);
         }
 
+        // TODO (ben): clean up redundant variables
         validatorCount_ = countValidators;
         minValidatorCount_ = minimumValidatorCount;
-
         beginHeight_ = creationKernelHeight;
     }
 
@@ -789,9 +789,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, ValidatorSet, MosaicV
 
         uint256 nextKernelHeight = openKernelHeight.add(1);
 
-        // insertValidator requires validator cannot join twice
+        // insertValidatorInternal asserts validator cannot join twice
         // insert validator starting from next metablock height
-        // insertValidator(_validator, nextKernelHeight);
         insertValidatorInternal(_validator, nextKernelHeight);
         Kernel storage nextKernel = kernels[nextKernelHeight];
         nextKernel.updatedValidators.push(_validator);
@@ -836,7 +835,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, ValidatorSet, MosaicV
 
         nextKernelHeight_ = openKernelHeight.add(1);
 
-        // removeValidator performs necessary requirements
+        // removeValidatorInternal asserts validator is currently in the validator set and not already logged out.
         // remove validator from next metablock height
         removeValidatorInternal(_validator, nextKernelHeight_);
 
@@ -864,21 +863,14 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, ValidatorSet, MosaicV
     /* Public functions */
 
     /**
-     * @notice Validator is active if open kernel height is
-     *           - greater or equal than validator's begin height
-     *           - and, less or equal than validator's end height
+     * @notice Validator is active if it is validator set at open kernel height.
      */
     function isValidator(address _account)
         public
         view
         returns (bool)
     {
-        // Validator must have a begin height less than or equal to current metablock height.
-        // Validator must have an end height higher than or equal current metablock height.
-        // Validator must be registered to this core.
-        return (validatorBeginHeight[_account] <= openKernelHeight) &&
-            (validatorEndHeight[_account] >= openKernelHeight) &&
-            (validatorEndHeight[_account] > uint256(0));
+        return inValidatorSet(_account, openKernelHeight);
     }
 
     function calculateQuorum(uint256 _count)
@@ -997,66 +989,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, ValidatorSet, MosaicV
         }
         delete proposals[_height][deleteProposal];
         delete voteCounts[deleteProposal];
-    }
-
-    /**
-     * @notice Inserts a validator in the core and sets begin and end heights
-     *         of validator.
-     *
-     * @dev Function requires:
-     *          - validator's address is not null
-     *          - begin height is greater or equal than open kernel height
-     *          - validator is not part of the core
-     */
-    function insertValidator(address _validator, uint256 _beginHeight)
-        internal
-    {
-        require(
-            _validator != address(0),
-            "Validator must not be null address."
-        );
-        assert(_beginHeight >= openKernelHeight);
-        require(
-            validatorEndHeight[_validator] == 0,
-            "Validator must not already be part of this core."
-        );
-        assert(validatorBeginHeight[_validator] == 0);
-        validatorBeginHeight[_validator] = _beginHeight;
-        validatorEndHeight[_validator] = MAX_FUTURE_END_HEIGHT;
-        // update validator count upon new metablock opening
-    }
-
-    /**
-     * @notice Removes a validator.
-     *
-     * @dev Function requires:
-     *          - address of a validator is not 0
-     *          - the given end height of a validator is bigger than open
-     *            kernel height
-     *          - validator must have begun
-     *          - validator must be active
-     */
-    function removeValidator(address _validator, uint256 _endHeight)
-        internal
-    {
-        require(
-            _validator != address(0),
-            "Validator must not be null address."
-        );
-        require(
-            _endHeight > openKernelHeight,
-            "End height cannot be less or equal than kernel height."
-        );
-        require(
-            validatorBeginHeight[_validator] <= openKernelHeight,
-            "Validator must have begun."
-        );
-        require(
-            validatorEndHeight[_validator] == MAX_FUTURE_END_HEIGHT,
-            "Validator must be active."
-        );
-        validatorEndHeight[_validator] = _endHeight;
-        // update validator count upon new metablock opening
     }
 
     /**
