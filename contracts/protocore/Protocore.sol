@@ -335,6 +335,7 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
         proposedLink.targetFinalisation = CheckpointFinalisationStatus.Registered;
     }
 
+
     /* Private Functions */
 
     /**
