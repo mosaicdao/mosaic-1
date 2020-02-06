@@ -20,7 +20,7 @@ import "./ConsensusI.sol";
 import "./CoreLifetime.sol";
 import "../anchor/AnchorI.sol";
 import "../axiom/AxiomI.sol";
-import "../block/Block.sol";
+import "../block/BlockHeader.sol";
 import "../committee/CommitteeI.sol";
 import "../core/CoreI.sol";
 import "../reputation/ReputationI.sol";
@@ -1241,7 +1241,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             "There is no anchor for the specified metachain id."
         );
 
-        Block.Header memory blockHeader = Block.decodeHeader(_rlpBlockHeader);
+        BlockHeader.Header memory blockHeader = BlockHeader.decodeHeader(_rlpBlockHeader);
 
         // Anchor state root.
         anchor.anchorStateRoot(

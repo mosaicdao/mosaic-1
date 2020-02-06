@@ -17,12 +17,10 @@ pragma solidity >=0.5.0 <0.6.0;
 /**
  * @title Genesis coconsensus contract is a storage contract that holds
  *        the initial values required by the contract that were written in the
- *        genesis block. This contract stores the information related to metachains.
- *        Coconsensus can track multiple protocores, so the values needed to
- *        initialize protocore are stored in the mapping. The metachain id's are
- *        stored as a linked list and is iterable. The corresponding anchor address,
- *        protocore address epoch length, domain separators and metablock height can
- *        be retrieved for a given metachain id from the mappings.
+ *        genesis block. This contract stores the origin metachain id,
+ *        self metachain id, observer contract addresses, protocore contract
+ *        addresses. The metachain ids are stored as a linked list so that it
+ *        can be iterable.
  */
 contract GenesisCoconsensus {
 
@@ -32,7 +30,7 @@ contract GenesisCoconsensus {
     bytes32 public genesisOriginMetachainId;
 
     /** Metachain id of the auxiliary chain. */
-    bytes32 public genesisAuxiliaryMetachainId;
+    bytes32 public genesisSelfMetachainId;
 
     /** Link list of metachain ids (for all protocores). */
     mapping(bytes32 => bytes32) public genesisMetachainIds;
@@ -48,13 +46,4 @@ contract GenesisCoconsensus {
      * address on auxiliary chain.
      */
     mapping(bytes32 => address) public genesisProtocores;
-
-    /** Mapping of metachain id to the epoch lengths. */
-    mapping(bytes32 => uint256) public genesisEpochLengths;
-
-    /** Mapping of metachain id to the metablock height. */
-    mapping(bytes32 => uint256) public genesisMetablockHeights;
-
-    /** Mapping of metachain id to the domain separator. */
-    mapping(bytes32 => bytes32) public genesisDomainSeparators;
 }

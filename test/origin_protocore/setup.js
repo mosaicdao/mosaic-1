@@ -33,17 +33,17 @@ contract('OriginProtocore::setup', (accounts) => {
     config.genesis.originSourceBlockHash = Utils.ZERO_BYTES32;
     config.genesis.originSourceBlockNumber = new BN(0);
     config.genesis.originTargetBlockHash = Utils.getRandomHash();
+    config.genesis.originMetachainId = Utils.getRandomHash();
+    config.genesis.domainSeparator = Utils.getRandomHash();
+    config.genesis.epochLength = new BN(100);
+    config.genesis.metablockHeight = new BN(Utils.getRandomNumber(1000));
+    config.genesis.selfProtocore = accountProvider.get();
 
     config.setupParams = {};
-    config.setupParams.metachainId = Utils.getRandomHash();
-    config.setupParams.domainSeparator = Utils.getRandomHash();
-    config.setupParams.epochLength = new BN(100);
-    config.setupParams.metablockHeight = new BN(Utils.getRandomNumber(1000));
-    config.setupParams.selfProtocore = accountProvider.get();
     config.setupParams.coconsensus = accountProvider.get();
 
     config.genesis.originTargetBlockNumber = new BN(
-      Utils.getRandomNumber(10000) * config.setupParams.epochLength,
+      Utils.getRandomNumber(10000) * config.genesis.epochLength,
     );
 
     config.contracts = {};
@@ -53,6 +53,11 @@ contract('OriginProtocore::setup', (accounts) => {
 
     // Set the value of genesis variables
     await config.contracts.originProtocore.setGenesisStorage(
+      config.genesis.originMetachainId,
+      config.genesis.domainSeparator,
+      config.genesis.epochLength,
+      config.genesis.metablockHeight,
+      config.genesis.selfProtocore,
       config.genesis.originParentVoteMessageHash,
       config.genesis.originSourceBlockHash,
       config.genesis.originSourceBlockNumber,
@@ -68,11 +73,6 @@ contract('OriginProtocore::setup', (accounts) => {
     it('should revert if caller is not coconsensus', async () => {
       await Utils.expectRevert(
         config.contracts.originProtocore.setup(
-          config.setupParams.metachainId,
-          config.setupParams.domainSeparator,
-          config.setupParams.epochLength,
-          config.setupParams.metablockHeight,
-          config.setupParams.selfProtocore,
           { from: accountProvider.get() },
         ),
         'Only the Coconsensus contract can call this function.',
@@ -81,20 +81,10 @@ contract('OriginProtocore::setup', (accounts) => {
 
     it('should revert if setup is already called once', async () => {
       await config.contracts.originProtocore.setup(
-        config.setupParams.metachainId,
-        config.setupParams.domainSeparator,
-        config.setupParams.epochLength,
-        config.setupParams.metablockHeight,
-        config.setupParams.selfProtocore,
         { from: config.setupParams.coconsensus },
       );
       await Utils.expectRevert(
         config.contracts.originProtocore.setup(
-          config.setupParams.metachainId,
-          config.setupParams.domainSeparator,
-          config.setupParams.epochLength,
-          config.setupParams.metablockHeight,
-          config.setupParams.selfProtocore,
           { from: config.setupParams.coconsensus },
         ),
         'Contract is already initialized.',
@@ -107,31 +97,26 @@ contract('OriginProtocore::setup', (accounts) => {
       const { originProtocore } = config.contracts;
 
       await originProtocore.setup(
-        config.setupParams.metachainId,
-        config.setupParams.domainSeparator,
-        config.setupParams.epochLength,
-        config.setupParams.metablockHeight,
-        config.setupParams.selfProtocore,
         { from: config.setupParams.coconsensus },
       );
 
       const selfProtocoreAddress = await originProtocore.selfProtocore.call();
       assert.strictEqual(
         selfProtocoreAddress,
-        config.setupParams.selfProtocore,
+        config.genesis.selfProtocore,
         'Self protocore address is not set during the setup.',
       );
 
       const epochLength = await originProtocore.epochLength.call();
       assert.strictEqual(
-        epochLength.eq(config.setupParams.epochLength),
+        epochLength.eq(config.genesis.epochLength),
         true,
         `Epoch length in contract ${epochLength.toString(10)} must be`
-        + `equal to ${config.setupParams.epochLength.toString(10)}}.`,
+        + `equal to ${config.genesis.epochLength.toString(10)}}.`,
       );
 
       const genesisVoteMessageHash = ProtocoreUtils.hashVoteMessage(
-        config.setupParams.domainSeparator,
+        config.genesis.domainSeparator,
         Utils.ZERO_BYTES32,
         Utils.ZERO_BYTES32,
         config.genesis.originTargetBlockHash,
@@ -163,15 +148,15 @@ contract('OriginProtocore::setup', (accounts) => {
         'Source transition hash in genesis link must be null.',
       );
       assert.strictEqual(
-        genesisLink.proposedMetablockHeight.eq(config.setupParams.metablockHeight),
+        genesisLink.proposedMetablockHeight.eq(config.genesis.metablockHeight),
         true,
         `Proposed metablock height from contract ${genesisLink.proposedMetablockHeight.toString(10)} `
-        + `must be equal to ${config.setupParams.metablockHeight.toString(10)}.`,
+        + `must be equal to ${config.genesis.metablockHeight.toString(10)}.`,
       );
       assert.isOk(
         (await originProtocore.fvsVoteCount(
           genesisVoteMessageHash,
-          config.setupParams.metablockHeight,
+          config.genesis.metablockHeight,
         )).eqn(0),
       );
       assert.strictEqual(
