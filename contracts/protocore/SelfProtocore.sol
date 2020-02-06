@@ -79,7 +79,7 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protoco
             genesisAuxiliaryTargetBlockNumber
         );
 
-        ValidatorSet.setupValidatorSet(openKernelHeight);
+        ValidatorSet.setupValidatorSet(openKernelHeight.add(1));
 
         finalizedBlockHash_ = genesisAuxiliaryTargetBlockHash;
         finalizedBlockNumber_ = genesisAuxiliaryTargetBlockNumber;
