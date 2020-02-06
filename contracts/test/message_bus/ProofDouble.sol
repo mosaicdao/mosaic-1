@@ -20,6 +20,9 @@ import "../../lib/CircularBufferUint.sol";
 
 contract ProofDouble is Proof {
 
+    /**
+     * @notice It is used to test Proof::setupProof
+     */
     function setupProofDouble(
         address _storageAccount,
         StateRootI _stateRootProvider,
@@ -34,7 +37,9 @@ contract ProofDouble is Proof {
         );
     }
 
-
+    /**
+     * @notice It is used to test Proof::proveStorageAccount
+     */
     function proveStorageAccountDouble(
         uint256 _blockHeight,
         bytes calldata _rlpAccount,
@@ -49,6 +54,9 @@ contract ProofDouble is Proof {
         );
     }
 
+    /**
+     * @notice It is used to test Proof::proveStorageExistence
+     */
     function proveStorageExistenceDouble(
         bytes calldata _path,
         bytes32 _value,
@@ -66,6 +74,9 @@ contract ProofDouble is Proof {
         );
     }
 
+    /**
+     * @notice It is used to test Proof::storagePath
+     */
     function storagePathDouble(
         uint8 _index,
         bytes32 _key
@@ -80,6 +91,12 @@ contract ProofDouble is Proof {
         );
     }
 
+    /**
+     * @notice It is used to set the storage root for _blockHeight
+     *
+     * @param _blockHeight Block height for which the storage root will be set
+     * @param _storageRoot Storage root
+     */
     function setStorageRootDouble(
         uint256 _blockHeight,
         bytes32 _storageRoot
