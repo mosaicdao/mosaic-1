@@ -115,7 +115,7 @@ contract TestProtocore is Protocore {
     )
         external
     {
-        return Protocore.registerVoteInternal(
+        Protocore.registerVoteInternal(
             _voteMessageHash,
             _r,
             _s,
