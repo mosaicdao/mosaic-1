@@ -79,6 +79,8 @@ contract TestSelfProtocore is SelfProtocore {
     {
         Link storage link = links[_voteMessageHash];
         link.targetBlockNumber = _targetBlockNumber;
+        link.targetFinalisation = CheckpointFinalisationStatus.Registered;
+        link.proposedMetablockHeight = openKernelHeight;
         epochLength = _epochLength;
     }
 }

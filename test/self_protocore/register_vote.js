@@ -46,7 +46,7 @@ contract('SelfProtocore::registerVote', (accounts) => {
       await config.selfProtocore.setLink(
         config.voteMessageHash,
         targetBlockNumber,
-        config.epochLength
+        config.epochLength,
       );
 
       await Utils.advanceBlocks(config.epochLength.muln(2));

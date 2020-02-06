@@ -388,6 +388,7 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
         uint8 _v
     )
         internal
+        returns (uint256)
     {
         require(
             _voteMessageHash != bytes32(0),
@@ -426,6 +427,8 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
         if (quorumReached) {
             justifyLink(_voteMessageHash, link);
         }
+
+        return link.targetBlockNumber;
     }
 
 
