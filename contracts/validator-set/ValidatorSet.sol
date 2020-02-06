@@ -14,7 +14,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "./ForwardValidatorSetAbstract.sol";
+import "./ValidatorSetAbstract.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
@@ -22,7 +22,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
  *
  * @notice It contains methods to maintain validators for a metablock.
  */
-contract ValidatorSet is ForwardValidatorSetAbstract {
+contract ValidatorSet is ValidatorSetAbstract {
 
     /* Usings */
 

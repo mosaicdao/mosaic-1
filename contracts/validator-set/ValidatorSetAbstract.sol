@@ -14,13 +14,11 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// TODO (ben): it has been premature to call this ForwardValidatorSetAbstract; rename ValidatorSetAbstract
-
 /**
- * @title ForwardValidatorSetAbstract abstract contract specifies a forward validator
+ * @title ValidatorSetAbstract abstract contract specifies a validator
  *        set abstract interfaces.
  */
-contract ForwardValidatorSetAbstract {
+contract ValidatorSetAbstract {
 
     /* Public Functions */
 
