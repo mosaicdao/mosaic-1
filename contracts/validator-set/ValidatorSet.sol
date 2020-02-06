@@ -187,6 +187,7 @@ contract ValidatorSet is ForwardValidatorSetAbstract {
         return fvsCount[_height];
     }
 
+
     /* Internal Functions  */
 
     /**
@@ -285,4 +286,15 @@ contract ValidatorSet is ForwardValidatorSetAbstract {
         validatorCount[nextHeight] = validatorCount[nextHeight].sub(1);
         fvsCount[activeHeight] = fvsCount[activeHeight].sub(1);
     }
+
+    /**
+     * @notice It returns current active height.
+     *
+     * @returns Value of active height.
+     */
+    function getActiveHeightInternal() internal view returns(uint256) {
+        return activeHeight;
+    }
+
+
 }

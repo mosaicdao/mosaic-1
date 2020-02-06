@@ -19,11 +19,12 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./CoreI.sol";
 import "./CoreStatusEnum.sol";
 import "../consensus/ConsensusModule.sol";
+import "../validator-set/ValidatorSet.sol";
 import "../reputation/ReputationI.sol";
 import "../version/MosaicVersion.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 
-contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreStatusEnum, CoreI {
+contract Core is MasterCopyNonUpgradable, ConsensusModule, ValidatorSet, MosaicVersion, CoreStatusEnum, CoreI {
 
     /* Usings */
 
@@ -34,6 +35,13 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
     /** Emitted when new metablock is proposed */
     event MetablockProposed(bytes32 proposal);
+
+    /** Emitted when core status is changed. */
+    event CoreStatusUpdated(CoreStatus status);
+
+    /**  Emitted when core is opened. */
+    event GenesisOriginObservationStored(uint256 originObservationBlockNumber);
+
 
     /* Structs */
 
@@ -71,10 +79,10 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         bytes32 source;
         /** Target block hash */
         bytes32 target;
-        /** Source block height */
-        uint256 sourceBlockHeight;
-        /** Target block height */
-        uint256 targetBlockHeight;
+        /** Source block number */
+        uint256 sourceBlockNumber;
+        /** Target block number */
+        uint256 targetBlockNumber;
     }
 
     struct VoteCount {
@@ -109,17 +117,11 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
     /** EIP-712 type hash for a Vote Message */
     bytes32 public constant VOTE_MESSAGE_TYPEHASH = keccak256(
-        "VoteMessage(bytes32 transitionHash,bytes32 source,bytes32 target,uint256 sourceBlockHeight,uint256 targetBlockHeight)"
+        "VoteMessage(bytes32 transitionHash,bytes32 source,bytes32 target,uint256 sourceBlockNumber,uint256 targetBlockNumber)"
     );
-
-    /** Sentinel pointer for marking end of linked-list of validators */
-    address public constant SENTINEL_VALIDATORS = address(0x1);
 
     /** Sentinel pointer for marking end of linked-list of proposals */
     bytes32 public constant SENTINEL_PROPOSALS = bytes32(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
-
-    /** Maximum future end height, set for all active validators */
-    uint256 public constant MAX_FUTURE_END_HEIGHT = uint256(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
 
     /** Maximum validators that can join or logout in one metablock */
     uint256 public constant MAX_DELTA_VALIDATORS = uint256(10);
@@ -147,19 +149,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
     /** Epoch length */
     uint256 public epochLength;
-
-    /** Validator begin height assigned to this core
-     * zero - not registered to this core, or started at height 0
-     * bigger than zero - begin height for active validators (given endHeight >= metablock height)
-     */
-    mapping(address => uint256) public validatorBeginHeight;
-
-    /** Validator end height assigned to this core
-     * zero - not registered to this core
-     * MAX_FUTURE_END_HEIGHT - for active validators (assert beginHeight <= metablock height)
-     * less than MAX_FUTURE_END_HEIGHT - for logged out validators
-     */
-    mapping(address => uint256) public validatorEndHeight;
 
     /** mapping of metablock height to Kernels */
     mapping(uint256 => Kernel) public kernels;
@@ -200,8 +189,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
     /** Committed dynasty number */
     uint256 public committedDynasty;
 
-    /** Committed sourceBlockHeight */
-    uint256 public committedSourceBlockHeight;
+    /** Committed sourceBlockNumber */
+    uint256 public committedSourceBlockNumber;
 
     // /** Closed transition object */
     // Transition public closedTransition;
@@ -221,14 +210,14 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
     /** Precommitment to a proposal */
     bytes32 public precommit;
 
-    /** Precommitment closure block height */
-    uint256 public precommitClosureBlockHeight;
+    /** Precommitment closure block number */
+    uint256 public precommitClosureBlockNumber;
 
     /**
      * Block number at which core status is changed to creation.
      * It will be used by validators to create GenesisFile.
      */
-    uint256 public rootOriginObservationBlockHeight;
+    uint256 public rootOriginObservationBlockNumber;
 
 
     /* Modifiers */
@@ -273,7 +262,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
     modifier duringPrecommitmentWindow()
     {
         require(
-            block.number <= precommitClosureBlockHeight,
+            block.number <= precommitClosureBlockNumber,
             "The precommitment window must be open."
         );
         _;
@@ -294,7 +283,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         uint256 _gasTarget,
         uint256 _dynasty,
         uint256 _accumulatedGas,
-        uint256 _sourceBlockHeight
+        uint256 _sourceBlockNumber
     )
         external
     {
@@ -355,7 +344,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         minimumValidatorCount = _minValidators;
         joinLimit = _joinLimit;
 
-        creationKernelHeight = _height;
+        creationKernelHeight = getActiveHeightInternal();
         openKernelHeight = _height;
 
         Kernel storage creationKernel = kernels[_height];
@@ -365,7 +354,11 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
         committedDynasty = _dynasty;
         committedAccumulatedGas = _accumulatedGas;
-        committedSourceBlockHeight = _sourceBlockHeight;
+        committedSourceBlockNumber = _sourceBlockNumber;
+
+        emit CoreStatusUpdated(coreStatus);
+
+        ValidatorSet.setupValidatorSet(creationKernelHeight);
     }
 
 
@@ -400,9 +393,9 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *                       metablock.
      * @param _source Source blockhash of a vote message for a proposed metablock.
      * @param _target Target blockhash of a vote message for a proposed metablock.
-     * @param _sourceBlockHeight Source block height of a vote message for a
+     * @param _sourceBlockNumber Source block number of a vote message for a
      *                           proposed metablock.
-     * @param _targetBlockHeight Target block height of a vote message for a
+     * @param _targetBlockNumber Target block number of a vote message for a
      *                           proposed metablock.
      *
      * @return proposal_ Returns a proposal based on input parameters.
@@ -415,8 +408,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         bytes32 _committeeLock,
         bytes32 _source,
         bytes32 _target,
-        uint256 _sourceBlockHeight,
-        uint256 _targetBlockHeight
+        uint256 _sourceBlockNumber,
+        uint256 _targetBlockNumber
     )
         external
         whileMetablockOpen
@@ -451,16 +444,16 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             "Target blockhash must not be null."
         );
         require(
-            _sourceBlockHeight > committedSourceBlockHeight,
-            "Source block height must strictly increase."
+            _sourceBlockNumber > committedSourceBlockNumber,
+            "Source block number must strictly increase."
         );
         require(
-            (_sourceBlockHeight % epochLength) == 0,
+            (_sourceBlockNumber % epochLength) == 0,
             "Source block height must be a checkpoint."
         );
         require(
-            _targetBlockHeight == _sourceBlockHeight.add(epochLength),
-            "Target block height must equal source block height plus one."
+            _targetBlockNumber == _sourceBlockNumber.add(epochLength),
+            "Target block number must equal source block number plus one."
         );
 
         bytes32 transitionHash = hashTransition(
@@ -475,8 +468,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             transitionHash,
             _source,
             _target,
-            _sourceBlockHeight,
-            _targetBlockHeight
+            _sourceBlockNumber,
+            _targetBlockNumber
         );
 
         // insert proposal, reverts if proposal already inserted
@@ -572,9 +565,9 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *                provided metablock.
      * @param _target Target blockhash of a vote message for a
      *                provided metablock.
-     * @param _sourceBlockHeight Source block height of a vote message for a
+     * @param _sourceBlockNumber Source block number of a vote message for a
      *                           provided metablock.
-     * @param _targetBlockHeight Target block height of a vote message for a
+     * @param _targetBlockNumber Target block number of a vote message for a
      *                           provided metablock.
      *
      * @return The precommit's hash.
@@ -587,8 +580,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         bytes32 _committeeLock,
         bytes32 _source,
         bytes32 _target,
-        uint256 _sourceBlockHeight,
-        uint256 _targetBlockHeight
+        uint256 _sourceBlockNumber,
+        uint256 _targetBlockNumber
     )
         public
         view
@@ -606,8 +599,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             transitionHash,
             _source,
             _target,
-            _sourceBlockHeight,
-            _targetBlockHeight
+            _sourceBlockNumber,
+            _targetBlockNumber
         );
     }
 
@@ -621,14 +614,14 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *
      * @param _committedDynasty Dynasty of an open metablock.
      * @param _committedAccumulatedGas Accumulated gas in an open metablock.
-     * @param _committedSourceBlockHeight Source block height of a vote message
+     * @param _committedSourceBlockNumber Source block number of a vote message
      *                                    for an open metablock.
      * @param _deltaGasTarget Gas target delta for a new metablock.
      */
     function openMetablock(
         uint256 _committedDynasty,
         uint256 _committedAccumulatedGas,
-        uint256 _committedSourceBlockHeight,
+        uint256 _committedSourceBlockNumber,
         uint256 _deltaGasTarget
     )
         external
@@ -639,7 +632,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
         committedDynasty = _committedDynasty;
         committedAccumulatedGas = _committedAccumulatedGas;
-        committedSourceBlockHeight = _committedSourceBlockHeight;
+        committedSourceBlockNumber = _committedSourceBlockNumber;
 
         uint256 nextKernelHeight = openKernelHeight.add(1);
         Kernel storage nextKernel = kernels[nextKernelHeight];
@@ -722,9 +715,10 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             uint256 minValidatorCount_,
             uint256 beginHeight_
         )
-    {
+    {   // change to blocknumber
         // during created state, validators join at creation kernel height
-        insertValidator(_validator, creationKernelHeight);
+        // insertValidator(_validator, creationKernelHeight);
+        insertValidatorInternal(_validator, creationKernelHeight);
 
         Kernel storage creationKernel = kernels[creationKernelHeight];
         countValidators = creationKernel.updatedValidators.push(_validator);
@@ -732,7 +726,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         creationKernel.updatedReputation.push(uint256(1));
         if (countValidators >= minimumValidatorCount) {
             quorum = calculateQuorum(countValidators);
-            precommitClosureBlockHeight = CORE_OPEN_VOTES_WINDOW;
+            precommitClosureBlockNumber = CORE_OPEN_VOTES_WINDOW;
             openKernelHash = hashKernel(
                 creationKernelHeight,
                 creationKernel.parent,
@@ -742,10 +736,14 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             );
             coreStatus = CoreStatus.opened;
             // Core status would be changed to `opened`.
-            // So `rootOriginObservationBlockHeight` would be set once.
-            rootOriginObservationBlockHeight = block.number;
+            // So `rootOriginObservationBlockNumber` would be set once.
+            rootOriginObservationBlockNumber = block.number;
+            emit GenesisOriginObservationStored(rootOriginObservationBlockNumber);
 
             newProposalSet();
+
+            ValidatorSet.incrementActiveHeightInternal(creationKernelHeight.add(1));
+            emit CoreStatusUpdated(coreStatus);
         }
 
         validatorCount_ = countValidators;
@@ -793,8 +791,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
         // insertValidator requires validator cannot join twice
         // insert validator starting from next metablock height
-        insertValidator(_validator, nextKernelHeight);
-
+        // insertValidator(_validator, nextKernelHeight);
+        insertValidatorInternal(_validator, nextKernelHeight);
         Kernel storage nextKernel = kernels[nextKernelHeight];
         nextKernel.updatedValidators.push(_validator);
         // TASK: reputation can be uint64, and initial rep set properly.
@@ -840,7 +838,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
         // removeValidator performs necessary requirements
         // remove validator from next metablock height
-        removeValidator(_validator, nextKernelHeight_);
+        removeValidatorInternal(_validator, nextKernelHeight_);
 
         Kernel storage nextKernel = kernels[nextKernelHeight_];
         nextKernel.updatedValidators.push(_validator);
@@ -911,8 +909,10 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         if (coreStatus == CoreStatus.opened) {
             coreStatus = CoreStatus.precommitted;
             precommit = _proposal;
-            precommitClosureBlockHeight = block.number.add(CORE_LAST_VOTES_WINDOW);
+            precommitClosureBlockNumber = block.number.add(CORE_LAST_VOTES_WINDOW);
             consensus.precommitMetablock(metachainId, openKernelHeight, _proposal);
+
+            emit CoreStatusUpdated(coreStatus);
         }
     }
 
@@ -1158,8 +1158,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         bytes32 _transitionHash,
         bytes32 _source,
         bytes32 _target,
-        uint256 _sourceBlockHeight,
-        uint256 _targetBlockHeight
+        uint256 _sourceBlockNumber,
+        uint256 _targetBlockNumber
     )
         internal
         view
@@ -1171,8 +1171,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
                 _transitionHash,
                 _source,
                 _target,
-                _sourceBlockHeight,
-                _targetBlockHeight
+                _sourceBlockNumber,
+                _targetBlockNumber
             )
         );
 
