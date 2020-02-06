@@ -123,6 +123,9 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protoco
         }
     }
 
+
+    /* External Functions. */
+
     /**
      * @notice Registers a vote for a link specified by vote message hash.
      *
@@ -158,9 +161,7 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protoco
             block.number < targetBlockNumber.add(epochLength),
             "Current block number should be less than the sum of the target block number and epoch length"
         );
-
-
-    /* External Functions. */
+    }
 
     /**
      * @notice It proposes a valid link to be voted later by active validators.
