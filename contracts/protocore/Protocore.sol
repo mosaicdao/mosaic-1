@@ -335,6 +335,7 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
         proposedLink.targetFinalisation = CheckpointFinalisationStatus.Registered;
     }
 
+
     /* Private Functions */
 
     /**
@@ -429,7 +430,6 @@ contract Protocore is MosaicVersion, CoconsensusModule, ForwardValidatorSetAbstr
             justifyLink(_voteMessageHash, link);
         }
     }
-
 
     /* Private Functions */
 
