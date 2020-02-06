@@ -217,10 +217,10 @@ contract('Core::setup', (accounts) => {
         + `and is not ${correctArgs.accumulatedGas}`,
       );
 
-      const committedSourceBlockHeight = await core.committedSourceBlockHeight();
+      const committedSourceBlockNumber = await core.committedSourceBlockNumber();
       assert.isOk(
-        committedSourceBlockHeight.cmp(correctArgs.sourceBlockHeight) === 0,
-        `Source block height is set to ${committedSourceBlockHeight} `
+        committedSourceBlockNumber.cmp(correctArgs.sourceBlockHeight) === 0,
+        `Source block height is set to ${committedSourceBlockNumber} `
         + `and is not ${correctArgs.sourceBlockHeight}`,
       );
     });

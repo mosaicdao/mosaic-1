@@ -206,7 +206,7 @@ contract('Core::proposeMetablock', async (accounts) => {
           config.core,
           proposal,
         ),
-        'Source block height must strictly increase.',
+        'Source block number must strictly increase.',
       );
     });
 
@@ -230,7 +230,7 @@ contract('Core::proposeMetablock', async (accounts) => {
           config.core,
           proposal,
         ),
-        'Target block height must equal source block height plus one.',
+        'Target block number must equal source block number plus one.',
       );
     });
 

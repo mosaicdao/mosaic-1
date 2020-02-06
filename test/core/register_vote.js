@@ -533,10 +533,10 @@ contract('Core::registerVote', (accounts) => {
 
       const quorumBlockNumber = txResponse.receipt.blockNumber;
       const CORE_LAST_VOTES_WINDOW = await config.core.CORE_LAST_VOTES_WINDOW();
-      const precommitClosureBlockHeight = await config.core.precommitClosureBlockHeight();
+      const precommitClosureBlockNumber = await config.core.precommitClosureBlockNumber();
 
       assert.isOk(
-        precommitClosureBlockHeight.eq(new BN(quorumBlockNumber).add(CORE_LAST_VOTES_WINDOW)),
+        precommitClosureBlockNumber.eq(new BN(quorumBlockNumber).add(CORE_LAST_VOTES_WINDOW)),
       );
 
       const isPrecommitted = await config.consensus.isPrecommitted(config.core.address);

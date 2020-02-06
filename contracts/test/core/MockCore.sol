@@ -126,4 +126,7 @@ contract MockCore is Core {
         openKernelHash = _openKernelHash;
     }
 
+    function incrementActiveHeight(uint256 _nextHeight) external {
+        ValidatorSet.incrementActiveHeightInternal(_nextHeight);
+    }
 }
