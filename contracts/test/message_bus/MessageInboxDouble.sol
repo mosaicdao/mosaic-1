@@ -25,21 +25,6 @@ contract MessageInboxDouble is MessageInbox {
 
     /**
      * @notice Setup message inbox.
-     *
-     * @dev Function requires:
-     *          - inboundChannelIdentifier must be zero
-     *          - metachainId must not be zero
-     *          - messageOutbox address must not be zero
-     *          - verifyingAddress must not be zero
-     *          - stateRootProvider must not be zero
-     *
-     * @param _metachainId Metachain identifier.
-     * @param _messageOutbox MessageOutbox contract address.
-     * @param _outboxStorageIndex Storage index of outbox mapping in
-     *                            MessageOutbox contract.
-     * @param _stateRootProvider State root provider contract address.
-     * @param _maxStorageRootItems Defines how many storage roots should be
-     *                             stored in circular buffer.
      */
 
     function setupMessageInboxDouble(
@@ -64,10 +49,6 @@ contract MessageInboxDouble is MessageInbox {
      * @notice Verify merkle proof of a storage contract address.
      *         Trust factor is brought by state roots of the contract which
      *         implements StateRootInterface.
-     * @param _blockHeight Block height at which Gateway/CoGateway is to be
-     *                     proven.
-     * @param _rlpAccount RLP encoded account node object.
-     * @param _rlpParentNodes RLP encoded value of account proof parent nodes.
      */
     function proveStorageAccountDouble(
         uint256 _blockHeight,
@@ -87,19 +68,6 @@ contract MessageInboxDouble is MessageInbox {
      * @notice Confirm a new message that is declared in outbox on the source
      *         chain. Merkle proof will be performed to verify storage data.
      *         This will update the inbox value to `true` for the given message hash.
-     *
-     * @dev  Function requires:
-     *          - message should not exists in inbox
-     *
-     * @param _intentHash Intent hash of message.
-     * @param _nonce Nonce of sender.
-     * @param _feeGasPrice Fee gas price.
-     * @param _feeGasLimit Fee gas limit.
-     * @param _sender Sender address.
-     * @param _blockHeight Block height for fetching storage root.
-     * @param _rlpParentNodes RLP encoded parent node data to prove in
-     *                        messageBox outbox.
-     * @return messageHash_ Message hash.
      */
     function confirmMessageDouble(
         bytes32 _intentHash,
