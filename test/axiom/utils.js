@@ -93,8 +93,8 @@ async function setupConsensusWithConfig(axiom, config) {
   );
 }
 
-async function newMetaChainWithConfig(axiom, config) {
-  return axiom.newMetaChain(
+async function newMetachainWithConfig(axiom, config) {
+  return axiom.newMetachain(
     config.txOptions,
   );
 }
@@ -174,7 +174,7 @@ module.exports = {
   deployAxiom,
   deployAxiomWithConfig,
   setupConsensusWithConfig,
-  newMetaChainWithConfig,
+  newMetachainWithConfig,
   encodeNewCoreParams,
   encodeNewCommitteeParams,
   encodeNewAnchorParams,

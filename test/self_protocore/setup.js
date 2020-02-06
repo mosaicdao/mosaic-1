@@ -34,20 +34,21 @@ contract('SelfProtocore::setup', (accounts) => {
     config.genesis.auxiliarySourceBlockHash = Utils.getRandomHash();
     config.genesis.auxiliaryTargetBlockHash = Utils.getRandomHash();
     config.genesis.auxiliaryAccumulatedGas = new BN(1000000);
+    config.genesis.auxiliaryMetachainId = Utils.getRandomHash();
+    config.genesis.domainSeparator = Utils.getRandomHash();
+    config.genesis.epochLength = new BN(100);
+    config.genesis.dynasty = new BN(0);
+    config.genesis.metablockHeight = new BN(Utils.getRandomNumber(1000));
 
     config.setupParams = {};
-    config.setupParams.metachainId = Utils.getRandomHash();
-    config.setupParams.domainSeparator = Utils.getRandomHash();
-    config.setupParams.epochLength = new BN(100);
-    config.setupParams.metablockHeight = new BN(Utils.getRandomNumber(1000));
-    config.setupParams.selfProtocore = accountProvider.get();
+
     config.setupParams.coconsensus = accountProvider.get();
 
     config.genesis.auxiliarySourceBlockNumber = new BN(
-      Utils.getRandomNumber(10000) * config.setupParams.epochLength,
+      Utils.getRandomNumber(10000) * config.genesis.epochLength,
     );
     config.genesis.auxiliaryTargetBlockNumber = config.genesis.auxiliarySourceBlockNumber
-      .add(config.setupParams.epochLength);
+      .add(config.genesis.epochLength);
 
     config.contracts = {};
 
@@ -56,6 +57,11 @@ contract('SelfProtocore::setup', (accounts) => {
 
     // Set the value of genesis variables
     await config.contracts.selfProtocore.setGenesisStorage(
+      config.genesis.auxiliaryMetachainId,
+      config.genesis.domainSeparator,
+      config.genesis.epochLength,
+      config.genesis.dynasty,
+      config.genesis.metablockHeight,
       config.genesis.auxiliaryParentVoteMessageHash,
       config.genesis.auxiliarySourceTransitionHash,
       config.genesis.auxiliarySourceBlockHash,
@@ -73,10 +79,6 @@ contract('SelfProtocore::setup', (accounts) => {
     it('should revert if caller is not coconsensus', async () => {
       await Utils.expectRevert(
         config.contracts.selfProtocore.setup(
-          config.setupParams.metachainId,
-          config.setupParams.domainSeparator,
-          config.setupParams.epochLength,
-          config.setupParams.metablockHeight,
           { from: accountProvider.get() },
         ),
         'Only the Coconsensus contract can call this function.',
@@ -85,18 +87,10 @@ contract('SelfProtocore::setup', (accounts) => {
 
     it('should revert if setup is already called once', async () => {
       await config.contracts.selfProtocore.setup(
-        config.setupParams.metachainId,
-        config.setupParams.domainSeparator,
-        config.setupParams.epochLength,
-        config.setupParams.metablockHeight,
         { from: config.setupParams.coconsensus },
       );
       await Utils.expectRevert(
         config.contracts.selfProtocore.setup(
-          config.setupParams.metachainId,
-          config.setupParams.domainSeparator,
-          config.setupParams.epochLength,
-          config.setupParams.metablockHeight,
           { from: config.setupParams.coconsensus },
         ),
         'Contract is already initialized.',
@@ -109,23 +103,19 @@ contract('SelfProtocore::setup', (accounts) => {
       const { selfProtocore } = config.contracts;
 
       await selfProtocore.setup(
-        config.setupParams.metachainId,
-        config.setupParams.domainSeparator,
-        config.setupParams.epochLength,
-        config.setupParams.metablockHeight,
         { from: config.setupParams.coconsensus },
       );
 
       const epochLength = await selfProtocore.epochLength.call();
       assert.strictEqual(
-        epochLength.eq(config.setupParams.epochLength),
+        epochLength.eq(config.genesis.epochLength),
         true,
         `Epoch length in contract ${epochLength.toString(10)} must be`
-        + `equal to ${config.setupParams.epochLength.toString(10)}}.`,
+        + `equal to ${config.genesis.epochLength.toString(10)}}.`,
       );
 
       const genesisVoteMessageHash = ProtocoreUtils.hashVoteMessage(
-        config.setupParams.domainSeparator,
+        config.genesis.domainSeparator,
         config.genesis.auxiliarySourceTransitionHash,
         config.genesis.auxiliarySourceBlockHash,
         config.genesis.auxiliaryTargetBlockHash,
@@ -157,25 +147,16 @@ contract('SelfProtocore::setup', (accounts) => {
         `Source transition hash in genesis link must be ${config.genesis.auxiliarySourceTransitionHash}.`,
       );
       assert.strictEqual(
-        genesisLink.proposedMetablockHeight.eq(config.setupParams.metablockHeight),
+        genesisLink.proposedMetablockHeight.eq(config.genesis.metablockHeight),
         true,
         `Proposed metablock height from contract ${genesisLink.proposedMetablockHeight.toString(10)} `
-        + `must be equal to ${config.setupParams.metablockHeight.toString(10)}.`,
+        + `must be equal to ${config.genesis.metablockHeight.toString(10)}.`,
       );
-      assert.strictEqual(
-        genesisLink.forwardVoteCount.eqn(0),
-        true,
-        'Forward vote count in genesis link must be zero.',
-      );
-      assert.strictEqual(
-        genesisLink.forwardVoteCountNextHeight.eqn(0),
-        true,
-        'Forward vote count next height in genesis link must be zero.',
-      );
-      assert.strictEqual(
-        genesisLink.forwardVoteCountPreviousHeight.eqn(0),
-        true,
-        'Forward vote count previous height in genesis link must be zero.',
+      assert.isOk(
+        (await selfProtocore.fvsVoteCount(
+          genesisVoteMessageHash,
+          config.genesis.metablockHeight,
+        )).eqn(0),
       );
       assert.strictEqual(
         genesisLink.targetFinalisation.eqn(ProtocoreUtils.CheckpointFinalisationStatus.Finalised),

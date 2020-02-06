@@ -26,7 +26,7 @@ contract('ValidatorSet::insertValidator', (accounts) => {
   const beginHeight = new BN(100);
   beforeEach(async () => {
     validatorSet = await ValidatorSet.new();
-    await validatorSet.setupValidator();
+    await validatorSet.setupValidatorSetDouble();
   });
 
   contract('Positive Tests', () => {
@@ -50,7 +50,10 @@ contract('ValidatorSet::insertValidator', (accounts) => {
       );
 
       // Inserting another validator.
-      await validatorSet.insertValidator(account2, beginHeight);
+      await validatorSet.insertValidator(
+        account2,
+        beginHeight,
+      );
 
       const addressAtAccount1 = await validatorSet.validators.call(
         account1,

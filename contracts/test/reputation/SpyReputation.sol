@@ -86,12 +86,13 @@ contract SpyReputation is MasterCopyNonUpgradable, ReputationI {
         address _withdrawalAddress
     )
         external
+        returns (uint256)
     {
         validator = _validator;
         spyWithdrawalAddress = _withdrawalAddress;
     }
 
-    function deregister(address _validator) external {
+    function deregister(address _validator) external returns (uint256) {
         validator = _validator;
     }
 
