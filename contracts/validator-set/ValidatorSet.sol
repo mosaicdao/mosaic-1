@@ -66,7 +66,7 @@ contract ValidatorSet is ForwardValidatorSetAbstract {
      * where J_h is the number of validators joining at height h, and
      * L_(h-1) is the number of validators that logged out at h-1 (equals their end-height).
      */
-    mapping(uint256 /* metablock height */ => uint256 /* validator count */) public validatorCount;
+    mapping(uint256 /* metablock height */ => uint256 /* validator count */) private validatorCount;
 
     /**
      * Forward validator set (FVS) count per height.
@@ -74,7 +74,7 @@ contract ValidatorSet is ForwardValidatorSetAbstract {
      * the number of validators at that height, N_h, minus the validators that have logged out at h:
      *     F_h = N_h - L_h
      */
-    mapping(uint256 /* metablock height */ => uint256 /* FVS count */) fvsCount;
+    mapping(uint256 /* metablock height */ => uint256 /* FVS count */) private fvsCount;
 
     /**
      * Active height constrains the insertion and removal of validators
@@ -85,7 +85,7 @@ contract ValidatorSet is ForwardValidatorSetAbstract {
      * Active height is introduced to the calculation of the forward validator set count
      * to a sliding-window calculation.
      */
-    uint256 public activeHeight;
+    uint256 private activeHeight;
 
 
     /* Modifiers */
