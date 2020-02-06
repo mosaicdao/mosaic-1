@@ -26,10 +26,7 @@ contract MessageOutboxDouble is MessageOutbox {
     /* External Functions */
 
     /**
-     * @notice It is used to setup message outbox.
-     *
-     * @param _metachainId Metahchain Id.
-     * @param _messageInbox Address of message inbox.
+     * @notice It is used to test setup message in message outbox contract.
      */
     function setupMessageOutboxDouble(
         bytes32 _metachainId,
@@ -41,15 +38,7 @@ contract MessageOutboxDouble is MessageOutbox {
     }
 
     /**
-     * @notice It is used to declare message at outbox.
-     *
-     * @param _intentHash Intent hash of message.
-     * @param _nonce Nonce of sender.
-     * @param _feeGasPrice Fee gas price.
-     * @param _feeGasLimit Fee gas limit.
-     * @param _sender Sender address.
-     *
-     * @return messageHash_ Message hash
+     * @notice It is used to test declare message in message outbox contract.
      */
     function declareMessageDouble(
         bytes32 _intentHash,
