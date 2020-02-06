@@ -29,7 +29,7 @@ contract('ValidatorSet::removeValidatorInternal', (accounts) => {
   beforeEach(async () => {
     config.activeHeight = new BN(1);
     config.validatorSet = await ValidatorSet.new();
-    config.validatorSet.setupValidatorSetDouble(config.activeHeight);
+    await config.validatorSet.setupValidatorSetDouble(config.activeHeight);
     config.validator = {
       address: accountProvider.get(),
       beginHeight: config.activeHeight.clone(),
