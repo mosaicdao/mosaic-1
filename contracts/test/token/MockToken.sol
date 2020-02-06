@@ -116,4 +116,40 @@ contract MockToken is ERC20I, MockTokenConfig {
 
         return true;
     }
+
+    /**
+     * @notice It burns an amount of the token of a given
+     *         account.
+     * @param _account The account whose tokens will be burnt.
+     * @param _value The amount that will be burnt.
+     *
+     * @return success `true` if tokens are burned successfully otherwise false
+     */
+    function burn(address _account, uint256 _value) public returns (bool success) {
+        require(_account != address(0), "ERC20: burn from the zero address");
+
+        tokenTotalSupply = tokenTotalSupply.sub(_value);
+        balances[_account] = balances[_account].sub(_value);
+        emit Transfer(_account, address(0), _value);
+        success = true;
+    }
+
+    /**
+     * @notice It helps to an amount of the tokens of a given account,
+     *         deducting from the sender's allowance for said account. Uses the
+     *         function burn.
+     *         Emits an Approval event (reflecting the reduced allowance).
+     * @param _account The account whose tokens will be burnt.
+     * @param _value The amount that will be burnt.
+     *
+     * @return success `true` if tokens are burned successfully otherwise false
+     */
+    function burnFrom(address _account, uint256 _value) public returns (bool success) {
+        allowed[_account][msg.sender] = allowed[_account][msg.sender].sub(
+            _value
+        );
+        burn(_account, _value);
+        emit Approval(_account, msg.sender, allowed[_account][msg.sender]);
+        success = true;
+    }
 }

@@ -137,7 +137,7 @@ async function deploySelfProtocore(coconsensusAddress) {
   config.genesis.metablockHeight = new BN(Utils.getRandomNumber(1000));
 
   config.genesis.auxiliarySourceBlockNumber = new BN(
-    Utils.getRandomNumber(10000) * config.genesis.epochLength,
+    100 * config.genesis.epochLength,
   );
   config.genesis.auxiliaryTargetBlockNumber = config.genesis.auxiliarySourceBlockNumber
     .add(config.genesis.epochLength);
@@ -192,7 +192,7 @@ async function deployOriginProtocore(
   config.setupParams.coconsensus = coconsensusAddress;
 
   config.genesis.originTargetBlockNumber = new BN(
-    Utils.getRandomNumber(10000) * config.genesis.epochLength,
+    100 * config.genesis.epochLength,
   );
 
   config.contracts = {};

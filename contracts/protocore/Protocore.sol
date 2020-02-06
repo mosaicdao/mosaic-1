@@ -337,6 +337,7 @@ contract Protocore is
         proposedLink.targetFinalisation = CheckpointFinalisationStatus.Registered;
     }
 
+
     /* Private Functions */
 
     /**
@@ -431,7 +432,6 @@ contract Protocore is
             justifyLink(_voteMessageHash, link);
         }
     }
-
 
     /* Private Functions */
 
