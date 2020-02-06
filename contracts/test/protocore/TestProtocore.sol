@@ -114,9 +114,8 @@ contract TestProtocore is Protocore {
         uint8 _v
     )
         external
-        returns (uint256)
     {
-        return Protocore.registerVoteInternal(
+        Protocore.registerVoteInternal(
             _voteMessageHash,
             _r,
             _s,

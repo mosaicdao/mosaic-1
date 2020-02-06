@@ -150,16 +150,18 @@ contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protoco
     )
         external
     {
-        uint256 targetBlockNumber = Protocore.registerVoteInternal(
+        Link storage link = links[_voteMessageHash];
+
+        require(
+            block.number < link.targetBlockNumber.add(epochLength),
+            "Current block number should be less than the sum of the target block number and epoch length"
+        );
+
+        Protocore.registerVoteInternal(
             _voteMessageHash,
             _r,
             _s,
             _v
-        );
-
-        require(
-            block.number < targetBlockNumber.add(epochLength),
-            "Current block number should be less than the sum of the target block number and epoch length"
         );
     }
 
