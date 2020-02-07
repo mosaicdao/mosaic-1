@@ -15,7 +15,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 import "../consensus/CoconsensusModule.sol";
-import "../validator-set/ForwardValidatorSetAbstract.sol";
+import "../validator-set/ValidatorSetAbstract.sol";
 import "../validator-set/ValidatorSet.sol";
 import "../version/MosaicVersion.sol";
 import "../vote-message/VoteMessage.sol";
@@ -29,7 +29,7 @@ contract Protocore is
     MosaicVersion,
     CoconsensusModule,
     VoteMessage,
-    ForwardValidatorSetAbstract
+    ValidatorSetAbstract
 {
 
     /* Usings */

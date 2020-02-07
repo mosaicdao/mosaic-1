@@ -98,11 +98,6 @@ contract Core is
         "Transition(bytes32 kernelHash,bytes32 originObservation,uint256 dynasty,uint256 accumulatedGas,bytes32 committeeLock)"
     );
 
-    /** EIP-712 type hash for a Vote Message */
-    bytes32 public constant VOTE_MESSAGE_TYPEHASH = keccak256(
-        "VoteMessage(bytes32 transitionHash,bytes32 source,bytes32 target,uint256 sourceBlockNumber,uint256 targetBlockNumber)"
-    );
-
     /** Sentinel pointer for marking end of linked-list of proposals */
     bytes32 public constant SENTINEL_PROPOSALS = bytes32(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
 
@@ -293,13 +288,6 @@ contract Core is
             _reputation != ReputationI(0),
             "Reputation contract's address is null."
         );
-
-        // TODO: remove before committing
-        // require(
-        //     (_height == uint256(0) && _parent == bytes32(0))
-        //     || (_height != uint256(0) && _parent != bytes32(0)),
-        //     "Height and parent can be 0 only together."
-        // );
 
         domainSeparator = keccak256(
             abi.encode(
@@ -696,6 +684,15 @@ contract Core is
             uint256 beginHeight_
         )
     {
+        require(
+            _validator != address(0),
+            "Validator must not be null address."
+        );
+        require(
+            validatorEndHeight[_validator] == 0,
+            "Validator must not already be part of this core."
+        );
+
         // during created state, validators join at creation kernel height
         insertValidatorInternal(_validator, creationKernelHeight);
 
@@ -754,6 +751,14 @@ contract Core is
         returns (uint256 beginHeight_)
     {
         require(
+            _validator != address(0),
+            "Validator must not be null address."
+        );
+        require(
+            validatorEndHeight[_validator] == 0,
+            "Validator must not already be part of this core."
+        );
+        require(
             countValidators
             .add(countJoinMessages)
             .sub(countLogOutMessages) < joinLimit,
@@ -801,6 +806,18 @@ contract Core is
         whileRunning
         returns (uint256 nextKernelHeight_)
     {
+        require(
+            _validator != address(0),
+            "Validator must not be null address."
+        );
+        require(
+            validatorBeginHeight[_validator] <= openKernelHeight,
+            "Validator must have begun."
+        );
+        require(
+            validatorEndHeight[_validator] == MAX_FUTURE_END_HEIGHT,
+            "Validator must be active."
+        );
         require(
             countValidators
             .add(countJoinMessages)

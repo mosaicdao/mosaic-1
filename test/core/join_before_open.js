@@ -107,7 +107,7 @@ contract('Core::joinBeforeOpen', async (accounts) => {
       );
     });
 
-    it.skip('should fail if validator\'s address is null', async () => {
+    it('should fail if validator\'s address is null', async () => {
       assertConfigInCreation(config.mockCore);
       await Utils.expectRevert(
         config.mockConsensus.joinDuringCreation(
@@ -117,7 +117,7 @@ contract('Core::joinBeforeOpen', async (accounts) => {
       );
     });
 
-    it.skip('should fail if a validator is already part of core', async () => {
+    it('should fail if a validator is already part of core', async () => {
       assertConfigInCreation(config.mockCore);
 
       const validator = accountProvider.get();
@@ -212,7 +212,7 @@ contract('Core::joinBeforeOpen', async (accounts) => {
       );
     });
 
-    it.skip('should open after enough validators join', async () => {
+    it('should open after enough validators join', async () => {
       const minVal = await config.mockCore.minimumValidatorCount.call();
 
       const expectedUpdatedValidators = [];
@@ -294,7 +294,7 @@ contract('Core::joinBeforeOpen', async (accounts) => {
 
       // TODO(ben): clean up all of this...
       const actualGenesisOriginObservationBlockNumber = await config.mockCore
-        .rootOriginObservationBlockNumber.call();
+        .genesisOriginObservationBlockNumber.call();
       assert.strictEqual(
         actualGenesisOriginObservationBlockNumber.eqn(expectedGenesisOriginObservationBlockNumber),
         true,

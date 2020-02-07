@@ -70,7 +70,7 @@ contract('Protocore::proposeLinkInternal', (accounts) => {
   });
 
   contract('Negative Tests', async () => {
-    it.skip('should revert if parent vote message hash does not exist', async () => {
+    it('should revert if parent vote message hash does not exist', async () => {
       const sourceTransitionHash = Utils.getRandomHash();
       const targetBlockHash = Utils.getRandomHash();
       const targetBlockNumber = config.genesisTargetBlockNumber.add(config.epochLength.muln(2));

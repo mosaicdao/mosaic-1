@@ -62,7 +62,7 @@ contract('Protocore::openKernel', (accounts) => {
   });
 
   contract('Negative Tests', async () => {
-    it.skip('should revert if new kernel height is not plus one of the current', async () => {
+    it('should revert if new kernel height is not plus one of the current', async () => {
       const newKernelHeight = config.genesisKernelHeight;
       const newKernelHash = Utils.getRandomHash();
 

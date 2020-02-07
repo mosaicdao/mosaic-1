@@ -427,7 +427,7 @@ contract('Protocore::registerVoteInternal', () => {
   });
 
   contract('Negative Tests', async () => {
-    it.skip('should fail if a finalisation status of a target checkpoint '
+    it('should fail if a finalisation status of a target checkpoint '
       + 'is less than registered', async () => {
       const v = await ProtocoreUtils.Validator.create();
       const sig = await v.ecsign(Utils.getRandomHash());

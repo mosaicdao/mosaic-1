@@ -15,9 +15,10 @@
 'use strict';
 
 const BN = require('bn.js');
-const Utils = require('../test_lib/utils.js');
 const consensusUtil = require('./utils.js');
+const Utils = require('../test_lib/utils.js');
 const axiomUtil = require('../axiom/utils');
+const web3 = require('../test_lib/web3.js');
 
 const SpyAxiom = artifacts.require('SpyAxiom');
 const Consensus = artifacts.require('Consensus');
@@ -99,7 +100,7 @@ contract('Consensus::newMetachain', (accounts) => {
       );
     });
 
-    it.skip('should verify data from spy contract', async () => {
+    it('should verify data from spy contract', async () => {
       await consensusUtil.callNewMetachainOnConsensus(contracts.SpyAxiom, inputParams);
       const newCoreCallData = await contracts.SpyAxiom.spyNewCoreCallData.call();
 
@@ -116,6 +117,10 @@ contract('Consensus::newMetachain', (accounts) => {
                 );
             }
        */
+      const genesisMetablockHash = web3.utils.soliditySha3(
+        { t: 'string', v: 'Mosaic-1 Testnet Gen-1 Genesis Metablock hash' },
+        { t: 'bytes32', v: inputParams.metachainId },
+      );
       const expectedCoreCallData = await axiomUtil.encodeNewCoreParams({
         consensus: contracts.Consensus.address,
         metachainId: inputParams.metachainId,
@@ -123,8 +128,8 @@ contract('Consensus::newMetachain', (accounts) => {
         minValidators: new BN(5),
         joinLimit: new BN(6),
         reputation: '0x0000000000000000000000000000000000000001',
-        height: new BN(0),
-        parent: Utils.ZERO_BYTES32,
+        height: new BN(1),
+        parent: genesisMetablockHash,
         gasTarget: new BN(99999),
         dynasty: new BN(0),
         accumulatedGas: new BN(0),

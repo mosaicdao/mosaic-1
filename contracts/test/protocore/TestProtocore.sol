@@ -100,6 +100,15 @@ contract TestProtocore is Protocore {
         fvsCounts[_height] = fvsCounts[_height].add(1);
     }
 
+    function inValidatorSet(address, uint256)
+        public
+        view
+        returns (bool)
+    {
+        // @todo (pro): Implement it.
+        return true;
+    }
+
     function inForwardValidatorSet(address _validator, uint256 _height)
         public
         view

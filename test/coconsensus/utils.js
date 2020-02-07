@@ -134,7 +134,7 @@ async function deploySelfProtocore(coconsensusAddress) {
   config.genesis.domainSeparator = Utils.getRandomHash();
   config.genesis.epochLength = new BN(100);
   config.genesis.dynasty = new BN(0);
-  config.genesis.metablockHeight = new BN(Utils.getRandomNumber(1000));
+  config.genesis.metablockHeight = new BN(Utils.getRandomNumber(0));
 
   config.genesis.auxiliarySourceBlockNumber = new BN(
     100 * config.genesis.epochLength,
