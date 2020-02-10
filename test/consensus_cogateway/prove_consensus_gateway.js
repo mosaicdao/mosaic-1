@@ -1,4 +1,4 @@
-// Copyright 2019 OpenST Ltd.
+// Copyright 2020 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ const { AccountProvider } = require('../test_lib/utils.js');
 const Utils = require('../test_lib/utils.js');
 const ProveConsensusGatewayProof = require('./prove_consensus_gateway_proof.json');
 
-const SpyCoConsensus = artifacts.require('SpyCoConsensus');
+const SpyCoconsensus = artifacts.require('SpyCoconsensus');
 
 const ConsensusCoGateway = artifacts.require('TestConsensusCogateway');
 const SpyAnchor = artifacts.require('SpyAnchor');
@@ -38,7 +38,7 @@ contract('CoConsensusGateway::proveConsensusGateway', (accounts) => {
 
   beforeEach(async () => {
     const spyAnchor = await SpyAnchor.new();
-    setupParams.coConsensus = await SpyCoConsensus.new();
+    setupParams.coConsensus = await SpyCoconsensus.new();
     await setupParams.coConsensus.setAnchorAddress(
       setupParams.metachainId,
       spyAnchor.address,

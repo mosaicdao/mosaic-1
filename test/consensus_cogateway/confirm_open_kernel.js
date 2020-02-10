@@ -1,4 +1,4 @@
-// Copyright 2019 OpenST Ltd.
+// Copyright 2020 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -79,7 +79,6 @@ contract('CoConsensusGateway::confirmOpenKernel', (accounts) => {
 
     await consensusCoGateway.setInboundChannelIdentifier(
       DeclareOpenKernel.outboundChannelIdentifier,
-
     );
   });
 
