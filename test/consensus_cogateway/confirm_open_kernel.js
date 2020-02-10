@@ -16,7 +16,7 @@ const BN = require('bn.js');
 const { AccountProvider } = require('../test_lib/utils.js');
 const DeclareOpenKernel = require('./declare_open_kernel.json');
 
-const SpyCoConsensus = artifacts.require('SpyCoConsensus');
+const SpyCoconsensus = artifacts.require('SpyCoconsensus');
 
 const ConsensusCoGateway = artifacts.require('TestConsensusCogateway');
 const SpyAnchor = artifacts.require('SpyAnchor');
@@ -47,7 +47,7 @@ contract('CoConsensusGateway::confirmOpenKernel', (accounts) => {
 
   beforeEach(async () => {
     const spyAnchor = await SpyAnchor.new();
-    setupParams.coConsensus = await SpyCoConsensus.new();
+    setupParams.coConsensus = await SpyCoconsensus.new();
     await setupParams.coConsensus.setAnchorAddress(
       setupParams.metachainId,
       spyAnchor.address,
