@@ -35,7 +35,7 @@ async function advanceBlock() {
   });
 }
 
-function getRandomHash() { return web3.utils.sha3(`${Date.now()}`); }
+function getRandomHash() { return web3.utils.randomHex(32); }
 
 const ResultType = {
   FAIL: 0,
@@ -335,6 +335,13 @@ Utils.prototype = {
     '0x0000000000000000000000000000000000000000',
 
   NULL_ADDRESS: '0x0000000000000000000000000000000000000000',
+
+  SENTINEL_ADDRESS: '0x0000000000000000000000000000000000000001',
+
+  MAX_UINT256: new BN(
+    '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+  ),
+  TRANSITION_TYPEHASH: web3.utils.soliditySha3('Transition(bytes32 kernelHash,bytes32 originObservation,uint256 dynasty,uint256 accumulatedGas,bytes32 committeeLock)'),
 };
 
 module.exports = new Utils();

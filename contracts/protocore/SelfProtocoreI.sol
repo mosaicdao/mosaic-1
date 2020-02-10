@@ -1,6 +1,6 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-// Copyright 2019 OpenST Ltd.
+// Copyright 2020 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,18 +15,23 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 /**
- * @title CoConsensusI.
- *
- * @notice Interface for CoConsensus contract.
+ * @title Self protocore interface
  */
-interface CoConsensusI {
+interface SelfProtocoreI {
 
     /**
-     * @notice Gets the anchor address for an metachain id.
+     * @notice Insert or remove validator. It inserts validator if not already
+     *         present and reputation is greater than 0. It removes validator
+     *         if it is present and reputation is 0.
      *
-     * @return Anchor contract address.
+     * @param _validator Validator address to upsert.
+     * @param _height Validator start or end height to be updated.
+     * @param _reputation Validator's reputation value.
      */
-    function getAnchor(bytes32 _metachainId) external returns(address);
-
+    function upsertValidator(
+        address _validator,
+        uint256 _height,
+        uint256 _reputation
+    )
+        external;
 }
-

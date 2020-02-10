@@ -161,17 +161,6 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
         _;
     }
 
-    modifier hasNotSlashed(address _validator)
-    {
-        require(
-            validators[_validator].status != ValidatorStatus.Slashed,
-            "Validator has slashed."
-        );
-
-        _;
-    }
-
-
     /* Special Member Functions */
 
     /**
@@ -407,6 +396,8 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
      *
      * @param _validator A validator address to stake.
      * @param _withdrawalAddress A withdrawal address of newly staked validator.
+     *
+     * @return reputation_ Initial reputation of a validator.
      */
     function stake(
         address _validator,
@@ -414,6 +405,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
     )
         external
         onlyConsensus
+        returns (uint256 reputation_)
     {
         require(
             _validator != address(0),
@@ -456,37 +448,8 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
             wETH.transferFrom(_validator, address(this), stakeWETHAmount),
             "Failed to transfer wETH stake amount from a validator."
         );
-    }
 
-    /**
-     * @notice Slashes validator.
-     *
-     * @dev Function requires:
-     *          - only consensus can call
-     *          - a validator has staked
-     *          - a validator has not withdrawn
-     *
-     * @param _validator A validator address to slash.
-     */
-    function slash(address _validator)
-        external
-        onlyConsensus
-        hasStaked(_validator)
-        hasNotWithdrawn(_validator)
-        hasNotSlashed(_validator)
-    {
-        ValidatorInfo storage v = validators[_validator];
-
-        v.status = ValidatorStatus.Slashed;
-        uint256 totalMOSTAmountToBurn = v.lockedEarnings
-            .add(v.cashableEarnings)
-            .add(stakeMOSTAmount);
-
-        v.lockedEarnings = 0;
-        v.cashableEarnings = 0;
-
-        assert(most.transfer(burner, totalMOSTAmountToBurn));
-        assert(wETH.transfer(burner, stakeWETHAmount));
+        reputation_ = initialReputation;
     }
 
     /**
@@ -502,6 +465,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
         external
         onlyConsensus
         isActive(_validator)
+        returns (uint256)
     {
         ValidatorInfo storage v = validators[_validator];
 
@@ -510,6 +474,8 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
         v.withdrawalBlockHeight = block.number.add(
             withdrawalCooldownPeriodInBlocks
         );
+
+        return v.withdrawalBlockHeight;
     }
 
     /**
@@ -564,6 +530,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
      * @notice Returns reputation of a validator.
      *
      * @param _validator An address of a validator.
+     * Returns validator reputation.
      */
     function getReputation(address _validator)
         external
@@ -572,6 +539,9 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
     {
         return validators[_validator].reputation;
     }
+
+
+    /* Public Functions */
 
     /**
      * @notice Check if the validator address is slashed or not.
