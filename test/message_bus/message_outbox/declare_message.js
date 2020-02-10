@@ -32,28 +32,29 @@ contract('MessageOutbox::declareMessage', (accounts) => {
       feeGasPrice: new BN(5),
       feeGasLimit: new BN(20),
       sender: accountProvider.get(),
-      metachainId: Utils.getRandomHash(),
-      inboxAddress: accountProvider.get(),
-      calculatedChannelIdentifier: '',
     };
 
-    config.outbox = await MessageBusUtils.deployMessageOutbox();
-    config.declareMessageArgs.calculatedChannelIdentifier =
+    config.metachainId = Utils.getRandomHash();
+    config.inboxAddress = accountProvider.get();
+    config.calculatedChannelIdentifier = '';
+
+    config.outboxAddress = await MessageBusUtils.deployMessageOutbox();
+    config.calculatedChannelIdentifier =
       await MessageBusUtils.hashChannelIdentifier(
-        config.declareMessageArgs.metachainId,
-        config.outbox.address,
-        config.declareMessageArgs.inboxAddress,
+        config.metachainId,
+        config.outboxAddress.address,
+        config.inboxAddress,
       );
 
-    await config.outbox.setupMessageOutboxDouble(
-      config.declareMessageArgs.metachainId,
-      config.declareMessageArgs.inboxAddress,
+    await config.outboxAddress.setupMessageOutboxDouble(
+      config.metachainId,
+      config.inboxAddress,
     );
   });
 
   contract('Negative Tests', async () => {
     it('should fail if message hash in outbox is already present', async () => {
-      await config.outbox.declareMessageDouble(
+      await config.outboxAddress.declareMessageDouble(
         config.declareMessageArgs.intentHash,
         config.declareMessageArgs.nonce,
         config.declareMessageArgs.feeGasPrice,
@@ -62,7 +63,7 @@ contract('MessageOutbox::declareMessage', (accounts) => {
       );
 
       await Utils.expectRevert(
-        config.outbox.declareMessageDouble(
+        config.outboxAddress.declareMessageDouble(
           config.declareMessageArgs.intentHash,
           config.declareMessageArgs.nonce,
           config.declareMessageArgs.feeGasPrice,
@@ -76,7 +77,7 @@ contract('MessageOutbox::declareMessage', (accounts) => {
 
   contract('Positive Tests', async () => {
     it('should declare a new message', async () => {
-      const actualMessageHash = await config.outbox.declareMessageDouble.call(
+      const actualMessageHash = await config.outboxAddress.declareMessageDouble.call(
         config.declareMessageArgs.intentHash,
         config.declareMessageArgs.nonce,
         config.declareMessageArgs.feeGasPrice,
@@ -90,16 +91,16 @@ contract('MessageOutbox::declareMessage', (accounts) => {
         config.declareMessageArgs.feeGasPrice,
         config.declareMessageArgs.feeGasLimit,
         config.declareMessageArgs.sender,
-        config.declareMessageArgs.calculatedChannelIdentifier,
+        config.calculatedChannelIdentifier,
       );
 
       assert.strictEqual(
         expectedMessageHash,
         actualMessageHash,
-        'actualMessageHash should be equal to expectedMessageHash',
+        'Incorrect message hash',
       );
 
-      await config.outbox.declareMessageDouble(
+      await config.outboxAddress.declareMessageDouble(
         config.declareMessageArgs.intentHash,
         config.declareMessageArgs.nonce,
         config.declareMessageArgs.feeGasPrice,
@@ -107,7 +108,7 @@ contract('MessageOutbox::declareMessage', (accounts) => {
         config.declareMessageArgs.sender,
       );
 
-      const outboxMapping = await config.outbox.outbox.call(actualMessageHash);
+      const outboxMapping = await config.outboxAddress.outbox.call(actualMessageHash);
 
       assert.ok(
         outboxMapping,

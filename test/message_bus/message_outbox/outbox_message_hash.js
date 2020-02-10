@@ -32,29 +32,30 @@ contract('MessageOutbox::outboxMessageHash', (accounts) => {
       feeGasPrice: new BN(5),
       feeGasLimit: new BN(20),
       sender: accountProvider.get(),
-      metachainId: Utils.getRandomHash(),
-      inboxAddress: accountProvider.get(),
-      calculatedChannelIdentifier: '',
     };
 
+    config.metachainId = Utils.getRandomHash();
+    config.inboxAddress = accountProvider.get();
+    config.calculatedChannelIdentifier = '';
 
-    config.outbox = await MessageBusUtils.deployMessageOutbox();
-    config.OutboxMessageHashArgs.calculatedChannelIdentifier =
+
+    config.outboxAddress = await MessageBusUtils.deployMessageOutbox();
+    config.calculatedChannelIdentifier =
       await MessageBusUtils.hashChannelIdentifier(
-        config.OutboxMessageHashArgs.metachainId,
-        config.outbox.address,
-        config.OutboxMessageHashArgs.inboxAddress,
+        config.metachainId,
+        config.outboxAddress.address,
+        config.inboxAddress,
       );
 
-    await config.outbox.setupMessageOutboxDouble(
-      config.OutboxMessageHashArgs.metachainId,
-      config.OutboxMessageHashArgs.inboxAddress,
+    await config.outboxAddress.setupMessageOutboxDouble(
+      config.metachainId,
+      config.inboxAddress,
     );
   });
 
   contract('Positive Tests', async () => {
     it('should return a outbox message hash', async () => {
-      const actualMessageHash = await config.outbox.outboxMessageHash(
+      const actualMessageHash = await config.outboxAddress.outboxMessageHash(
         config.OutboxMessageHashArgs.intentHash,
         config.OutboxMessageHashArgs.nonce,
         config.OutboxMessageHashArgs.feeGasPrice,
@@ -68,13 +69,13 @@ contract('MessageOutbox::outboxMessageHash', (accounts) => {
         config.OutboxMessageHashArgs.feeGasPrice,
         config.OutboxMessageHashArgs.feeGasLimit,
         config.OutboxMessageHashArgs.sender,
-        config.OutboxMessageHashArgs.calculatedChannelIdentifier,
+        config.calculatedChannelIdentifier,
       );
 
       assert.strictEqual(
         actualMessageHash,
         expectedMessageHash,
-        'outboxMessageHash should be same as expected messageHash.',
+        'Incorrect message hash',
       );
     });
   });
