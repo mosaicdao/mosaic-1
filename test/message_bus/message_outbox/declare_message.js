@@ -38,15 +38,15 @@ contract('MessageOutbox::declareMessage', (accounts) => {
     config.inboxAddress = accountProvider.get();
     config.calculatedChannelIdentifier = '';
 
-    config.outboxAddress = await MessageBusUtils.deployMessageOutbox();
+    config.outbox = await MessageBusUtils.deployMessageOutbox();
     config.calculatedChannelIdentifier =
       await MessageBusUtils.hashChannelIdentifier(
         config.metachainId,
-        config.outboxAddress.address,
+        config.outbox.address,
         config.inboxAddress,
       );
 
-    await config.outboxAddress.setupMessageOutboxDouble(
+    await config.outbox.setupMessageOutboxDouble(
       config.metachainId,
       config.inboxAddress,
     );
@@ -54,7 +54,7 @@ contract('MessageOutbox::declareMessage', (accounts) => {
 
   contract('Negative Tests', async () => {
     it('should fail if message hash in outbox is already present', async () => {
-      await config.outboxAddress.declareMessageDouble(
+      await config.outbox.declareMessageDouble(
         config.declareMessageArgs.intentHash,
         config.declareMessageArgs.nonce,
         config.declareMessageArgs.feeGasPrice,
@@ -63,7 +63,7 @@ contract('MessageOutbox::declareMessage', (accounts) => {
       );
 
       await Utils.expectRevert(
-        config.outboxAddress.declareMessageDouble(
+        config.outbox.declareMessageDouble(
           config.declareMessageArgs.intentHash,
           config.declareMessageArgs.nonce,
           config.declareMessageArgs.feeGasPrice,
@@ -77,7 +77,7 @@ contract('MessageOutbox::declareMessage', (accounts) => {
 
   contract('Positive Tests', async () => {
     it('should declare a new message', async () => {
-      const actualMessageHash = await config.outboxAddress.declareMessageDouble.call(
+      const actualMessageHash = await config.outbox.declareMessageDouble.call(
         config.declareMessageArgs.intentHash,
         config.declareMessageArgs.nonce,
         config.declareMessageArgs.feeGasPrice,
@@ -100,7 +100,7 @@ contract('MessageOutbox::declareMessage', (accounts) => {
         'Incorrect message hash',
       );
 
-      await config.outboxAddress.declareMessageDouble(
+      await config.outbox.declareMessageDouble(
         config.declareMessageArgs.intentHash,
         config.declareMessageArgs.nonce,
         config.declareMessageArgs.feeGasPrice,
@@ -108,7 +108,7 @@ contract('MessageOutbox::declareMessage', (accounts) => {
         config.declareMessageArgs.sender,
       );
 
-      const outboxMapping = await config.outboxAddress.outbox.call(actualMessageHash);
+      const outboxMapping = await config.outbox.outbox.call(actualMessageHash);
 
       assert.ok(
         outboxMapping,

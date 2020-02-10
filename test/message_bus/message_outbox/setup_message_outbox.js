@@ -29,19 +29,19 @@ contract('MessageOutbox::setupMessageOutbox', (accounts) => {
       inboxAddress: accountProvider.get(),
     };
 
-    config.outboxAddress = await MessageBusUtils.deployMessageOutbox();
+    config.outbox = await MessageBusUtils.deployMessageOutbox();
 
   });
 
   contract('Negative Tests', async () => {
     it('should fail if message outbox is already setup', async () => {
-      await config.outboxAddress.setupMessageOutboxDouble(
+      await config.outbox.setupMessageOutboxDouble(
         config.SetupMessageOutboxArgs.metachainId,
         config.SetupMessageOutboxArgs.inboxAddress,
       );
 
       await Utils.expectRevert(
-        config.outboxAddress.setupMessageOutboxDouble(
+        config.outbox.setupMessageOutboxDouble(
           config.SetupMessageOutboxArgs.metachainId,
           config.SetupMessageOutboxArgs.inboxAddress,
         ),
@@ -51,7 +51,7 @@ contract('MessageOutbox::setupMessageOutbox', (accounts) => {
 
     it('should fail if metachainId is 0', async () => {
       await Utils.expectRevert(
-        config.outboxAddress.setupMessageOutboxDouble(
+        config.outbox.setupMessageOutboxDouble(
           Utils.ZERO_BYTES32,
           config.SetupMessageOutboxArgs.inboxAddress,
         ),
@@ -61,7 +61,7 @@ contract('MessageOutbox::setupMessageOutbox', (accounts) => {
 
     it('should fail if message inbox address is 0', async () => {
       await Utils.expectRevert(
-        config.outboxAddress.setupMessageOutboxDouble(
+        config.outbox.setupMessageOutboxDouble(
           config.SetupMessageOutboxArgs.metachainId,
           Utils.NULL_ADDRESS,
         ),
@@ -72,25 +72,25 @@ contract('MessageOutbox::setupMessageOutbox', (accounts) => {
 
   contract('Positive Tests', async () => {
     it('should successfully setup message outbox', async () => {
-      await config.outboxAddress.setupMessageOutboxDouble(
+      await config.outbox.setupMessageOutboxDouble(
         config.SetupMessageOutboxArgs.metachainId,
         config.SetupMessageOutboxArgs.inboxAddress,
       );
 
       const expectedChannelIdentifier = await MessageBusUtils.hashChannelIdentifier(
         config.SetupMessageOutboxArgs.metachainId,
-        config.outboxAddress.address,
+        config.outbox.address,
         config.SetupMessageOutboxArgs.inboxAddress,
       );
 
       assert.strictEqual(
-        await config.outboxAddress.outboundChannelIdentifier(),
+        await config.outbox.outboundChannelIdentifier(),
         expectedChannelIdentifier,
         'Invalid channel identifier',
       );
 
       assert.strictEqual(
-        await config.outboxAddress.messageInbox(),
+        await config.outbox.messageInbox(),
         config.SetupMessageOutboxArgs.inboxAddress,
         'Invalid message inbox address',
       );

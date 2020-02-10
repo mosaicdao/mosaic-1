@@ -39,15 +39,15 @@ contract('MessageOutbox::outboxMessageHash', (accounts) => {
     config.calculatedChannelIdentifier = '';
 
 
-    config.outboxAddress = await MessageBusUtils.deployMessageOutbox();
+    config.outbox = await MessageBusUtils.deployMessageOutbox();
     config.calculatedChannelIdentifier =
       await MessageBusUtils.hashChannelIdentifier(
         config.metachainId,
-        config.outboxAddress.address,
+        config.outbox.address,
         config.inboxAddress,
       );
 
-    await config.outboxAddress.setupMessageOutboxDouble(
+    await config.outbox.setupMessageOutboxDouble(
       config.metachainId,
       config.inboxAddress,
     );
@@ -55,7 +55,7 @@ contract('MessageOutbox::outboxMessageHash', (accounts) => {
 
   contract('Positive Tests', async () => {
     it('should return a outbox message hash', async () => {
-      const actualMessageHash = await config.outboxAddress.outboxMessageHash(
+      const actualMessageHash = await config.outbox.outboxMessageHash(
         config.OutboxMessageHashArgs.intentHash,
         config.OutboxMessageHashArgs.nonce,
         config.OutboxMessageHashArgs.feeGasPrice,
