@@ -47,7 +47,6 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
     )
         external
     {
-
         spyConsensus = _consensus;
         spyMetachainId = _metachainId;
         spyEpochLength = _epochLength;
@@ -61,18 +60,19 @@ contract SpyCore is MasterCopyNonUpgradable, CoreI{
         spyAccumulatedGas = _accumulatedGas;
         spySourceBlockHeight = _sourceBlockHeight;
     }
+
     function joinBeforeOpen(address _validator)
         external
-        returns (uint256, uint256)
+        returns (uint256, uint256, uint256)
     {
         spyValidator = _validator;
     }
 
-    function join(address _validator) external {
+    function join(address _validator) external returns (uint256) {
         spyValidator = _validator;
     }
 
-    function logout(address _validator) external {
+    function logout(address _validator) external returns (uint256) {
         spyValidator = _validator;
     }
 

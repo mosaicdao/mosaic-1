@@ -121,7 +121,7 @@ contract('Reputation::increaseReputation', (accounts) => {
       delta,
       { from: constructorArgs.consensus },
     ),
-    'Validator is not active.');
+      'Validator is not active.');
   });
 
   it('should fail if transaction is done by account other than consensus', async () => {
@@ -133,7 +133,7 @@ contract('Reputation::increaseReputation', (accounts) => {
       delta,
       { from: otherAccount },
     ),
-    'Only the consensus contract can call this function.');
+      'Only the consensus contract can call this function.');
   });
 
   it('should fail for logged out validator', async () => {
@@ -145,7 +145,7 @@ contract('Reputation::increaseReputation', (accounts) => {
       delta,
       { from: constructorArgs.consensus },
     ),
-    'Validator is not active.');
+      'Validator is not active.');
   });
 
   it('should fail for withdraw-ed validator', async () => {
@@ -160,18 +160,6 @@ contract('Reputation::increaseReputation', (accounts) => {
       delta,
       { from: constructorArgs.consensus },
     ),
-    'Validator is not active.');
-  });
-
-  it('should fail for slashed validator', async () => {
-    await reputation.slash(validator.address, { from: constructorArgs.consensus });
-    const delta = 100;
-
-    await Utils.expectRevert(reputation.increaseReputation(
-      validator.address,
-      delta,
-      { from: constructorArgs.consensus },
-    ),
-    'Validator is not active.');
+      'Validator is not active.');
   });
 });

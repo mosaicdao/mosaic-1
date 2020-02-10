@@ -14,15 +14,23 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../consensus/CoConsensusModule.sol";
-import "../proxies/MasterCopyNonUpgradable.sol";
-import "../message-bus/MessageBus.sol";
-import "../message-bus/StateRootI.sol";
+
+import "../consensus/CoconsensusModule.sol";
+import "../consensus/CoconsensusI.sol";
 import "../consensus-gateway/ConsensusGatewayBase.sol";
 import "../consensus-gateway/ERC20GatewayBase.sol";
-import "../consensus/CoConsensusI.sol";
+import "../message-bus/MessageBus.sol";
+import "../message-bus/StateRootI.sol";
+import "../proxies/MasterCopyNonUpgradable.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
-contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, CoConsensusModule {
+
+contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, CoconsensusModule {
+
+    /* Usings */
+
+    using SafeMath for uint256;
+
 
     /* Constants */
 
@@ -39,7 +47,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
      * @notice It sets up consensus cogateway. It can only be called once.
      *
      * @param _metachainId Metachain id of a metablock.
-     * @param _coConsensus Address of coConsensus contract.
+     * @param _coconsensus Address of Coconsensus contract.
      * @param _utMOST Address of most contract at auxiliary chain.
      * @param _consensusGateway Address of most contract at auxiliary chain.
      * @param _outboxStorageIndex Outbox Storage index of ConsensusGateway.
@@ -48,7 +56,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
      */
     function setup(
         bytes32 _metachainId,
-        address _coConsensus,
+        address _coconsensus,
         ERC20I _utMOST,
         address _consensusGateway,
         uint8 _outboxStorageIndex,
@@ -70,7 +78,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
             _consensusGateway
         );
 
-        address anchor = CoConsensusI(_coConsensus).getAnchor(_metachainId);
+        address anchor = CoconsensusI(_coconsensus).getAnchor(_metachainId);
 
         require(
             anchor != address(0),
@@ -83,6 +91,68 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
             _outboxStorageIndex,
             StateRootI(anchor),
             _maxStorageRootItems
+        );
+    }
+
+    /**
+     * @notice It allows withdrawing Utmost tokens. Withdrawer needs to
+     *         approve consensus cogateway contract for the amount to
+     *         be withdrawn.
+     *
+     * @dev Function requires :
+     *          - Amount must not be 0.
+     *          - Beneficiary must not be 0.
+     *          - Withdrawal amount must be greater than multiplication of
+     *            gas price and gas limit.
+     * @param _amount Amount of tokens to be redeemed.
+     * @param _beneficiary The address in the origin chain where the value
+     *                     where the tokens will be withdrawn.
+     * @param _feeGasPrice Fee gas price for the reward calculation.
+     * @param _feeGasLimit Fee gas limit for the reward calculation.
+     *
+     * @return messageHash_ Message hash.
+     */
+    function withdraw(
+        uint256 _amount,
+        address _beneficiary,
+        uint256 _feeGasPrice,
+        uint256 _feeGasLimit
+    )
+        external
+        returns(bytes32 messageHash_)
+    {
+        require(
+            _amount != 0,
+            "Withdrawal amount should be greater than 0."
+        );
+        require(
+            _beneficiary != address(0),
+            "Beneficiary address must not be 0."
+        );
+        require(
+            _amount > _feeGasPrice.mul(_feeGasLimit),
+            "Withdrawal amount should be greater than max reward."
+        );
+
+        bytes32 withdrawIntentHash = hashWithdrawIntent(
+            _amount,
+            _beneficiary
+        );
+
+        uint256 nonce = nonces[msg.sender];
+        nonces[msg.sender] = nonce.add(1);
+
+        messageHash_ = MessageOutbox.declareMessage(
+            withdrawIntentHash,
+            nonce,
+            _feeGasPrice,
+            _feeGasLimit,
+            msg.sender
+        );
+
+        require(
+            ERC20I(most).burnFrom(msg.sender, _amount),
+            "Utmost burnFrom must succeed."
         );
     }
 }

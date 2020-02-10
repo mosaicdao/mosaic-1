@@ -63,8 +63,19 @@ interface ConsensusI {
     /**
      * @notice Creates a new metachain.
      *
+     * @return metachainId_ Metachain id.
+     * @return anchor_ Address of anchor.
+     * @return mosaicVersion_ Mosaic Version.
+     * @return consensusGateway_ Address of ConsensusGateway.
      */
-    function newMetaChain() external returns(bytes32 metachainId_);
+    function newMetachain()
+        external
+        returns (
+            bytes32 metachainId_,
+            address anchor_,
+            string memory mosaicVersion_,
+            address consensusGateway_
+        );
 
     /**
      * @notice Get anchor address for metachain id.
