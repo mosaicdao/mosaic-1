@@ -22,8 +22,8 @@ import "../consensus-gateway/ERC20GatewayBase.sol";
 import "../message-bus/MessageBus.sol";
 import "../message-bus/StateRootI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, CoconsensusModule {
 
@@ -170,7 +170,6 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
         currentMetablockHeight = _kernelHeight;
 
         uint256 nonce = nonces[_sender];
-
         nonces[_sender] = nonce.add(1);
 
         bytes32 kernelIntentHash = hashKernelIntent(

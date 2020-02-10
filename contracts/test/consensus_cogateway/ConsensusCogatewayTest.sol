@@ -17,11 +17,11 @@ pragma solidity >=0.5.0 <0.6.0;
 import "../../consensus-gateway/ConsensusCogateway.sol";
 
 /**
- * @title TestConsensusCogateway
+ * @title ConsensusCogatewayTest contract.
  *
  * @notice Test contract used for testing ConsensusCogateway contract.
  */
-contract TestConsensusCogateway is ConsensusCogateway {
+contract ConsensusCogatewayTest is ConsensusCogateway {
 
     /* Special function */
 

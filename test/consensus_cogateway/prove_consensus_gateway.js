@@ -19,7 +19,7 @@ const ProveConsensusGatewayProof = require('./prove_consensus_gateway_proof.json
 
 const SpyCoconsensus = artifacts.require('SpyCoconsensus');
 
-const ConsensusCoGateway = artifacts.require('TestConsensusCogateway');
+const ConsensusCoGateway = artifacts.require('ConsensusCogatewayTest');
 const SpyAnchor = artifacts.require('SpyAnchor');
 
 contract('CoConsensusGateway::proveConsensusGateway', (accounts) => {

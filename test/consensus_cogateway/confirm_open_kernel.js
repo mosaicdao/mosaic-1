@@ -18,7 +18,7 @@ const DeclareOpenKernel = require('./declare_open_kernel.json');
 
 const SpyCoconsensus = artifacts.require('SpyCoconsensus');
 
-const ConsensusCoGateway = artifacts.require('TestConsensusCogateway');
+const ConsensusCoGateway = artifacts.require('ConsensusCogatewayTest');
 const SpyAnchor = artifacts.require('SpyAnchor');
 
 contract('CoConsensusGateway::confirmOpenKernel', (accounts) => {
