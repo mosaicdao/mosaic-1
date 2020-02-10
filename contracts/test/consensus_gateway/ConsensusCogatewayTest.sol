@@ -22,13 +22,13 @@ contract ConsensusCogatewayTest is ConsensusCogateway {
         uint256 _blockHeight,
         bytes32 _storageRoot
     )
-        public
+        external
     {
          storageRoots[_blockHeight] = _storageRoot;
     }
 
     function setInboundChannelIdentifier(bytes32 _inboundChannelIdentifier)
-        public
+        external
     {
         inboundChannelIdentifier = _inboundChannelIdentifier;
     }

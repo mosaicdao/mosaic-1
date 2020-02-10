@@ -16,14 +16,21 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "../../most/UtmostInterface.sol";
 
+/**
+ * @title Spy contract for Utmost.
+ */
 contract UtmostSpy is UtmostInterface {
 
+    /* Storage */
 
     address[] public beneficiaries;
     uint256 [] public amounts;
 
+
+    /* External Functions. */
+
     /**
-     * Used for unit testing
+     * @notice Used for unit testing.
      *
      * @param _beneficiary Address of beneficiary where tokens are minted.
      * @param _amount Amount in wei.

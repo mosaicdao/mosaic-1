@@ -154,6 +154,8 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
             _rlpParentNodes
         );
 
+        // Additional gas consumption after this statement can be adjusted with
+        // the gas price value.
         uint256 gasConsumed = initialGas.sub(gasleft());
         uint256 rewardAmount = reward(gasConsumed, _feeGasPrice, _feeGasLimit);
 

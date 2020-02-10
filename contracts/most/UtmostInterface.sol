@@ -22,7 +22,7 @@ interface UtmostInterface {
     /* External Functions */
 
     /**
-     * Mints the given amount of token to beneficiary.
+     * @notice Mints the given amount of token to beneficiary.
      *
      * @param _beneficiary Address of beneficiary where tokens are minted.
      * @param _amount Amount in wei.
