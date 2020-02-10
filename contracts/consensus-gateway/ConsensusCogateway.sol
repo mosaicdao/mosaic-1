@@ -15,15 +15,16 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 
-import "../consensus/CoconsensusModule.sol";
 import "../consensus/CoconsensusI.sol";
+import "../consensus/CoconsensusModule.sol";
 import "../consensus-gateway/ConsensusGatewayBase.sol";
 import "../consensus-gateway/ERC20GatewayBase.sol";
 import "../message-bus/MessageBus.sol";
 import "../message-bus/StateRootI.sol";
+import "../most/UtmostInterface.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, CoconsensusModule {
 
@@ -95,6 +96,81 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
     }
 
     /**
+     * @notice Confirm deposit in order to mint tokens.
+     *
+     * @param _amount MOST token deposit amount in atto.
+     * @param _beneficiary Address of beneficiary on auxiliary chain.
+     * @param _feeGasPrice Fee gas price at which rewards will be calculated.
+     * @param _feeGasLimit Fee gas limit at which rewards will be calculated.
+     * @param _depositor Address of depositor on the origin chain.
+     * @param _blockHeight Block height of origin chain at which storage proof
+     *                     is generated.
+     * @param _rlpParentNodes Storage merkle proof to verify message declaration
+     *                        on the origin chain.
+     *
+     * @return messageHash_ Message hash.
+     */
+    function confirmDeposit(
+        uint256 _amount,
+        address payable _beneficiary,
+        uint256 _feeGasPrice,
+        uint256 _feeGasLimit,
+        address _depositor,
+        uint256 _blockHeight,
+        bytes calldata _rlpParentNodes
+    )
+        external
+        returns (bytes32 messageHash_)
+    {
+
+        uint256 initialGas = gasleft();
+
+        require(
+            _amount != 0,
+            "Deposit amount should be greater than 0."
+        );
+        require(
+            _beneficiary != address(0),
+            "Beneficiary address must not be 0."
+        );
+        require(
+            _depositor != address(0),
+            "Depositor address must not be 0."
+        );
+
+        uint256 nonce = nonces[msg.sender];
+        nonces[msg.sender] = nonce.add(1);
+
+        messageHash_ = MessageInbox.confirmMessage(
+            ERC20GatewayBase.hashDepositIntent(
+                _amount,
+                _beneficiary
+            ),
+            nonce,
+            _feeGasPrice,
+            _feeGasLimit,
+            _depositor,
+            _blockHeight,
+            _rlpParentNodes
+        );
+
+        uint256 gasConsumed = initialGas.sub(gasleft());
+        uint256 rewardAmount = reward(gasConsumed, _feeGasPrice, _feeGasLimit);
+
+        uint256 mintAmount = _amount.sub(rewardAmount);
+
+        require(
+            UtmostInterface(address(most)).mint(msg.sender, rewardAmount),
+            "Reward must be minted."
+        );
+
+        require(
+            UtmostInterface(address(most)).mint(_beneficiary, mintAmount),
+            "Tokens must be minted for beneficiary."
+        );
+    }
+
+    /**
      * @notice It allows withdrawing Utmost tokens. Withdrawer needs to
      *         approve consensus cogateway contract for the amount to
      *         be withdrawn.
@@ -155,4 +231,33 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
             "Utmost burnFrom must succeed."
         );
     }
+
+
+    /* Private functions */
+
+    /**
+     * @notice Calculates reward.
+     *
+     * @param _gasConsumed Gas consumption in confirm deposit transaction.
+     * @param _feeGasPrice Fee gas price at which rewards will be calculated.
+     * @param _feeGasLimit Fee gas limit at which rewards will be calculated.
+     *
+     * @return rewardAmount_ Total reward amount.
+     */
+    function reward(
+        uint256 _gasConsumed,
+        uint256 _feeGasPrice,
+        uint256 _feeGasLimit
+    )
+        private
+        pure
+        returns(uint256 rewardAmount_)
+    {
+        if(_gasConsumed > _feeGasLimit) {
+            rewardAmount_ = _feeGasPrice.mul(_feeGasLimit);
+        } else {
+            rewardAmount_ = _feeGasPrice.mul(_gasConsumed);
+        }
+    }
+
 }

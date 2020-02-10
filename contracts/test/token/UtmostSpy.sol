@@ -1,6 +1,6 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-// Copyright 2019 OpenST Ltd.
+// Copyright 2020 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,12 +14,16 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../ERC20I.sol";
+import "../../most/UtmostInterface.sol";
 
-interface UTMOSTI {
+contract UtmostSpy is UtmostInterface {
+
+
+    address[] public beneficiaries;
+    uint256 [] public amounts;
 
     /**
-     * Mints the given amount of token to beneficiary.
+     * Used for unit testing
      *
      * @param _beneficiary Address of beneficiary where tokens are minted.
      * @param _amount Amount in wei.
@@ -31,6 +35,11 @@ interface UTMOSTI {
         uint256 _amount
     )
         external
-        returns(bool);
+        returns(bool)
+    {
+        beneficiaries.push(_beneficiary);
+        amounts.push(_amount);
+        return true;
+    }
 
 }

@@ -1,4 +1,4 @@
-// Copyright 2019 OpenST Ltd.
+// Copyright 2020 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,36 +18,36 @@ const BN = require('bn.js');
 const { AccountProvider } = require('../../test_lib/utils.js');
 const TestData = require('../data/deposit_proof');
 
-const SpyCoConsensus = artifacts.require('SpyCoConsensus');
+const SpyCoconsensus = artifacts.require('SpyCoconsensus');
 const ConsensusCogateway = artifacts.require('ConsensusCogatewayTest');
-const SpyUTMOST = artifacts.require('SpyUTMOST');
+const UtmostSpy = artifacts.require('UtmostSpy');
 
-contract('ConsensusCoGateway::confirmDeposit', (accounts) => {
+contract('ConsensusCogateway::confirmDeposit', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
   let consensusCogateway;
   const anchor = accountProvider.get();
   let setupParams;
-  let utMOST;
+  let utmost;
 
   beforeEach(async () => {
     consensusCogateway = await ConsensusCogateway.new();
 
-    utMOST = await SpyUTMOST.new();
+    utmost = await UtmostSpy.new();
     setupParams = {
       metachainId: TestData.metachainId,
-      utMOST: utMOST.address,
+      utMOST: utmost.address,
       consensusGateway: TestData.consensusGateway,
       outboxStorageIndex: new BN(1),
       maxStorageRootItems: new BN(100),
       metablockHeight: new BN(1),
-      coConsensus: await SpyCoConsensus.new(),
+      coconsensus: await SpyCoconsensus.new(),
     };
 
-    await setupParams.coConsensus.setAnchorAddress(setupParams.metachainId, anchor);
+    await setupParams.coconsensus.setAnchorAddress(setupParams.metachainId, anchor);
 
     await consensusCogateway.setup(
       setupParams.metachainId,
-      setupParams.coConsensus.address,
+      setupParams.coconsensus.address,
       setupParams.utMOST,
       setupParams.consensusGateway,
       setupParams.outboxStorageIndex,
@@ -79,10 +79,10 @@ contract('ConsensusCoGateway::confirmDeposit', (accounts) => {
         { from: sender },
       );
 
-      const beneficiary1 = await utMOST.beneficiaries.call(0);
-      const beneficiary2 = await utMOST.beneficiaries.call(1);
-      const amount1 = await utMOST.amounts.call(0);
-      const amount2 = await utMOST.amounts.call(1);
+      const beneficiary1 = await utmost.beneficiaries.call(0);
+      const beneficiary2 = await utmost.beneficiaries.call(1);
+      const amount1 = await utmost.amounts.call(0);
+      const amount2 = await utmost.amounts.call(1);
 
       assert.strictEqual(
         beneficiary1,
