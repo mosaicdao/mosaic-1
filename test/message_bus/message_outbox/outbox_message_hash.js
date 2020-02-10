@@ -47,7 +47,7 @@ contract('MessageOutbox::outboxMessageHash', (accounts) => {
         config.inboxAddress,
       );
 
-    await config.outbox.setupMessageOutboxDouble(
+    await config.outbox.setMessageOutbox(
       config.metachainId,
       config.inboxAddress,
     );
