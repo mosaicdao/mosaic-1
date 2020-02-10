@@ -1,4 +1,4 @@
-// Copyright 2019 OpenST Ltd.
+// Copyright 2020 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const BN = require('bn.js');
+const ConfirmMessageIntentHash = require('./confirm_message.json');
 const web3 = require('../../test_lib/web3.js');
 const Utils = require('../../test_lib/utils.js');
 const { AccountProvider } = require('../../test_lib/utils.js');
-
-const MessageInbox = artifacts.require('MessageInboxDouble');
+const BN = require('bn.js');
 const ConsensusGatewayBase = artifacts.require('ConsensusGatewayBase');
-const ConfirmMessageIntentHash = require('./confirm_message_intentHash.json');
+const MessageInbox = artifacts.require('MessageInboxDouble');
 
 contract('MessageInbox::confirmMessage', (accounts) => {
   let messageInbox;
@@ -30,7 +29,7 @@ contract('MessageInbox::confirmMessage', (accounts) => {
   beforeEach(async () => {
     setupParams.metachainId = ConfirmMessageIntentHash.metachainId;
     setupParams.messageOutbox = await accountProvider.get();
-    setupParams.stateRootI = await accountProvider.get();
+    setupParams.stateRoot = await accountProvider.get();
     setupParams.maxStorageRootItems = new BN(Utils.getRandomNumber(500));
     setupParams.txOptions = {
       from: accountProvider.get(),
@@ -66,8 +65,8 @@ contract('MessageInbox::confirmMessage', (accounts) => {
   });
 
   contract('Negative Tests', async () => {
-    it('Should fail when Message Hash already exists in inbox mapping', async () => {
-      await messageInbox.confirmMessageDouble(
+    it('Should fail when message hash already exists in inbox mapping', async () => {
+      await messageInbox.confirmMessageIntent(
         setupParams.intentHash,
         setupParams.nonce,
         setupParams.feeGasPrice,
@@ -78,7 +77,7 @@ contract('MessageInbox::confirmMessage', (accounts) => {
       );
 
       await Utils.expectRevert(
-        messageInbox.confirmMessageDouble(
+        messageInbox.confirmMessageIntent(
           setupParams.intentHash,
           setupParams.nonce,
           setupParams.feeGasPrice,
@@ -93,7 +92,7 @@ contract('MessageInbox::confirmMessage', (accounts) => {
   });
   contract('Positive Tests', async () => {
     it('Should be able to set parameters', async () => {
-      const messageHash = await messageInbox.confirmMessageDouble.call(
+      const messageHash = await messageInbox.confirmMessageIntent.call(
         setupParams.intentHash,
         setupParams.nonce,
         setupParams.feeGasPrice,
@@ -143,7 +142,7 @@ contract('MessageInbox::confirmMessage', (accounts) => {
         'Message Hash from contract should be same as expected hash',
       );
 
-      await messageInbox.confirmMessageDouble(
+      await messageInbox.confirmMessageIntent(
         setupParams.intentHash,
         setupParams.nonce,
         setupParams.feeGasPrice,

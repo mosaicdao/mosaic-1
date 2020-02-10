@@ -1,6 +1,6 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-// Copyright 2019 OpenST Ltd.
+// Copyright 2020 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,17 +17,15 @@ pragma solidity >=0.5.0 <0.6.0;
 import "../../message-bus/MessageInbox.sol";
 
 /**
- * @title MessageInbox - Contract to confirm the messages declared in MessageOutbox
+ * @title MessageInbox - Contract to confirm the messages declared in MessageOutbox.
  */
-
 contract MessageInboxDouble is MessageInbox {
-    /* Internal Functions */
+    /* External Functions */
 
     /**
      * @notice Setup message inbox.
      */
-
-    function setupMessageInboxDouble(
+    function setMessageInbox(
         bytes32 _metachainId,
         address _messageOutbox,
         uint8 _outboxStorageIndex,
@@ -46,11 +44,9 @@ contract MessageInboxDouble is MessageInbox {
     }
 
     /**
-     * @notice Verify merkle proof of a storage contract address.
-     *         Trust factor is brought by state roots of the contract which
-     *         implements StateRootInterface.
+     * @notice It is used to test MessageInboxDouble::proveStorageAccount
      */
-    function proveStorageAccountDouble(
+    function proveAccountStorage(
         uint256 _blockHeight,
         bytes calldata _rlpAccount,
         bytes calldata _rlpParentNodes
@@ -65,11 +61,9 @@ contract MessageInboxDouble is MessageInbox {
     }
 
     /**
-     * @notice Confirm a new message that is declared in outbox on the source
-     *         chain. Merkle proof will be performed to verify storage data.
-     *         This will update the inbox value to `true` for the given message hash.
+     * @notice It is used to test MessageInboxDouble::confirmMessage
      */
-    function confirmMessageDouble(
+    function confirmMessageIntent(
         bytes32 _intentHash,
         uint256 _nonce,
         uint256 _feeGasPrice,
@@ -79,9 +73,9 @@ contract MessageInboxDouble is MessageInbox {
         bytes calldata _rlpParentNodes
     )
         external
-        returns (bytes32)
+        returns (bytes32 messageHash_)
     {
-        return confirmMessage(
+        messageHash_ = MessageInbox.confirmMessage(
             _intentHash,
             _nonce,
             _feeGasPrice,
@@ -100,7 +94,7 @@ contract MessageInboxDouble is MessageInbox {
     function setInboundChannelIdentifier(
         bytes32 _inboundChannelIdentifier
     )
-        public
+        external
     {
         inboundChannelIdentifier = _inboundChannelIdentifier;
     }
@@ -108,7 +102,7 @@ contract MessageInboxDouble is MessageInbox {
     /**
      * @notice It sets Storage Root.
      *
-     * @param _blockHeight Block height at which Gateway/CoGateway is to be
+     * @param _blockHeight Block height at which Gateway/Cogateway is to be
      *                     proven.
      * @param _storageRoot Storage Root.
      */
@@ -116,13 +110,13 @@ contract MessageInboxDouble is MessageInbox {
         uint256 _blockHeight,
         bytes32 _storageRoot
     )
-        public
+        external
     {
         storageRoots[_blockHeight] = _storageRoot;
     }
 
     /**
-     * @notice It sets Storage Root.
+     * @notice It sets storage Root.
      *
      * @param _outboxStorageIndex Storage index of outbox mapping in
      *                            MessageOutbox contract.
@@ -130,7 +124,7 @@ contract MessageInboxDouble is MessageInbox {
     function setOutboxStorageIndex(
         uint8 _outboxStorageIndex
     )
-        public
+        external
     {
         outboxStorageIndex = uint8(_outboxStorageIndex);
     }

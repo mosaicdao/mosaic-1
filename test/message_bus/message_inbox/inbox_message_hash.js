@@ -1,4 +1,4 @@
-// Copyright 2019 OpenST Ltd.
+// Copyright 2020 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const BN = require('bn.js');
+
 const web3 = require('../../test_lib/web3.js');
 const Utils = require('../../test_lib/utils.js');
 const { AccountProvider } = require('../../test_lib/utils.js');
-
+const BN = require('bn.js');
 const MessageInbox = artifacts.require('MessageInboxDouble');
 
 contract('MessageInbox::inboxMessageHash', (accounts) => {
@@ -33,17 +33,17 @@ contract('MessageInbox::inboxMessageHash', (accounts) => {
     setupParams.messageOutbox = await accountProvider.get();
     setupParams.metachainId = Utils.generateRandomMetachainId();
     setupParams.outboxStorageIndex = new BN(Utils.getRandomNumber(63));
-    setupParams.stateRootI = await accountProvider.get();
+    setupParams.stateRoot = await accountProvider.get();
     setupParams.maxStorageRootItems = new BN(Utils.getRandomNumber(500));
   });
 
   contract('Positive Tests', async () => {
-    it('Should be able to set parameters', async () => {
-      await messageInbox.setupMessageInboxDouble(
+    it('Should successfully generate inbox message hash', async () => {
+      await messageInbox.setMessageInbox(
         setupParams.metachainId,
         setupParams.messageOutbox,
         setupParams.outboxStorageIndex,
-        setupParams.stateRootI,
+        setupParams.stateRoot,
         setupParams.maxStorageRootItems,
       );
 

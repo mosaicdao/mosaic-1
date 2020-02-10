@@ -1,4 +1,4 @@
-// Copyright 2019 OpenST Ltd.
+// Copyright 2020 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ contract('MessageInbox::setupMessageInbox', (accounts) => {
     setupParams.metachainId = Utils.generateRandomMetachainId();
     setupParams.messageOutbox = await accountProvider.get();
     setupParams.outboxStorageIndex = new BN(Utils.getRandomNumber(63));// need to verify thr range
-    setupParams.stateRootI = await accountProvider.get();
+    setupParams.stateRoot = await accountProvider.get();
     setupParams.maxStorageRootItems = new BN(Utils.getRandomNumber(500));
     setupParams.txOptions = {
       from: accountProvider.get(),
@@ -41,11 +41,11 @@ contract('MessageInbox::setupMessageInbox', (accounts) => {
       const metachainId = '0x0000000000000000000000000000000000000000000000000000000000000000';
 
       await Utils.expectRevert(
-        messageInbox.setupMessageInboxDouble(
+        messageInbox.setMessageInbox(
           metachainId,
           setupParams.messageOutbox,
           setupParams.outboxStorageIndex,
-          setupParams.stateRootI,
+          setupParams.stateRoot,
           setupParams.maxStorageRootItems,
         ),
         'metachain id is 0.',
@@ -56,22 +56,22 @@ contract('MessageInbox::setupMessageInbox', (accounts) => {
       const messageOutbox = '0x0000000000000000000000000000000000000000';
 
       await Utils.expectRevert(
-        messageInbox.setupMessageInboxDouble(
+        messageInbox.setMessageInbox(
           setupParams.metachainId,
           messageOutbox,
           setupParams.outboxStorageIndex,
-          setupParams.stateRootI,
+          setupParams.stateRoot,
           setupParams.maxStorageRootItems,
         ),
         'Outbox address is 0.',
       );
     });
 
-    it('Should fail when stateRoot Provider is 0', async () => {
+    it('Should fail when state root provider is 0', async () => {
       const stateRootProvider = '0x0000000000000000000000000000000000000000';
 
       await Utils.expectRevert(
-        messageInbox.setupMessageInboxDouble(
+        messageInbox.setMessageInbox(
           setupParams.metachainId,
           setupParams.messageOutbox,
           setupParams.outboxStorageIndex,
@@ -88,11 +88,11 @@ contract('MessageInbox::setupMessageInbox', (accounts) => {
       );
 
       await Utils.expectRevert(
-        messageInbox.setupMessageInboxDouble(
+        messageInbox.setMessageInbox(
           setupParams.metachainId,
           setupParams.messageOutbox,
           setupParams.outboxStorageIndex,
-          setupParams.stateRootI,
+          setupParams.stateRoot,
           setupParams.maxStorageRootItems,
         ),
         'Message inbox is already setup.',
@@ -101,12 +101,12 @@ contract('MessageInbox::setupMessageInbox', (accounts) => {
   });
 
   contract('Positive Tests', async () => {
-    it('Should set the parameters', async () => {
-      await messageInbox.setupMessageInboxDouble(
+    it('Should successfully setup message inbox with required the parameters', async () => {
+      await messageInbox.setMessageInbox(
         setupParams.metachainId,
         setupParams.messageOutbox,
         setupParams.outboxStorageIndex,
-        setupParams.stateRootI,
+        setupParams.stateRoot,
         setupParams.maxStorageRootItems,
       );
 
@@ -115,7 +115,7 @@ contract('MessageInbox::setupMessageInbox', (accounts) => {
       assert.strictEqual(
         messageOutbox,
         setupParams.messageOutbox,
-        'Message Outbox  from contract must be same as setupParams.messageOutbox',
+        'Message Outbox from contract must be same as setupParams.messageOutbox',
       );
 
       const outboxStorageIndex = await messageInbox.outboxStorageIndex.call();
