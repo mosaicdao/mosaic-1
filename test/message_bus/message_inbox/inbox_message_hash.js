@@ -60,7 +60,7 @@ contract('MessageInbox::inboxMessageHash', (accounts) => {
          'Message(bytes32 intentHash,uint256 nonce,uint256 feeGasPrice,uint256 feeGasLimit,address sender)',
       );
 
-      const expectedinboundChannelIdentifier = ConsensusGatewayUtils.getChannelIdentifier(
+      const expectedInboundChannelIdentifier = ConsensusGatewayUtils.getChannelIdentifier(
         setupParams.metachainId,
         setupParams.messageOutbox,
         messageInbox.address,
@@ -87,16 +87,16 @@ contract('MessageInbox::inboxMessageHash', (accounts) => {
         ),
       );
 
-      const expectedmessageHash = web3.utils.soliditySha3(
+      const expectedMessageHash = web3.utils.soliditySha3(
         { t: 'bytes1', v: '0x19' },
         { t: 'bytes1', v: '0x4d' },
-        { t: 'bytes32', v: expectedinboundChannelIdentifier },
+        { t: 'bytes32', v: expectedInboundChannelIdentifier },
         { t: 'bytes32', v: typedHashed },
       );
 
       assert.strictEqual(
         messageHash,
-        expectedmessageHash,
+        expectedMessageHash,
         'Message Hash from contract should be same as expected hash',
       );
     });

@@ -130,7 +130,7 @@ contract('MessageInbox::confirmMessage', (accounts) => {
         ),
       );
 
-      const expectedmessageHash = web3.utils.soliditySha3(
+      const expectedMessageHash = web3.utils.soliditySha3(
         { t: 'bytes1', v: '0x19' },
         { t: 'bytes1', v: '0x4d' },
         { t: 'bytes32', v: inboundChannelIdentifier },
@@ -139,7 +139,7 @@ contract('MessageInbox::confirmMessage', (accounts) => {
 
       assert.strictEqual(
         messageHash,
-        expectedmessageHash,
+        expectedMessageHash,
         'Message Hash from contract should be same as expected hash',
       );
 

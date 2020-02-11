@@ -129,14 +129,14 @@ contract('MessageInbox::setupMessageInbox', (accounts) => {
 
       const inboundChannelidentifier = await messageInbox.inboundChannelIdentifier.call();
 
-      const expectedinboundChannelIdentifier = ConsensusGatewayUtils.getChannelIdentifier(
+      const expectedInboundChannelIdentifier = ConsensusGatewayUtils.getChannelIdentifier(
         setupParams.metachainId,
         setupParams.messageOutbox,
         messageInbox.address,
       );
 
       assert.strictEqual(
-        expectedinboundChannelIdentifier,
+        expectedInboundChannelIdentifier,
         inboundChannelidentifier,
         'Inbound Channel Identifier from contract must be same as expected inbound channel identifier',
       );

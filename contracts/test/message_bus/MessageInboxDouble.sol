@@ -17,7 +17,7 @@ pragma solidity >=0.5.0 <0.6.0;
 import "../../message-bus/MessageInbox.sol";
 
 /**
- * @title MessageInbox - Message Inbox test contract.
+ * @title MessageInboxDouble - Message Inbox test double contract.
  */
 contract MessageInboxDouble is MessageInbox {
 
@@ -101,7 +101,7 @@ contract MessageInboxDouble is MessageInbox {
     }
 
     /**
-     * @notice It sets Storage root.
+     * @notice It sets storage root.
      *
      * @param _blockHeight Block height at which Gateway/Cogateway is to be
      *                     proven.
