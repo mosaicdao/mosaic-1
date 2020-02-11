@@ -14,8 +14,12 @@
 
 'use strict';
 
+
 const Assert = require('assert');
 const BN = require('bn.js');
+
+const ERC20Mock = artifacts.require('ERC20Mock');
+
 const web3 = require('./web3.js');
 
 async function advanceBlock() {
@@ -35,7 +39,7 @@ async function advanceBlock() {
   });
 }
 
-function getRandomHash() { return web3.utils.sha3(`${Date.now()}`); }
+function getRandomHash() { return web3.utils.randomHex(32); }
 
 const ResultType = {
   FAIL: 0,
@@ -67,6 +71,9 @@ const receipts = [];
 function Utils() {}
 
 Utils.prototype = {
+
+  deployMockToken: async (initialAccount, initialBalance = '8000000000000000000000') => ERC20Mock.new(initialAccount, initialBalance),
+
   generateRandomMetachainId: () => getRandomHash(),
 
   /** Log receipt. */
@@ -335,6 +342,13 @@ Utils.prototype = {
     '0x0000000000000000000000000000000000000000',
 
   NULL_ADDRESS: '0x0000000000000000000000000000000000000000',
+
+  SENTINEL_ADDRESS: '0x0000000000000000000000000000000000000001',
+
+  MAX_UINT256: new BN(
+    '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+  ),
+  TRANSITION_TYPEHASH: web3.utils.soliditySha3('Transition(bytes32 kernelHash,bytes32 originObservation,uint256 dynasty,uint256 accumulatedGas,bytes32 committeeLock)'),
 };
 
 module.exports = new Utils();

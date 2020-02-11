@@ -18,7 +18,6 @@ const { AccountProvider } = require('../test_lib/utils.js');
 const Utils = require('../test_lib/utils.js');
 
 const Reputation = artifacts.require('Reputation');
-const MockToken = artifacts.require('MockToken');
 
 contract('Reputation::depositEarnings', (accounts) => {
   let constructorArgs;
@@ -35,8 +34,8 @@ contract('Reputation::depositEarnings', (accounts) => {
       address: accountProvider.get(),
       withdrawalAddress: accountProvider.get(),
     };
-    most = await MockToken.new(18, { from: validator.address });
-    wETH = await MockToken.new(18, { from: validator.address });
+    most = await Utils.deployMockToken(validator.address);
+    wETH = await Utils.deployMockToken(validator.address);
 
     depositor = accountProvider.get();
 
@@ -152,23 +151,7 @@ contract('Reputation::depositEarnings', (accounts) => {
       amount,
       { from: depositor },
     ),
-    'Validator is not active.');
-  });
-
-  it('should fail for slashed validator', async () => {
-    const amount = 1000;
-
-    await reputation.slash(
-      validator.address,
-      { from: constructorArgs.consensus },
-    );
-
-    await Utils.expectRevert(reputation.depositEarnings(
-      validator.address,
-      amount,
-      { from: depositor },
-    ),
-    'Validator is not active.');
+      'Validator is not active.');
   });
 
   it('should fail for logged out validator', async () => {
@@ -181,7 +164,7 @@ contract('Reputation::depositEarnings', (accounts) => {
       amount,
       { from: depositor },
     ),
-    'Validator is not active.');
+      'Validator is not active.');
   });
 
   it('should fail for withdrawn validator', async () => {
@@ -201,6 +184,6 @@ contract('Reputation::depositEarnings', (accounts) => {
       amount,
       { from: depositor },
     ),
-    'Validator is not active.');
+      'Validator is not active.');
   });
 });

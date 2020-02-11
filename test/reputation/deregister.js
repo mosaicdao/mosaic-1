@@ -19,7 +19,6 @@ const { ValidatorStatus } = require('./utils.js');
 const Utils = require('../test_lib/utils.js');
 
 const Reputation = artifacts.require('Reputation');
-const MockToken = artifacts.require('MockToken');
 
 contract('Reputation::deregister', (accounts) => {
   let constructorArgs;
@@ -35,8 +34,8 @@ contract('Reputation::deregister', (accounts) => {
       address: accountProvider.get(),
       withdrawalAddress: accountProvider.get(),
     };
-    most = await MockToken.new(18, { from: validator.address });
-    wETH = await MockToken.new(18, { from: validator.address });
+    most = await Utils.deployMockToken(validator.address);
+    wETH = await Utils.deployMockToken(validator.address);
 
     constructorArgs = {
       consensus: accountProvider.get(),
@@ -113,7 +112,7 @@ contract('Reputation::deregister', (accounts) => {
       unknownValidator,
       { from: constructorArgs.consensus },
     ),
-    'Validator is not active.');
+      'Validator is not active.');
   });
 
   it('should fail if transaction is done by account other than consensus', async () => {
@@ -123,7 +122,7 @@ contract('Reputation::deregister', (accounts) => {
       validator.address,
       { from: otherAccount },
     ),
-    'Only the consensus contract can call this function.');
+      'Only the consensus contract can call this function.');
   });
 
   it('should fail for deregistered validator', async () => {
@@ -133,7 +132,7 @@ contract('Reputation::deregister', (accounts) => {
       validator.address,
       { from: constructorArgs.consensus },
     ),
-    'Validator is not active.');
+      'Validator is not active.');
   });
 
   it('should fail for withdraw-ed validator', async () => {
@@ -145,16 +144,6 @@ contract('Reputation::deregister', (accounts) => {
       validator.address,
       { from: constructorArgs.consensus },
     ),
-    'Validator is not active.');
-  });
-
-  it('should fail for slashed validator', async () => {
-    await reputation.slash(validator.address, { from: constructorArgs.consensus });
-
-    await Utils.expectRevert(reputation.deregister(
-      validator.address,
-      { from: constructorArgs.consensus },
-    ),
-    'Validator is not active.');
+      'Validator is not active.');
   });
 });

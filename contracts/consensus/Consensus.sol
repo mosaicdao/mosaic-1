@@ -20,7 +20,7 @@ import "./ConsensusI.sol";
 import "./CoreLifetime.sol";
 import "../anchor/AnchorI.sol";
 import "../axiom/AxiomI.sol";
-import "../block/Block.sol";
+import "../block/BlockHeader.sol";
 import "../committee/CommitteeI.sol";
 import "../core/CoreI.sol";
 import "../reputation/ReputationI.sol";
@@ -38,12 +38,77 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
     /* Events */
 
+    /** Emitted when endpoint is published */
     event EndpointPublished(
         bytes32 metachainId,
         address core,
         address validator,
         string service,
         string endpoint
+    );
+
+    /** Emitted when validator logs out*/
+    event ValidatorLoggedOut(
+        address validator,
+        uint256 endHeight,
+        uint256 withdrawalBlockHeight
+    );
+
+    /** Emitted when core is created */
+    event CoreCreated(
+        address core,
+        bytes32 metachainId,
+        uint256 minValidators,
+        uint256 maxValidators,
+        uint256 gasTarget
+    );
+
+    /** Emitted when validator joins */
+    event ValidatorJoined(
+        address validator,
+        address core,
+        uint256 beginHeight,
+        uint256 reputation
+    );
+
+    /** Emitted when core lifetime is updated */
+    event CoreLifetimeUpdated(
+        address core,
+        uint256 coreLifetime
+    );
+
+    /** Emitted when metablock is precommitted */
+    event MetablockPrecommitted(
+        bytes32 metablockHash,
+        bytes32 metachainId,
+        uint256 metablockHeight,
+        uint256 roundMetablockNumber
+    );
+
+    /** Emitted when committee is formed */
+    event MetablockCommitteeFormed(
+        address committee,
+        bytes32 metablockHash,
+        bytes32 metachainId,
+        uint256 formationHeight,
+        uint256 size
+    );
+
+    /** Emitted when committee is decided */
+    event MetablockCommitteeDecided(
+        address committee,
+        bytes32 metablockHash,
+        bytes32 metachainId,
+        uint256 size,
+        bytes32 decision
+    );
+
+    /** Emitted when metablock is committed*/
+    event MetablockCommitted(
+        bytes32 kernelHash,
+        address core,
+        bytes32 metachainId,
+        bytes32 metablockHash
     );
 
 
@@ -365,7 +430,18 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         // On first precommit by a core, CoreLifetime state will change to active.
         if (coreLifetimes[address(core)] == CoreLifetime.genesis) {
             coreLifetimes[address(core)] = CoreLifetime.active;
+            emit CoreLifetimeUpdated(
+                address(core),
+                uint256(CoreLifetime.active)
+            );
         }
+
+        emit MetablockPrecommitted(
+            _metablockHashPrecommit,
+            _metachainId,
+            _metablockHeight,
+            block.number
+        );
     }
 
     /**
@@ -411,7 +487,19 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         currentMetablock.round = MetablockRound.CommitteeFormed;
         currentMetablock.roundBlockNumber = block.number;
 
-        startCommittee(_metachainId, seed, currentMetablock.metablockHash);
+        address committee = startCommittee(
+            _metachainId,
+            seed,
+            currentMetablock.metablockHash
+        );
+
+        emit MetablockCommitteeFormed(
+            committee,
+            currentMetablock.metablockHash,
+            _metachainId,
+            committeeFormationBlockHeight,
+            committeeSize
+        );
     }
 
     /**
@@ -590,6 +678,16 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         );
 
         decisions[currentMetablock.metablockHash] = _committeeDecision;
+
+        CommitteeI committee = committees[currentMetablock.metablockHash];
+
+        emit MetablockCommitteeDecided(
+            address(committee),
+            currentMetablock.metablockHash,
+            _metachainId,
+            committeeSize,
+            _committeeDecision
+        );
     }
 
     /**
@@ -609,7 +707,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      *          - anchor contract for the given metachain id should exist
      *
      * @param _metachainId Metachain id.
-     * @param _rlpBlockHeader RLP ecoded block header.
+     * @param _rlpBlockHeader RLP encoded block header.
      * @param _kernelHash Kernel hash
      * @param _originObservation Observation of the origin chain.
      * @param _dynasty The dynasty number where the meta-block closes
@@ -625,7 +723,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      */
     function commitMetablock(
         bytes32 _metachainId,
-        bytes calldata _rlpBlockHeader,
+        bytes memory _rlpBlockHeader,
         bytes32 _kernelHash,
         bytes32 _originObservation,
         uint256 _dynasty,
@@ -636,7 +734,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         uint256 _sourceBlockHeight,
         uint256 _targetBlockHeight
     )
-        external
+        public
     {
         require(
             _source == keccak256(_rlpBlockHeader),
@@ -675,6 +773,13 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             _sourceBlockHeight,
             gasTargetDelta
         );
+
+        emit MetablockCommitted(
+            _kernelHash,
+            address(core),
+            _metachainId,
+            metablockHash
+        );
     }
 
     /**
@@ -707,10 +812,20 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         );
 
         // Stake in reputation contract.
-        reputation.stake(msg.sender, _withdrawalAddress);
+        uint256 validatorReputation = reputation.stake(
+            msg.sender,
+            _withdrawalAddress
+        );
 
         // Join in core contract.
-        core.join(msg.sender);
+        uint256 beginHeight = core.join(msg.sender);
+
+        emit ValidatorJoined(
+            msg.sender,
+            address(core),
+            beginHeight,
+            validatorReputation
+        );
     }
 
     /**
@@ -745,12 +860,16 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         );
 
         // Stake in reputation contract.
-        reputation.stake(msg.sender, _withdrawalAddress);
+        uint256 validatorReputation = reputation.stake(
+            msg.sender,
+            _withdrawalAddress
+        );
 
         // Join in core contract.
         (
             uint256 validatorCount,
-            uint256 minValidatorCount
+            uint256 minValidatorCount,
+            uint256 beginHeight
         ) = core.joinBeforeOpen(msg.sender);
 
         if (validatorCount >= minValidatorCount) {
@@ -762,7 +881,19 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
                 feeGasPrice,
                 feeGasLimit
             );
+
+            emit CoreLifetimeUpdated(
+                address(core),
+                uint256(CoreLifetime.genesis)
+            );
         }
+
+        emit ValidatorJoined(
+            msg.sender,
+            address(core),
+            beginHeight,
+            validatorReputation
+        );
     }
 
     /**
@@ -803,9 +934,13 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             "Core lifetime status must be genesis or active."
         );
 
-        reputation.deregister(msg.sender);
+        uint256 withdrawalBlockHeight = reputation.deregister(msg.sender);
+
+        uint256 endHeight = _core.logout(msg.sender);
 
         _core.logout(msg.sender);
+
+        emit ValidatorLoggedOut(msg.sender, endHeight, withdrawalBlockHeight);
     }
 
     /** @notice Creates a new meta chain.
@@ -814,11 +949,21 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      * @dev Function requires:
      *          - msg.sender should be axiom contract.
      *          - core is not assigned to metachain.
+     *
+     * @return metachainId_ Metachain id.
+     * @return anchor_ Address of anchor.
+     * @return mosaicVersion_ Mosaic Version.
+     * @return consensusGateway_ Address of Consensus Gateway.
      */
-    function newMetaChain()
+    function newMetachain()
         external
         onlyAxiom
-        returns(bytes32 metachainId_)
+        returns (
+            bytes32 metachainId_,
+            address anchor_,
+            string memory mosaicVersion_,
+            address consensusGateway_
+        )
     {
 
         bytes memory anchorSetupCallData = anchorSetupData(
@@ -827,7 +972,9 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         );
 
         AnchorI anchor = AnchorI(axiom.deployAnchor(anchorSetupCallData));
-        metachainId_ = hashMetachainId(address(anchor));
+
+        anchor_ = address(anchor);
+        metachainId_ = hashMetachainId(anchor_);
 
         bytes memory coreSetupCallData = coreSetupData(
             metachainId_,
@@ -842,9 +989,11 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
         bytes memory consensusGatewaySetupCallData = consensusGatewaySetupData();
 
+        address core;
+
         (
-            address core,
-            address consensusGateway
+            core,
+            consensusGateway_
         ) = axiom.deployMetachainProxies(
                 coreSetupCallData,
                 consensusGatewaySetupCallData
@@ -852,9 +1001,23 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
         assignments[metachainId_] = CoreI(core);
         anchors[metachainId_] = anchor;
-        consensusGateways[metachainId_] = ConsensusGatewayI(consensusGateway);
+        consensusGateways[metachainId_] = ConsensusGatewayI(consensusGateway_);
 
         coreLifetimes[core] = CoreLifetime.creation;
+        mosaicVersion_ = DOMAIN_SEPARATOR_VERSION;
+
+        emit CoreLifetimeUpdated(
+            address(core),
+            uint256(CoreLifetime.creation)
+        );
+
+        emit CoreCreated(
+            address(core),
+            metachainId_,
+            minValidators,
+            joinLimit,
+            gasTargetDelta
+        );
     }
 
     /** Get minimum validator and join limit count. */
@@ -1010,6 +1173,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      * @param _metachainId Metachain id of a proposed metablock.
      * @param _dislocation Hash to shuffle validators.
      * @param _metablockHash Proposal under consideration for committee.
+     *
+     * @return committeeAddress_ Address of the committee
      */
     function startCommittee(
         bytes32 _metachainId,
@@ -1017,6 +1182,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         bytes32 _metablockHash
     )
         internal
+        returns (address committeeAddress_)
     {
         assert(committees[_metablockHash] == CommitteeI(0));
 
@@ -1026,6 +1192,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             _dislocation,
             _metablockHash
         );
+
+        CommitteeI committee = committees[_metablockHash];
+
+        committeeAddress_ = address(committee);
     }
 
 
@@ -1112,7 +1282,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             "There is no anchor for the specified metachain id."
         );
 
-        Block.Header memory blockHeader = Block.decodeHeader(_rlpBlockHeader);
+        BlockHeader.Header memory blockHeader = BlockHeader.decodeHeader(_rlpBlockHeader);
 
         // Anchor state root.
         anchor.anchorStateRoot(

@@ -17,9 +17,9 @@ pragma solidity >=0.5.0 <0.6.0;
 import "../lib/RLP.sol";
 
 /**
- * @title Block provides functionality to work with blocks.
+ * @title BlockHeader provides functionality to work with blocks.
  */
-library Block {
+library BlockHeader {
 
     /* Structs */
 

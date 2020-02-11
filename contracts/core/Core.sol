@@ -22,8 +22,16 @@ import "../consensus/ConsensusModule.sol";
 import "../reputation/ReputationI.sol";
 import "../version/MosaicVersion.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
+import "../vote-message/VoteMessage.sol";
 
-contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreStatusEnum, CoreI {
+contract Core is
+    MasterCopyNonUpgradable,
+    ConsensusModule,
+    MosaicVersion,
+    CoreStatusEnum,
+    VoteMessage,
+    CoreI
+{
 
     /* Usings */
 
@@ -62,19 +70,6 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         uint256 accumulatedGas;
         /** Committee lock is the hash of the accumulated transaction root */
         bytes32 committeeLock;
-    }
-
-    struct VoteMessage {
-        /** Transition hash */
-        bytes32 transitionHash;
-        /** Source block hash */
-        bytes32 source;
-        /** Target block hash */
-        bytes32 target;
-        /** Source block height */
-        uint256 sourceBlockHeight;
-        /** Target block height */
-        uint256 targetBlockHeight;
     }
 
     struct VoteCount {
@@ -396,7 +391,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      * @param _originObservation Origin observation of a proposed metablock.
      * @param _dynasty Dynasty of a proposed metablock.
      * @param _accumulatedGas Accumulated gas in a proposed metablock.
-     * @param _committeeLock Committe lock (transition root hash) of a proposed
+     * @param _committeeLock Committee lock (transition root hash) of a proposed
      *                       metablock.
      * @param _source Source blockhash of a vote message for a proposed metablock.
      * @param _target Target blockhash of a vote message for a proposed metablock.
@@ -471,7 +466,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             _committeeLock
         );
 
-        proposal_ = hashVoteMessage(
+        proposal_ = VoteMessage.hashVoteMessage(
+            domainSeparator,
             transitionHash,
             _source,
             _target,
@@ -499,7 +495,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *          - validator active in this core
      *          - validator should not be slashed in reputation contract
      *          - validator has not already cast the same vote
-     *          - vote gets updated only if the new vote is at higher dynsaty
+     *          - vote gets updated only if the new vote is at higher dynasty
      */
     function registerVote(
         bytes32 _proposal,
@@ -562,7 +558,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      * @param _originObservation Origin observation of a provided metablock.
      * @param _dynasty Dynasty of a provided metablock.
      * @param _accumulatedGas Accumulated gas in a provided metablock.
-     * @param _committeeLock Committe lock (transition root hash) of a provided
+     * @param _committeeLock Committee lock (transition root hash) of a provided
      *                       metablock.
      * @param _source Source blockhash of a vote message for a
      *                provided metablock.
@@ -598,7 +594,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             _committeeLock
         );
 
-        metablockHash_ = hashVoteMessage(
+        metablockHash_ = VoteMessage.hashVoteMessage(
+            domainSeparator,
             transitionHash,
             _source,
             _target,
@@ -703,13 +700,21 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *
      * @param _validator A validator's address to join.
      *
-     * @return The total count of joined validators.
+     * @return validatorCount_ The total count of validators.
+     * @return minValidatorCount_ Minimum validator count required set by consensus.
+     * @return beginHeight_ Begin height of validator.
      */
-    function joinBeforeOpen(address _validator)
+    function joinBeforeOpen(
+        address _validator
+    )
         external
         onlyConsensus
         beforeOpen
-        returns(uint256 validatorCount_, uint256 minValidatorCount_)
+        returns (
+            uint256 validatorCount_,
+            uint256 minValidatorCount_,
+            uint256 beginHeight_
+        )
     {
         // during created state, validators join at creation kernel height
         insertValidator(_validator, creationKernelHeight);
@@ -738,6 +743,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
         validatorCount_ = countValidators;
         minValidatorCount_ = minimumValidatorCount;
+
+        beginHeight_ = creationKernelHeight;
     }
 
     /**
@@ -753,11 +760,14 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *          - validator has not joined
      *
      * @param _validator Address of a validator to join.
+     *
+     * @return beginHeight_ Begin height of the validator
      */
     function join(address _validator)
         external
         onlyConsensus
         whileRunning
+        returns (uint256 beginHeight_)
     {
         require(
             countValidators
@@ -782,6 +792,8 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
         nextKernel.updatedValidators.push(_validator);
         // TASK: reputation can be uint64, and initial rep set properly.
         nextKernel.updatedReputation.push(uint256(1));
+
+        beginHeight_ = nextKernelHeight;
     }
 
     /**
@@ -797,11 +809,14 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *          - validator has joined
      *
      * @param _validator An address of the validator to logout.
+     *
+     * @return nextKernelHeight_ Next kernel height.
      */
     function logout(address _validator)
         external
         onlyConsensus
         whileRunning
+        returns (uint256 nextKernelHeight_)
     {
         require(
             countValidators
@@ -814,13 +829,13 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             "Maximum number of validators that can log out in one metablock is reached."
         );
 
-        uint256 nextKernelHeight = openKernelHeight.add(1);
+        nextKernelHeight_ = openKernelHeight.add(1);
 
         // removeValidator performs necessary requirements
         // remove validator from next metablock height
-        removeValidator(_validator, nextKernelHeight);
+        removeValidator(_validator, nextKernelHeight_);
 
-        Kernel storage nextKernel = kernels[nextKernelHeight];
+        Kernel storage nextKernel = kernels[nextKernelHeight_];
         nextKernel.updatedValidators.push(_validator);
         nextKernel.updatedReputation.push(uint256(0));
 
@@ -895,7 +910,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
 
     /**
      * @notice Precommits to a given proposal and lock core validators
-     *         to associated responsability.
+     *         to associated responsibility.
      */
     function registerPrecommit(bytes32 _proposal)
         internal
@@ -1031,7 +1046,7 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
      *          - the given end height of a validator is bigger than open
      *            kernel height
      *          - validator must have begun
-     *          - validatvalidator must be active
+     *          - validator must be active
      */
     function removeValidator(address _validator, uint256 _endHeight)
         internal
@@ -1146,41 +1161,4 @@ contract Core is MasterCopyNonUpgradable, ConsensusModule, MosaicVersion, CoreSt
             )
         );
     }
-
-    /**
-    * @notice Takes the VoteMessage parameters and returns
-     *        the typed VoteMessage hash.
-     */
-    function hashVoteMessage(
-        bytes32 _transitionHash,
-        bytes32 _source,
-        bytes32 _target,
-        uint256 _sourceBlockHeight,
-        uint256 _targetBlockHeight
-    )
-        internal
-        view
-        returns (bytes32 hash_)
-    {
-        bytes32 typedVoteMessageHash = keccak256(
-            abi.encode(
-                VOTE_MESSAGE_TYPEHASH,
-                _transitionHash,
-                _source,
-                _target,
-                _sourceBlockHeight,
-                _targetBlockHeight
-            )
-        );
-
-        hash_ = keccak256(
-            abi.encodePacked(
-                byte(0x19),
-                byte(0x01),
-                domainSeparator,
-                typedVoteMessageHash
-            )
-        );
-    }
-
 }

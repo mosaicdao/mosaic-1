@@ -18,7 +18,6 @@ const { AccountProvider } = require('../test_lib/utils.js');
 const Utils = require('../test_lib/utils.js');
 
 const Reputation = artifacts.require('Reputation');
-const MockToken = artifacts.require('MockToken');
 
 contract('Reputation::cashoutEarnings', (accounts) => {
   let constructorArgs;
@@ -35,8 +34,8 @@ contract('Reputation::cashoutEarnings', (accounts) => {
       address: accountProvider.get(),
       withdrawalAddress: accountProvider.get(),
     };
-    most = await MockToken.new(18, { from: validator.address });
-    wETH = await MockToken.new(18, { from: validator.address });
+    most = await Utils.deployMockToken(validator.address);
+    wETH = await Utils.deployMockToken(validator.address);
 
     depositor = accountProvider.get();
 
@@ -147,22 +146,7 @@ contract('Reputation::cashoutEarnings', (accounts) => {
       amount,
       { from: unknownValidator },
     ),
-    'Validator has not staked.');
-  });
-
-  it('should fail for slashed validator', async () => {
-    const amount = 499;
-
-    await reputation.slash(
-      validator.address,
-      { from: constructorArgs.consensus },
-    );
-
-    await Utils.expectRevert(reputation.cashOutEarnings(
-      amount,
-      { from: validator.address },
-    ),
-    'Validator is not honest.');
+      'Validator has not staked.');
   });
 
   it('should fail for withdrawn validator', async () => {
@@ -179,6 +163,6 @@ contract('Reputation::cashoutEarnings', (accounts) => {
       amount,
       { from: validator.address },
     ),
-    'Validator has withdrawn.');
+      'Validator has withdrawn.');
   });
 });

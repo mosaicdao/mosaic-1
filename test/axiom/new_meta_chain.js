@@ -28,10 +28,10 @@ const SpyConsensusGateway = artifacts.require('SpyConsensusGateway');
 let config = {};
 let contracts = {};
 let constructionParams = {};
-let newMetaChainParams = {};
+let newMetachainParams = {};
 let axiom;
 
-contract('Axiom::newMetaChain', (accounts) => {
+contract('Axiom::newMetachain', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
 
   beforeEach(async () => {
@@ -74,7 +74,7 @@ contract('Axiom::newMetaChain', (accounts) => {
     axiom = await AxiomUtils.deployAxiomWithConfig(constructionParams);
     await AxiomUtils.setupConsensusWithConfig(axiom, config);
 
-    newMetaChainParams = {
+    newMetachainParams = {
       txOptions: {
         from: constructionParams.techGov,
       },
@@ -83,9 +83,9 @@ contract('Axiom::newMetaChain', (accounts) => {
 
   contract('Negative Tests', () => {
     it('should fail when called by non technical governance address', async () => {
-      newMetaChainParams.txOptions.from = accountProvider.get();
+      newMetachainParams.txOptions.from = accountProvider.get();
       await Utils.expectRevert(
-        AxiomUtils.newMetaChainWithConfig(axiom, newMetaChainParams),
+        AxiomUtils.newMetachainWithConfig(axiom, newMetachainParams),
         'Caller must be technical governance address.',
       );
     });
@@ -93,12 +93,12 @@ contract('Axiom::newMetaChain', (accounts) => {
 
   contract('Positive Tests', () => {
     it('should pass when called with correct params', async () => {
-      await AxiomUtils.newMetaChainWithConfig(axiom, newMetaChainParams);
+      await AxiomUtils.newMetachainWithConfig(axiom, newMetachainParams);
     });
 
 
     it('should validate the spied values of the consensus proxy contract', async () => {
-      const response = await AxiomUtils.newMetaChainWithConfig(axiom, newMetaChainParams);
+      const response = await AxiomUtils.newMetachainWithConfig(axiom, newMetachainParams);
 
       assert.isOk(
         response.receipt.logs.length > 0,

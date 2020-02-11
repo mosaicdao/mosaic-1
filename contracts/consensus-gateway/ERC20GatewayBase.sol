@@ -22,6 +22,10 @@ contract ERC20GatewayBase {
         "DepositIntent(uint256 amount,address beneficiary)"
     );
 
+    bytes32 constant public WITHDRAW_INTENT_TYPEHASH = keccak256(
+        "WithdrawIntent(uint256 amount,address beneficiary)"
+    );
+
 
     /* Public functions */
 
@@ -49,4 +53,31 @@ contract ERC20GatewayBase {
             )
         );
     }
+
+
+    /**
+     * @notice It returns hash of withdraw intent.
+     *
+     * @param _amount Amount of tokens.
+     * @param _beneficiary Beneficiary address.
+     *
+     * @return withdrawIntentHash_ Hash of withdraw intent.
+     */
+    function hashWithdrawIntent(
+        uint256 _amount,
+        address _beneficiary
+    )
+        public
+        pure
+        returns (bytes32 withdrawIntentHash_)
+    {
+        withdrawIntentHash_ = keccak256(
+            abi.encode(
+                WITHDRAW_INTENT_TYPEHASH,
+                _amount,
+                _beneficiary
+            )
+        );
+    }
+
 }
