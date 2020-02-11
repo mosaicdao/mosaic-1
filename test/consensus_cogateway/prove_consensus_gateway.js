@@ -54,7 +54,7 @@ contract('CoConsensusgateway::proveConsensusGateway', (accounts) => {
     await consensusCogateway.setup(
       setupParams.metachainId,
       setupParams.coConsensus.address,
-      setupParams.utMOST,
+      setupParams.utmost,
       ProveConsensusGatewayProof.address,
       setupParams.outboxStorageIndex,
       setupParams.maxStorageRootItems,
