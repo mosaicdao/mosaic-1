@@ -16,8 +16,9 @@
 const web3 = require('../../test_lib/web3.js');
 const Utils = require('../../test_lib/utils.js');
 const { AccountProvider } = require('../../test_lib/utils.js');
-const BN = require('bn.js');
 const MessageInbox = artifacts.require('MessageInboxDouble');
+
+const BN = require('bn.js');
 
 contract('MessageInbox::inboxMessageHash', (accounts) => {
   let messageInbox;
