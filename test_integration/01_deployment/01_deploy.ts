@@ -49,13 +49,13 @@ describe('Deployment', async () => {
 
   it.skip('Token deployment and fund validator', async () => {
     const {
-      MockToken,
+      ERC20Mock,
     } = shared.artifacts;
 
     const { funder } = shared.origin;
 
-    const most = await MockToken.new(18, { from: funder });
-    const wETH = await MockToken.new(18, { from: funder });
+    const most = await ERC20Mock.new(funder,'800000000', { from: funder });
+    const wETH = await ERC20Mock.new(funder,'800000000', { from: funder });
 
     const web3 = shared.origin.web3;
     shared.origin.contracts.MOST.instance = Interacts.getERC20I(web3, most.address);
