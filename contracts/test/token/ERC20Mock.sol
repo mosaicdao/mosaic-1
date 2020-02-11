@@ -23,6 +23,12 @@ contract ERC20Mock is ERC20 {
 
     /* Special Functions */
 
+    /**
+     * @notice ERC20Mock constructor.
+     *
+     * @param _initialAccount Initial account for which tokens will be minted.
+     * @param _initialBalance Initial token supply.
+     */
     constructor(address _initialAccount, uint256 _initialBalance) public {
         _mint(_initialAccount, _initialBalance);
     }
@@ -31,7 +37,7 @@ contract ERC20Mock is ERC20 {
     /* External Functions */
 
     /**
-     * @notice Burn tokens from given address.
+     * @notice Burn tokens from already approved address.
      */
     function burnFrom(address account, uint256 value)
         external
