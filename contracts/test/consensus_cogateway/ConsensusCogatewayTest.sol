@@ -17,11 +17,11 @@ pragma solidity >=0.5.0 <0.6.0;
 import "../../consensus-gateway/ConsensusCogateway.sol";
 
 /**
- * @title ConsensusCogatewayTest contract.
+ * @title ConsensusCogatewayDouble contract.
  *
  * @notice Test contract used for testing ConsensusCogateway contract.
  */
-contract ConsensusCogatewayTest is ConsensusCogateway {
+contract ConsensusCogatewayDouble is ConsensusCogateway {
 
     /* Special function */
 
@@ -31,14 +31,14 @@ contract ConsensusCogatewayTest is ConsensusCogateway {
      { }
 
 
-    /* Public functions */
+    /* External Functions */
 
     /**
      * It sets current metablock height.
      *
      * @param _metablockHeight Current metablock height.
      */
-    function setMetablock(uint256 _metablockHeight) public {
+    function setMetablock(uint256 _metablockHeight) external {
         currentMetablockHeight = _metablockHeight;
     }
 
@@ -48,7 +48,7 @@ contract ConsensusCogatewayTest is ConsensusCogateway {
      * @param _blockHeight Block height.
      * @param _storageRoot Storage root at block height.
      */
-    function setStorageRoots(uint256 _blockHeight, bytes32 _storageRoot) public {
+    function setStorageRoots(uint256 _blockHeight, bytes32 _storageRoot) external {
         storageRoots[_blockHeight] = _storageRoot;
     }
 
@@ -57,7 +57,7 @@ contract ConsensusCogatewayTest is ConsensusCogateway {
      *
      * @param _inboundChannelIdentifier Inboundchannel identifier.
      */
-    function setInboundChannelIdentifier(bytes32 _inboundChannelIdentifier) public {
+    function setInboundChannelIdentifier(bytes32 _inboundChannelIdentifier) external {
         inboundChannelIdentifier =  _inboundChannelIdentifier;
     }
 }

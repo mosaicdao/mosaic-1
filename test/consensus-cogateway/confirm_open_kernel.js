@@ -14,17 +14,17 @@
 
 const BN = require('bn.js');
 const { AccountProvider } = require('../test_lib/utils.js');
-const DeclareOpenKernel = require('./declare_open_kernel.json');
+const DeclareOpenKernel = require('../data/declare_open_kernel.json');
 
 const SpyCoconsensus = artifacts.require('SpyCoconsensus');
 
-const ConsensusCoGateway = artifacts.require('ConsensusCogatewayTest');
+const ConsensusCogateway = artifacts.require('ConsensusCogatewayDouble');
 const SpyAnchor = artifacts.require('SpyAnchor');
 
-contract('CoConsensusGateway::confirmOpenKernel', (accounts) => {
+contract('CoconsensusGateway::confirmOpenKernel', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
 
-  let consensusCoGateway;
+  let consensusCogateway;
   const metablockHeight = new BN(2);
   const setupParams = {
     metachainId: DeclareOpenKernel.metachainId,
@@ -47,13 +47,13 @@ contract('CoConsensusGateway::confirmOpenKernel', (accounts) => {
 
   beforeEach(async () => {
     const spyAnchor = await SpyAnchor.new();
-    setupParams.coConsensus = await SpyCoconsensus.new();
-    await setupParams.coConsensus.setAnchorAddress(
+    setupParams.coconsensus = await SpyCoconsensus.new();
+    await setupParams.coconsensus.setAnchorAddress(
       setupParams.metachainId,
       spyAnchor.address,
     );
 
-    consensusCoGateway = await ConsensusCoGateway.new();
+    consensusCogateway = await ConsensusCogateway.new();
 
     // Set stateroot.
     await spyAnchor.anchorStateRoot(
@@ -61,9 +61,9 @@ contract('CoConsensusGateway::confirmOpenKernel', (accounts) => {
       DeclareOpenKernel.stateRoot,
     );
 
-    await consensusCoGateway.setup(
+    await consensusCogateway.setup(
       setupParams.metachainId,
-      setupParams.coConsensus.address,
+      setupParams.coconsensus.address,
       setupParams.utMOST,
       setupParams.consensusGateway,
       setupParams.outboxStorageIndex,
@@ -71,24 +71,24 @@ contract('CoConsensusGateway::confirmOpenKernel', (accounts) => {
       setupParams.metablockHeight,
     );
 
-    await consensusCoGateway.setMetablock(metablockHeight);
-    await consensusCoGateway.setStorageRoots(
+    await consensusCogateway.setMetablock(metablockHeight);
+    await consensusCogateway.setStorageRoots(
       confirmOpenKernelParams.blockHeight,
       DeclareOpenKernel.storageHash,
     );
 
-    await consensusCoGateway.setInboundChannelIdentifier(
+    await consensusCogateway.setInboundChannelIdentifier(
       DeclareOpenKernel.outboundChannelIdentifier,
     );
   });
 
   contract('Positive Tests', () => {
-    it('should confirm opened kernel successfully', async () => {
-      const initialNonceForSender = await consensusCoGateway.nonces.call(
+    it('should confirm open kernel successfully', async () => {
+      const initialNonceForSender = await consensusCogateway.nonces.call(
         confirmOpenKernelParams.sender,
       );
 
-      await consensusCoGateway.confirmOpenKernel(
+      await consensusCogateway.confirmOpenKernel(
         confirmOpenKernelParams.kernelHeight,
         confirmOpenKernelParams.kernelHash,
         confirmOpenKernelParams.feeGasPrice,
@@ -98,7 +98,7 @@ contract('CoConsensusGateway::confirmOpenKernel', (accounts) => {
         confirmOpenKernelParams.rlpParentNodes,
       );
 
-      const actualKernelHash = await consensusCoGateway.kernelHashes.call(
+      const actualKernelHash = await consensusCogateway.kernelHashes.call(
         confirmOpenKernelParams.kernelHeight,
       );
       assert.strictEqual(
@@ -107,7 +107,7 @@ contract('CoConsensusGateway::confirmOpenKernel', (accounts) => {
         'Invalid kernel hash',
       );
 
-      const actualNonceForSender = await consensusCoGateway.nonces.call(
+      const actualNonceForSender = await consensusCogateway.nonces.call(
         confirmOpenKernelParams.sender,
       );
       assert.strictEqual(
@@ -116,7 +116,7 @@ contract('CoConsensusGateway::confirmOpenKernel', (accounts) => {
         `Expected nonce for sender is ${initialNonceForSender.addn(1)} but got ${actualNonceForSender}`,
       );
 
-      const actualCurrentMetablockHeight = await consensusCoGateway.currentMetablockHeight.call();
+      const actualCurrentMetablockHeight = await consensusCogateway.currentMetablockHeight.call();
       assert.strictEqual(
         confirmOpenKernelParams.kernelHeight.eq(actualCurrentMetablockHeight),
         true,

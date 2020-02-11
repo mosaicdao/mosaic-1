@@ -15,17 +15,16 @@
 const BN = require('bn.js');
 const { AccountProvider } = require('../test_lib/utils.js');
 const Utils = require('../test_lib/utils.js');
-const ProveConsensusGatewayProof = require('./prove_consensus_gateway_proof.json');
+const ProveConsensusGatewayProof = require('../data/prove_consensus_gateway_proof.json');
 
 const SpyCoconsensus = artifacts.require('SpyCoconsensus');
-
-const ConsensusCoGateway = artifacts.require('ConsensusCogatewayTest');
+const ConsensusCogateway = artifacts.require('ConsensusCogatewayDouble');
 const SpyAnchor = artifacts.require('SpyAnchor');
 
-contract('CoConsensusGateway::proveConsensusGateway', (accounts) => {
+contract('CoConsensusgateway::proveConsensusGateway', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
 
-  let consensusCoGateway;
+  let consensusCogateway;
 
   const setupParams = {
     metachainId: Utils.getRandomHash(),
@@ -44,7 +43,7 @@ contract('CoConsensusGateway::proveConsensusGateway', (accounts) => {
       spyAnchor.address,
     );
 
-    consensusCoGateway = await ConsensusCoGateway.new();
+    consensusCogateway = await ConsensusCogateway.new();
 
     // Set stateroot.
     await spyAnchor.anchorStateRoot(
@@ -52,7 +51,7 @@ contract('CoConsensusGateway::proveConsensusGateway', (accounts) => {
       ProveConsensusGatewayProof.stateRoot,
     );
 
-    await consensusCoGateway.setup(
+    await consensusCogateway.setup(
       setupParams.metachainId,
       setupParams.coConsensus.address,
       setupParams.utMOST,
@@ -65,10 +64,20 @@ contract('CoConsensusGateway::proveConsensusGateway', (accounts) => {
 
   contract('Positive Tests', () => {
     it('should prove successfully', async () => {
-      await consensusCoGateway.proveConsensusGateway(
+      await consensusCogateway.proveConsensusGateway(
         ProveConsensusGatewayProof.blockNumber,
         ProveConsensusGatewayProof.rlpAccountNode,
         ProveConsensusGatewayProof.rlpParentNodes,
+      );
+
+      const actualStorageHash = await consensusCogateway.storageRoots.call(
+        ProveConsensusGatewayProof.blockNumber,
+      );
+
+      assert.strictEqual(
+        actualStorageHash,
+        ProveConsensusGatewayProof.storageHash,
+        'Incorrect storage hash',
       );
     });
   });

@@ -102,21 +102,21 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
 
     /**
      * @notice This method will be called by anyone to verify merkle proof of
-     *          gateway contract address.
+     *          consensus gateway contract address.
      *
-     *  @param _blockHeight Block height at which gateway is to be proven.
+     *  @param _blockNumber Block number at which consensus gateway is to be proven.
      *  @param _rlpAccount RLP encoded account node object.
      *  @param _rlpParentNodes RLP encoded value of account proof node array.
      */
     function proveConsensusGateway(
-        uint256 _blockHeight,
+        uint256 _blockNumber,
         bytes calldata _rlpAccount,
         bytes calldata _rlpParentNodes
     )
         external
     {
         MessageInbox.proveStorageAccount(
-            _blockHeight,
+            _blockNumber,
             _rlpAccount,
             _rlpParentNodes
         );
@@ -125,18 +125,18 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
     /**
      * @notice Confirms the initiation of opening a kernel at auxiliary chain.
      *
-     *      Function requires:
+     * @dev Function requires:
      *          - Sender address must not be 0.
      *          - Kernel hash must not be 0.
-     *          - Difference between kernelheight and currentMetablockHeight
-     *            must not be greater than 0.
+     *          - Difference between kernelheight and current metablock height
+     *            must be 1.
      *
      * @param _kernelHeight Height of the kernel.
      * @param _kernelHash Hash of the kernel.
      * @param _feeGasPrice Gas price which the sender is willing to pay.
      * @param _feeGasLimit Gas limit which the sender is willing to pay.
      * @param _sender Sender address.
-     * @param _blockHeight Block height for which the proof is valid.
+     * @param _blockNumber Block number at which proof is valid.
      * @param _rlpParentNodes RLP encoded parent node data to prove message
      *                        exists in outbox of ConsensusGateway.
      *
@@ -148,7 +148,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
         uint256 _feeGasPrice,
         uint256 _feeGasLimit,
         address _sender,
-        uint256 _blockHeight,
+        uint256 _blockNumber,
         bytes calldata _rlpParentNodes
     )
         external
@@ -183,7 +183,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
             _feeGasPrice,
             _feeGasLimit,
             _sender,
-            _blockHeight,
+            _blockNumber,
             _rlpParentNodes
         );
 

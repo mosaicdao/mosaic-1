@@ -20,7 +20,7 @@ import "../../proxies/MasterCopyNonUpgradable.sol";
 
 contract SpyAnchor is MasterCopyNonUpgradable, AnchorI{
 
-    uint256 public spyBlockHeight;
+    uint256 public spyBlockNumber;
     bytes32 public spyStateRoot;
     uint256 public spyMaxStateRoot;
     address public spyConsensus;
@@ -45,30 +45,30 @@ contract SpyAnchor is MasterCopyNonUpgradable, AnchorI{
     }
 
     /**
-     * @notice It sets stateroot for a blockheight.
+     * @notice It sets state root for a block number.
      *
-     * @param _stateRoot State root for a blocknumber.
-     * @param _blockHeight Block height.
+     * @param _blockNumber Block number.
+     * @param _stateRoot State root for a block number.
      */
     function anchorStateRoot(
-        uint256 _blockHeight,
+        uint256 _blockNumber,
         bytes32 _stateRoot
     )
         external
     {
-        spyBlockHeight = _blockHeight;
+        spyBlockNumber = _blockNumber;
         spyStateRoot = _stateRoot;
-        stateRoots[_blockHeight] = _stateRoot;
+        stateRoots[_blockNumber] = _stateRoot;
     }
 
     /**
-     * @notice It returns stateroot for a blockheight.
+     * @notice It returns state root for a block number.
      *
-     * @param _blockHeight Blockheight for which stateroot is required.
+     * @param _blockNumber Block number for which state root is required.
      *
-     * @return Stateroot for the blockheight.
+     * @return State root for the block number.
      */
-    function getStateRoot(uint256 _blockHeight) external view returns(bytes32) {
-        return stateRoots[_blockHeight];
+    function getStateRoot(uint256 _blockNumber) external view returns(bytes32) {
+        return stateRoots[_blockNumber];
     }
 }
