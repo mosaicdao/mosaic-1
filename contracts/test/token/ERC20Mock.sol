@@ -1,6 +1,6 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-// Copyright 2019 OpenST Ltd.
+// Copyright 2020 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,11 +16,28 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 
+/**
+ * @title Mock ERC20 token used for testing.
+ */
 contract ERC20Mock is ERC20 {
 
     /* Special Functions */
 
     constructor(address _initialAccount, uint256 _initialBalance) public {
         _mint(_initialAccount, _initialBalance);
+    }
+
+
+    /* External Functions */
+
+    /**
+     * @notice Burn tokens from given address.
+     */
+    function burnFrom(address account, uint256 value)
+        external
+        returns (bool success_)
+    {
+        ERC20._burnFrom(account, value);
+        success_ = true;
     }
 }
