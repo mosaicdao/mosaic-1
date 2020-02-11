@@ -35,13 +35,13 @@ contract('MessageOutbox::setupMessageOutbox', (accounts) => {
 
   contract('Negative Tests', async () => {
     it('should fail if message outbox is already setup', async () => {
-      await config.outbox.setMessageOutbox(
+      await config.outbox.setupMessageOutboxExternal(
         config.SetupMessageOutboxArgs.metachainId,
         config.SetupMessageOutboxArgs.inboxAddress,
       );
 
       await Utils.expectRevert(
-        config.outbox.setMessageOutbox(
+        config.outbox.setupMessageOutboxExternal(
           config.SetupMessageOutboxArgs.metachainId,
           config.SetupMessageOutboxArgs.inboxAddress,
         ),
@@ -51,7 +51,7 @@ contract('MessageOutbox::setupMessageOutbox', (accounts) => {
 
     it('should fail if metachainId is 0', async () => {
       await Utils.expectRevert(
-        config.outbox.setMessageOutbox(
+        config.outbox.setupMessageOutboxExternal(
           Utils.ZERO_BYTES32,
           config.SetupMessageOutboxArgs.inboxAddress,
         ),
@@ -61,7 +61,7 @@ contract('MessageOutbox::setupMessageOutbox', (accounts) => {
 
     it('should fail if message inbox address is 0', async () => {
       await Utils.expectRevert(
-        config.outbox.setMessageOutbox(
+        config.outbox.setupMessageOutboxExternal(
           config.SetupMessageOutboxArgs.metachainId,
           Utils.NULL_ADDRESS,
         ),
@@ -72,7 +72,7 @@ contract('MessageOutbox::setupMessageOutbox', (accounts) => {
 
   contract('Positive Tests', async () => {
     it('should successfully setup message outbox', async () => {
-      await config.outbox.setMessageOutbox(
+      await config.outbox.setupMessageOutboxExternal(
         config.SetupMessageOutboxArgs.metachainId,
         config.SetupMessageOutboxArgs.inboxAddress,
       );

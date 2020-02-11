@@ -28,7 +28,7 @@ contract MessageOutboxDouble is MessageOutbox {
     /**
      * @notice It is used to test MessageOutbox::setupMessageOutbox().
      */
-    function setMessageOutbox(
+    function setupMessageOutboxExternal(
         bytes32 _metachainId,
         address _messageInbox
     )
@@ -40,7 +40,7 @@ contract MessageOutboxDouble is MessageOutbox {
     /**
      * @notice It is used to test MessageOutbox::declareMessage().
      */
-    function outboxDeclareMessage(
+    function declareMessageExternal(
         bytes32 _intentHash,
         uint256 _nonce,
         uint256 _feeGasPrice,

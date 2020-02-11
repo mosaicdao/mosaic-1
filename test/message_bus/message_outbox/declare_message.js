@@ -46,7 +46,7 @@ contract('MessageOutbox::declareMessage', (accounts) => {
         config.inboxAddress,
       );
 
-    await config.outbox.setMessageOutbox(
+    await config.outbox.setupMessageOutboxExternal(
       config.metachainId,
       config.inboxAddress,
     );
@@ -54,7 +54,7 @@ contract('MessageOutbox::declareMessage', (accounts) => {
 
   contract('Negative Tests', async () => {
     it('should fail if message hash in outbox is already present', async () => {
-      await config.outbox.outboxDeclareMessage(
+      await config.outbox.declareMessageExternal(
         config.declareMessageArgs.intentHash,
         config.declareMessageArgs.nonce,
         config.declareMessageArgs.feeGasPrice,
@@ -63,7 +63,7 @@ contract('MessageOutbox::declareMessage', (accounts) => {
       );
 
       await Utils.expectRevert(
-        config.outbox.outboxDeclareMessage(
+        config.outbox.declareMessageExternal(
           config.declareMessageArgs.intentHash,
           config.declareMessageArgs.nonce,
           config.declareMessageArgs.feeGasPrice,
@@ -77,7 +77,7 @@ contract('MessageOutbox::declareMessage', (accounts) => {
 
   contract('Positive Tests', async () => {
     it('should declare a new message', async () => {
-      const actualMessageHash = await config.outbox.outboxDeclareMessage.call(
+      const actualMessageHash = await config.outbox.declareMessageExternal.call(
         config.declareMessageArgs.intentHash,
         config.declareMessageArgs.nonce,
         config.declareMessageArgs.feeGasPrice,
@@ -100,7 +100,7 @@ contract('MessageOutbox::declareMessage', (accounts) => {
         'Incorrect message hash',
       );
 
-      await config.outbox.outboxDeclareMessage(
+      await config.outbox.declareMessageExternal(
         config.declareMessageArgs.intentHash,
         config.declareMessageArgs.nonce,
         config.declareMessageArgs.feeGasPrice,
