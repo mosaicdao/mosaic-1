@@ -17,7 +17,6 @@ const { AccountProvider } = require('../test_lib/utils.js');
 const DeclareOpenKernel = require('../data/declare_open_kernel.json');
 
 const SpyCoconsensus = artifacts.require('SpyCoconsensus');
-
 const ConsensusCogateway = artifacts.require('ConsensusCogatewayDouble');
 const SpyAnchor = artifacts.require('SpyAnchor');
 
@@ -28,7 +27,7 @@ contract('CoconsensusGateway::confirmOpenKernel', (accounts) => {
   const metablockHeight = new BN(2);
   const setupParams = {
     metachainId: DeclareOpenKernel.metachainId,
-    utMOST: accountProvider.get(),
+    utmost: accountProvider.get(),
     consensusGateway: DeclareOpenKernel.address,
     outboxStorageIndex: new BN(1),
     maxStorageRootItems: new BN(100),
@@ -55,7 +54,7 @@ contract('CoconsensusGateway::confirmOpenKernel', (accounts) => {
 
     consensusCogateway = await ConsensusCogateway.new();
 
-    // Set stateroot.
+    // Set state root.
     await spyAnchor.anchorStateRoot(
       DeclareOpenKernel.blockNumber,
       DeclareOpenKernel.stateRoot,
@@ -64,7 +63,7 @@ contract('CoconsensusGateway::confirmOpenKernel', (accounts) => {
     await consensusCogateway.setup(
       setupParams.metachainId,
       setupParams.coconsensus.address,
-      setupParams.utMOST,
+      setupParams.utmost,
       setupParams.consensusGateway,
       setupParams.outboxStorageIndex,
       setupParams.maxStorageRootItems,

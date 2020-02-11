@@ -15,7 +15,7 @@
 const BN = require('bn.js');
 const { AccountProvider } = require('../test_lib/utils.js');
 const Utils = require('../test_lib/utils.js');
-const ProveConsensusGatewayProof = require('../data/prove_consensus_gateway_proof.json');
+const ProveConsensusGatewayProof = require('../data/prove_consensus_gateway.json');
 
 const SpyCoconsensus = artifacts.require('SpyCoconsensus');
 const ConsensusCogateway = artifacts.require('ConsensusCogatewayDouble');
@@ -28,7 +28,7 @@ contract('CoConsensusgateway::proveConsensusGateway', (accounts) => {
 
   const setupParams = {
     metachainId: Utils.getRandomHash(),
-    utMOST: accountProvider.get(),
+    utmost: accountProvider.get(),
     consensusGateway: accountProvider.get(),
     outboxStorageIndex: new BN(1),
     maxStorageRootItems: new BN(100),
@@ -45,7 +45,7 @@ contract('CoConsensusgateway::proveConsensusGateway', (accounts) => {
 
     consensusCogateway = await ConsensusCogateway.new();
 
-    // Set stateroot.
+    // Set state root.
     await spyAnchor.anchorStateRoot(
       ProveConsensusGatewayProof.blockNumber,
       ProveConsensusGatewayProof.stateRoot,
@@ -55,7 +55,7 @@ contract('CoConsensusgateway::proveConsensusGateway', (accounts) => {
       setupParams.metachainId,
       setupParams.coConsensus.address,
       setupParams.utMOST,
-      ProveConsensusGatewayProof.address,
+      ProveConsensusGx`atewayProof.address,
       setupParams.outboxStorageIndex,
       setupParams.maxStorageRootItems,
       setupParams.metablockHeight,

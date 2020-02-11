@@ -156,11 +156,11 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
     {
         require(
             _sender != address(0),
-            "Sender address must not be 0."
+            "Sender address is 0."
         );
         require(
             _kernelHash != bytes32(0),
-            "Kernel hash must not be 0."
+            "Kernel hash is 0."
         );
         require(
             _kernelHeight.sub(currentMetablockHeight) == 1,
