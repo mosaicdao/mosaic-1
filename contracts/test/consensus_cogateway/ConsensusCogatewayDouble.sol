@@ -23,7 +23,7 @@ import "../../consensus-gateway/ConsensusCogateway.sol";
  */
 contract ConsensusCogatewayDouble is ConsensusCogateway {
 
-    /* Special function */
+    /* Special Function */
 
     constructor()
      public
@@ -43,13 +43,13 @@ contract ConsensusCogatewayDouble is ConsensusCogateway {
     }
 
     /**
-     * @notice It sets storageroots for a blockheight.
+     * @notice It sets storage roots for a block number.
      *
-     * @param _blockHeight Block height.
-     * @param _storageRoot Storage root at block height.
+     * @param _blockNumber Block number.
+     * @param _storageRoot Storage root at block number.
      */
-    function setStorageRoots(uint256 _blockHeight, bytes32 _storageRoot) external {
-        storageRoots[_blockHeight] = _storageRoot;
+    function setStorageRoots(uint256 _blockNumber, bytes32 _storageRoot) external {
+        storageRoots[_blockNumber] = _storageRoot;
     }
 
     /**
