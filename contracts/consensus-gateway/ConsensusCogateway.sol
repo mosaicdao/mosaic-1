@@ -42,6 +42,12 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
     uint8 constant public INBOX_OFFSET = uint8(4);
 
 
+    /* Storage */
+
+    /** Mapping of kernel height and kernel hash. */
+    mapping(uint256 /* Kernel Height */ => bytes32 /* Kernel Hash */) public  kernelHashes;
+
+
     /* External functions */
 
     /**
@@ -170,6 +176,96 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
             UtilityTokenInterface(address(most)).mint(_beneficiary, mintAmount),
             "Tokens must be minted for beneficiary."
         );
+    }
+
+    /**
+     * @notice This method will be called by anyone to verify merkle proof of
+     *          consensus gateway contract address.
+     *
+     *  @param _blockNumber Block number at which consensus gateway is to be proven.
+     *  @param _rlpAccount RLP encoded account node object.
+     *  @param _rlpParentNodes RLP encoded value of account proof node array.
+     */
+    function proveConsensusGateway(
+        uint256 _blockNumber,
+        bytes calldata _rlpAccount,
+        bytes calldata _rlpParentNodes
+    )
+        external
+    {
+        MessageInbox.proveStorageAccount(
+            _blockNumber,
+            _rlpAccount,
+            _rlpParentNodes
+        );
+    }
+
+    /**
+     * @notice Confirms the initiation of opening a kernel at auxiliary chain.
+     *
+     * @dev Function requires:
+     *          - Sender address must not be 0.
+     *          - Kernel hash must not be 0.
+     *          - Difference between kernelheight and current metablock height
+     *            must be 1.
+     *
+     * @param _kernelHeight Height of the kernel.
+     * @param _kernelHash Hash of the kernel.
+     * @param _feeGasPrice Gas price which the sender is willing to pay.
+     * @param _feeGasLimit Gas limit which the sender is willing to pay.
+     * @param _sender Sender address.
+     * @param _blockNumber Block number at which proof is valid.
+     * @param _rlpParentNodes RLP encoded parent node data to prove message
+     *                        exists in outbox of ConsensusGateway.
+     *
+     * @return messageHash_ Message hash.
+     */
+    function confirmOpenKernel(
+        uint256 _kernelHeight,
+        bytes32 _kernelHash,
+        uint256 _feeGasPrice,
+        uint256 _feeGasLimit,
+        address _sender,
+        uint256 _blockNumber,
+        bytes calldata _rlpParentNodes
+    )
+        external
+        returns (bytes32 messageHash_)
+    {
+        require(
+            _sender != address(0),
+            "Sender address is 0."
+        );
+        require(
+            _kernelHash != bytes32(0),
+            "Kernel hash is 0."
+        );
+        require(
+            _kernelHeight.sub(currentMetablockHeight) == 1,
+            "Invalid kernel height."
+        );
+
+        currentMetablockHeight = _kernelHeight;
+
+        uint256 nonce = nonces[_sender];
+        nonces[_sender] = nonce.add(1);
+
+        bytes32 kernelIntentHash = hashKernelIntent(
+            _kernelHeight,
+            _kernelHash
+        );
+
+        messageHash_ = MessageInbox.confirmMessage(
+            kernelIntentHash,
+            nonce,
+            _feeGasPrice,
+            _feeGasLimit,
+            _sender,
+            _blockNumber,
+            _rlpParentNodes
+        );
+
+        kernelHashes[_kernelHeight] = _kernelHash;
     }
 
     /**

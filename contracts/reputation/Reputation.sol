@@ -33,7 +33,9 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     );
 
-    address public constant burner = address(0);
+    // This is set to 1 not 0, because Openzeppelin ERC20 does not support
+    // transfer to address(0).
+    address public constant burner = address(1);
 
 
     /* Enums */

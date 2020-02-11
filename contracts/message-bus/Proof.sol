@@ -169,6 +169,12 @@ contract Proof is CircularBufferUint {
         internal
         view
     {
+        // _rlpParentNodes should be valid.
+        require(
+            _rlpParentNodes.length != 0,
+            "Length of RLP parent nodes is 0."
+        );
+
         // Get storage root.
         bytes32 storageRoot = storageRoots[_blockHeight];
         require(

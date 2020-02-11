@@ -16,7 +16,6 @@
 
 const BN = require('bn.js');
 
-const MockToken = artifacts.require('MockToken');
 const ConsensusCogateway = artifacts.require('ConsensusCogateway');
 const MockConsensus = artifacts.require('MockConsensus');
 
@@ -43,7 +42,7 @@ contract('ConsensusCogateway::withdraw', (accounts) => {
       feeGasLimit: new BN(1),
     };
 
-    utmost = await MockToken.new(18, { from: param.owner });
+    utmost = await Utils.deployMockToken(param.owner);
     param.utmostAddress = utmost.address;
 
     const consensusConfig = {
