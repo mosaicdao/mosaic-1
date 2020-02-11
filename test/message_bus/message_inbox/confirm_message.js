@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+const ConfirmMessageIntentHash = require('../../data/confirm_message.json');
 const web3 = require('../../test_lib/web3.js');
 const Utils = require('../../test_lib/utils.js');
 const { AccountProvider } = require('../../test_lib/utils.js');
-const ConfirmMessageIntentHash = require('./confirm_message.json');
 const ConsensusGatewayBase = artifacts.require('ConsensusGatewayBase');
 const MessageInbox = artifacts.require('MessageInboxDouble');
 

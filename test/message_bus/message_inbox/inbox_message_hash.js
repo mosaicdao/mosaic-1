@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
+const ConsensusGatewayUtils = require('../../consensus-gateway/utils.js');
 const web3 = require('../../test_lib/web3.js');
 const Utils = require('../../test_lib/utils.js');
 const { AccountProvider } = require('../../test_lib/utils.js');
@@ -57,52 +57,13 @@ contract('MessageInbox::inboxMessageHash', (accounts) => {
       );
 
       const MESSAGE_TYPEHASH = web3.utils.keccak256(
-        'Message(bytes32 intentHash,uint256 nonce,uint256 feeGasPrice,uint256 feeGasLimit,address sender)',
+         'Message(bytes32 intentHash,uint256 nonce,uint256 feeGasPrice,uint256 feeGasLimit,address sender)',
       );
 
-      const MMB_CHANNEL_TYPEHASH = web3.utils.keccak256(
-        'MosaicMessageBusChannel(address outbox, address inbox)',
-      );
-
-      const MMB_DOMAIN_SEPARATOR_TYPEHASH = web3.utils.keccak256(
-        'MosaicMessageBus(string name,string version,bytes32 metachainId,bytes32 channelSeparator)',
-      );
-
-      const MMB_DOMAIN_SEPARATOR_NAME = 'Mosaic-Bus';
-      const MMB_DOMAIN_SEPARATOR_VERSION = '0';
-
-      const channelSeparator = web3.utils.keccak256(
-        web3.eth.abi.encodeParameters(
-          [
-            'bytes32',
-            'address',
-            'address',
-          ],
-          [
-            MMB_CHANNEL_TYPEHASH,
-            setupParams.messageOutbox,
-            messageInbox.address,
-          ],
-        ),
-      );
-
-      const expectedinboundChannelIdentifier = web3.utils.keccak256(
-        web3.eth.abi.encodeParameters(
-          [
-            'bytes32',
-            'string',
-            'string',
-            'bytes32',
-            'bytes32',
-          ],
-          [
-            MMB_DOMAIN_SEPARATOR_TYPEHASH,
-            MMB_DOMAIN_SEPARATOR_NAME,
-            MMB_DOMAIN_SEPARATOR_VERSION,
-            setupParams.metachainId,
-            channelSeparator,
-          ],
-        ),
+      const expectedinboundChannelIdentifier = ConsensusGatewayUtils.getChannelIdentifier(
+        setupParams.metachainId,
+        setupParams.messageOutbox,
+        messageInbox.address,
       );
 
       const typedHashed = web3.utils.keccak256(

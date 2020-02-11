@@ -17,13 +17,14 @@ pragma solidity >=0.5.0 <0.6.0;
 import "../../message-bus/MessageInbox.sol";
 
 /**
- * @title MessageInbox - Contract to confirm the messages declared in MessageOutbox.
+ * @title MessageInbox - Message Inbox test contract.
  */
 contract MessageInboxDouble is MessageInbox {
+
     /* External Functions */
 
     /**
-     * @notice Setup message inbox.
+     * @notice It is used to test MessageInbox::setupMessageInbox
      */
     function setupMessageInboxExternal(
         bytes32 _metachainId,
@@ -44,7 +45,7 @@ contract MessageInboxDouble is MessageInbox {
     }
 
     /**
-     * @notice It is used to test MessageInboxDouble::proveStorageAccount
+     * @notice It is used to test MessageInbox::proveStorageAccount
      */
     function proveStorageAccountExternal(
         uint256 _blockHeight,
@@ -53,7 +54,7 @@ contract MessageInboxDouble is MessageInbox {
     )
         external
     {
-        proveStorageAccount(
+        MessageInbox.proveStorageAccount(
             _blockHeight,
             _rlpAccount,
             _rlpParentNodes
@@ -61,7 +62,7 @@ contract MessageInboxDouble is MessageInbox {
     }
 
     /**
-     * @notice It is used to test MessageInboxDouble::confirmMessage
+     * @notice It is used to test MessageInbox::confirmMessage
      */
     function confirmMessageExternal(
         bytes32 _intentHash,
@@ -89,7 +90,7 @@ contract MessageInboxDouble is MessageInbox {
     /**
      * @notice It sets inbound channel identifier.
      *
-     * @param _inboundChannelIdentifier Inboundchannel identifier.
+     * @param _inboundChannelIdentifier Inbound channel identifier.
      */
     function setInboundChannelIdentifier(
         bytes32 _inboundChannelIdentifier
@@ -100,11 +101,11 @@ contract MessageInboxDouble is MessageInbox {
     }
 
     /**
-     * @notice It sets Storage Root.
+     * @notice It sets Storage root.
      *
      * @param _blockHeight Block height at which Gateway/Cogateway is to be
      *                     proven.
-     * @param _storageRoot Storage Root.
+     * @param _storageRoot Storage root.
      */
     function setStorageRoots(
         uint256 _blockHeight,
@@ -116,7 +117,7 @@ contract MessageInboxDouble is MessageInbox {
     }
 
     /**
-     * @notice It sets storage Root.
+     * @notice It sets Outbox storage index.
      *
      * @param _outboxStorageIndex Storage index of outbox mapping in
      *                            MessageOutbox contract.
