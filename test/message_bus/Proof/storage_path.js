@@ -22,7 +22,7 @@ const web3 = require('../../test_lib/web3.js');
 const { AccountProvider } = require('../../test_lib/utils.js');
 const ProveStorageExistence = require('./prove_storage_existence_proof.json');
 
-contract('Proof::proveStorageExistence', async (accounts) => {
+contract('Proof::storagePath', async (accounts) => {
   const accountProvider = new AccountProvider(accounts);
   let proof;
   let setupParams;
@@ -39,7 +39,7 @@ contract('Proof::proveStorageExistence', async (accounts) => {
       maxStorageRootItems: new BN(100),
     };
 
-    await proof.setupProofDouble(
+    await proof.setupProofExternal(
       setupParams.storageAccount,
       setupParams.stateRootProvider,
       setupParams.maxStorageRootItems,
@@ -47,7 +47,7 @@ contract('Proof::proveStorageExistence', async (accounts) => {
   });
 
   it('should pass when actual storage path matches with expected storage path', async () => {
-    actualPath = await proof.storagePathDouble(
+    actualPath = await proof.storagePathExternal(
       new BN(1),
       ProveStorageExistence.messageHash,
     );

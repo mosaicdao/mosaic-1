@@ -38,37 +38,36 @@ contract('Proof::proveStorageExistence', async (accounts) => {
       maxStorageRootItems: new BN(100),
     };
 
-    await proof.setupProofDouble(
+    await proof.setupProofExternal(
       setupParams.storageAccount,
       setupParams.stateRootProvider,
       setupParams.maxStorageRootItems,
     );
 
-    await proof.setStorageRootDouble(
+    await proof.setStorageRootExternal(
       ProveStorageExistence.blockNumber,
       ProveStorageExistence.storageHash,
     );
 
-    path = await proof.storagePathDouble(
-      new BN(1),
-      ProveStorageExistence.messageHash,
-    );
+    path = web3.utils.padLeft(ProveStorageExistence.messageHash,64)
+    path = path + web3.utils.padLeft("1",64)
+    path = web3.utils.sha3(path);
+    path = web3.utils.sha3(path);
   });
 
 
   contract('Negative Tests', async () => {
     it('should fail when storage root is zero', async () => {
       const storageRoot = '0x';
-      const value = web3.utils.soliditySha3(true);
 
-      await proof.setStorageRootDouble(
+      await proof.setStorageRootExternal(
         ProveStorageExistence.blockNumber,
         storageRoot,
       );
       await utils.expectRevert(
-        proof.proveStorageExistenceDouble(
+        proof.proveStorageExistenceExternal(
           path,
-          value,
+          ProveStorageExistence.value,
           ProveStorageExistence.blockNumber,
           ProveStorageExistence.serializedStorageProof,
         ),
@@ -79,12 +78,11 @@ contract('Proof::proveStorageExistence', async (accounts) => {
 
     it('should fail when a single parameter to proveStorageExistence is wrong/empty', async () => {
       path = '0x';
-      const value = web3.utils.soliditySha3(true);
 
       await utils.expectRevert(
-        proof.proveStorageExistenceDouble(
+        proof.proveStorageExistenceExternal(
           path,
-          value,
+          ProveStorageExistence.value,
           ProveStorageExistence.blockNumber,
           ProveStorageExistence.serializedStorageProof,
         ),
@@ -96,10 +94,9 @@ contract('Proof::proveStorageExistence', async (accounts) => {
 
   contract('Positive Tests', async () => {
     it('should pass when existence account proof matches', async () => {
-      const value = web3.utils.soliditySha3(true);
-      await proof.proveStorageExistenceDouble(
+      await proof.proveStorageExistenceExternal(
         path,
-        value,
+        ProveStorageExistence.value,
         ProveStorageExistence.blockNumber,
         ProveStorageExistence.serializedStorageProof,
       );

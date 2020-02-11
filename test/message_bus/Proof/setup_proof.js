@@ -18,9 +18,10 @@ const Proof = artifacts.require('ProofDouble');
 const BN = require('bn.js');
 
 const { AccountProvider } = require('../../test_lib/utils.js');
+const Web3 = require('../../test_lib/web3.js');
 const Utils = require('../../test_lib/utils.js');
 
-contract('Proof::proveStorageAccount', (accounts) => {
+contract('Proof::setupProof', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
   let proof;
   let setupParams;
@@ -38,13 +39,13 @@ contract('Proof::proveStorageAccount', (accounts) => {
 
   contract('Negative Tests', async () => {
     it('should fail when stateRootProvider address is empty', async () => {
-      await proof.setupProofDouble(
+      await proof.setupProofExternal(
         setupParams.storageAccount,
         setupParams.stateRootProvider,
         setupParams.maxStorageRootItems,
       );
       await Utils.expectRevert(
-        proof.setupProofDouble(
+        proof.setupProofExternal(
           setupParams.storageAccount,
           setupParams.stateRootProvider,
           setupParams.maxStorageRootItems,
@@ -56,7 +57,7 @@ contract('Proof::proveStorageAccount', (accounts) => {
 
     it('should fail when storageAccount address is 0', async () => {
       await Utils.expectRevert(
-        proof.setupProofDouble(
+        proof.setupProofExternal(
           Utils.NULL_ADDRESS,
           setupParams.stateRootProvider,
           setupParams.maxStorageRootItems,
@@ -68,7 +69,7 @@ contract('Proof::proveStorageAccount', (accounts) => {
 
     it('should fail when stateRootProvider address is 0', async () => {
       await Utils.expectRevert(
-        proof.setupProofDouble(
+        proof.setupProofExternal(
           setupParams.storageAccount,
           Utils.NULL_ADDRESS,
           setupParams.maxStorageRootItems,
@@ -81,10 +82,18 @@ contract('Proof::proveStorageAccount', (accounts) => {
 
   contract('Positive Tests', async () => {
     it('should do setup successfully', async () => {
-      await proof.setupProofDouble(
+      await proof.setupProofExternal(
         setupParams.storageAccount,
         setupParams.stateRootProvider,
         setupParams.maxStorageRootItems,
+      );
+
+      const expectedEncodedAccountPath = await proof.encodedAccountPath.call();
+      const calculatedEncodedAccountPath = Web3.utils.sha3(setupParams.storageAccount);
+      assert.strictEqual(
+        expectedEncodedAccountPath,
+        calculatedEncodedAccountPath,
+        'Expected and calculated encoded account path must match.',
       );
 
       const storageAccount = await proof.storageAccount.call();

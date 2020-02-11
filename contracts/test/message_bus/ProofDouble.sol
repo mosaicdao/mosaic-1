@@ -1,6 +1,6 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-// Copyright 2019 OpenST Ltd.
+// Copyright 2020 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,15 +15,18 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 import "../../message-bus/Proof.sol";
-import "../../message-bus/StateRootI.sol";
-import "../../lib/CircularBufferUint.sol";
 
+/**
+ * @title ProofDouble - Contract to test Proof contract.
+ */
 contract ProofDouble is Proof {
+
+    /* External Functions */
 
     /**
      * @notice It is used to test Proof::setupProof
      */
-    function setupProofDouble(
+    function setupProofExternal(
         address _storageAccount,
         StateRootI _stateRootProvider,
         uint256 _maxStorageRootItems
@@ -40,7 +43,7 @@ contract ProofDouble is Proof {
     /**
      * @notice It is used to test Proof::proveStorageAccount
      */
-    function proveStorageAccountDouble(
+    function proveStorageAccountExternal(
         uint256 _blockHeight,
         bytes calldata _rlpAccount,
         bytes calldata _rlpParentNodes
@@ -57,7 +60,7 @@ contract ProofDouble is Proof {
     /**
      * @notice It is used to test Proof::proveStorageExistence
      */
-    function proveStorageExistenceDouble(
+    function proveStorageExistenceExternal(
         bytes calldata _path,
         bytes32 _value,
         uint256 _blockHeight,
@@ -77,7 +80,7 @@ contract ProofDouble is Proof {
     /**
      * @notice It is used to test Proof::storagePath
      */
-    function storagePathDouble(
+    function storagePathExternal(
         uint8 _index,
         bytes32 _key
     )
@@ -97,7 +100,7 @@ contract ProofDouble is Proof {
      * @param _blockHeight Block height for which the storage root will be set
      * @param _storageRoot Storage root
      */
-    function setStorageRootDouble(
+    function setStorageRootExternal(
         uint256 _blockHeight,
         bytes32 _storageRoot
     )

@@ -22,19 +22,20 @@ const utils = require('../../test_lib/utils.js');
 
 const { AccountProvider } = require('../../test_lib/utils.js');
 const ProveStorageAccount = require('./prove_storage_account_proof.json');
+const ProveStorageAccountCircularBuffer = require('./prove_storage_circular_buffer.json');
 
 contract('Proof::proveStorageAccount', async (accounts) => {
   const accountProvider = new AccountProvider(accounts);
   let proof;
   let spyAnchor;
   let setupParams;
-  let consensus;
   let ExpectedStorageRoot;
   let CalculatedStorageRoot;
 
   beforeEach(async () => {
     proof = await Proof.new();
     spyAnchor = await SpyAnchor.new();
+    let consensus;
 
     setupParams = {
       storageAccount: ProveStorageAccount.address,
@@ -42,7 +43,7 @@ contract('Proof::proveStorageAccount', async (accounts) => {
       maxStorageRootItems: new BN(100),
     };
 
-    await proof.setupProofDouble(
+    await proof.setupProofExternal(
       setupParams.storageAccount,
       setupParams.stateRootProvider,
       setupParams.maxStorageRootItems,
@@ -65,7 +66,7 @@ contract('Proof::proveStorageAccount', async (accounts) => {
     it('should fail when rlpAccount length is zero', async () => {
       const failRlpAccount = '0x';
       await utils.expectRevert(
-        proof.proveStorageAccountDouble(
+        proof.proveStorageAccountExternal(
           new BN(ProveStorageAccount.blockNumber),
           failRlpAccount,
           ProveStorageAccount.rlpParentNodes,
@@ -82,7 +83,7 @@ contract('Proof::proveStorageAccount', async (accounts) => {
         ProveStorageAccount.stateRoot,
       );
       await utils.expectRevert(
-        proof.proveStorageAccountDouble(
+        proof.proveStorageAccountExternal(
           new BN(ProveStorageAccount.blockNumber),
           ProveStorageAccount.rlpAccountNode,
           failRlpParentNodes,
@@ -100,7 +101,7 @@ contract('Proof::proveStorageAccount', async (accounts) => {
       );
 
       await utils.expectRevert(
-        proof.proveStorageAccountDouble(
+        proof.proveStorageAccountExternal(
           new BN(ProveStorageAccount.blockNumber),
           ProveStorageAccount.rlpAccountNode,
           ProveStorageAccount.rlpParentNodes,
@@ -113,7 +114,7 @@ contract('Proof::proveStorageAccount', async (accounts) => {
 
   contract('Positive Tests', async () => {
     it('should pass when account storage root proof matches', async () => {
-      await proof.proveStorageAccountDouble(
+      await proof.proveStorageAccountExternal(
         new BN(ProveStorageAccount.blockNumber),
         ProveStorageAccount.rlpAccountNode,
         ProveStorageAccount.rlpParentNodes,
@@ -126,7 +127,68 @@ contract('Proof::proveStorageAccount', async (accounts) => {
       assert.strictEqual(
         ExpectedStorageRoot,
         CalculatedStorageRoot,
-        'Storage root/hash generated must match with storage root calculated.',
+        'Storage root hash generated must match with storage root calculated.',
+      );
+    });
+
+    it('should pass when it is not proving already proved storage account', async () => {
+      const gasEstimatedNewStorageAccount = await proof.proveStorageAccountExternal.estimateGas(
+        new BN(ProveStorageAccount.blockNumber),
+        ProveStorageAccount.rlpAccountNode,
+        ProveStorageAccount.rlpParentNodes
+      );
+
+      // setting storage account
+      await proof.setStorageRootExternal(
+        ProveStorageAccount.blockNumber,
+        ProveStorageAccount.storageHash
+      )
+      const gasEstimatedExistingStorageAccount = await proof.proveStorageAccountExternal.estimateGas(
+        new BN(ProveStorageAccount.blockNumber),
+        ProveStorageAccount.rlpAccountNode,
+        ProveStorageAccount.rlpParentNodes
+      );
+
+      assert.strictEqual(
+        gasEstimatedExistingStorageAccount < gasEstimatedNewStorageAccount,
+        true,
+        'gas estimation for already existing storage account must be less than'+
+        'the gas estimation for the new storage account',
+      );
+    });
+
+    it('should pass when it store the latest storage root '
+    + 'and delete oldest storage root when the circular buffer is full.', async () => {
+      await proof.proveStorageAccountExternal(
+        new BN(ProveStorageAccount.blockNumber),
+        ProveStorageAccount.rlpAccountNode,
+        ProveStorageAccount.rlpParentNodes,
+      );
+
+      spyAnchor = await SpyAnchor.new();
+      await spyAnchor.anchorStateRoot(
+        ProveStorageAccountCircularBuffer.blockNumber,
+        ProveStorageAccountCircularBuffer.stateRoot,
+      );
+
+      proof = await Proof.new();
+      await proof.setupProofExternal(
+        ProveStorageAccountCircularBuffer.address,
+        spyAnchor.address,
+        new BN(1),
+      );
+
+      await proof.proveStorageAccountExternal(
+        new BN(ProveStorageAccountCircularBuffer.blockNumber),
+        ProveStorageAccountCircularBuffer.rlpAccountNode,
+        ProveStorageAccountCircularBuffer.rlpParentNodes,
+      );
+
+      const storageRoot = await proof.storageRoots.call(ProveStorageAccount.blockNumber);
+      assert.strictEqual(
+        storageRoot,
+        utils.ZERO_BYTES32,
+        'Storage root must be equal to zero',
       );
     });
   });
