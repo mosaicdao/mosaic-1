@@ -21,8 +21,8 @@ import "../consensus-gateway/ConsensusGatewayBase.sol";
 import "../consensus-gateway/ERC20GatewayBase.sol";
 import "../message-bus/MessageBus.sol";
 import "../message-bus/StateRootI.sol";
-import "../most/UtmostInterface.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
+import "../utility-token/UtilityTokenInterface.sol";
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
@@ -99,12 +99,12 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
      * @notice Confirm deposit in order to mint tokens.
      *
      * @param _amount MOST token deposit amount in atto.
-     * @param _beneficiary Address of beneficiary on auxiliary chain.
-     * @param _feeGasPrice Fee gas price at which rewards will be calculated.
-     * @param _feeGasLimit Fee gas limit at which rewards will be calculated.
+     * @param _beneficiary Address of beneficiary on target metachain.
+     * @param _feeGasPrice Gas price at which fee will be calculated.
+     * @param _feeGasLimit Gas limit at which fee will be capped.
      * @param _depositor Address of depositor on the origin chain.
-     * @param _blockHeight Block height of origin chain at which storage proof
-     *                     is generated.
+     * @param _blockNumber Block number of origin chain against which storage
+                           proof is generated.
      * @param _rlpParentNodes Storage merkle proof to verify message declaration
      *                        on the origin chain.
      *
@@ -116,7 +116,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
         uint256 _feeGasPrice,
         uint256 _feeGasLimit,
         address _depositor,
-        uint256 _blockHeight,
+        uint256 _blockNumber,
         bytes calldata _rlpParentNodes
     )
         external
@@ -150,24 +150,24 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
             _feeGasPrice,
             _feeGasLimit,
             _depositor,
-            _blockHeight,
+            _blockNumber,
             _rlpParentNodes
         );
 
         // Additional gas consumption after this statement can be adjusted with
         // the gas price value.
         uint256 gasConsumed = initialGas.sub(gasleft());
-        uint256 rewardAmount = reward(gasConsumed, _feeGasPrice, _feeGasLimit);
+        uint256 feeAmount = reward(gasConsumed, _feeGasPrice, _feeGasLimit);
 
-        uint256 mintAmount = _amount.sub(rewardAmount);
+        uint256 mintAmount = _amount.sub(feeAmount);
 
         require(
-            UtmostInterface(address(most)).mint(msg.sender, rewardAmount),
+            UtilityTokenInterface(address(most)).mint(msg.sender, feeAmount),
             "Reward must be minted."
         );
 
         require(
-            UtmostInterface(address(most)).mint(_beneficiary, mintAmount),
+            UtilityTokenInterface(address(most)).mint(_beneficiary, mintAmount),
             "Tokens must be minted for beneficiary."
         );
     }
@@ -185,8 +185,8 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
      * @param _amount Amount of tokens to be redeemed.
      * @param _beneficiary The address in the origin chain where the value
      *                     where the tokens will be withdrawn.
-     * @param _feeGasPrice Fee gas price for the reward calculation.
-     * @param _feeGasLimit Fee gas limit for the reward calculation.
+     * @param _feeGasPrice Gas price at which fee will be calculated.
+     * @param _feeGasLimit Gas limit at which fee will be capped.
      *
      * @return messageHash_ Message hash.
      */
@@ -241,8 +241,8 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
      * @notice Calculates reward.
      *
      * @param _gasConsumed Gas consumption in confirm deposit transaction.
-     * @param _feeGasPrice Fee gas price at which rewards will be calculated.
-     * @param _feeGasLimit Fee gas limit at which rewards will be calculated.
+     * @param _feeGasPrice Gas price at which fee will be calculated.
+     * @param _feeGasLimit Gas limit at which fee will be capped.
      *
      * @return rewardAmount_ Total reward amount.
      */

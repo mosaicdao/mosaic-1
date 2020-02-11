@@ -19,8 +19,8 @@ const { AccountProvider } = require('../../test_lib/utils.js');
 const TestData = require('../data/deposit_proof');
 
 const SpyCoconsensus = artifacts.require('SpyCoconsensus');
-const ConsensusCogateway = artifacts.require('ConsensusCogatewayTest');
-const UtmostSpy = artifacts.require('UtmostSpy');
+const ConsensusCogateway = artifacts.require('ConsensusCogatewayDouble');
+const UtmostConfirmDepositSpy = artifacts.require('UtmostConfirmDepositSpy');
 
 contract('ConsensusCogateway::confirmDeposit', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
@@ -32,7 +32,7 @@ contract('ConsensusCogateway::confirmDeposit', (accounts) => {
   beforeEach(async () => {
     consensusCogateway = await ConsensusCogateway.new();
 
-    utmost = await UtmostSpy.new();
+    utmost = await UtmostConfirmDepositSpy.new();
     setupParams = {
       metachainId: TestData.metachainId,
       utMOST: utmost.address,

@@ -14,39 +14,36 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../../most/UtmostInterface.sol";
+import "../../consensus-gateway/ConsensusCogateway.sol";
 
 /**
- * @title Spy contract for Utmost.
+ * @title ConsensusCogatewayDouble contract.
+ *
+ * @notice It is used for testing ConsensusCogateway contract.
  */
-contract UtmostSpy is UtmostInterface {
-
-    /* Storage */
-
-    address[] public beneficiaries;
-    uint256 [] public amounts;
-
+contract ConsensusCogatewayDouble is ConsensusCogateway {
 
     /* External Functions. */
 
     /**
-     * @notice Used for unit testing.
-     *
-     * @param _beneficiary Address of beneficiary where tokens are minted.
-     * @param _amount Amount in wei.
-     *
-     * @return bool `true` if success else `false`.
+     * @notice Sets storage root at specific block number.
      */
-    function mint(
-        address payable _beneficiary,
-        uint256 _amount
+    function setStorageRoot(
+        uint256 _blockNumber,
+        bytes32 _storageRoot
     )
         external
-        returns(bool)
     {
-        beneficiaries.push(_beneficiary);
-        amounts.push(_amount);
-        return true;
+         storageRoots[_blockNumber] = _storageRoot;
     }
 
+    /**
+     * @notice Sets inbound channel identifier.
+     */
+    function setInboundChannelIdentifier(bytes32 _inboundChannelIdentifier)
+        external
+    {
+        inboundChannelIdentifier = _inboundChannelIdentifier;
+    }
 }
+
