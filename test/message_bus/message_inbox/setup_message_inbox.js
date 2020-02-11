@@ -41,7 +41,7 @@ contract('MessageInbox::setupMessageInbox', (accounts) => {
       const metachainId = '0x0000000000000000000000000000000000000000000000000000000000000000';
 
       await Utils.expectRevert(
-        messageInbox.setMessageInbox(
+        messageInbox.setupMessageInboxExternal(
           metachainId,
           setupParams.messageOutbox,
           setupParams.outboxStorageIndex,
@@ -56,7 +56,7 @@ contract('MessageInbox::setupMessageInbox', (accounts) => {
       const messageOutbox = '0x0000000000000000000000000000000000000000';
 
       await Utils.expectRevert(
-        messageInbox.setMessageInbox(
+        messageInbox.setupMessageInboxExternal(
           setupParams.metachainId,
           messageOutbox,
           setupParams.outboxStorageIndex,
@@ -71,7 +71,7 @@ contract('MessageInbox::setupMessageInbox', (accounts) => {
       const stateRootProvider = '0x0000000000000000000000000000000000000000';
 
       await Utils.expectRevert(
-        messageInbox.setMessageInbox(
+        messageInbox.setupMessageInboxExternal(
           setupParams.metachainId,
           setupParams.messageOutbox,
           setupParams.outboxStorageIndex,
@@ -88,7 +88,7 @@ contract('MessageInbox::setupMessageInbox', (accounts) => {
       );
 
       await Utils.expectRevert(
-        messageInbox.setMessageInbox(
+        messageInbox.setupMessageInboxExternal(
           setupParams.metachainId,
           setupParams.messageOutbox,
           setupParams.outboxStorageIndex,
@@ -102,7 +102,7 @@ contract('MessageInbox::setupMessageInbox', (accounts) => {
 
   contract('Positive Tests', async () => {
     it('Should successfully setup message inbox with required the parameters', async () => {
-      await messageInbox.setMessageInbox(
+      await messageInbox.setupMessageInboxExternal(
         setupParams.metachainId,
         setupParams.messageOutbox,
         setupParams.outboxStorageIndex,

@@ -25,7 +25,7 @@ contract MessageInboxDouble is MessageInbox {
     /**
      * @notice Setup message inbox.
      */
-    function setMessageInbox(
+    function setupMessageInboxExternal(
         bytes32 _metachainId,
         address _messageOutbox,
         uint8 _outboxStorageIndex,
@@ -46,7 +46,7 @@ contract MessageInboxDouble is MessageInbox {
     /**
      * @notice It is used to test MessageInboxDouble::proveStorageAccount
      */
-    function proveAccountStorage(
+    function proveStorageAccountExternal(
         uint256 _blockHeight,
         bytes calldata _rlpAccount,
         bytes calldata _rlpParentNodes
@@ -63,7 +63,7 @@ contract MessageInboxDouble is MessageInbox {
     /**
      * @notice It is used to test MessageInboxDouble::confirmMessage
      */
-    function confirmMessageIntent(
+    function confirmMessageExternal(
         bytes32 _intentHash,
         uint256 _nonce,
         uint256 _feeGasPrice,

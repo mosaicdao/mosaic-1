@@ -39,7 +39,7 @@ contract('MessageInbox::inboxMessageHash', (accounts) => {
 
   contract('Positive Tests', async () => {
     it('Should successfully generate inbox message hash', async () => {
-      await messageInbox.setMessageInbox(
+      await messageInbox.setupMessageInboxExternal(
         setupParams.metachainId,
         setupParams.messageOutbox,
         setupParams.outboxStorageIndex,

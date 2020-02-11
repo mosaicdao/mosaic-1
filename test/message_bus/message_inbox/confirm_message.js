@@ -66,7 +66,7 @@ contract('MessageInbox::confirmMessage', (accounts) => {
 
   contract('Negative Tests', async () => {
     it('Should fail when message hash already exists in inbox mapping', async () => {
-      await messageInbox.confirmMessageIntent(
+      await messageInbox.confirmMessageExternal(
         setupParams.intentHash,
         setupParams.nonce,
         setupParams.feeGasPrice,
@@ -77,7 +77,7 @@ contract('MessageInbox::confirmMessage', (accounts) => {
       );
 
       await Utils.expectRevert(
-        messageInbox.confirmMessageIntent(
+        messageInbox.confirmMessageExternal(
           setupParams.intentHash,
           setupParams.nonce,
           setupParams.feeGasPrice,
@@ -92,7 +92,7 @@ contract('MessageInbox::confirmMessage', (accounts) => {
   });
   contract('Positive Tests', async () => {
     it('Should be able to set parameters', async () => {
-      const messageHash = await messageInbox.confirmMessageIntent.call(
+      const messageHash = await messageInbox.confirmMessageExternal.call(
         setupParams.intentHash,
         setupParams.nonce,
         setupParams.feeGasPrice,
@@ -142,7 +142,7 @@ contract('MessageInbox::confirmMessage', (accounts) => {
         'Message Hash from contract should be same as expected hash',
       );
 
-      await messageInbox.confirmMessageIntent(
+      await messageInbox.confirmMessageExternal(
         setupParams.intentHash,
         setupParams.nonce,
         setupParams.feeGasPrice,
