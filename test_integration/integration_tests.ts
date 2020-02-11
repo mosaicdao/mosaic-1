@@ -34,7 +34,7 @@ const Core = artifacts.require('Core');
 // @ts-ignore
 const Reputation = artifacts.require('Reputation');
 // @ts-ignore
-const MockToken = artifacts.require('MockToken');
+const ERC20Mock = artifacts.require('ERC20Mock');
 
 const setupArtifacts = () => {
   shared.artifacts = {
@@ -44,7 +44,7 @@ const setupArtifacts = () => {
     Consensus,
     Core,
     Reputation,
-    MockToken,
+    ERC20Mock,
   };
 };
 
