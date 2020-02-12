@@ -134,10 +134,6 @@ contract Protocore is
      * \pre `_metachainId` is not 0.
      * \pre `_domainSeparator` is not 0.
      * \pre `_epochLength` is not 0.
-     * \pre `_genesisSourceBlockNumber` must be multiple of `_epochLength`.
-     * \pre `_genesisTargetBlockNumber` must be multiple of `_epochLength`.
-     * \pre `_genesisTargetBlockHash` must not be 0.
-     * \pre `_genesisTargetBlockNumber` must be greater than or equal to `_genesisSourceBlockNumber`.
      * \pre This function can be called only once.
      *
      * \post Sets domainSeparator storage variable to the given value.
@@ -170,22 +166,6 @@ contract Protocore is
         require(
             _domainSeparator != bytes32(0),
             "Domain separator must not be null."
-        );
-        require(
-            _genesisSourceBlockNumber % _epochLength == 0,
-            "Genesis source block number must be multiple of epoch length."
-        );
-        require(
-            _genesisTargetBlockNumber % _epochLength == 0,
-            "Genesis target block number must be multiple of epoch length."
-        );
-        require(
-            _genesisTargetBlockHash != bytes32(0),
-            "Genesis target block hash must not be null."
-        );
-        require(
-            _genesisTargetBlockNumber >= _genesisSourceBlockNumber,
-            "Genesis target block number is less than genesis source block number."
         );
 
         metachainId = _metachainId;
