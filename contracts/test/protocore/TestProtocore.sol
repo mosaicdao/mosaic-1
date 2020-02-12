@@ -105,7 +105,6 @@ contract TestProtocore is Protocore {
         view
         returns (bool)
     {
-        // @todo (pro): Implement it.
         return true;
     }
 
