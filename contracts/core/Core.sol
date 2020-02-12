@@ -344,10 +344,10 @@ contract Core is
      *          - committee lock (transition root hash) is not 0
      *          - source blockhash is not 0
      *          - target blockhash is not 0
-     *          - source block height is strictly greater than committed
-     *            block height
-     *          - source block height is a checkpoint
-     *          - target block height is +1 epoch of the source block height
+     *          - source block number is strictly greater than committed
+     *            block number
+     *          - source block number is a checkpoint
+     *          - target block number is +1 epoch of the source block number
      *          - a proposal matching with the input parameters does
      *            not exist in the core
      *
@@ -415,7 +415,7 @@ contract Core is
         );
         require(
             (_sourceBlockNumber % epochLength) == 0,
-            "Source block height must be a checkpoint."
+            "Source block number must be a checkpoint."
         );
         require(
             _targetBlockNumber == _sourceBlockNumber.add(epochLength),
