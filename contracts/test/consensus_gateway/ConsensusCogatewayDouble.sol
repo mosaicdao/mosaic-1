@@ -45,5 +45,14 @@ contract ConsensusCogatewayDouble is ConsensusCogateway {
     {
         inboundChannelIdentifier = _inboundChannelIdentifier;
     }
+
+    /**
+     * It sets current metablock height.
+     *
+     * @param _metablockHeight Current metablock height.
+     */
+    function setMetablock(uint256 _metablockHeight) external {
+        currentMetablockHeight = _metablockHeight;
+    }
 }
 
