@@ -45,19 +45,6 @@ contract SpyAnchor is MasterCopyNonUpgradable, AnchorI{
     }
 
     /**
-     * @dev _blockheight is not assigned to spyBlockHeight
-     *       variable because it is view in it's function signature
-     */
-
-    function getStateRoot(uint256)
-        external
-        view
-        returns (bytes32)
-    {
-        return spyStateRoot;
-    }
-
-    /**
      * @notice It sets state root for a block number.
      *
      * @param _blockNumber Block number.
