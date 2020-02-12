@@ -217,7 +217,7 @@ contract('Core::proposeMetablock', async (accounts) => {
           config.core,
           proposal,
         ),
-        'Source block height must be a checkpoint.',
+        'Source block number must be a checkpoint.',
       );
     });
 
