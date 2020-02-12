@@ -19,7 +19,6 @@ const { ValidatorStatus } = require('./utils.js');
 const Utils = require('../test_lib/utils.js');
 
 const Reputation = artifacts.require('Reputation');
-const MockToken = artifacts.require('MockToken');
 
 contract('Reputation::withdraw', (accounts) => {
   let constructorArgs;
@@ -36,8 +35,8 @@ contract('Reputation::withdraw', (accounts) => {
       address: accountProvider.get(),
       withdrawalAddress: accountProvider.get(),
     };
-    most = await MockToken.new(18, { from: validator.address });
-    wETH = await MockToken.new(18, { from: validator.address });
+    most = await Utils.deployMockToken(validator.address);
+    wETH = await Utils.deployMockToken(validator.address);
 
     constructorArgs = {
       consensus: accountProvider.get(),

@@ -62,20 +62,6 @@ contract('Protocore::openKernel', (accounts) => {
   });
 
   contract('Negative Tests', async () => {
-    it('should revert if caller is not coconsensus', async () => {
-      const newKernelHeight = config.genesisKernelHeight.addn(1);
-      const newKernelHash = Utils.getRandomHash();
-
-      await Utils.expectRevert(
-        config.protocore.openKernel(
-          newKernelHeight,
-          newKernelHash,
-          { from: accountProvider.get() },
-        ),
-        'Only the Coconsensus contract can call this function.',
-      );
-    });
-
     it('should revert if new kernel height is not plus one of the current', async () => {
       const newKernelHeight = config.genesisKernelHeight;
       const newKernelHash = Utils.getRandomHash();

@@ -19,19 +19,22 @@ pragma solidity >=0.5.0 <0.6.0;
  */
 interface ProtocoreI {
 
-    /**
-     * @notice setup() function initializes the protocore contract.
-     *
-     * @param _metachainId Metachain id.
-     * @param _domainSeparator Domain separator.
-     * @param _epochLength Epoch length.
-     * @param _metablockHeight Metablock height.
-     */
-    function setup(
-        bytes32 _metachainId,
-        bytes32 _domainSeparator,
-        uint256 _epochLength,
-        uint256 _metablockHeight
+    /** @notice setup() function initializes the protocore contract. */
+    function setup() external returns (bytes32, uint256);
+
+    /** @notice Function to get the domain separator. */
+    function domainSeparator() external returns (bytes32);
+
+    /**  @notice epochLength() function returns the epoch length. */
+    function epochLength() external returns (uint256);
+
+    function openKernelHeight()
+        external
+        returns (uint256);
+
+    function openKernel(
+        uint256 _kernelHeight,
+        bytes32 _kernelHash
     )
         external;
 }

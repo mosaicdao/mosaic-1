@@ -228,30 +228,6 @@ contract('Protocore::proposeLinkInternal', (accounts) => {
         actualProposedMetablockHeight.eq(config.genesisKernelHeight),
       );
 
-      const actualForwardVoteCount = await config.protocore.getForwardVoteCount.call(
-        voteMessageHash,
-      );
-
-      assert.isOk(
-        actualForwardVoteCount.eqn(0),
-      );
-
-      const actualForwardVoteCountNextHeight = await config.protocore.getForwardVoteCountNextHeight.call(
-        voteMessageHash,
-      );
-
-      assert.isOk(
-        actualForwardVoteCountNextHeight.eqn(0),
-      );
-
-      const actualForwardVoteCountPreviousHeight = await config.protocore.getForwardVoteCountPreviousHeight.call(
-        voteMessageHash,
-      );
-
-      assert.isOk(
-        actualForwardVoteCountPreviousHeight.eqn(0),
-      );
-
       const actualTargetFinalisation = await config.protocore.getTargetFinalisation.call(
         voteMessageHash,
       );
