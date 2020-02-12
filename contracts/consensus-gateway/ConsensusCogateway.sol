@@ -15,15 +15,16 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 
-import "../consensus/CoconsensusModule.sol";
 import "../consensus/CoconsensusI.sol";
+import "../consensus/CoconsensusModule.sol";
 import "../consensus-gateway/ConsensusGatewayBase.sol";
 import "../consensus-gateway/ERC20GatewayBase.sol";
 import "../message-bus/MessageBus.sol";
 import "../message-bus/StateRootI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "../utility-token/UtilityTokenInterface.sol";
 
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, CoconsensusModule {
 
@@ -39,6 +40,12 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
 
     /* Storage offset of message inbox. */
     uint8 constant public INBOX_OFFSET = uint8(4);
+
+
+    /* Storage */
+
+    /** Mapping of kernel height and kernel hash. */
+    mapping(uint256 /* Kernel Height */ => bytes32 /* Kernel Hash */) public  kernelHashes;
 
 
     /* External functions */
@@ -95,6 +102,173 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
     }
 
     /**
+     * @notice Confirm deposit in order to mint tokens.
+     *
+     * @param _amount MOST token deposit amount in atto.
+     * @param _beneficiary Address of beneficiary on target metachain.
+     * @param _feeGasPrice Gas price at which fee will be calculated.
+     * @param _feeGasLimit Gas limit at which fee will be capped.
+     * @param _depositor Address of depositor on the origin chain.
+     * @param _blockNumber Block number of origin chain against which storage
+                           proof is generated.
+     * @param _rlpParentNodes Storage merkle proof to verify message declaration
+     *                        on the origin chain.
+     *
+     * @return messageHash_ Message hash.
+     */
+    function confirmDeposit(
+        uint256 _amount,
+        address payable _beneficiary,
+        uint256 _feeGasPrice,
+        uint256 _feeGasLimit,
+        address _depositor,
+        uint256 _blockNumber,
+        bytes calldata _rlpParentNodes
+    )
+        external
+        returns (bytes32 messageHash_)
+    {
+
+        uint256 initialGas = gasleft();
+
+        require(
+            _amount != 0,
+            "Deposit amount should be greater than 0."
+        );
+        require(
+            _beneficiary != address(0),
+            "Beneficiary address must not be 0."
+        );
+        require(
+            _depositor != address(0),
+            "Depositor address must not be 0."
+        );
+
+        uint256 nonce = nonces[msg.sender];
+        nonces[msg.sender] = nonce.add(1);
+
+        messageHash_ = MessageInbox.confirmMessage(
+            ERC20GatewayBase.hashDepositIntent(
+                _amount,
+                _beneficiary
+            ),
+            nonce,
+            _feeGasPrice,
+            _feeGasLimit,
+            _depositor,
+            _blockNumber,
+            _rlpParentNodes
+        );
+
+        // Additional gas consumption after this statement can be adjusted with
+        // the gas price value.
+        uint256 gasConsumed = initialGas.sub(gasleft());
+        uint256 feeAmount = reward(gasConsumed, _feeGasPrice, _feeGasLimit);
+
+        uint256 mintAmount = _amount.sub(feeAmount);
+
+        require(
+            UtilityTokenInterface(address(most)).mint(msg.sender, feeAmount),
+            "Reward must be minted."
+        );
+
+        require(
+            UtilityTokenInterface(address(most)).mint(_beneficiary, mintAmount),
+            "Tokens must be minted for beneficiary."
+        );
+    }
+
+    /**
+     * @notice This method will be called by anyone to verify merkle proof of
+     *          consensus gateway contract address.
+     *
+     *  @param _blockNumber Block number at which consensus gateway is to be proven.
+     *  @param _rlpAccount RLP encoded account node object.
+     *  @param _rlpParentNodes RLP encoded value of account proof node array.
+     */
+    function proveConsensusGateway(
+        uint256 _blockNumber,
+        bytes calldata _rlpAccount,
+        bytes calldata _rlpParentNodes
+    )
+        external
+    {
+        MessageInbox.proveStorageAccount(
+            _blockNumber,
+            _rlpAccount,
+            _rlpParentNodes
+        );
+    }
+
+    /**
+     * @notice Confirms the initiation of opening a kernel at auxiliary chain.
+     *
+     * @dev Function requires:
+     *          - Sender address must not be 0.
+     *          - Kernel hash must not be 0.
+     *          - Difference between kernelheight and current metablock height
+     *            must be 1.
+     *
+     * @param _kernelHeight Height of the kernel.
+     * @param _kernelHash Hash of the kernel.
+     * @param _feeGasPrice Gas price which the sender is willing to pay.
+     * @param _feeGasLimit Gas limit which the sender is willing to pay.
+     * @param _sender Sender address.
+     * @param _blockNumber Block number at which proof is valid.
+     * @param _rlpParentNodes RLP encoded parent node data to prove message
+     *                        exists in outbox of ConsensusGateway.
+     *
+     * @return messageHash_ Message hash.
+     */
+    function confirmOpenKernel(
+        uint256 _kernelHeight,
+        bytes32 _kernelHash,
+        uint256 _feeGasPrice,
+        uint256 _feeGasLimit,
+        address _sender,
+        uint256 _blockNumber,
+        bytes calldata _rlpParentNodes
+    )
+        external
+        returns (bytes32 messageHash_)
+    {
+        require(
+            _sender != address(0),
+            "Sender address is 0."
+        );
+        require(
+            _kernelHash != bytes32(0),
+            "Kernel hash is 0."
+        );
+        require(
+            _kernelHeight.sub(currentMetablockHeight) == 1,
+            "Invalid kernel height."
+        );
+
+        currentMetablockHeight = _kernelHeight;
+
+        uint256 nonce = nonces[_sender];
+        nonces[_sender] = nonce.add(1);
+
+        bytes32 kernelIntentHash = hashKernelIntent(
+            _kernelHeight,
+            _kernelHash
+        );
+
+        messageHash_ = MessageInbox.confirmMessage(
+            kernelIntentHash,
+            nonce,
+            _feeGasPrice,
+            _feeGasLimit,
+            _sender,
+            _blockNumber,
+            _rlpParentNodes
+        );
+
+        kernelHashes[_kernelHeight] = _kernelHash;
+    }
+
+    /**
      * @notice It allows withdrawing Utmost tokens. Withdrawer needs to
      *         approve consensus cogateway contract for the amount to
      *         be withdrawn.
@@ -107,8 +281,8 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
      * @param _amount Amount of tokens to be redeemed.
      * @param _beneficiary The address in the origin chain where the value
      *                     where the tokens will be withdrawn.
-     * @param _feeGasPrice Fee gas price for the reward calculation.
-     * @param _feeGasLimit Fee gas limit for the reward calculation.
+     * @param _feeGasPrice Gas price at which fee will be calculated.
+     * @param _feeGasLimit Gas limit at which fee will be capped.
      *
      * @return messageHash_ Message hash.
      */
@@ -155,4 +329,33 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
             "Utmost burnFrom must succeed."
         );
     }
+
+
+    /* Private functions */
+
+    /**
+     * @notice Calculates reward.
+     *
+     * @param _gasConsumed Gas consumption in confirm deposit transaction.
+     * @param _feeGasPrice Gas price at which fee will be calculated.
+     * @param _feeGasLimit Gas limit at which fee will be capped.
+     *
+     * @return rewardAmount_ Total reward amount.
+     */
+    function reward(
+        uint256 _gasConsumed,
+        uint256 _feeGasPrice,
+        uint256 _feeGasLimit
+    )
+        private
+        pure
+        returns(uint256 rewardAmount_)
+    {
+        if(_gasConsumed > _feeGasLimit) {
+            rewardAmount_ = _feeGasPrice.mul(_feeGasLimit);
+        } else {
+            rewardAmount_ = _feeGasPrice.mul(_gasConsumed);
+        }
+    }
+
 }

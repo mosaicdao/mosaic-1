@@ -19,11 +19,11 @@ library MerklePatriciaProof {
      */
     function verify(
         bytes32 value,
-        bytes calldata encodedPath,
-        bytes calldata rlpParentNodes,
+        bytes memory encodedPath,
+        bytes memory rlpParentNodes,
         bytes32 root
     )
-        external
+        internal
         pure
         returns (bool)
     {
