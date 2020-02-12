@@ -240,7 +240,7 @@ contract('Core::joinBeforeOpen', async (accounts) => {
       const validator = accountProvider.get();
       expectedUpdatedValidators.push(validator);
       expectedUpdatedReputations.push(new BN(1));
-      const expectedRootOriginObservationBlock = await web3.eth.getBlockNumber() + 1;
+      const expectedGenesisOriginObservationBlockNumber = await web3.eth.getBlockNumber() + 1;
       await config.mockConsensus.joinDuringCreation(validator);
       const valCount = await config.mockCore.countValidators.call();
       assert.isOk(
@@ -258,10 +258,10 @@ contract('Core::joinBeforeOpen', async (accounts) => {
       );
 
       const coreOpenVotesWindow = await config.mockCore.CORE_OPEN_VOTES_WINDOW();
-      const precommitClosureBlockHeight = await config.mockCore.precommitClosureBlockHeight();
+      const precommitClosureBlockNumber = await config.mockCore.precommitClosureBlockNumber();
       assert.isOk(
-        precommitClosureBlockHeight.cmp(coreOpenVotesWindow) === 0,
-        `Precommit closure height (${precommitClosureBlockHeight}) should be equal to `
+        precommitClosureBlockNumber.cmp(coreOpenVotesWindow) === 0,
+        `Precommit closure height (${precommitClosureBlockNumber}) should be equal to `
         + `${coreOpenVotesWindow} on core open.`,
       );
 
@@ -292,10 +292,11 @@ contract('Core::joinBeforeOpen', async (accounts) => {
         isProposalSetInitialized,
       );
 
-      const actualRootOriginObservationBlock = await config.mockCore
-        .rootOriginObservationBlockHeight.call();
+      // TODO(ben): clean up all of this...
+      const actualGenesisOriginObservationBlockNumber = await config.mockCore
+        .genesisOriginObservationBlockNumber.call();
       assert.strictEqual(
-        actualRootOriginObservationBlock.eqn(expectedRootOriginObservationBlock),
+        actualGenesisOriginObservationBlockNumber.eqn(expectedGenesisOriginObservationBlockNumber),
         true,
       );
     });

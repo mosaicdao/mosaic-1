@@ -914,15 +914,30 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         anchor_ = address(anchor);
         metachainId_ = hashMetachainId(anchor_);
 
+        uint256 genesisMetablockHeight = uint256(0);
+
+        Metablock storage genesisMetablock = metablockchains[metachainId_][genesisMetablockHeight];
+        genesisMetablock.metablockHash = keccak256(
+            abi.encodePacked(
+                "Mosaic-1 Testnet Gen-1 Genesis Metablock hash",
+                metachainId_
+            ));
+        genesisMetablock.round = MetablockRound.Committed;
+        genesisMetablock.roundBlockNumber = block.number;
+
+        metablockTips[metachainId_] = genesisMetablockHeight;
+
+        uint256 coreCreationKernelHeight = genesisMetablockHeight.add(1);
+
         bytes memory coreSetupCallData = coreSetupData(
             metachainId_,
             EPOCH_LENGTH,
-            uint256(0), // metablock height
-            bytes32(0), // parent hash
+            coreCreationKernelHeight, // metablock height
+            genesisMetablock.metablockHash, // parent hash
             gasTargetDelta, // gas target
             uint256(0), // dynasty
             uint256(0), // accumulated gas
-            0 // source block height
+            uint256(0)  // source block height
         );
 
         bytes memory consensusGatewaySetupCallData = consensusGatewaySetupData();

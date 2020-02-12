@@ -15,12 +15,27 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 /**
- * @title ForwardValidatorSetAbstract abstract contract specifies a forward validator
+ * @title ValidatorSetAbstract abstract contract specifies a validator
  *        set abstract interfaces.
  */
-contract ForwardValidatorSetAbstract {
+contract ValidatorSetAbstract {
 
     /* Public Functions */
+
+    /**
+     * @notice inValidatorSet() function checks if a validator is in
+     *         validator set for the given height.
+     *
+     * @param _validator A validator's address to check.
+     * @param _height A metablock height.
+     *
+     * @return Returns true if a validator is in the validator set
+     *         for the given metablock height, otherwise false.
+     */
+    function inValidatorSet(address _validator, uint256 _height)
+        public
+        view
+        returns (bool);
 
     /**
      * @notice inForwardValidatorSet() function checks if a validator is in
