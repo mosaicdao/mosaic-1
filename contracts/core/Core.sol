@@ -14,16 +14,16 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-
 import "./CoreI.sol";
 import "./CoreStatusEnum.sol";
 import "../consensus/ConsensusModule.sol";
-import "../validator-set/ValidatorSet.sol";
-import "../reputation/ReputationI.sol";
-import "../version/MosaicVersion.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
+import "../reputation/ReputationI.sol";
+import "../validator-set/ValidatorSet.sol";
+import "../version/MosaicVersion.sol";
 import "../vote-message/VoteMessage.sol";
+
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract Core is
     MasterCopyNonUpgradable,
