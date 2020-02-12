@@ -831,8 +831,9 @@ contract Core is
 
         nextKernelHeight_ = openKernelHeight.add(1);
 
-        // removeValidatorInternal asserts validator is currently in the validator set and not already logged out.
-        // remove validator from next metablock height
+        // removeValidatorInternal() asserts validator is currently in the
+        // validator set and not already logged out.
+        // Removes validator from next metablock height.
         removeValidatorInternal(_validator, nextKernelHeight_);
 
         Kernel storage nextKernel = kernels[nextKernelHeight_];
