@@ -25,6 +25,7 @@ import "../validator-set/ValidatorSet.sol";
 contract SelfProtocore is MasterCopyNonUpgradable, GenesisSelfProtocore, Protocore, ValidatorSet {
 
     /* Usings */
+
     using SafeMath for uint256;
 
 
