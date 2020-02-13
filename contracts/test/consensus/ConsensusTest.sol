@@ -81,7 +81,7 @@ contract ConsensusTest is Consensus {
 
     function setAnchor(
         bytes32 _metachainId,
-        AnchorI _anchor
+        AnchorInterface _anchor
     )
         external
     {

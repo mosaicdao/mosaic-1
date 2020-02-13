@@ -2,7 +2,7 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "../../proxies/MasterCopyNonUpgradable.sol";
 import "../../consensus/ConsensusI.sol";
-import "../../axiom/AxiomI.sol";
+import "../../axiom/AxiomInterface.sol";
 
 contract SpyConsensus is MasterCopyNonUpgradable, ConsensusI {
 
@@ -54,7 +54,7 @@ contract SpyConsensus is MasterCopyNonUpgradable, ConsensusI {
     }
 
     function callNewCore(
-        AxiomI _axiom,
+        AxiomInterface _axiom,
         bytes calldata _data
     )
         external
@@ -63,7 +63,7 @@ contract SpyConsensus is MasterCopyNonUpgradable, ConsensusI {
     }
 
     function callNewCommittee(
-        AxiomI _axiom,
+        AxiomInterface _axiom,
         bytes calldata _data
     )
     external

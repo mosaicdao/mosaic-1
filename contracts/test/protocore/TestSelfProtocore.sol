@@ -14,7 +14,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../../consensus/CoconsensusI.sol";
+import "../../consensus/CoconsensusInterface.sol";
 import "../../protocore/SelfProtocore.sol";
 
 
@@ -27,7 +27,7 @@ contract TestSelfProtocore is SelfProtocore {
 
     /* Storage */
 
-    CoconsensusI public coconsensus;
+    CoconsensusInterface public coconsensus;
 
 
     /* External Functions */
@@ -37,7 +37,7 @@ contract TestSelfProtocore is SelfProtocore {
      *         of SelfProtocore contract.
      */
     function setCoconsensus(address _coconsensus) external {
-        coconsensus = CoconsensusI(_coconsensus);
+        coconsensus = CoconsensusInterface(_coconsensus);
     }
 
     /**
@@ -87,7 +87,7 @@ contract TestSelfProtocore is SelfProtocore {
     function getCoconsensus()
 		public
 		view
-		returns (CoconsensusI)
+		returns (CoconsensusInterface)
 	{
         return coconsensus;
     }

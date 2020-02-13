@@ -18,8 +18,8 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "./ConsensusI.sol";
 import "./CoreLifetime.sol";
-import "../anchor/AnchorI.sol";
-import "../axiom/AxiomI.sol";
+import "../anchor/AnchorInterface.sol";
+import "../axiom/AxiomInterface.sol";
 import "../block/BlockHeader.sol";
 import "../committee/CommitteeI.sol";
 import "../core/CoreI.sol";
@@ -238,7 +238,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
     mapping(bytes32 /* metablock hash */ => bytes32 /* decision */) public decisions;
 
     /** Assigned anchor per metachain. */
-    mapping(bytes32 /* metachain id */ => AnchorI) public anchors;
+    mapping(bytes32 /* metachain id */ => AnchorInterface) public anchors;
 
     /** Core lifetimes. */
     mapping(address /* core */ => CoreLifetime /* coreLifetime */) public coreLifetimes;
@@ -250,7 +250,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
     ReputationI public reputation;
 
     /** Axiom contract address */
-    AxiomI public axiom;
+    AxiomInterface public axiom;
 
     /** Mosaic domain separator */
     bytes32 public mosaicDomainSeparator;
@@ -345,7 +345,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         coinbaseSplitPerMille = _coinbaseSplitPerMille;
         reputation = ReputationI(_reputation);
 
-        axiom = AxiomI(msg.sender);
+        axiom = AxiomInterface(msg.sender);
 
         uint256 chainId = getChainId();
 
@@ -909,7 +909,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             address(this)
         );
 
-        AnchorI anchor = AnchorI(axiom.deployAnchor(anchorSetupCallData));
+        AnchorInterface anchor = AnchorInterface(axiom.deployAnchor(anchorSetupCallData));
 
         anchor_ = address(anchor);
         metachainId_ = hashMetachainId(anchor_);
@@ -1234,10 +1234,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
     )
         private
     {
-        AnchorI anchor = anchors[_metachainId];
+        AnchorInterface anchor = anchors[_metachainId];
 
         require(
-            anchor != AnchorI(0),
+            anchor != AnchorInterface(0),
             "There is no anchor for the specified metachain id."
         );
 

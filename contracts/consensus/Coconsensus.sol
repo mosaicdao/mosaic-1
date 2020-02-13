@@ -14,7 +14,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../anchor/ObserverI.sol";
+import "../anchor/ObserverInterface.sol";
 import "../block/BlockHeader.sol";
 import "../consensus/GenesisCoconsensus.sol";
 import "../consensus-gateway/ConsensusCogatewayI.sol";
@@ -108,7 +108,7 @@ contract Coconsensus is
     mapping (bytes32 /* metachainId */ => ProtocoreI) public protocores;
 
     /** Mapping of metachain id to the observers contract address. */
-    mapping (bytes32 /* metachainId */ => ObserverI) public observers;
+    mapping (bytes32 /* metachainId */ => ObserverInterface) public observers;
 
     /** Mapping of metachain id to the domain separators. */
     mapping (bytes32 /* metachainId */ => bytes32 /* domain separator */) public domainSeparators;
@@ -382,7 +382,7 @@ contract Coconsensus is
         );
 
         // Get the observer contract.
-        ObserverI observer = observers[_metachainId];
+        ObserverInterface observer = observers[_metachainId];
 
         // Anchor the state root.
         observer.anchorStateRoot(blockHeader.height, blockHeader.stateRoot);
@@ -522,7 +522,7 @@ contract Coconsensus is
         // Get the observer contract address from the genesis storage.
         address observerAddress = genesisObservers[_metachainId];
         if(observerAddress != address(0)) {
-            ObserverI observer = ObserverI(observerAddress);
+            ObserverInterface observer = ObserverInterface(observerAddress);
 
             // Update the observers mapping.
             observers[_metachainId] = observer;

@@ -36,7 +36,7 @@ contract OriginObserverTest is OriginObserver {
         testCoconsensus = _coconsensus;
     }
 
-    function getCoconsensus() public view returns (CoconsensusI) {
-        return CoconsensusI(testCoconsensus);
+    function getCoconsensus() public view returns (CoconsensusInterface) {
+        return CoconsensusInterface(testCoconsensus);
     }
 }
