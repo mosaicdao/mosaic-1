@@ -16,19 +16,19 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
-import "./ConsensusI.sol";
+import "./ConsensusInterface.sol";
 import "./CoreLifetime.sol";
 import "../anchor/AnchorInterface.sol";
 import "../axiom/AxiomInterface.sol";
 import "../block/BlockHeader.sol";
-import "../committee/CommitteeI.sol";
+import "../committee/CommitteeInterface.sol";
 import "../core/CoreI.sol";
 import "../reputation/ReputationI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../version/MosaicVersion.sol";
 import "../consensus-gateway/ConsensusGatewayI.sol";
 
-contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, ConsensusI {
+contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, ConsensusInterface {
 
     /* Usings */
 
@@ -232,7 +232,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
     mapping(bytes32 /* metachain id */ => CoreI) public assignments;
 
     /** Committees per metablock. */
-    mapping(bytes32 /* metablock hash */ => CommitteeI) public committees;
+    mapping(bytes32 /* metablock hash */ => CommitteeInterface) public committees;
 
     /** Committees' decisions per metablock. */
     mapping(bytes32 /* metablock hash */ => bytes32 /* decision */) public decisions;
@@ -567,8 +567,8 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             "Committee must have been formed to enter a validator."
         );
 
-        CommitteeI committee = committees[currentMetablock.metablockHash];
-        assert(committee != CommitteeI(0));
+        CommitteeInterface committee = committees[currentMetablock.metablockHash];
+        assert(committee != CommitteeInterface(0));
 
         committee.enterCommittee(_validator, _furtherMember);
     }
@@ -617,7 +617,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
         decisions[currentMetablock.metablockHash] = _committeeDecision;
 
-        CommitteeI committee = committees[currentMetablock.metablockHash];
+        CommitteeInterface committee = committees[currentMetablock.metablockHash];
 
         emit MetablockCommitteeDecided(
             address(committee),
@@ -1122,7 +1122,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         internal
         returns (address committeeAddress_)
     {
-        assert(committees[_metablockHash] == CommitteeI(0));
+        assert(committees[_metablockHash] == CommitteeInterface(0));
 
         committees[_metablockHash] = newCommittee(
             _metachainId,
@@ -1131,7 +1131,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             _metablockHash
         );
 
-        CommitteeI committee = committees[_metablockHash];
+        CommitteeInterface committee = committees[_metablockHash];
 
         committeeAddress_ = address(committee);
     }
@@ -1346,7 +1346,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         bytes32 _proposal
     )
         private
-        returns (CommitteeI committee_)
+        returns (CommitteeInterface committee_)
     {
         bytes memory committeeSetupData = abi.encodeWithSelector(
             COMMITTEE_SETUP_CALLPREFIX,
@@ -1357,7 +1357,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             _proposal
         );
 
-        committee_ = CommitteeI(axiom.newCommittee(committeeSetupData));
+        committee_ = CommitteeInterface(axiom.newCommittee(committeeSetupData));
     }
 
     /**

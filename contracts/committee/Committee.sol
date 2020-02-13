@@ -17,14 +17,14 @@ pragma solidity >=0.5.0 <0.6.0;
 import "../consensus/ConsensusModule.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
-import "./CommitteeI.sol";
+import "./CommitteeInterface.sol";
 
 
 /**
  * @title Committee
  * @author Benjamin Bollen - <ben@ost.com>
  */
-contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
+contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeInterface {
 
     /* Usings */
 
@@ -249,7 +249,7 @@ contract Committee is MasterCopyNonUpgradable, ConsensusModule, CommitteeI {
 
     function setup(
         bytes32 _metachainId,
-        ConsensusI _consensus,
+        ConsensusInterface _consensus,
         uint256 _committeeSize,
         bytes32 _dislocation,
         bytes32 _proposal

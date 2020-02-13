@@ -15,9 +15,9 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 import "../../committee/Committee.sol";
-import "../../consensus/ConsensusI.sol";
+import "../../consensus/ConsensusInterface.sol";
 
-contract CommitteeMockConsensus is ConsensusI {
+contract CommitteeMockConsensus is ConsensusInterface {
 
     /* Storage */
 

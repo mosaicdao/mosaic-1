@@ -189,7 +189,7 @@ contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
      *                                          for a validator.
      */
     function setup(
-        ConsensusI _consensus,
+        ConsensusInterface _consensus,
         ERC20I _most,
         uint256 _stakeMOSTAmount,
         ERC20I _wETH,

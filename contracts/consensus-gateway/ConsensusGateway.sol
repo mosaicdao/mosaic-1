@@ -21,7 +21,7 @@ import "./ERC20GatewayBase.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../message-bus/MessageBus.sol";
 import "../consensus/ConsensusModule.sol";
-import "../consensus/ConsensusI.sol";
+import "../consensus/ConsensusInterface.sol";
 import "../core/CoreI.sol";
 import "./ConsensusGatewayI.sol";
 
@@ -59,7 +59,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
      */
     function setup(
         bytes32 _metachainId,
-        ConsensusI _consensus,
+        ConsensusInterface _consensus,
         ERC20I _most,
         address _consensusCogateway,
         uint256 _maxStorageRootItems,

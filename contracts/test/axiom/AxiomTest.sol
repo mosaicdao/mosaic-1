@@ -53,7 +53,7 @@ contract AxiomTest is Axiom {
     {
 
     }
-    function setConsensus(ConsensusI _consensus) public {
+    function setConsensus(ConsensusInterface _consensus) public {
         consensus = _consensus;
     }
 }

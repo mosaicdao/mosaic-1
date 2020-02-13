@@ -278,7 +278,7 @@ contract Core is
     /* Special Functions */
 
     function setup(
-        ConsensusI _consensus,
+        ConsensusInterface _consensus,
         bytes32 _metachainId,
         uint256 _epochLength,
         uint256 _minValidators,

@@ -16,7 +16,7 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "./AxiomInterface.sol";
 import "../anchor/Anchor.sol"; // TASK: change this to factory, when new anchor is implemented.
-import "../consensus/ConsensusI.sol";
+import "../consensus/ConsensusInterface.sol";
 import "../proxies/ProxyFactory.sol";
 
 
@@ -213,7 +213,7 @@ contract Axiom is AxiomInterface, ProxyFactory, ConsensusModule {
         // which is deployed in next step.
         Proxy consensusProxy = createProxy(consensusMasterCopy, "");
 
-        ConsensusModule.setupConsensus(ConsensusI(address(consensusProxy)));
+        ConsensusModule.setupConsensus(ConsensusInterface(address(consensusProxy)));
 
         bytes memory reputationSetupData = abi.encodeWithSelector(
             REPUTATION_SETUP_CALLPREFIX,

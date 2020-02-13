@@ -14,18 +14,18 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "./ConsensusI.sol";
+import "./ConsensusInterface.sol";
 
 contract ConsensusModule {
 
     /** Consensus contract for which this committee was formed. */
-    ConsensusI public consensus;
+    ConsensusInterface public consensus;
 
     /**
      * @notice It sets address for consensus contract.
      * @param _consensus Address of consensus contract.
      */
-    function setupConsensus(ConsensusI _consensus) internal {
+    function setupConsensus(ConsensusInterface _consensus) internal {
         require(
             address(consensus) == address(0),
             "Consensus address is already present."

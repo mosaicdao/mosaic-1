@@ -16,7 +16,7 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "../reputation/ReputationI.sol";
 
-interface ConsensusI {
+interface ConsensusInterface {
 
     /**
      * @notice Gets the reputation contract address.

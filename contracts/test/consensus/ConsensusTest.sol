@@ -54,7 +54,7 @@ contract ConsensusTest is Consensus {
     )
         external
     {
-        committees[_metachainId] = CommitteeI(_committeeAddress);
+        committees[_metachainId] = CommitteeInterface(_committeeAddress);
     }
 
     function setReputation(address _reputation) external {
@@ -71,7 +71,7 @@ contract ConsensusTest is Consensus {
     }
 
     function setCommitteeProposal(
-        CommitteeI _committeeAddress,
+        CommitteeInterface _committeeAddress,
         bytes32 _proposal
     )
         external
