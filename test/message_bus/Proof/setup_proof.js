@@ -38,7 +38,7 @@ contract('Proof::setupProof', (accounts) => {
 
 
   contract('Negative Tests', async () => {
-    it('should fail when stateRootProvider address is empty', async () => {
+    it('should fail when setup is already done.', async () => {
       await proof.setupProofExternal(
         setupParams.storageAccount,
         setupParams.stateRootProvider,

@@ -131,22 +131,22 @@ contract('Proof::proveStorageAccount', async (accounts) => {
       );
     });
 
-    it('should pass when it is not proving already proved storage account', async () => {
+    it('should skip the proof verification if already proven for same block number', async () => {
       const gasEstimatedNewStorageAccount = await proof.proveStorageAccountExternal.estimateGas(
         new BN(ProveStorageAccount.blockNumber),
         ProveStorageAccount.rlpAccountNode,
-        ProveStorageAccount.rlpParentNodes
+        ProveStorageAccount.rlpParentNodes,
       );
 
       // setting storage account
       await proof.setStorageRootExternal(
         ProveStorageAccount.blockNumber,
-        ProveStorageAccount.storageHash
-      )
+        ProveStorageAccount.storageHash,
+      );
       const gasEstimatedExistingStorageAccount = await proof.proveStorageAccountExternal.estimateGas(
         new BN(ProveStorageAccount.blockNumber),
         ProveStorageAccount.rlpAccountNode,
-        ProveStorageAccount.rlpParentNodes
+        ProveStorageAccount.rlpParentNodes,
       );
 
       assert.strictEqual(

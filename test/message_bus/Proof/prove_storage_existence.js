@@ -49,8 +49,8 @@ contract('Proof::proveStorageExistence', async (accounts) => {
       ProveStorageExistence.storageHash,
     );
 
-    path = web3.utils.padLeft(ProveStorageExistence.messageHash,64)
-    path = path + web3.utils.padLeft("1",64)
+    path = web3.utils.padLeft(ProveStorageExistence.messageHash, 64);
+    path = path + web3.utils.padLeft('1', 64);
     path = web3.utils.sha3(path);
     path = web3.utils.sha3(path);
   });
@@ -93,7 +93,7 @@ contract('Proof::proveStorageExistence', async (accounts) => {
 
 
   contract('Positive Tests', async () => {
-    it('should pass when existence account proof matches', async () => {
+    it('should pass when desired storage is proven', async () => {
       await proof.proveStorageExistenceExternal(
         path,
         ProveStorageExistence.value,

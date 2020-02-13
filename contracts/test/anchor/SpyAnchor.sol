@@ -41,7 +41,7 @@ contract SpyAnchor is MasterCopyNonUpgradable, AnchorI{
         view
         returns (uint256)
     {
-        require(false, 'SpyAnchor::getLatestStateRootBlockHeight should not be called.');
+        require(false, "SpyAnchor::getLatestStateRootBlockHeight should not be called.");
     }
 
     /**
