@@ -15,7 +15,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 import "./MessageBox.sol";
-import "./StateRootI.sol";
+import "./StateRootInterface.sol";
 import "./Proof.sol";
 
 /**
@@ -94,7 +94,7 @@ contract MessageInbox is MessageBox, Proof {
         bytes32 _metachainId,
         address _messageOutbox,
         uint8 _outboxStorageIndex,
-        StateRootI _stateRootProvider,
+        StateRootInterface _stateRootProvider,
         uint256 _maxStorageRootItems
     )
         internal

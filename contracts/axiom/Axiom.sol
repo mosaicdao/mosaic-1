@@ -92,7 +92,7 @@ contract Axiom is AxiomInterface, ProxyFactory, ConsensusModule {
     address public consensusGatewayMasterCopy;
 
     /** Reputation contract address */
-    ReputationI public reputation;
+    ReputationInterface public reputation;
 
 
     /* Special Member Functions */
@@ -227,7 +227,7 @@ contract Axiom is AxiomInterface, ProxyFactory, ConsensusModule {
             _withdrawalCooldownPeriodInBlocks
         );
 
-        reputation = ReputationI(
+        reputation = ReputationInterface(
             address(
                 createProxy(
                     reputationMasterCopy,

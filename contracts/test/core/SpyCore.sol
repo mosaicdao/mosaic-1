@@ -1,9 +1,9 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-import "../../core/CoreI.sol";
+import "../../core/CoreInterface.sol";
 import "../../proxies/MasterCopyNonUpgradable.sol";
 
-contract SpyCore is MasterCopyNonUpgradable, CoreI{
+contract SpyCore is MasterCopyNonUpgradable, CoreInterface{
 
     uint256 public minimumValidatorCount = 3;
 

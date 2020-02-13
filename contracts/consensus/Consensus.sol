@@ -22,11 +22,11 @@ import "../anchor/AnchorInterface.sol";
 import "../axiom/AxiomInterface.sol";
 import "../block/BlockHeader.sol";
 import "../committee/CommitteeInterface.sol";
-import "../core/CoreI.sol";
-import "../reputation/ReputationI.sol";
+import "../core/CoreInterface.sol";
+import "../reputation/ReputationInterface.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../version/MosaicVersion.sol";
-import "../consensus-gateway/ConsensusGatewayI.sol";
+import "../consensus-gateway/ConsensusGatewayInterface.sol";
 
 contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, ConsensusInterface {
 
@@ -229,7 +229,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
     mapping(bytes32 /* metachain id */ => uint256 /* metablock tip */) public metablockTips;
 
     /** Assigned core for a given metachain id */
-    mapping(bytes32 /* metachain id */ => CoreI) public assignments;
+    mapping(bytes32 /* metachain id */ => CoreInterface) public assignments;
 
     /** Committees per metablock. */
     mapping(bytes32 /* metablock hash */ => CommitteeInterface) public committees;
@@ -244,10 +244,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
     mapping(address /* core */ => CoreLifetime /* coreLifetime */) public coreLifetimes;
 
     /** Assigned consensus gateways for a given metachain id */
-    mapping(bytes32 => ConsensusGatewayI) public consensusGateways;
+    mapping(bytes32 => ConsensusGatewayInterface) public consensusGateways;
 
     /** Reputation contract for validators */
-    ReputationI public reputation;
+    ReputationInterface public reputation;
 
     /** Axiom contract address */
     AxiomInterface public axiom;
@@ -343,7 +343,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         joinLimit = _joinLimit;
         gasTargetDelta = _gasTargetDelta;
         coinbaseSplitPerMille = _coinbaseSplitPerMille;
-        reputation = ReputationI(_reputation);
+        reputation = ReputationInterface(_reputation);
 
         axiom = AxiomInterface(msg.sender);
 
@@ -392,7 +392,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             "Metablock hash is 0."
         );
 
-        CoreI core = assignments[_metachainId];
+        CoreInterface core = assignments[_metachainId];
 
         require(
             msg.sender == address(core),
@@ -523,7 +523,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      */
     function enterCommittee(
         bytes32 _metachainId,
-        CoreI _core,
+        CoreInterface _core,
         address _validator,
         address _furtherMember
     )
@@ -535,7 +535,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         );
 
         require(
-            _core != CoreI(0),
+            _core != CoreInterface(0),
             "Core's address is 0."
         );
 
@@ -681,7 +681,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
         bytes32 metablockHash = goToCommittedRound(_metachainId);
 
-        CoreI core = assignments[_metachainId];
+        CoreInterface core = assignments[_metachainId];
         require(
             isCoreActive(core),
             "Core is not active."
@@ -737,10 +737,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
     )
         external
     {
-        CoreI core = assignments[_metachainId];
+        CoreInterface core = assignments[_metachainId];
 
         require(
-            core != CoreI(0),
+            core != CoreInterface(0),
             "Core does not exist for given metachain."
         );
 
@@ -784,10 +784,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
     )
         external
     {
-        CoreI core = assignments[_metachainId];
+        CoreInterface core = assignments[_metachainId];
 
         require(
-            core != CoreI(0),
+            core != CoreInterface(0),
             "Core does not exist for given metachain."
         );
 
@@ -812,7 +812,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
 
         if (validatorCount >= minValidatorCount) {
             coreLifetimes[address(core)] = CoreLifetime.genesis;
-            ConsensusGatewayI consensusGateway = consensusGateways[_metachainId];
+            ConsensusGatewayInterface consensusGateway = consensusGateways[_metachainId];
             assert(address(consensusGateway) != address(0));
             consensusGateway.declareOpenKernel(
                 address(core),
@@ -848,7 +848,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      */
     function logout(
         bytes32 _metachainId,
-        CoreI _core
+        CoreInterface _core
     )
         external
     {
@@ -858,7 +858,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         );
 
         require(
-            _core != CoreI(0),
+            _core != CoreInterface(0),
             "Core is 0."
         );
 
@@ -937,9 +937,9 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
                 consensusGatewaySetupCallData
             );
 
-        assignments[metachainId_] = CoreI(core);
+        assignments[metachainId_] = CoreInterface(core);
         anchors[metachainId_] = anchor;
-        consensusGateways[metachainId_] = ConsensusGatewayI(consensusGateway_);
+        consensusGateways[metachainId_] = ConsensusGatewayInterface(consensusGateway_);
 
         coreLifetimes[core] = CoreLifetime.creation;
         mosaicVersion_ = DOMAIN_SEPARATOR_VERSION;
@@ -988,10 +988,10 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
     )
         external
     {
-        CoreI core = assignments[_metachainId];
+        CoreInterface core = assignments[_metachainId];
 
         require(
-            core != CoreI(0),
+            core != CoreInterface(0),
             "No core exists for the metachain id."
         );
 
@@ -1077,7 +1077,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      * @param _core Core contract address.
      * Returns true if the specified address is a core.
      */
-    function isCoreRunning(CoreI _core)
+    function isCoreRunning(CoreInterface _core)
         internal
         view
         returns (bool)
@@ -1087,7 +1087,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             lifeTimeStatus == CoreLifetime.active;
     }
 
-    function isCoreActive(CoreI _core)
+    function isCoreActive(CoreInterface _core)
         internal
         view
         returns (bool isActive_)
@@ -1146,12 +1146,12 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      * @return Returns true, if the given validator is an active validator
      *         in the given core and has not been slashed.
      */
-    function isValidator(CoreI _core, address _validator)
+    function isValidator(CoreInterface _core, address _validator)
         internal
         view
         returns (bool isValidator_)
     {
-        assert(_core != CoreI(0));
+        assert(_core != CoreInterface(0));
 
         isValidator_ = _core.isValidator(_validator)
             && !reputation.isSlashed(_validator);
@@ -1179,7 +1179,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
     }
 
     function assertCommit(
-        CoreI _core,
+        CoreInterface _core,
         bytes32 _precommit,
         bytes32 _kernelHash,
         bytes32 _originObservation,
@@ -1201,7 +1201,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             "Committee decision does not match with committee lock."
         );
 
-        bytes32 metablockHash = CoreI(_core).hashMetablock(
+        bytes32 metablockHash = CoreInterface(_core).hashMetablock(
             _kernelHash,
             _originObservation,
             _dynasty,

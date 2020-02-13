@@ -14,7 +14,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../reputation/ReputationI.sol";
+import "../reputation/ReputationInterface.sol";
 
 interface ConsensusInterface {
 
@@ -26,7 +26,7 @@ interface ConsensusInterface {
     function reputation()
         external
         view
-        returns (ReputationI reputation_);
+        returns (ReputationInterface reputation_);
 
     /** @notice Gets cores' validators minimum count and join limit. */
     function coreValidatorThresholds()

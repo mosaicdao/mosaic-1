@@ -44,7 +44,7 @@ contract CommitteeMockConsensus is ConsensusInterface {
     function reputation()
         external
         view
-        returns (ReputationI)
+        returns (ReputationInterface)
     {
     }
 

@@ -16,10 +16,10 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
-import "./CoreI.sol";
+import "./CoreInterface.sol";
 import "./CoreStatusEnum.sol";
 import "../consensus/ConsensusModule.sol";
-import "../reputation/ReputationI.sol";
+import "../reputation/ReputationInterface.sol";
 import "../version/MosaicVersion.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../vote-message/VoteMessage.sol";
@@ -30,7 +30,7 @@ contract Core is
     MosaicVersion,
     CoreStatusEnum,
     VoteMessage,
-    CoreI
+    CoreInterface
 {
 
     /* Usings */
@@ -178,7 +178,7 @@ contract Core is
     uint256 public countLogOutMessages;
 
     /** Reputation contract */
-    ReputationI public reputation;
+    ReputationInterface public reputation;
 
     /** Creation kernel height */
     uint256 public creationKernelHeight;
@@ -283,7 +283,7 @@ contract Core is
         uint256 _epochLength,
         uint256 _minValidators,
         uint256 _joinLimit,
-        ReputationI _reputation,
+        ReputationInterface _reputation,
         uint256 _height,
         bytes32 _parent,
         uint256 _gasTarget,
@@ -319,7 +319,7 @@ contract Core is
         );
 
         require(
-            _reputation != ReputationI(0),
+            _reputation != ReputationInterface(0),
             "Reputation contract's address is null."
         );
 

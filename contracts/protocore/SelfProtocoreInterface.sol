@@ -1,6 +1,6 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-// Copyright 2019 OpenST Ltd.
+// Copyright 2020 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,18 +14,24 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-interface ReputationI {
+/**
+ * @title Self protocore interface
+ */
+interface SelfProtocoreInterface {
 
-    function isSlashed(address _validator) external view returns (bool);
-
-    function stake(
+    /**
+     * @notice Insert or remove validator. It inserts validator if not already
+     *         present and reputation is greater than 0. It removes validator
+     *         if it is present and reputation is 0.
+     *
+     * @param _validator Validator address to upsert.
+     * @param _height Validator start or end height to be updated.
+     * @param _reputation Validator's reputation value.
+     */
+    function upsertValidator(
         address _validator,
-        address _withdrawalAddress
+        uint256 _height,
+        uint256 _reputation
     )
-        external
-        returns (uint256);
-
-    function deregister(address _validator) external returns (uint256);
-
-    function getReputation(address _validator) external view returns (uint256);
+        external;
 }

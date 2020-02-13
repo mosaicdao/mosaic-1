@@ -22,10 +22,10 @@ import "../proxies/MasterCopyNonUpgradable.sol";
 import "../message-bus/MessageBus.sol";
 import "../consensus/ConsensusModule.sol";
 import "../consensus/ConsensusInterface.sol";
-import "../core/CoreI.sol";
-import "./ConsensusGatewayI.sol";
+import "../core/CoreInterface.sol";
+import "./ConsensusGatewayInterface.sol";
 
-contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, ConsensusModule, ConsensusGatewayI {
+contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, ConsensusModule, ConsensusGatewayInterface {
 
     /* Usings */
 
@@ -87,7 +87,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
             _metachainId,
             _consensusCogateway,
             _outboxStorageIndex,
-            StateRootI(stateRootProvider),
+            StateRootInterface(stateRootProvider),
             _maxStorageRootItems
         );
     }
@@ -179,7 +179,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
             "Core address is 0."
         );
 
-        (bytes32 openKernelHash, uint256 openKernelHeight) = CoreI(_core).getOpenKernel();
+        (bytes32 openKernelHash, uint256 openKernelHeight) = CoreInterface(_core).getOpenKernel();
 
         require(
             (openKernelHeight == currentMetablockHeight.add(1)) ||

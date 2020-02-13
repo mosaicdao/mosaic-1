@@ -15,7 +15,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 import "../lib/CircularBufferUint.sol";
-import "./StateRootI.sol";
+import "./StateRootInterface.sol";
 import "../lib/RLP.sol";
 import "../lib/MerklePatriciaProof.sol";
 import "../lib/BytesLib.sol";
@@ -31,7 +31,7 @@ contract Proof is CircularBufferUint {
     address public storageAccount;
 
     /** State root provider address. */
-    StateRootI public stateRootProvider;
+    StateRootInterface public stateRootProvider;
 
     /** Encoded account path. */
     bytes public encodedAccountPath;
@@ -57,7 +57,7 @@ contract Proof is CircularBufferUint {
      */
     function setupProof(
         address _storageAccount,
-        StateRootI _stateRootProvider,
+        StateRootInterface _stateRootProvider,
         uint256 _maxStorageRootItems
     )
         internal

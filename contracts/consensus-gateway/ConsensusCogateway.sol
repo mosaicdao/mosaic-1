@@ -20,7 +20,7 @@ import "../consensus/CoconsensusInterface.sol";
 import "../consensus-gateway/ConsensusGatewayBase.sol";
 import "../consensus-gateway/ERC20GatewayBase.sol";
 import "../message-bus/MessageBus.sol";
-import "../message-bus/StateRootI.sol";
+import "../message-bus/StateRootInterface.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
@@ -95,7 +95,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
             _metachainId,
             _consensusGateway,
             _outboxStorageIndex,
-            StateRootI(anchor),
+            StateRootInterface(anchor),
             _maxStorageRootItems
         );
     }

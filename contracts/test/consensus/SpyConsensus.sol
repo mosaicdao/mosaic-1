@@ -101,9 +101,9 @@ contract SpyConsensus is MasterCopyNonUpgradable, ConsensusInterface {
     function reputation()
         external
         view
-        returns (ReputationI reputation_)
+        returns (ReputationInterface reputation_)
     {
-        reputation_ = ReputationI(reputationAddress);
+        reputation_ = ReputationInterface(reputationAddress);
     }
 
     /**

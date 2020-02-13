@@ -15,7 +15,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 /** @title An interface to an get state root. */
-interface StateRootI {
+interface StateRootInterface {
 
     /**
      * @notice Gets the block number of latest committed state root.

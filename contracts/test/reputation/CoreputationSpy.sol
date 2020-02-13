@@ -14,10 +14,10 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../../reputation/CoreputationI.sol";
+import "../../reputation/CoreputationInterface.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
-contract CoreputationSpy is CoreputationI {
+contract CoreputationSpy is CoreputationInterface {
 
     using SafeMath for uint256;
 

@@ -58,12 +58,12 @@ contract ConsensusTest is Consensus {
     }
 
     function setReputation(address _reputation) external {
-        reputation = ReputationI(_reputation);
+        reputation = ReputationInterface(_reputation);
     }
 
     function setAssignment(
         bytes32 _metachainId,
-        CoreI _core
+        CoreInterface _core
     )
         external
     {
@@ -94,6 +94,6 @@ contract ConsensusTest is Consensus {
     )
         external
     {
-        consensusGateways[_metachainId] = ConsensusGatewayI(_consensusGateway);
+        consensusGateways[_metachainId] = ConsensusGatewayInterface(_consensusGateway);
     }
 }

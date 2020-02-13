@@ -90,17 +90,17 @@ contract CoconsensusTest is Coconsensus {
     function getCoreputation()
         internal
         view
-        returns (CoreputationI)
+        returns (CoreputationInterface)
     {
-        return CoreputationI(coreputation);
+        return CoreputationInterface(coreputation);
     }
 
     /** @notice Get the consensus cogateway contract address. */
     function getConsensusCogateway()
         internal
         view
-        returns (ConsensusCogatewayI)
+        returns (ConsensusCogatewayInterface)
     {
-        return ConsensusCogatewayI(consensusCogateway);
+        return ConsensusCogatewayInterface(consensusCogateway);
     }
 }
