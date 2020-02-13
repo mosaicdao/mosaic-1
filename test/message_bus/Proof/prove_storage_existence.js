@@ -50,7 +50,7 @@ contract('Proof::proveStorageExistence', async (accounts) => {
     );
 
     path = web3.utils.padLeft(ProveStorageExistence.messageHash, 64);
-    path = path + web3.utils.padLeft('1', 64);
+    path += web3.utils.padLeft('1', 64);
     path = web3.utils.sha3(path);
     path = web3.utils.sha3(path);
   });
