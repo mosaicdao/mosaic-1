@@ -14,19 +14,21 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-
 import "./CoreInterface.sol";
 import "./CoreStatusEnum.sol";
 import "../consensus/ConsensusModule.sol";
 import "../reputation/ReputationInterface.sol";
-import "../version/MosaicVersion.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
+import "../validator-set/ValidatorSet.sol";
+import "../version/MosaicVersion.sol";
 import "../vote-message/VoteMessage.sol";
+
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract Core is
     MasterCopyNonUpgradable,
     ConsensusModule,
+    ValidatorSet,
     MosaicVersion,
     CoreStatusEnum,
     VoteMessage,
@@ -43,6 +45,13 @@ contract Core is
     /** Emitted when new metablock is proposed */
     event MetablockProposed(bytes32 proposal);
 
+    /** Emitted when core status is changed. */
+    event CoreStatusUpdated(CoreStatus status);
+
+    /**  Emitted when core is opened for a first time after creation. */
+    event GenesisOriginObservationStored(uint256 genesisOriginObservationBlockNumber);
+
+
     /* Structs */
 
     /** The kernel of a meta-block header */
@@ -57,19 +66,6 @@ contract Core is
         uint256[] updatedReputation;
         /** Gas target to close the metablock */
         uint256 gasTarget;
-    }
-
-    struct Transition {
-        /** Kernel Hash */
-        bytes32 KernelHash;
-        /** Observation of the origin chain */
-        bytes32 originObservation;
-        /** Dynasty number of the metablockchain */
-        uint256 dynasty;
-        /** Accumulated gas on the metablockchain */
-        uint256 accumulatedGas;
-        /** Committee lock is the hash of the accumulated transaction root */
-        bytes32 committeeLock;
     }
 
     struct VoteCount {
@@ -102,19 +98,8 @@ contract Core is
         "Transition(bytes32 kernelHash,bytes32 originObservation,uint256 dynasty,uint256 accumulatedGas,bytes32 committeeLock)"
     );
 
-    /** EIP-712 type hash for a Vote Message */
-    bytes32 public constant VOTE_MESSAGE_TYPEHASH = keccak256(
-        "VoteMessage(bytes32 transitionHash,bytes32 source,bytes32 target,uint256 sourceBlockHeight,uint256 targetBlockHeight)"
-    );
-
-    /** Sentinel pointer for marking end of linked-list of validators */
-    address public constant SENTINEL_VALIDATORS = address(0x1);
-
     /** Sentinel pointer for marking end of linked-list of proposals */
     bytes32 public constant SENTINEL_PROPOSALS = bytes32(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
-
-    /** Maximum future end height, set for all active validators */
-    uint256 public constant MAX_FUTURE_END_HEIGHT = uint256(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
 
     /** Maximum validators that can join or logout in one metablock */
     uint256 public constant MAX_DELTA_VALIDATORS = uint256(10);
@@ -142,19 +127,6 @@ contract Core is
 
     /** Epoch length */
     uint256 public epochLength;
-
-    /** Validator begin height assigned to this core
-     * zero - not registered to this core, or started at height 0
-     * bigger than zero - begin height for active validators (given endHeight >= metablock height)
-     */
-    mapping(address => uint256) public validatorBeginHeight;
-
-    /** Validator end height assigned to this core
-     * zero - not registered to this core
-     * MAX_FUTURE_END_HEIGHT - for active validators (assert beginHeight <= metablock height)
-     * less than MAX_FUTURE_END_HEIGHT - for logged out validators
-     */
-    mapping(address => uint256) public validatorEndHeight;
 
     /** mapping of metablock height to Kernels */
     mapping(uint256 => Kernel) public kernels;
@@ -195,14 +167,8 @@ contract Core is
     /** Committed dynasty number */
     uint256 public committedDynasty;
 
-    /** Committed sourceBlockHeight */
-    uint256 public committedSourceBlockHeight;
-
-    // /** Closed transition object */
-    // Transition public closedTransition;
-
-    // /** Sealing vote message */
-    // VoteMessage public sealedVoteMessage;
+    /** Committed sourceBlockNumber */
+    uint256 public committedSourceBlockNumber;
 
     /** Map kernel height to linked list of proposals */
     mapping(uint256 => mapping(bytes32 => bytes32)) proposals;
@@ -216,14 +182,14 @@ contract Core is
     /** Precommitment to a proposal */
     bytes32 public precommit;
 
-    /** Precommitment closure block height */
-    uint256 public precommitClosureBlockHeight;
+    /** Precommitment closure block number */
+    uint256 public precommitClosureBlockNumber;
 
     /**
-     * Block number at which core status is changed to creation.
-     * It will be used by validators to create GenesisFile.
+     * Block number at which core status is changed from creation to opened.
+     * The initial validators are now known and they can create the genesis file.
      */
-    uint256 public rootOriginObservationBlockHeight;
+    uint256 public genesisOriginObservationBlockNumber;
 
 
     /* Modifiers */
@@ -268,7 +234,7 @@ contract Core is
     modifier duringPrecommitmentWindow()
     {
         require(
-            block.number <= precommitClosureBlockHeight,
+            block.number <= precommitClosureBlockNumber,
             "The precommitment window must be open."
         );
         _;
@@ -289,7 +255,7 @@ contract Core is
         uint256 _gasTarget,
         uint256 _dynasty,
         uint256 _accumulatedGas,
-        uint256 _sourceBlockHeight
+        uint256 _sourceBlockNumber
     )
         external
     {
@@ -323,12 +289,6 @@ contract Core is
             "Reputation contract's address is null."
         );
 
-        require(
-            (_height == uint256(0) && _parent == bytes32(0))
-            || (_height != uint256(0) && _parent != bytes32(0)),
-            "Height and parent can be 0 only together."
-        );
-
         domainSeparator = keccak256(
             abi.encode(
                 DOMAIN_SEPARATOR_TYPEHASH,
@@ -340,6 +300,8 @@ contract Core is
         );
 
         setupConsensus(_consensus);
+
+        setupValidatorSet(_height);
 
         coreStatus = CoreStatus.created;
 
@@ -360,7 +322,9 @@ contract Core is
 
         committedDynasty = _dynasty;
         committedAccumulatedGas = _accumulatedGas;
-        committedSourceBlockHeight = _sourceBlockHeight;
+        committedSourceBlockNumber = _sourceBlockNumber;
+
+        emit CoreStatusUpdated(coreStatus);
     }
 
 
@@ -380,10 +344,10 @@ contract Core is
      *          - committee lock (transition root hash) is not 0
      *          - source blockhash is not 0
      *          - target blockhash is not 0
-     *          - source block height is strictly greater than committed
-     *            block height
-     *          - source block height is a checkpoint
-     *          - target block height is +1 epoch of the source block height
+     *          - source block number is strictly greater than committed
+     *            block number
+     *          - source block number is a checkpoint
+     *          - target block number is +1 epoch of the source block number
      *          - a proposal matching with the input parameters does
      *            not exist in the core
      *
@@ -395,9 +359,9 @@ contract Core is
      *                       metablock.
      * @param _source Source blockhash of a vote message for a proposed metablock.
      * @param _target Target blockhash of a vote message for a proposed metablock.
-     * @param _sourceBlockHeight Source block height of a vote message for a
+     * @param _sourceBlockNumber Source block number of a vote message for a
      *                           proposed metablock.
-     * @param _targetBlockHeight Target block height of a vote message for a
+     * @param _targetBlockNumber Target block number of a vote message for a
      *                           proposed metablock.
      *
      * @return proposal_ Returns a proposal based on input parameters.
@@ -410,8 +374,8 @@ contract Core is
         bytes32 _committeeLock,
         bytes32 _source,
         bytes32 _target,
-        uint256 _sourceBlockHeight,
-        uint256 _targetBlockHeight
+        uint256 _sourceBlockNumber,
+        uint256 _targetBlockNumber
     )
         external
         whileMetablockOpen
@@ -446,16 +410,16 @@ contract Core is
             "Target blockhash must not be null."
         );
         require(
-            _sourceBlockHeight > committedSourceBlockHeight,
-            "Source block height must strictly increase."
+            _sourceBlockNumber > committedSourceBlockNumber,
+            "Source block number must strictly increase."
         );
         require(
-            (_sourceBlockHeight % epochLength) == 0,
-            "Source block height must be a checkpoint."
+            (_sourceBlockNumber % epochLength) == 0,
+            "Source block number must be a checkpoint."
         );
         require(
-            _targetBlockHeight == _sourceBlockHeight.add(epochLength),
-            "Target block height must equal source block height plus one."
+            _targetBlockNumber == _sourceBlockNumber.add(epochLength),
+            "Target block number must equal source block number plus one."
         );
 
         bytes32 transitionHash = hashTransition(
@@ -471,8 +435,8 @@ contract Core is
             transitionHash,
             _source,
             _target,
-            _sourceBlockHeight,
-            _targetBlockHeight
+            _sourceBlockNumber,
+            _targetBlockNumber
         );
 
         // insert proposal, reverts if proposal already inserted
@@ -568,9 +532,9 @@ contract Core is
      *                provided metablock.
      * @param _target Target blockhash of a vote message for a
      *                provided metablock.
-     * @param _sourceBlockHeight Source block height of a vote message for a
+     * @param _sourceBlockNumber Source block number of a vote message for a
      *                           provided metablock.
-     * @param _targetBlockHeight Target block height of a vote message for a
+     * @param _targetBlockNumber Target block number of a vote message for a
      *                           provided metablock.
      *
      * @return The precommit's hash.
@@ -583,8 +547,8 @@ contract Core is
         bytes32 _committeeLock,
         bytes32 _source,
         bytes32 _target,
-        uint256 _sourceBlockHeight,
-        uint256 _targetBlockHeight
+        uint256 _sourceBlockNumber,
+        uint256 _targetBlockNumber
     )
         public
         view
@@ -603,8 +567,8 @@ contract Core is
             transitionHash,
             _source,
             _target,
-            _sourceBlockHeight,
-            _targetBlockHeight
+            _sourceBlockNumber,
+            _targetBlockNumber
         );
     }
 
@@ -618,14 +582,14 @@ contract Core is
      *
      * @param _committedDynasty Dynasty of an open metablock.
      * @param _committedAccumulatedGas Accumulated gas in an open metablock.
-     * @param _committedSourceBlockHeight Source block height of a vote message
+     * @param _committedSourceBlockNumber Source block number of a vote message
      *                                    for an open metablock.
      * @param _deltaGasTarget Gas target delta for a new metablock.
      */
     function openMetablock(
         uint256 _committedDynasty,
         uint256 _committedAccumulatedGas,
-        uint256 _committedSourceBlockHeight,
+        uint256 _committedSourceBlockNumber,
         uint256 _deltaGasTarget
     )
         external
@@ -636,7 +600,7 @@ contract Core is
 
         committedDynasty = _committedDynasty;
         committedAccumulatedGas = _committedAccumulatedGas;
-        committedSourceBlockHeight = _committedSourceBlockHeight;
+        committedSourceBlockNumber = _committedSourceBlockNumber;
 
         uint256 nextKernelHeight = openKernelHeight.add(1);
         Kernel storage nextKernel = kernels[nextKernelHeight];
@@ -720,16 +684,26 @@ contract Core is
             uint256 beginHeight_
         )
     {
+        require(
+            _validator != address(0),
+            "Validator must not be null address."
+        );
+        require(
+            validatorEndHeight[_validator] == 0,
+            "Validator must not already be part of this core."
+        );
+
         // during created state, validators join at creation kernel height
-        insertValidator(_validator, creationKernelHeight);
+        insertValidatorInternal(_validator, creationKernelHeight);
 
         Kernel storage creationKernel = kernels[creationKernelHeight];
         countValidators = creationKernel.updatedValidators.push(_validator);
         // TASK: reputation can be uint64, and initial rep set properly
         creationKernel.updatedReputation.push(uint256(1));
         if (countValidators >= minimumValidatorCount) {
+            assert(countValidators == minimumValidatorCount);
             quorum = calculateQuorum(countValidators);
-            precommitClosureBlockHeight = CORE_OPEN_VOTES_WINDOW;
+            precommitClosureBlockNumber = CORE_OPEN_VOTES_WINDOW;
             openKernelHash = hashKernel(
                 creationKernelHeight,
                 creationKernel.parent,
@@ -737,17 +711,20 @@ contract Core is
                 creationKernel.updatedReputation,
                 creationKernel.gasTarget
             );
+            genesisOriginObservationBlockNumber = block.number;
+            // with the initial validator set determined, move the active height for joining up.
+            ValidatorSet.incrementActiveHeightInternal(creationKernelHeight.add(1));
+            emit GenesisOriginObservationStored(genesisOriginObservationBlockNumber);
+
             coreStatus = CoreStatus.opened;
-            // Core status would be changed to `opened`.
-            // So `rootOriginObservationBlockHeight` would be set once.
-            rootOriginObservationBlockHeight = block.number;
+            emit CoreStatusUpdated(coreStatus);
 
             newProposalSet();
         }
 
+        // TODO (ben): clean up redundant variables
         validatorCount_ = countValidators;
         minValidatorCount_ = minimumValidatorCount;
-
         beginHeight_ = creationKernelHeight;
     }
 
@@ -774,6 +751,14 @@ contract Core is
         returns (uint256 beginHeight_)
     {
         require(
+            _validator != address(0),
+            "Validator must not be null address."
+        );
+        require(
+            validatorEndHeight[_validator] == 0,
+            "Validator must not already be part of this core."
+        );
+        require(
             countValidators
             .add(countJoinMessages)
             .sub(countLogOutMessages) < joinLimit,
@@ -788,10 +773,9 @@ contract Core is
 
         uint256 nextKernelHeight = openKernelHeight.add(1);
 
-        // insertValidator requires validator cannot join twice
+        // insertValidatorInternal asserts validator cannot join twice
         // insert validator starting from next metablock height
-        insertValidator(_validator, nextKernelHeight);
-
+        insertValidatorInternal(_validator, nextKernelHeight);
         Kernel storage nextKernel = kernels[nextKernelHeight];
         nextKernel.updatedValidators.push(_validator);
         // TASK: reputation can be uint64, and initial rep set properly.
@@ -823,6 +807,18 @@ contract Core is
         returns (uint256 nextKernelHeight_)
     {
         require(
+            _validator != address(0),
+            "Validator must not be null address."
+        );
+        require(
+            validatorBeginHeight[_validator] <= openKernelHeight,
+            "Validator must have begun."
+        );
+        require(
+            validatorEndHeight[_validator] == MAX_FUTURE_END_HEIGHT,
+            "Validator must be active."
+        );
+        require(
             countValidators
             .add(countJoinMessages)
             .sub(countLogOutMessages) > minimumValidatorCount,
@@ -835,9 +831,10 @@ contract Core is
 
         nextKernelHeight_ = openKernelHeight.add(1);
 
-        // removeValidator performs necessary requirements
-        // remove validator from next metablock height
-        removeValidator(_validator, nextKernelHeight_);
+        // removeValidatorInternal() asserts validator is currently in the
+        // validator set and not already logged out.
+        // Removes validator from next metablock height.
+        removeValidatorInternal(_validator, nextKernelHeight_);
 
         Kernel storage nextKernel = kernels[nextKernelHeight_];
         nextKernel.updatedValidators.push(_validator);
@@ -863,21 +860,14 @@ contract Core is
     /* Public functions */
 
     /**
-     * @notice Validator is active if open kernel height is
-     *           - greater or equal than validator's begin height
-     *           - and, less or equal than validator's end height
+     * @notice Validator is active if it is validator set at open kernel height.
      */
     function isValidator(address _account)
         public
         view
         returns (bool)
     {
-        // Validator must have a begin height less than or equal to current metablock height.
-        // Validator must have an end height higher than or equal current metablock height.
-        // Validator must be registered to this core.
-        return (validatorBeginHeight[_account] <= openKernelHeight) &&
-            (validatorEndHeight[_account] >= openKernelHeight) &&
-            (validatorEndHeight[_account] > uint256(0));
+        return inValidatorSet(_account, openKernelHeight);
     }
 
     function calculateQuorum(uint256 _count)
@@ -908,8 +898,10 @@ contract Core is
         if (coreStatus == CoreStatus.opened) {
             coreStatus = CoreStatus.precommitted;
             precommit = _proposal;
-            precommitClosureBlockHeight = block.number.add(CORE_LAST_VOTES_WINDOW);
+            precommitClosureBlockNumber = block.number.add(CORE_LAST_VOTES_WINDOW);
             consensus.precommitMetablock(metachainId, openKernelHeight, _proposal);
+
+            emit CoreStatusUpdated(coreStatus);
         }
     }
 
@@ -994,66 +986,6 @@ contract Core is
         }
         delete proposals[_height][deleteProposal];
         delete voteCounts[deleteProposal];
-    }
-
-    /**
-     * @notice Inserts a validator in the core and sets begin and end heights
-     *         of validator.
-     *
-     * @dev Function requires:
-     *          - validator's address is not null
-     *          - begin height is greater or equal than open kernel height
-     *          - validator is not part of the core
-     */
-    function insertValidator(address _validator, uint256 _beginHeight)
-        internal
-    {
-        require(
-            _validator != address(0),
-            "Validator must not be null address."
-        );
-        assert(_beginHeight >= openKernelHeight);
-        require(
-            validatorEndHeight[_validator] == 0,
-            "Validator must not already be part of this core."
-        );
-        assert(validatorBeginHeight[_validator] == 0);
-        validatorBeginHeight[_validator] = _beginHeight;
-        validatorEndHeight[_validator] = MAX_FUTURE_END_HEIGHT;
-        // update validator count upon new metablock opening
-    }
-
-    /**
-     * @notice Removes a validator.
-     *
-     * @dev Function requires:
-     *          - address of a validator is not 0
-     *          - the given end height of a validator is bigger than open
-     *            kernel height
-     *          - validator must have begun
-     *          - validator must be active
-     */
-    function removeValidator(address _validator, uint256 _endHeight)
-        internal
-    {
-        require(
-            _validator != address(0),
-            "Validator must not be null address."
-        );
-        require(
-            _endHeight > openKernelHeight,
-            "End height cannot be less or equal than kernel height."
-        );
-        require(
-            validatorBeginHeight[_validator] <= openKernelHeight,
-            "Validator must have begun."
-        );
-        require(
-            validatorEndHeight[_validator] == MAX_FUTURE_END_HEIGHT,
-            "Validator must be active."
-        );
-        validatorEndHeight[_validator] = _endHeight;
-        // update validator count upon new metablock opening
     }
 
     /**

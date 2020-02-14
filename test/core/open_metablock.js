@@ -107,7 +107,7 @@ async function proposeMetablock(
     proposalArgs.committeeLock,
     proposalArgs.source,
     proposalArgs.target,
-    proposalArgs.sourceBlockHeight,
+    proposalArgs.sourceBlockNumber,
     proposalArgs.targetBlockHeight,
   );
 
@@ -119,7 +119,7 @@ async function proposeMetablock(
     proposalArgs.committeeLock,
     proposalArgs.source,
     proposalArgs.target,
-    proposalArgs.sourceBlockHeight,
+    proposalArgs.sourceBlockNumber,
     proposalArgs.targetBlockHeight,
   );
 
@@ -141,7 +141,7 @@ contract('Core::openMetablock', (accounts) => {
       dynasty: new BN(1),
       accumulatedGas: new BN(1),
       source: accountProvider.get(),
-      sourceBlockHeight: new BN(100),
+      sourceBlockNumber: new BN(100),
     };
 
     config.consensus = await CoreUtils.createConsensusCore(
@@ -154,7 +154,7 @@ contract('Core::openMetablock', (accounts) => {
       config.consensusCoreArgs.gasTarget,
       config.consensusCoreArgs.dynasty,
       config.consensusCoreArgs.accumulatedGas,
-      config.consensusCoreArgs.sourceBlockHeight,
+      config.consensusCoreArgs.sourceBlockNumber,
       { from: accountProvider.get() },
     );
 
@@ -174,10 +174,10 @@ contract('Core::openMetablock', (accounts) => {
       committeeLock: CoreUtils.randomSha3(),
       source: CoreUtils.randomSha3(),
       target: CoreUtils.randomSha3(),
-      sourceBlockHeight: config.consensusCoreArgs.sourceBlockHeight
+      sourceBlockNumber: config.consensusCoreArgs.sourceBlockNumber
         .add(config.consensusCoreArgs.epochLength
           .mul(new BN(2))),
-      targetBlockHeight: config.consensusCoreArgs.sourceBlockHeight
+      targetBlockHeight: config.consensusCoreArgs.sourceBlockNumber
         .add(config.consensusCoreArgs.epochLength
           .mul(new BN(3))),
     };
@@ -194,7 +194,7 @@ contract('Core::openMetablock', (accounts) => {
         config.consensus.openMetablock(
           config.proposalArgs.dynasty,
           config.proposalArgs.accumulatedGas,
-          config.proposalArgs.sourceBlockHeight,
+          config.proposalArgs.sourceBlockNumber,
           config.newMetablockDeltaGasTarget,
         ),
         'The core must be precommitted.',
@@ -212,7 +212,7 @@ contract('Core::openMetablock', (accounts) => {
         config.core.openMetablock(
           config.proposalArgs.dynasty,
           config.proposalArgs.accumulatedGas,
-          config.proposalArgs.sourceBlockHeight,
+          config.proposalArgs.sourceBlockNumber,
           config.newMetablockDeltaGasTarget,
         ),
         'Only the consensus contract can call this function.',
@@ -246,7 +246,7 @@ contract('Core::openMetablock', (accounts) => {
       await config.consensus.openMetablock(
         config.proposalArgs.dynasty,
         config.proposalArgs.accumulatedGas,
-        config.proposalArgs.sourceBlockHeight,
+        config.proposalArgs.sourceBlockNumber,
         config.newMetablockDeltaGasTarget,
       );
 
@@ -260,9 +260,9 @@ contract('Core::openMetablock', (accounts) => {
         committedAccumulatedGas.eq(config.proposalArgs.accumulatedGas),
       );
 
-      const committedSourceBlockHeight = await config.core.committedSourceBlockHeight();
+      const committedSourceBlockNumber = await config.core.committedSourceBlockNumber();
       assert.isOk(
-        committedSourceBlockHeight.eq(config.proposalArgs.sourceBlockHeight),
+        committedSourceBlockNumber.eq(config.proposalArgs.sourceBlockNumber),
       );
 
       const openKernelHeight = await config.core.openKernelHeight();

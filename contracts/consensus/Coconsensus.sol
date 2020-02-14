@@ -37,7 +37,6 @@ contract Coconsensus is
     VoteMessage,
     MosaicVersion
 {
-
     /* Usings */
 
     using SafeMath for uint256;

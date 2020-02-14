@@ -14,10 +14,10 @@
 
 'use strict';
 
-const BN = require('../../node_modules/bn.js/lib/bn');
-const { AccountProvider } = require('../test_lib/utils.js');
-const Utils = require('../test_lib/utils.js');
-const ConsensusGatewayUtils = require('./utils');
+const BN = require('bn.js');
+const { AccountProvider } = require('../../test_lib/utils.js');
+const Utils = require('../../test_lib/utils.js');
+const ConsensusGatewayUtils = require('../utils');
 
 const SpyCoconsensus = artifacts.require('SpyCoconsensus');
 const ConsensusCogateway = artifacts.require('ConsensusCogateway');

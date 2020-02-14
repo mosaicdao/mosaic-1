@@ -174,6 +174,22 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
     /* Public Functions */
 
     /**
+     * @notice inValidatorSet() function checks if a validator is in
+     *         validator set for the given height.
+     */
+    function inValidatorSet(address _validator, uint256 _height)
+        public
+        view
+        returns (bool)
+    {
+        assert(selfProtocore != address(0));
+        return ValidatorSetAbstract(selfProtocore).inValidatorSet(
+            _validator,
+            _height
+        );
+    }
+
+    /**
      * @notice inForwardValidatorSet() function calls on SelfProtocore contract
      *         to query the forward validator set.
      */
@@ -183,7 +199,7 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
         returns (bool)
     {
         assert(selfProtocore != address(0));
-        return ForwardValidatorSetAbstract(selfProtocore).inForwardValidatorSet(
+        return ValidatorSetAbstract(selfProtocore).inForwardValidatorSet(
             _validator,
             _height
         );
@@ -199,7 +215,7 @@ contract OriginProtocore is MasterCopyNonUpgradable, GenesisOriginProtocore, Pro
         returns (uint256)
     {
         assert(selfProtocore != address(0));
-        return ForwardValidatorSetAbstract(selfProtocore).forwardValidatorSetCount(
+        return ValidatorSetAbstract(selfProtocore).forwardValidatorSetCount(
             _height
         );
     }

@@ -71,7 +71,7 @@ contract('CoconsensusGateway::confirmOpenKernel', (accounts) => {
     );
 
     await consensusCogateway.setMetablock(metablockHeight);
-    await consensusCogateway.setStorageRoots(
+    await consensusCogateway.setStorageRoot(
       confirmOpenKernelParams.blockHeight,
       DeclareOpenKernel.storageHash,
     );
