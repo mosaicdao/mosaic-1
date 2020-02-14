@@ -14,16 +14,16 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-
 import "./ConsensusGatewayBase.sol";
 import "./ERC20GatewayBase.sol";
+import "../consensus/ConsensusInterface.sol";
+import "../consensus/ConsensusModule.sol";
+import "../core/CoreInterface.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../message-bus/MessageBus.sol";
-import "../consensus/ConsensusModule.sol";
-import "../consensus/ConsensusInterface.sol";
-import "../core/CoreInterface.sol";
 import "./ConsensusGatewayInterface.sol";
+
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, ConsensusModule, ConsensusGatewayInterface {
 

@@ -14,11 +14,11 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-
-import "../ERC20I.sol";
 import "../consensus/ConsensusModule.sol";
+import "../ERC20I.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
+
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract Reputation is MasterCopyNonUpgradable, ConsensusModule {
 

@@ -14,9 +14,9 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import "../core/MockCore.sol";
 import "../../consensus/ConsensusInterface.sol";
 import "../../reputation/ReputationInterface.sol";
-import "../core/MockCore.sol";
 
 contract MockConsensus is ConsensusInterface, ReputationInterface {
 

@@ -14,19 +14,19 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-
 import "./ConsensusInterface.sol";
 import "./CoreLifetime.sol";
 import "../anchor/AnchorInterface.sol";
 import "../axiom/AxiomInterface.sol";
 import "../block/BlockHeader.sol";
 import "../committee/CommitteeInterface.sol";
+import "../consensus-gateway/ConsensusGatewayInterface.sol";
 import "../core/CoreInterface.sol";
 import "../reputation/ReputationInterface.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../version/MosaicVersion.sol";
-import "../consensus-gateway/ConsensusGatewayInterface.sol";
+
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, ConsensusInterface {
 

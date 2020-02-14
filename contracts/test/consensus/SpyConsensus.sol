@@ -1,8 +1,8 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-import "../../proxies/MasterCopyNonUpgradable.sol";
-import "../../consensus/ConsensusInterface.sol";
 import "../../axiom/AxiomInterface.sol";
+import "../../consensus/ConsensusInterface.sol";
+import "../../proxies/MasterCopyNonUpgradable.sol";
 
 contract SpyConsensus is MasterCopyNonUpgradable, ConsensusInterface {
 

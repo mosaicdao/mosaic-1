@@ -1,7 +1,7 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-import "../../proxies/MasterCopyNonUpgradable.sol";
 import "../../committee/CommitteeInterface.sol";
+import "../../proxies/MasterCopyNonUpgradable.sol";
 
 // Copyright 2019 OpenST Ltd.
 //
