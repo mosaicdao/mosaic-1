@@ -28,7 +28,7 @@ contract('CoConsensusgateway::proveConsensusGateway', (accounts) => {
 
   const setupParams = {
     metachainId: Utils.getRandomHash(),
-    utmost: accountProvider.get(),
+    utBase: accountProvider.get(),
     consensusGateway: accountProvider.get(),
     outboxStorageIndex: new BN(1),
     maxStorageRootItems: new BN(100),
@@ -54,7 +54,7 @@ contract('CoConsensusgateway::proveConsensusGateway', (accounts) => {
     await consensusCogateway.setup(
       setupParams.metachainId,
       setupParams.coConsensus.address,
-      setupParams.utmost,
+      setupParams.utBase,
       ProveConsensusGatewayProof.address,
       setupParams.outboxStorageIndex,
       setupParams.maxStorageRootItems,

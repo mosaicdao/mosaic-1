@@ -15,13 +15,13 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 /**
- * @title Genesis Utmost contract.
+ * @title Genesis UtBase contract.
  */
-contract GenesisUtmost {
+contract GenesisUtBase {
 
      /* Constants */
 
-    /** Total initial supply value for Utmost token */
+    /** Total initial supply value for UtBase token */
     uint256 public genesisTotalSupply;
 
 }

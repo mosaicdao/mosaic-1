@@ -81,16 +81,11 @@ contract UtilityToken is ERC20Token {
      *      account. Calls the internal burn function.
      * @param _account The account whose tokens will be burnt.
      * @param _value The amount that will be burnt.
-     *
-     * @return success_ `true` for a successful burn, `false` otherwise.
      */
     function burn(address _account, uint256 _value)
         external
-        returns (bool success_)
     {
         _burn(_account, _value);
-
-        success_ = true;
     }
 
     /**
@@ -101,16 +96,11 @@ contract UtilityToken is ERC20Token {
      *      account. Uses the internal _burnFrom function.
      * @param _account The account whose tokens will be burnt.
      * @param _value The amount that will be burnt.
-     *
-     * @return success_ `true` for a successful burnFrom, `false` otherwise.
      */
     function burnFrom(address _account, uint256 _value)
         external
-        returns (bool success_)
     {
         _burnFrom(_account, _value);
-
-        success_ = true;
     }
 
 

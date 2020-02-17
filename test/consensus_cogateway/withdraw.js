@@ -25,7 +25,7 @@ const Utils = require('../test_lib/utils.js');
 contract('ConsensusCogateway::withdraw', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
   let param;
-  let utmost;
+  let utBase;
 
   let consensusCogateway;
   beforeEach(async () => {
@@ -42,8 +42,8 @@ contract('ConsensusCogateway::withdraw', (accounts) => {
       feeGasLimit: new BN(1),
     };
 
-    utmost = await Utils.deployMockToken(param.owner);
-    param.utmostAddress = utmost.address;
+    utBase = await Utils.deployMockToken(param.owner);
+    param.utBaseAddress = utBase.address;
 
     const consensusConfig = {
       metachainId: param.metachainId,
@@ -74,7 +74,7 @@ contract('ConsensusCogateway::withdraw', (accounts) => {
     await consensusCogateway.setup(
       param.metachainId,
       consensus.address,
-      param.utmostAddress,
+      param.utBaseAddress,
       param.consensusGateway,
       new BN(4),
       param.maxStorageRootItems,
@@ -83,9 +83,9 @@ contract('ConsensusCogateway::withdraw', (accounts) => {
   });
 
   it('should successfully withdraw', async () => {
-    const beforeUtmostBalanceWithdrawer = await utmost.balanceOf(param.owner);
+    const beforeutBaseBalanceWithdrawer = await utBase.balanceOf(param.owner);
 
-    await utmost.approve(consensusCogateway.address, param.amount, {
+    await utBase.approve(consensusCogateway.address, param.amount, {
       from: param.owner,
     });
 
@@ -103,21 +103,21 @@ contract('ConsensusCogateway::withdraw', (accounts) => {
       param.feeGasLimit,
     );
 
-    const afterUtmostBalanceWithdrawer = await utmost.balanceOf(param.owner);
+    const afterUtBaseBalanceWithdrawer = await utBase.balanceOf(param.owner);
 
     const messageStatus = await consensusCogateway.outbox.call(messageHash);
 
     assert.isOk(messageStatus === true, 'Message status must be true');
 
     assert.isOk(
-      afterUtmostBalanceWithdrawer.eq(
-        beforeUtmostBalanceWithdrawer.sub(param.amount),
+      afterUtBaseBalanceWithdrawer.eq(
+        beforeutBaseBalanceWithdrawer.sub(param.amount),
       ),
       'Deposit amount must be transferred from redeemer.'
-        + ` Expected balance is ${beforeUtmostBalanceWithdrawer
+        + ` Expected balance is ${beforeutBaseBalanceWithdrawer
           .sub(param.amount)
           .toString(10)} but`
-        + `found ${afterUtmostBalanceWithdrawer.toString(10)}`,
+        + `found ${afterUtBaseBalanceWithdrawer.toString(10)}`,
     );
   });
 });

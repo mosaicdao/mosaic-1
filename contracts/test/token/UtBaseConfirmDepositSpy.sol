@@ -17,9 +17,9 @@ pragma solidity >=0.5.0 <0.6.0;
 import "../../utility-token/UtilityTokenInterface.sol";
 
 /**
- * @title Utmost spy contract to test ConsensusCogateway::confirmDeposit.
+ * @title UtBase spy contract to test ConsensusCogateway::confirmDeposit.
  */
-contract UtmostConfirmDepositSpy is UtilityTokenInterface {
+contract UtBaseConfirmDepositSpy is UtilityTokenInterface {
 
     /* Storage */
 
