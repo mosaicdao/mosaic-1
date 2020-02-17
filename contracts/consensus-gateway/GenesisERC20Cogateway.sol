@@ -23,7 +23,7 @@ contract GenesisERC20Cogateway {
 
     /* Storage */
 
-    /** Metachain id of the origin chain. */
+    /** Metachain id of the auxiliary chain. */
     bytes32 public genesisMetachainId;
 
     /** ERC20Gateway address */
@@ -36,5 +36,5 @@ contract GenesisERC20Cogateway {
     uint256 public genesisMaxStorageRootItems;
 
     /** Outbox storage index */
-    uint8 public genesisOutboxStoreageIndex;
+    uint8 public genesisOutboxStorageIndex;
 }
