@@ -54,7 +54,7 @@ contract MockConsensus is ConsensusInterface, ReputationInterface {
 
         mockCore = new MockCore();
         mockCore.setup(
-			ConsensusInterface(address(this)),
+            ConsensusInterface(address(this)),
             _metachainId,
             _epochLength,
             minValidatorCount,
