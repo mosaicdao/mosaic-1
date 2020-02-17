@@ -14,11 +14,11 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../../consensus/ConsensusI.sol";
-import "../../reputation/ReputationI.sol";
 import "../core/MockCore.sol";
+import "../../consensus/ConsensusInterface.sol";
+import "../../reputation/ReputationInterface.sol";
 
-contract MockConsensus is ConsensusI, ReputationI {
+contract MockConsensus is ConsensusInterface, ReputationInterface {
 
     /* Storage */
 
@@ -54,12 +54,12 @@ contract MockConsensus is ConsensusI, ReputationI {
 
         mockCore = new MockCore();
         mockCore.setup(
-			ConsensusI(address(this)),
+            ConsensusInterface(address(this)),
             _metachainId,
             _epochLength,
             minValidatorCount,
             validatorJoinLimit,
-            ReputationI(this),
+            ReputationInterface(this),
             _height,
             _parent,
             _gasTarget,
@@ -138,7 +138,7 @@ contract MockConsensus is ConsensusI, ReputationI {
     function reputation()
         external
         view
-        returns (ReputationI)
+        returns (ReputationInterface)
     {
         return this;
     }

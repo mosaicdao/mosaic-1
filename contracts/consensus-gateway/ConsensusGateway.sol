@@ -14,18 +14,18 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import "./ConsensusGatewayBase.sol";
+import "./ConsensusGatewayInterface.sol";
+import "./ERC20GatewayBase.sol";
+import "../consensus/ConsensusInterface.sol";
+import "../consensus/ConsensusModule.sol";
+import "../core/CoreInterface.sol";
+import "../message-bus/MessageBus.sol";
+import "../proxies/MasterCopyNonUpgradable.sol";
+
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
-import "./ConsensusGatewayBase.sol";
-import "./ERC20GatewayBase.sol";
-import "../proxies/MasterCopyNonUpgradable.sol";
-import "../message-bus/MessageBus.sol";
-import "../consensus/ConsensusModule.sol";
-import "../consensus/ConsensusI.sol";
-import "../core/CoreI.sol";
-import "./ConsensusGatewayI.sol";
-
-contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, ConsensusModule, ConsensusGatewayI {
+contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, ConsensusModule, ConsensusGatewayInterface {
 
     /* Usings */
 
@@ -59,7 +59,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
      */
     function setup(
         bytes32 _metachainId,
-        ConsensusI _consensus,
+        ConsensusInterface _consensus,
         ERC20I _most,
         address _consensusCogateway,
         uint256 _maxStorageRootItems,
@@ -87,7 +87,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
             _metachainId,
             _consensusCogateway,
             _outboxStorageIndex,
-            StateRootI(stateRootProvider),
+            StateRootInterface(stateRootProvider),
             _maxStorageRootItems
         );
     }
@@ -179,7 +179,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
             "Core address is 0."
         );
 
-        (bytes32 openKernelHash, uint256 openKernelHeight) = CoreI(_core).getOpenKernel();
+        (bytes32 openKernelHash, uint256 openKernelHeight) = CoreInterface(_core).getOpenKernel();
 
         require(
             (openKernelHeight == currentMetablockHeight.add(1)) ||

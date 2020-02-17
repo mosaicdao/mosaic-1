@@ -23,7 +23,7 @@ contract UtmostTest is Utmost {
 
     /* Storage */
 
-    CoconsensusI public coconsensus;
+    CoconsensusInterface public coconsensus;
 
 
     /* Special Functions */
@@ -34,7 +34,7 @@ contract UtmostTest is Utmost {
      * @param _coconsensus Coconsensus contract address.
      * @param _initialTokenSupply Initial token supply.
      */
-    constructor(CoconsensusI _coconsensus, uint256 _initialTokenSupply)
+    constructor(CoconsensusInterface _coconsensus, uint256 _initialTokenSupply)
         public
     {
         genesisTotalSupply = _initialTokenSupply;
@@ -49,7 +49,7 @@ contract UtmostTest is Utmost {
      *
      * @return Coconsensus contract address.
      */
-    function getCoconsensus() public view returns (CoconsensusI) {
+    function getCoconsensus() public view returns (CoconsensusInterface) {
         return coconsensus;
     }
 }

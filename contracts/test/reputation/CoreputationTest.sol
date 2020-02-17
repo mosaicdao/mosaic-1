@@ -21,13 +21,13 @@ import "../../reputation/Coreputation.sol";
  */
 contract CoreputationTest is Coreputation {
 
-    CoconsensusI public coconsensus;
+    CoconsensusInterface public coconsensus;
 
 
     /* Special Functions */
 
     constructor(
-        CoconsensusI _coconsensus
+        CoconsensusInterface _coconsensus
     )
         public
     {
@@ -50,7 +50,7 @@ contract CoreputationTest is Coreputation {
 
      /* Public Functions */
 
-    function getCoconsensus() public view returns (CoconsensusI) {
+    function getCoconsensus() public view returns (CoconsensusInterface) {
         return coconsensus;
     }
 }

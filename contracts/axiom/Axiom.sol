@@ -14,13 +14,13 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "./AxiomI.sol";
+import "./AxiomInterface.sol";
 import "../anchor/Anchor.sol"; // TASK: change this to factory, when new anchor is implemented.
-import "../consensus/ConsensusI.sol";
+import "../consensus/ConsensusInterface.sol";
 import "../proxies/ProxyFactory.sol";
 
 
-contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
+contract Axiom is AxiomInterface, ProxyFactory, ConsensusModule {
 
     /* Usings */
 
@@ -92,7 +92,7 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
     address public consensusGatewayMasterCopy;
 
     /** Reputation contract address */
-    ReputationI public reputation;
+    ReputationInterface public reputation;
 
 
     /* Special Member Functions */
@@ -213,7 +213,7 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
         // which is deployed in next step.
         Proxy consensusProxy = createProxy(consensusMasterCopy, "");
 
-        ConsensusModule.setupConsensus(ConsensusI(address(consensusProxy)));
+        ConsensusModule.setupConsensus(ConsensusInterface(address(consensusProxy)));
 
         bytes memory reputationSetupData = abi.encodeWithSelector(
             REPUTATION_SETUP_CALLPREFIX,
@@ -227,7 +227,7 @@ contract Axiom is AxiomI, ProxyFactory, ConsensusModule {
             _withdrawalCooldownPeriodInBlocks
         );
 
-        reputation = ReputationI(
+        reputation = ReputationInterface(
             address(
                 createProxy(
                     reputationMasterCopy,

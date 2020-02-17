@@ -40,7 +40,7 @@ contract Anchor is MasterCopyNonUpgradable, ConsensusModule, StateRootProvider {
      */
     function setup(
         uint256 _maxStateRoots,
-        ConsensusI _consensus
+        ConsensusInterface _consensus
     )
         external
     {

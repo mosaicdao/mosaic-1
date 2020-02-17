@@ -1,7 +1,5 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-import "../../reputation/ReputationI.sol";
-
 // Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,10 +14,10 @@ import "../../reputation/ReputationI.sol";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../../reputation/ReputationI.sol";
+import "../../reputation/ReputationInterface.sol";
 import "../../proxies/MasterCopyNonUpgradable.sol";
 
-contract SpyReputation is MasterCopyNonUpgradable, ReputationI {
+contract SpyReputation is MasterCopyNonUpgradable, ReputationInterface {
 
     mapping(address /* validator */ => bool /* isActive */) public activeValidators;
 
