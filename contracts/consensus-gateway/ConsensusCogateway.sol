@@ -167,15 +167,9 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
 
         uint256 mintAmount = _amount.sub(feeAmount);
 
-        require(
-            UtilityTokenInterface(address(most)).mint(msg.sender, feeAmount),
-            "Reward must be minted."
-        );
+        UtilityTokenInterface(address(most)).mint(msg.sender, feeAmount);
 
-        require(
-            UtilityTokenInterface(address(most)).mint(_beneficiary, mintAmount),
-            "Tokens must be minted for beneficiary."
-        );
+        UtilityTokenInterface(address(most)).mint(_beneficiary, mintAmount);
     }
 
     /**
@@ -323,6 +317,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
             _feeGasLimit,
             msg.sender
         );
+
         ERC20I(most).burnFrom(msg.sender, _amount);
     }
 

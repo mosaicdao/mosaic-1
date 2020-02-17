@@ -34,19 +34,15 @@ contract UtBaseConfirmDepositSpy is UtilityTokenInterface {
      *
      * @param _beneficiary Address of beneficiary where tokens are minted.
      * @param _amount Amount in wei.
-     *
-     * @return bool `true` if success else `false`.
      */
     function mint(
         address payable _beneficiary,
         uint256 _amount
     )
         external
-        returns(bool)
     {
         beneficiaries.push(_beneficiary);
         amounts.push(_amount);
-        return true;
     }
 
     /**
@@ -54,7 +50,6 @@ contract UtBaseConfirmDepositSpy is UtilityTokenInterface {
      */
     function burn(address, uint256)
         external
-        returns(bool)
     {
         require(false, 'This method should not be called.');
     }

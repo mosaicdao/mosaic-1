@@ -19,7 +19,6 @@ const { AccountProvider } = require('../test_lib/utils.js');
 
 contract('UtBase::setup', (accounts) => {
   let utBase;
-  let consensusCogateway;
   let initialSupply;
   let coconsensus;
 
@@ -28,9 +27,7 @@ contract('UtBase::setup', (accounts) => {
   beforeEach(async () => {
     coconsensus = accountProvider.get();
     initialSupply = new BN('1000000');
-    // consensusCogateway
     utBase = await UtBase.new(coconsensus, initialSupply);
-    consensusCogateway = '0x0000000000000000000000000000000000004d02';
   });
 
   it('should setup utBase token correctly.', async () => {
