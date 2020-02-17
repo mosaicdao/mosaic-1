@@ -55,8 +55,8 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
      *
      * @param _metachainId Metachain id of a metablock.
      * @param _coconsensus Address of Coconsensus contract.
-     * @param _utBase Address of most contract at auxiliary chain.
-     * @param _consensusGateway Address of most contract at auxiliary chain.
+     * @param _utBase Address of UtBase contract at auxiliary chain.
+     * @param _consensusGateway Address of consensus cogateway contract at auxiliary chain.
      * @param _outboxStorageIndex Outbox Storage index of ConsensusGateway.
      * @param _maxStorageRootItems Max storage roots to be stored.
      * @param _metablockHeight Height of the metablock.

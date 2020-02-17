@@ -49,7 +49,7 @@ contract UtBase is MasterCopyNonUpgradable, GenesisUtBase, ERC20Token, Coconsens
     modifier onlyConsensusCogateway()
     {
         require(
-            consensusCogateway == msg.sender,
+            msg.sender == getConsensusCogateway(),
             "Caller must be consensus cogateway contract address."
         );
         _;
@@ -156,12 +156,26 @@ contract UtBase is MasterCopyNonUpgradable, GenesisUtBase, ERC20Token, Coconsens
         transferBalance(address(this), account, amount);
     }
 
+    /**
+     * @notice It allows to burn UtBase tokens for an account. It calls
+     *         ERC20Token::burn method.
+     *
+     * @param _account The account whose tokens will be burnt.
+     * @param _value The amount that will be burnt.
+     */
     function burn(address _account, uint256 _value)
         external
     {
         _burn(_account, _value);
     }
 
+    /**
+     * @notice It allows to burn tokens of the spender. It calls
+     *         ERC20Token::burnFrom method.
+     *
+     * @param _account The account whose tokens will be burnt.
+     * @param _value The amount that will be burnt.
+     */
     function burnFrom(address _account, uint256 _value)
         external
     {
@@ -171,6 +185,11 @@ contract UtBase is MasterCopyNonUpgradable, GenesisUtBase, ERC20Token, Coconsens
 
     /* Public Functions */
 
+    /**
+     * @notice Gets the consensus cogateway contract address.
+     *
+     * @return Consensus cogateway contract address.
+     */
     function getConsensusCogateway() public view returns(address) {
         return consensusCogateway;
     }
@@ -179,8 +198,8 @@ contract UtBase is MasterCopyNonUpgradable, GenesisUtBase, ERC20Token, Coconsens
     /* Internal Functions */
 
     /**
-     * @notice Internal method to transfer the base coin equivalent to amount
-     *         to be unwrapped.
+     * @notice Internal method to transfer the base coin equivalent amount to
+     *         beneficiary address.
      *
      * @dev Function requires:
      *          - Amount must be less than or equal to beneficiary token balance

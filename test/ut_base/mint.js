@@ -24,7 +24,7 @@ contract('UtBase.mint()', (accounts) => {
   let initialSupply;
   let caller;
   let wrappedAmount;
-  let amountToBeMinted;
+  let mintedAmount;
   let coconsensus;
   let consensusCogateaway;
   let beneficiary;
@@ -39,50 +39,35 @@ contract('UtBase.mint()', (accounts) => {
     await utBase.setup({ from: coconsensus });
     await utBase.setConsensusCogateway(consensusCogateaway);
     caller = accountProvider.get();
-    amountToBeMinted = new BN('20');
-    // Mints ERC20 UtBase balance for caller
+    mintedAmount = new BN('20');
+
     wrappedAmount = new BN('100');
     await utBase.wrap({ from: caller, value: wrappedAmount });
   });
 
   it('should mint base coins successfully', async () => {
     const initialContractBaseCoinBalance = await Utils.getBalance(utBase.address);
-    const initialCallerBaseCoinBalance = await Utils.getBalance(caller);
+    const beneficiaryInitialERC20Balance = await utBase.balanceOf.call(beneficiary);
 
-    const tx = await utBase.mint(beneficiary, amountToBeMinted, { from: caller });
-    const gasUsed = new BN(tx.receipt.gasUsed);
+    await utBase.mint(beneficiary, mintedAmount, { from: consensusCogateaway });
 
-    const callerERC20TokenBalance = await utBase.balanceOf.call(
-      caller,
-    );
-    assert.strictEqual(
-      callerERC20TokenBalance.eq(wrappedAmount.sub(amountToBeMinted)),
-      true,
-      `The balance of ${caller} should be 80.`,
-    );
-
-    const contractERC20TokenBalance = await utBase.balanceOf.call(
-      utBase.address,
-    );
-    assert.strictEqual(
-      contractERC20TokenBalance.eq((initialSupply.sub(wrappedAmount)).add(amountToBeMinted)),
-      true,
-      `The token balance of UtBase contract should increase by ${amountToBeMinted.toString(10)}.`,
-    );
-
-    const finalContractBaseCoinBalance = await Utils.getBalance(utBase.address);
-    const finalCallerBaseCoinBalance = await Utils.getBalance(caller);
+    const finalUtBaseContractBaseCoinBalance = await Utils.getBalance(utBase.address);
 
     assert.strictEqual(
-      finalContractBaseCoinBalance.eq(initialContractBaseCoinBalance.sub(amountToBeMinted)),
+      initialContractBaseCoinBalance.sub(
+        finalUtBaseContractBaseCoinBalance,
+      ).eq(mintedAmount),
       true,
-      `Contract base token balance should decrease by ${amountToBeMinted.toString(10)}`,
+      `Expected base coin balance for UtBase contract is ${wrappedAmount.sub(mintedAmount)}`
+        + `but got ${finalUtBaseContractBaseCoinBalance}`,
     );
 
+    const beneficiaryAfterERC20Balance = await utBase.balanceOf.call(beneficiary);
     assert.strictEqual(
-      finalCallerBaseCoinBalance.eq(initialCallerBaseCoinBalance.add(amountToBeMinted).sub(gasUsed)),
+      beneficiaryInitialERC20Balance.eq(beneficiaryAfterERC20Balance),
       true,
-      `Caller's base coin balance should change by ${amountToBeMinted.sub(gasUsed).toString(10)}`,
+      `Expected beneficiary erc20 balance is ${beneficiaryInitialERC20Balance} `
+       + `but got ${beneficiaryAfterERC20Balance}`,
     );
   });
 });
