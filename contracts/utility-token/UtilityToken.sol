@@ -59,19 +59,14 @@ contract UtilityToken is ERC20Token {
      *      proper events are emitted.
      * @param _account The account that will receive the created tokens.
      * @param _value The amount that will be created.
-     *
-     * @return success_ `true` for a successful mint, `false` otherwise.
      */
     function mint(address _account, uint256 _value)
         external
         onlyConsensusCogateway()
-        returns (bool success_)
     {
         _mint(_account, _value);
 
         emit Transfer(address(0), _account, _value);
-
-        success_ = true;
     }
 
     /**
