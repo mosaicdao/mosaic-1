@@ -18,7 +18,7 @@ pragma solidity >=0.5.0 <0.6.0;
 import "../consensus/CoconsensusI.sol";
 import "../consensus/CoconsensusModule.sol";
 import "../consensus-gateway/ConsensusGatewayBase.sol";
-import "../consensus-gateway/ERC20GatewayBase.sol";
+import "../erc20-gateway/ERC20GatewayBase.sol";
 import "../message-bus/MessageBus.sol";
 import "../message-bus/StateRootI.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";

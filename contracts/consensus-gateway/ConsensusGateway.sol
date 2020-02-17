@@ -17,7 +17,7 @@ pragma solidity >=0.5.0 <0.6.0;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "./ConsensusGatewayBase.sol";
-import "./ERC20GatewayBase.sol";
+import "../erc20-gateway/ERC20GatewayBase.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../message-bus/MessageBus.sol";
 import "../consensus/ConsensusModule.sol";
