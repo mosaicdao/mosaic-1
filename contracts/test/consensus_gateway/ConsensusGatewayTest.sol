@@ -19,12 +19,12 @@ import "../../consensus-gateway/ConsensusGateway.sol";
 contract ConsensusGatewayTest is ConsensusGateway {
 
     function setConsensus(
-        ConsensusI _consensus
+        ConsensusInterface _consensus
     )
         external
     {
         ConsensusModule.setupConsensus(
-            ConsensusI(_consensus)
+            ConsensusInterface(_consensus)
         );
     }
 }

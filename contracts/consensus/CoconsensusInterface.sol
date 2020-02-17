@@ -20,7 +20,7 @@ pragma solidity >=0.5.0 <0.6.0;
  * @notice Specifies Coconsensus external interfaces to be called from
  *         other parts.
  */
-interface CoconsensusI {
+interface CoconsensusInterface {
 
     /* External Functions */
 

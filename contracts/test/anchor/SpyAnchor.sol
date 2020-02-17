@@ -14,11 +14,11 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../../anchor/AnchorI.sol";
-import "../../consensus/ConsensusI.sol";
+import "../../anchor/AnchorInterface.sol";
+import "../../consensus/ConsensusInterface.sol";
 import "../../proxies/MasterCopyNonUpgradable.sol";
 
-contract SpyAnchor is MasterCopyNonUpgradable, AnchorI{
+contract SpyAnchor is MasterCopyNonUpgradable, AnchorInterface{
 
     uint256 public spyBlockNumber;
     bytes32 public spyStateRoot;
@@ -28,7 +28,7 @@ contract SpyAnchor is MasterCopyNonUpgradable, AnchorI{
 
     function setup(
         uint256 _maxStateRoots,
-        ConsensusI _consensus
+        ConsensusInterface _consensus
     )
         external
     {

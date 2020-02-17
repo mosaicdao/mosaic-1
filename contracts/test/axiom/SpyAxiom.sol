@@ -1,9 +1,9 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-import "../../axiom/AxiomI.sol";
+import "../../axiom/AxiomInterface.sol";
 import "../../consensus/Consensus.sol";
 
-contract SpyAxiom is AxiomI{
+contract SpyAxiom is AxiomInterface{
 
     address public constant mockedCommitteeAddress = address(111);
     address public constant mockedCoreAddress = address(112);

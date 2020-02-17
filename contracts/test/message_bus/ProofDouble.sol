@@ -28,7 +28,7 @@ contract ProofDouble is Proof {
      */
     function setupProofExternal(
         address _storageAccount,
-        StateRootI _stateRootProvider,
+        StateRootInterface _stateRootProvider,
         uint256 _maxStorageRootItems
     )
         external

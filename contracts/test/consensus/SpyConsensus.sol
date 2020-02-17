@@ -1,10 +1,10 @@
 pragma solidity >=0.5.0 <0.6.0;
 
+import "../../axiom/AxiomInterface.sol";
+import "../../consensus/ConsensusInterface.sol";
 import "../../proxies/MasterCopyNonUpgradable.sol";
-import "../../consensus/ConsensusI.sol";
-import "../../axiom/AxiomI.sol";
 
-contract SpyConsensus is MasterCopyNonUpgradable, ConsensusI {
+contract SpyConsensus is MasterCopyNonUpgradable, ConsensusInterface {
 
     uint256 public committeeSize;
     uint256 public minValidators;
@@ -54,7 +54,7 @@ contract SpyConsensus is MasterCopyNonUpgradable, ConsensusI {
     }
 
     function callNewCore(
-        AxiomI _axiom,
+        AxiomInterface _axiom,
         bytes calldata _data
     )
         external
@@ -63,7 +63,7 @@ contract SpyConsensus is MasterCopyNonUpgradable, ConsensusI {
     }
 
     function callNewCommittee(
-        AxiomI _axiom,
+        AxiomInterface _axiom,
         bytes calldata _data
     )
     external
@@ -101,9 +101,9 @@ contract SpyConsensus is MasterCopyNonUpgradable, ConsensusI {
     function reputation()
         external
         view
-        returns (ReputationI reputation_)
+        returns (ReputationInterface reputation_)
     {
-        reputation_ = ReputationI(reputationAddress);
+        reputation_ = ReputationInterface(reputationAddress);
     }
 
     /**

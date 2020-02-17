@@ -1,6 +1,6 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-// Copyright 2019 OpenST Ltd.
+// Copyright 2020 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,13 +14,26 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-interface ConsensusGatewayI {
+/**
+ * @title Observer Interface
+ */
+interface ObserverInterface {
 
-    function declareOpenKernel(
-        address _core,
-        uint256 _feeGasPrice,
-        uint256 _feeGasLimit
+    /**
+     * @notice setup() function initializes the observer contract.
+     */
+     function setup() external;
+
+    /**
+     * @notice Anchor the state root for an (increasing) block number.
+     *
+     * @param _blockNumber Block number for which state root needs to
+     *                      update.
+     * @param _stateRoot State root of input block number.
+     */
+    function anchorStateRoot(
+        uint256 _blockNumber,
+        bytes32 _stateRoot
     )
-        external
-        returns (bytes32);
+        external;
 }

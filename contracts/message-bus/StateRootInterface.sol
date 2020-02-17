@@ -14,11 +14,11 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-interface AnchorI {
+/** @title An interface to an get state root. */
+interface StateRootInterface {
 
     /**
      * @notice Gets the block number of latest committed state root.
-     *
      * @return height_ Block height of the latest committed state root.
      */
     function getLatestStateRootBlockHeight()
@@ -28,22 +28,11 @@ interface AnchorI {
 
     /**
      * @notice Get the state root for the given block height.
-     *
      * @param _blockHeight The block height for which the state root is fetched.
-     *
      * @return bytes32 State root at the given height.
      */
     function getStateRoot(uint256 _blockHeight)
         external
         view
         returns (bytes32 stateRoot_);
-
-    /**
-     *  @param _blockHeight Block height of the block to anchor.
-     *  @param _stateRoot State root of the block to anchor.
-     */
-    function anchorStateRoot(
-        uint256 _blockHeight,
-        bytes32 _stateRoot
-    ) external;
 }

@@ -14,7 +14,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "./CoconsensusI.sol";
+import "./CoconsensusInterface.sol";
 
 contract CoconsensusModule {
 
@@ -44,7 +44,7 @@ contract CoconsensusModule {
      *
      * @return Coconsensus contract address.
      */
-    function getCoconsensus() public view returns (CoconsensusI) {
-        return CoconsensusI(coconsensusAddress);
+    function getCoconsensus() public view returns (CoconsensusInterface) {
+        return CoconsensusInterface(coconsensusAddress);
     }
 }

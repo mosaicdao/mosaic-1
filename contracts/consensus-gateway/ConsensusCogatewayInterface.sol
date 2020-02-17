@@ -1,6 +1,6 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-// Copyright 2019 OpenST Ltd.
+// Copyright 2020 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,17 +14,21 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-interface CoreputationI {
+/**
+ * @title An interface for consensus cogateway contract.
+ */
+interface ConsensusCogatewayInterface {
+
+    /* External Functions */
 
     /**
-     * @notice Insert or update validator information.
+     * @notice Get the kernel hash for a given kernel height.
      *
-     * @param _validator Validator address to upsert.
-     * @param _reputation Validator reputation value.
+     * @param _kernelHeight Kernel height.
+     *
+     * @return kernelHash_ Returns the kernel hash.
      */
-    function upsertValidator(
-        address _validator,
-        uint256 _reputation
-    )
-        external;
+    function getKernelHash(uint256 _kernelHeight)
+        external
+        returns (bytes32 kernelHash_);
 }

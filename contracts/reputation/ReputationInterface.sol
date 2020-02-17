@@ -1,6 +1,6 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-// Copyright 2020 OpenST Ltd.
+// Copyright 2019 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,27 +14,18 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/**
- * @title Protocore Interface
- */
-interface ProtocoreI {
+interface ReputationInterface {
 
-    /** @notice setup() function initializes the protocore contract. */
-    function setup() external returns (bytes32, uint256);
+    function isSlashed(address _validator) external view returns (bool);
 
-    /** @notice Function to get the domain separator. */
-    function domainSeparator() external returns (bytes32);
-
-    /**  @notice epochLength() function returns the epoch length. */
-    function epochLength() external returns (uint256);
-
-    function openKernelHeight()
+    function stake(
+        address _validator,
+        address _withdrawalAddress
+    )
         external
         returns (uint256);
 
-    function openKernel(
-        uint256 _kernelHeight,
-        bytes32 _kernelHash
-    )
-        external;
+    function deregister(address _validator) external returns (uint256);
+
+    function getReputation(address _validator) external view returns (uint256);
 }
