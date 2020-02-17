@@ -14,18 +14,17 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "./ERC20GatewayBase.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../message-bus/MessageBus.sol";
 
-contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
+contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus {
 
     /* Constants */
 
-    /* Storage offset of message outbox. */
+    /** Storage offset of message outbox. */
     uint8 constant public OUTBOX_OFFSET = uint8(1);
 
-    /* Storage offset of message inbox. */
+    /** Storage offset of message inbox. */
     uint8 constant public INBOX_OFFSET = uint8(4);
 
 

@@ -44,7 +44,7 @@ contract('ERC20Gateway::setup', (accounts) => {
     coGatewayOutboxIndex = new BN(1);
   });
 
-  it('should successfully setup ERC20 gateway', async () => {
+  it('should successfully setup ERC20 gateway contract', async () => {
     await erc20Gateway.setup(
       metachainId,
       erc20Cogateway,
@@ -87,8 +87,8 @@ contract('ERC20Gateway::setup', (accounts) => {
       erc20Cogateway,
     );
     assert.strictEqual(
-      expectedOutboundChannelIdentifier,
       outboundChannelIdentifierFromContract,
+      expectedOutboundChannelIdentifier,
       'Mismatch in outbound channel identifier.',
     );
 
@@ -101,8 +101,8 @@ contract('ERC20Gateway::setup', (accounts) => {
     );
 
     assert.strictEqual(
-      expectedInboundChannelIdentifier,
       inboundChannelIdentifierFromContract,
+      expectedInboundChannelIdentifier,
       'Mismatch in inbound channel identifier.',
     );
 
