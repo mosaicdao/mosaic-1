@@ -464,9 +464,6 @@ contract Coconsensus is
      *
      * @param _metachainId Metachain id.
      *
-     * \pre Protocore contract must exist for the given metachain id in
-     *      the genesisProtocores storage variable.
-     *
      * \post Adds newly setup protocore's address into protocores storage variable.
      * \post Adds newly setup protocore's domain separator into domainSeparators
      *       storage variable.
@@ -478,11 +475,6 @@ contract Coconsensus is
 
         // Get the protocore contract address from the genesis storage.
         address protocoreAddress = genesisProtocores[_metachainId];
-
-        require(
-            protocoreAddress != address(0),
-            "Protocore address must not be null."
-        );
 
         ProtocoreI protocore = ProtocoreI(protocoreAddress);
 
