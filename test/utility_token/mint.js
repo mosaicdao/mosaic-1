@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const UtilityToken = artifacts.require('UtilityTokenTest');
+const UtilityToken = artifacts.require('UtilityToken');
 const BN = require('bn.js');
 
 contract('UtilityToken::mint', (accounts) => {
