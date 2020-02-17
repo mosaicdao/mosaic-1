@@ -661,7 +661,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
      */
     function commitMetablock(
         bytes32 _metachainId,
-        bytes memory _rlpBlockHeader,
+        bytes calldata _rlpBlockHeader,
         bytes32 _kernelHash,
         bytes32 _originObservation,
         uint256 _dynasty,
@@ -672,24 +672,21 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         uint256 _sourceBlockHeight,
         uint256 _targetBlockHeight
     )
-        public
+        external
     {
         require(
             _source == keccak256(_rlpBlockHeader),
             "Block header does not match with vote message source."
         );
 
-        bytes32 metablockHash = goToCommittedRound(_metachainId);
-
-        CoreI core = assignments[_metachainId];
         require(
-            isCoreActive(core),
+            isCoreActive(assignments[_metachainId]),
             "Core is not active."
         );
 
+        //Asserts the commit of metablock.
         assertCommit(
-            core,
-            metablockHash,
+            _metachainId,
             _kernelHash,
             _originObservation,
             _dynasty,
@@ -701,15 +698,62 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
             _targetBlockHeight
         );
 
+        //Anchors state root and opens a new metablock.
+        commitStateRoot(
+            _metachainId,
+            _rlpBlockHeader,
+            _dynasty,
+            _accumulatedGas,
+            _sourceBlockHeight,
+            gasTargetDelta,
+            _kernelHash
+        );
+    }
+
+    /**
+     * @notice Anchors state root and opens a new metablock.
+     * @dev Function requires:
+     *          - block header should match with source blockhash.
+     *          - metachain id should not be 0.
+     *          - a core for the specified metachain id should exist.
+     *          - the given metablock parameters should match with the
+     *             core's contract.
+     *          - precommit for the correspomding core should exist.
+     *          - anchor contract for the given metachain id should exist.
+     *
+     * @param _metachainId Metachain id.
+     * @param _rlpBlockHeader RLP encoded block header.
+     * @param _dynasty The dynasty number where the meta-block closes
+                       on the auxiliary chain.
+     * @param _accumulatedGas The total consumed gas on auxiliary within this
+                              meta-block.
+     * @param _sourceBlockHeight Source block height.
+     * @param _gasTargetDelta Gas target delta to open new metablock.
+     * @param _kernelHash Kernel hash.
+     */
+    function commitStateRoot(
+        bytes32 _metachainId,
+        bytes memory _rlpBlockHeader,
+        uint256 _dynasty,
+        uint256 _accumulatedGas,
+        uint256 _sourceBlockHeight,
+        uint256 _gasTargetDelta,
+        bytes32 _kernelHash
+    )
+        private
+    {
         // Anchor state root.
         anchorStateRoot(_metachainId, _rlpBlockHeader);
+
+        CoreI core = assignments[_metachainId];
+        bytes32 metablockHash = goToCommittedRound(_metachainId);
 
         // Open a new metablock.
         core.openMetablock(
             _dynasty,
             _accumulatedGas,
             _sourceBlockHeight,
-            gasTargetDelta
+            _gasTargetDelta
         );
 
         emit MetablockCommitted(
@@ -1194,8 +1238,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
     }
 
     function assertCommit(
-        CoreI _core,
-        bytes32 _precommit,
+        bytes32 _metachainId,
         bytes32 _kernelHash,
         bytes32 _originObservation,
         uint256 _dynasty,
@@ -1207,16 +1250,18 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         uint256 _targetBlockHeight
     )
         private
-        view
     {
-        bytes32 decision = decisions[_precommit];
+        CoreI core = assignments[_metachainId];
+        bytes32 precommit = goToCommittedRound(_metachainId);
+        bytes32 decision = decisions[precommit];
+
 
         require(
             _committeeLock == keccak256(abi.encode(decision)),
             "Committee decision does not match with committee lock."
         );
 
-        bytes32 metablockHash = CoreI(_core).hashMetablock(
+        bytes32 metablockHash = CoreI(core).hashMetablock(
             _kernelHash,
             _originObservation,
             _dynasty,
@@ -1229,7 +1274,7 @@ contract Consensus is MasterCopyNonUpgradable, CoreLifetimeEnum, MosaicVersion, 
         );
 
         require(
-            metablockHash == _precommit,
+            metablockHash == precommit,
             "Input parameters do not hash to the core's precommit."
         );
     }
