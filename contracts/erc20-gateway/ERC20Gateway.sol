@@ -22,7 +22,7 @@ import "../proxies/MasterCopyNonUpgradable.sol";
  * @title ERC20Gateway Contract.
  *
  * @notice ERC20Gateway act as medium to send messages from origin chain to
- *         auxiliary chain. Currently it supports deposit message.
+ *         auxiliary chain. Currently ERC20Gateway supports deposit message.
  */
 contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
 
