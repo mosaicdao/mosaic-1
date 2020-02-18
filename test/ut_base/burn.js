@@ -37,8 +37,9 @@ contract('UtBase::burn', (accounts) => {
     await utBase.wrap({ from: beneficiary, value: amount });
   });
 
-  it('should burn tokens when called with proper params.', async () => {
+  it('should burn tokens when called with proper params', async () => {
     const balanceBeforeBurn = await utBase.balanceOf(beneficiary);
+    const initialTotalTokenSupply = await utBase.getTotalTokenSupply();
 
     await utBase.burn(burnAmount, { from: beneficiary });
 
@@ -47,7 +48,15 @@ contract('UtBase::burn', (accounts) => {
     assert.strictEqual(
       balanceBeforeBurn.sub(balanceAfterBurn).eq(burnAmount),
       true,
-      `Balance of beneficiary must decrease by ${burnAmount}.`,
+      `Balance of beneficiary must decrease by ${burnAmount.toString(10)}.`,
+    );
+
+    const finalTotalTokenSupply = await utBase.getTotalTokenSupply();
+    assert.strictEqual(
+      initialTotalTokenSupply.sub(burnAmount).eq(finalTotalTokenSupply),
+      true,
+      `Expected total supply after burning is ${(initialTotalTokenSupply.add(burnAmount)).toString(10)}`
+      + ` but got ${finalTotalTokenSupply.toString(10)}`,
     );
   });
 });

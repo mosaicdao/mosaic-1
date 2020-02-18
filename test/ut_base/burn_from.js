@@ -20,7 +20,7 @@ contract('UtBase::burnFrom', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
   const consensusCogateway = accountProvider.get();
   const beneficiary = accountProvider.get();
-  const spender = accountProvider.get()
+  const spender = accountProvider.get();
 
   let utBase;
   let amount;
@@ -44,8 +44,9 @@ contract('UtBase::burnFrom', (accounts) => {
     );
   });
 
-  it('should burn tokens from beneficiary when called with proper params by spender using burnFrom.', async () => {
+  it('should burn tokens', async () => {
     const balanceBeforeBurnFrom = await utBase.balanceOf(beneficiary);
+    const initialTotalTokenSupply = await utBase.getTotalTokenSupply();
 
     await utBase.burnFrom(beneficiary, burnAmount, {
       from: spender,
@@ -56,7 +57,15 @@ contract('UtBase::burnFrom', (accounts) => {
     assert.strictEqual(
       balanceBeforeBurnFrom.sub(balanceAfterBurnFrom).eq(burnAmount),
       true,
-      `Balance of beneficiary must decrease by ${burnAmount}.`,
+      `Balance of beneficiary must decrease by ${burnAmount.toString(10)}.`,
+    );
+
+    const finalTotalTokenSupply = await utBase.getTotalTokenSupply();
+    assert.strictEqual(
+      initialTotalTokenSupply.sub(burnAmount).eq(finalTotalTokenSupply),
+      true,
+      `Expected total supply after burning is ${(initialTotalTokenSupply.add(burnAmount)).toString(10)}`
+      + ` but got ${finalTotalTokenSupply.toString(10)}`,
     );
   });
 });

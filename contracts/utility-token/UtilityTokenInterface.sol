@@ -43,4 +43,13 @@ interface UtilityTokenInterface {
     )
         external;
 
+    /**
+     * Burns the given amount(in atto) of the given account.
+     *
+     * @param _account Address of account for which the tokens will be burned.
+     * @param _amount Amount in atto.
+     */
+    function burnFrom(address _account, uint256 _amount)
+        external;
+
 }

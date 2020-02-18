@@ -49,6 +49,8 @@ contract('UtBase.mint()', (accounts) => {
     const initialContractBaseCoinBalance = await Utils.getBalance(utBase.address);
     const beneficiaryInitialERC20Balance = await utBase.balanceOf.call(beneficiary);
     const beneficiaryInitialCoinBalance = await Utils.getBalance(beneficiary);
+    const initialTotalTokenSupply = await utBase.getTotalTokenSupply();
+
     await utBase.mint(beneficiary, mintedAmount, { from: consensusCogateway });
 
     const finalUtBaseContractBaseCoinBalance = await Utils.getBalance(utBase.address);
@@ -58,22 +60,32 @@ contract('UtBase.mint()', (accounts) => {
         finalUtBaseContractBaseCoinBalance,
       ).eq(mintedAmount),
       true,
-      `Contract base coin balance should decrease by ${mintedAmount.toString()}`,
+      `Contract base coin balance should decrease by ${mintedAmount.toString(10)}`,
     );
 
     const beneficiaryAfterERC20Balance = await utBase.balanceOf.call(beneficiary);
     assert.strictEqual(
       beneficiaryInitialERC20Balance.eq(beneficiaryAfterERC20Balance),
       true,
-      `Expected beneficiary erc20 balance is ${beneficiaryInitialERC20Balance} `
-       + `but got ${beneficiaryAfterERC20Balance}`,
+      `Expected beneficiary erc20 balance is ${beneficiaryInitialERC20Balance.toString(10)} `
+      + `but got ${beneficiaryAfterERC20Balance.toString(10)}`,
     );
 
     assert.strictEqual(
       beneficiaryFinalCoinBalance.eq(beneficiaryInitialCoinBalance.add(mintedAmount)),
       true,
       'Expected base coin balance for beneficiary is '
-      + `${beneficiaryInitialCoinBalance.add(mintedAmount)} but got ${beneficiaryFinalCoinBalance}`,
+      + `${(beneficiaryInitialCoinBalance.add(mintedAmount)).toString(10)} but`
+      + ` got ${beneficiaryFinalCoinBalance.toString(10)}`,
+    );
+
+    const finalTotalTokenSupply = await utBase.getTotalTokenSupply();
+    assert.strictEqual(
+      initialTotalTokenSupply.add(mintedAmount).eq(finalTotalTokenSupply),
+      true,
+      'Expected total supply after minting is'
+      + ` ${(initialTotalTokenSupply.add(mintedAmount)).toString(10)}`
+      + ` but got ${finalTotalTokenSupply.toString(10)}`,
     );
   });
 });

@@ -319,7 +319,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
             msg.sender
         );
 
-        MOSTInterface(address(most)).burnFrom(msg.sender, _amount);
+        UtilityTokenInterface(address(most)).burnFrom(msg.sender, _amount);
     }
 
 
