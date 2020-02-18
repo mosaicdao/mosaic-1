@@ -118,7 +118,7 @@ contract MessageOutbox is MessageBox {
      *          - message should not exists in outbox
      *
      * @param _intentHash Intent hash of message.
-     * @param _nonce Nonce of sender.
+     * @param _nonce Nonce ofsender.
      * @param _feeGasPrice Fee gas price.
      * @param _feeGasLimit Fee gas limit.
      * @param _sender Sender address.
