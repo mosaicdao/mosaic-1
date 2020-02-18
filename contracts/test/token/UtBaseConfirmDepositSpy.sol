@@ -54,4 +54,13 @@ contract UtBaseConfirmDepositSpy is UtilityTokenInterface {
         require(false, 'This method should not be called.');
     }
 
+    /**
+     * @notice Implemented to satisfy the interface definition.
+     */
+    function burnFrom(address, uint256)
+        external
+    {
+        require(false, "This method should not be called from unit tests.");
+    }
+
 }
