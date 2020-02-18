@@ -205,4 +205,75 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
             msg.sender
         );
     }
+
+    /**
+     * @notice Confirm withdraw in order to transfer most.
+     *
+     * @param _amount MOST token amount for withdrawal
+     * @param _beneficiary Address of beneficiary where tokens will be withdrawn.
+     * @param _feeGasPrice Gas price at which fee will be calculated.
+     * @param _feeGasLimit Gas limit at which fee will be capped.
+     * @param _blockNumber Block number of Aux chain against which storage
+                           proof is generated.
+     * @param _withdrawer Storage merkle proof to verify message declaration
+                          on the origin chain.
+     * @param _rlpParentNodes Storage merkle proof to verify message declaration
+                              on the origin chain.
+     *
+     */
+    function confirmWithdraw(
+        uint256 _amount,
+        address _beneficiary,
+        uint256 _feeGasPrice,
+        uint256 _feeGasLimit,
+        address _withdrawer,
+        uint256 _blockNumber,
+        bytes calldata _rlpParentNodes
+    )
+        external
+        returns (bytes32 messageHash_)
+    {
+        uint256 initialGas = gasleft();
+        require(
+            _amount != 0,
+            "Withdraw amount should be greater than 0."
+        );
+        require(
+            _beneficiary != address(0),
+            "Beneficiary address must not be 0."
+        );
+        require(
+            _withdrawer != address(0),
+            "Withdrawer address must not be 0."
+        );
+
+        uint256 nonce = nonces[msg.sender];
+        nonces[msg.sender] = nonce.add(1);
+
+        messageHash_ = MessageInbox.confirmMessage(
+            ERC20GatewayBase.hashWithdrawIntent(
+                _amount,
+                _beneficiary
+            ),
+            nonce,
+            _feeGasPrice,
+            _feeGasLimit,
+            _withdrawer,
+            _blockNumber,
+            _rlpParentNodes
+        );
+
+        uint256 gasConsumed = initialGas.sub(gasleft());
+        uint256 feeAmount = ERC20GatewayBase.reward(gasConsumed, _feeGasPrice, _feeGasLimit);
+        uint256 withdrawAmount = _amount.sub(feeAmount);
+
+        require(
+            ERC20I(most).transfer(msg.sender, feeAmount),
+            "Reward transfer must succeed."
+        );
+        require(
+            ERC20I(most).transfer(_beneficiary, withdrawAmount),
+            "Withdrawal MOST transfer to beneficiary must succeed."
+        );
+    }
 }

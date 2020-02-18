@@ -14,7 +14,13 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
 contract ERC20GatewayBase {
+
+    /* Usings */
+
+    using SafeMath for uint256;
 
     /* Constants */
 
@@ -80,4 +86,30 @@ contract ERC20GatewayBase {
         );
     }
 
+    /* Internal functions */
+
+    /**
+     * @notice Calculates reward.
+     *
+     * @param _gasConsumed Gas consumption in a transaction.
+     * @param _feeGasPrice Gas price at which fee will be calculated.
+     * @param _feeGasLimit Gas limit at which fee will be capped.
+     *
+     * @return rewardAmount_ Total reward amount.
+     */
+    function reward(
+        uint256 _gasConsumed,
+        uint256 _feeGasPrice,
+        uint256 _feeGasLimit
+    )
+        internal
+        pure
+        returns(uint256 rewardAmount_)
+    {
+        if(_gasConsumed > _feeGasLimit) {
+            rewardAmount_ = _feeGasPrice.mul(_feeGasLimit);
+        } else {
+            rewardAmount_ = _feeGasPrice.mul(_gasConsumed);
+        }
+    }
 }
