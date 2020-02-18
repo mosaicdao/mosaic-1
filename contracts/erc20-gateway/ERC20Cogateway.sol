@@ -46,8 +46,7 @@ contract ERC20Cogateway is MasterCopyNonUpgradable, MessageBus, GenesisERC20Coga
     /* External Functions */
 
     /**
-     * @notice Setup function to initialize ERC20Cogateway contract.
-     *         It sets up inbox and outbox of message.
+     * @notice It initializes ERC20Cogateway contract.
      */
     function setup()
         external
@@ -56,10 +55,12 @@ contract ERC20Cogateway is MasterCopyNonUpgradable, MessageBus, GenesisERC20Coga
 
         MessageInbox.setupMessageInbox(
             genesisMetachainId,
-            address(this),
+            genesisERC20Gateway,
             genesisOutboxStorageIndex,
             StateRootInterface(genesisStateRootProvider),
             genesisOutboxStorageIndex
         );
+
+        activated = true;
     }
 }
