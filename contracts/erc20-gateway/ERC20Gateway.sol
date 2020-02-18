@@ -14,10 +14,17 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../proxies/MasterCopyNonUpgradable.sol";
+import "./ERC20GatewayBase.sol";
 import "../message-bus/MessageBus.sol";
+import "../proxies/MasterCopyNonUpgradable.sol";
 
-contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus {
+/**
+ * @title ERC20Gateway Contract.
+ *
+ * @notice ERC20Gateway act as medium to send messages from origin chain to
+ *         auxiliary chain. Currently it supports deposit message.
+ */
+contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
 
     /* Constants */
 
@@ -43,6 +50,8 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus {
      * @param _stateRootProvider State root provider contract address.
      * @param _maxStorageRootItems Maximum number of storage roots stored.
      * @param _outboxStorageIndex Outbox storage index of ERC20 Cogateway.
+     *
+     * \pre  This function can only be called once.
      *
      * \post Setup message outbox and updates outboundChannelIdentifier storage
      *       variable.
