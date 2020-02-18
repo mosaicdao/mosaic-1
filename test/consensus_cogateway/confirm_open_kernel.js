@@ -27,7 +27,7 @@ contract('CoconsensusGateway::confirmOpenKernel', (accounts) => {
   const metablockHeight = new BN(2);
   const setupParams = {
     metachainId: DeclareOpenKernel.metachainId,
-    utmost: accountProvider.get(),
+    utBase: accountProvider.get(),
     consensusGateway: DeclareOpenKernel.address,
     outboxStorageIndex: new BN(1),
     maxStorageRootItems: new BN(100),
@@ -63,7 +63,7 @@ contract('CoconsensusGateway::confirmOpenKernel', (accounts) => {
     await consensusCogateway.setup(
       setupParams.metachainId,
       setupParams.coconsensus.address,
-      setupParams.utmost,
+      setupParams.utBase,
       setupParams.consensusGateway,
       setupParams.outboxStorageIndex,
       setupParams.maxStorageRootItems,

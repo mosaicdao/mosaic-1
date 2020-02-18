@@ -26,29 +26,30 @@ interface UtilityTokenInterface {
      *
      * @param _beneficiary Address of beneficiary where tokens are minted.
      * @param _amount Amount in atto.
-     *
-     * @return bool `true` if success else `false`.
      */
     function mint(
         address payable _beneficiary,
         uint256 _amount
     )
-        external
-        returns(bool);
+        external;
 
     /**
      * @notice Burns an amount of the token of a given account.
      *
-     * @param _account The account whose tokens will be burnt.
      * @param _value The amount in atto that will be burnt.
-     *
-     * @return success_ `true` for a successful burn, `false` otherwise.
      */
     function burn(
-        address _account,
         uint256 _value
     )
-        external
-        returns(bool);
+        external;
+
+    /**
+     * Burns the given amount(in atto) of the given account.
+     *
+     * @param _account Address of account for which the tokens will be burned.
+     * @param _amount Amount in atto.
+     */
+    function burnFrom(address _account, uint256 _amount)
+        external;
 
 }
