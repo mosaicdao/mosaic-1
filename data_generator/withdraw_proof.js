@@ -23,7 +23,12 @@ const MockConsensus = artifacts.require('MockConsensus');
 const ConsensusCogateway = artifacts.require('ConsensusCogateway');
 const Utils = require('../test/test_lib/utils.js');
 
-
+/** Instructions to generate proof
+ * use web3 version as 1.0.0-beta.53
+ * 1. run geth : docker run -p 8545:8545 -p 8546:8546 -p 30303:30303 mosaicdao/dev-chains:1.0.3 origin
+ * 2. truffle test data_generator/withdraw_proof.js
+ *
+*/
 contract('Withdraw Proof', (accounts) => {
   let consensusCogateway;
   let setupParam;
