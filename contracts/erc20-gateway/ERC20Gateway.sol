@@ -61,7 +61,7 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
     function setup(
         bytes32 _metachainId,
         address _erc20Cogateway,
-        StateRootI _stateRootProvider,
+        StateRootInterface _stateRootProvider,
         uint256 _maxStorageRootItems,
         uint8 _outboxStorageIndex
     )
