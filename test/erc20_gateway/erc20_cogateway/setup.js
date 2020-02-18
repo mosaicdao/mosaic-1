@@ -13,9 +13,9 @@
 // limitations under the License.
 
 const BN = require('bn.js');
-const Utils = require('../test_lib/utils.js');
-const { AccountProvider } = require('../test_lib/utils.js');
-const ConsensusGatewayUtils = require('../consensus-gateway/utils');
+const Utils = require('../../test_lib/utils.js');
+const { AccountProvider } = require('../../test_lib/utils.js');
+const ConsensusGatewayUtils = require('../../consensus-gateway/utils');
 
 const ERC20Cogateway = artifacts.require('ERC20CogatewayDouble');
 
