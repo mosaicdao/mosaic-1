@@ -15,7 +15,6 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 import "./GenesisUtBase.sol";
-
 import "../consensus/CoconsensusModule.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../utility-token/ERC20Token.sol";
@@ -50,7 +49,7 @@ contract UtBase is MasterCopyNonUpgradable, GenesisUtBase, ERC20Token, Coconsens
     {
         require(
             msg.sender == getConsensusCogateway(),
-            "Caller must be consensus cogateway contract address."
+            "Only the consensus cogateway contract can call this function."
         );
         _;
     }
@@ -61,11 +60,8 @@ contract UtBase is MasterCopyNonUpgradable, GenesisUtBase, ERC20Token, Coconsens
     /**
      * @notice Initializes the UtBase contract.
      *
-     * @dev This function must be called only once.
-     *
-     *      Function requires:
-     *          - msg.sender should be Coconsensus
-     *          - setup can be called only once
+     * \pre Caller must be Consensus cogateway contract.
+     * \pre setup() must be called only once.
      */
     function setup()
         external
@@ -73,7 +69,7 @@ contract UtBase is MasterCopyNonUpgradable, GenesisUtBase, ERC20Token, Coconsens
     {
         require(
             totalTokenSupply == uint256(0),
-            "Setup is already done."
+            "Utbase contract is already initialized."
         );
 
         tokenSymbol = TOKEN_SYMBOL;
@@ -94,10 +90,10 @@ contract UtBase is MasterCopyNonUpgradable, GenesisUtBase, ERC20Token, Coconsens
     }
 
     /**
-     * @notice Mints the base coin equivalent amount to beneficiary address.
+     * @notice Mints the ERC20 token for the beneficiary address and
+     *         unwraps its to base coin.
      *
-     * @dev Function requires :
-     *          - Caller must be Consensus cogateway contract.
+     * \pre Caller must be Consensus cogateway contract.
      *
      * @param _beneficiary Beneficairy address which will receive base coin.
      * @param _amount Amount of UtBase tokens to be minted.
@@ -117,8 +113,8 @@ contract UtBase is MasterCopyNonUpgradable, GenesisUtBase, ERC20Token, Coconsens
     /**
      * @notice Unwrap converts ERC20 UtBase to base coin.
      *
-     * @dev  This contract's base coin balance must always be greater than
-     *       unwrap amount.
+     * @dev This contract's base coin balance must always be greater than
+     *       amount.
      *
      * @param _amount Amount of ERC20 UtBase token to convert to base coin.
      */
@@ -136,8 +132,9 @@ contract UtBase is MasterCopyNonUpgradable, GenesisUtBase, ERC20Token, Coconsens
      * @dev The ERC20 OST balance of contract should always be greater than the
      *      received payable amount.
      *
-     *      Function requires:
-     *          - msg.value should be non-zero
+     * \pre msg.value should be non-zero.
+     *
+     * \post Transfers UtBase ERC20 tokens to the caller.
      */
     function wrap()
         external
@@ -157,21 +154,18 @@ contract UtBase is MasterCopyNonUpgradable, GenesisUtBase, ERC20Token, Coconsens
     }
 
     /**
-     * @notice It allows to burn UtBase tokens for an account. It calls
-     *         ERC20Token::_burn method.
+     * @notice It allows to burn UtBase tokens for an account.
      *
-     * @param _account The account whose tokens will be burnt.
      * @param _value The amount that will be burnt.
      */
-    function burn(address _account, uint256 _value)
+    function burn(uint256 _value)
         external
     {
-        _burn(_account, _value);
+        _burn(msg.sender, _value);
     }
 
     /**
-     * @notice It allows to burn tokens of the spender. It calls
-     *         ERC20Token::_burnFrom method.
+     * @notice It allows to burn tokens of the spender.
      *
      * @param _account The account whose tokens will be burnt.
      * @param _value The amount that will be burnt.
@@ -201,12 +195,15 @@ contract UtBase is MasterCopyNonUpgradable, GenesisUtBase, ERC20Token, Coconsens
      * @notice Internal method to transfer the base coin equivalent amount to
      *         beneficiary address.
      *
-     * @dev Function requires:
-     *          - Amount must be less than or equal to beneficiary token balance
-     *          - Caller UtBase token balance should be greater than amount
+     * \pre `amount` must be less than or equal to beneficiary token balance.
+     * \pre UtBase contract base token balance must be greater than or
+     *      equal to `amount`.
+     *
+     * \post UtBase contract receives ERC20 UtBase tokens.
+     * \post `beneficiary` address receives base coin.
      *
      * @param _beneficiary Beneficairy address which will receive base coin.
-     * @param _amount Amount of ERC20 UtBase token to be unwrapped.
+     * @param _amount Amount of ERC20 UtBase tokens to be unwrapped.
      */
     function unwrapInternal(
         address payable _beneficiary,

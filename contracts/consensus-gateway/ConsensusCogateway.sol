@@ -21,6 +21,7 @@ import "../consensus-gateway/ConsensusGatewayBase.sol";
 import "../consensus-gateway/ERC20GatewayBase.sol";
 import "../message-bus/MessageBus.sol";
 import "../message-bus/StateRootInterface.sol";
+import "../most/MOSTInterface.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../utility-token/UtilityTokenInterface.sol";
 
@@ -318,7 +319,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
             msg.sender
         );
 
-        ERC20I(most).burnFrom(msg.sender, _amount);
+        MOSTInterface(address(most)).burnFrom(msg.sender, _amount);
     }
 
 

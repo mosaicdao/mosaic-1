@@ -83,7 +83,7 @@ contract('ConsensusCogateway::withdraw', (accounts) => {
   });
 
   it('should successfully withdraw', async () => {
-    const beforeutBaseBalanceWithdrawer = await utBase.balanceOf(param.owner);
+    const beforeUtBaseBalanceWithdrawer = await utBase.balanceOf(param.owner);
 
     await utBase.approve(consensusCogateway.address, param.amount, {
       from: param.owner,
@@ -111,10 +111,10 @@ contract('ConsensusCogateway::withdraw', (accounts) => {
 
     assert.isOk(
       afterUtBaseBalanceWithdrawer.eq(
-        beforeutBaseBalanceWithdrawer.sub(param.amount),
+        beforeUtBaseBalanceWithdrawer.sub(param.amount),
       ),
-      'Deposit amount must be transferred from redeemer.'
-        + ` Expected balance is ${beforeutBaseBalanceWithdrawer
+      'Withdrawal amount must be transferred from withdrawer.'
+        + ` Expected balance is ${beforeUtBaseBalanceWithdrawer
           .sub(param.amount)
           .toString(10)} but`
         + `found ${afterUtBaseBalanceWithdrawer.toString(10)}`,

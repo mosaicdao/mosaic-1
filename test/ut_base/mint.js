@@ -26,18 +26,18 @@ contract('UtBase.mint()', (accounts) => {
   let wrappedAmount;
   let mintedAmount;
   let coconsensus;
-  let consensusCogateaway;
+  let consensusCogateway;
   let beneficiary;
   const accountProvider = new AccountProvider(accounts);
 
   beforeEach(async () => {
     coconsensus = accountProvider.get();
-    consensusCogateaway = accountProvider.get();
+    consensusCogateway = accountProvider.get();
     beneficiary = accountProvider.get();
     initialSupply = new BN('1000000');
     utBase = await UtBase.new(coconsensus, initialSupply);
     await utBase.setup({ from: coconsensus });
-    await utBase.setConsensusCogateway(consensusCogateaway);
+    await utBase.setConsensusCogateway(consensusCogateway);
     caller = accountProvider.get();
     mintedAmount = new BN('20');
 
@@ -49,7 +49,7 @@ contract('UtBase.mint()', (accounts) => {
     const initialContractBaseCoinBalance = await Utils.getBalance(utBase.address);
     const beneficiaryInitialERC20Balance = await utBase.balanceOf.call(beneficiary);
     const beneficiaryInitialCoinBalance = await Utils.getBalance(beneficiary);
-    await utBase.mint(beneficiary, mintedAmount, { from: consensusCogateaway });
+    await utBase.mint(beneficiary, mintedAmount, { from: consensusCogateway });
 
     const finalUtBaseContractBaseCoinBalance = await Utils.getBalance(utBase.address);
     const beneficiaryFinalCoinBalance = await Utils.getBalance(beneficiary);

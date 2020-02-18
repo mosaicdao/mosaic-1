@@ -72,15 +72,14 @@ contract UtilityToken is ERC20Token {
     /**
      * @notice External function to burn tokens.
      *
-     * @dev Burns an amount of the token of a given
-     *      account. Calls the internal burn function.
-     * @param _account The account whose tokens will be burnt.
+     * @dev Burns an amount of utility token from caller of the method.
+     *
      * @param _value The amount that will be burnt.
      */
-    function burn(address _account, uint256 _value)
+    function burn(uint256 _value)
         external
     {
-        _burn(_account, _value);
+        _burn(msg.sender, _value);
     }
 
     /**

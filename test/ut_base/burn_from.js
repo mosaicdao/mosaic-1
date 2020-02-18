@@ -12,44 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const UtilityToken = artifacts.require('UtilityTokenTest');
+const UtBase = artifacts.require('UtBaseTest');
 const BN = require('bn.js');
+const { AccountProvider } = require('../test_lib/utils');
 
 contract('UtBase::burnFrom', (accounts) => {
-  const TOKEN_SYMBOL = 'UT';
-  const TOKEN_NAME = 'Utility Token';
-  const TOKEN_DECIMALS = 18;
-  const TOTAL_TOKEN_SUPPLY = new BN('1000');
-  const consensusCogateway = accounts[2];
-  const beneficiary = accounts[3];
-  const spender = accounts[4];
+  const accountProvider = new AccountProvider(accounts);
+  const consensusCogateway = accountProvider.get();
+  const beneficiary = accountProvider.get();
+  const spender = accountProvider.get()
 
-  let utilityToken;
+  let utBase;
   let amount;
-
+  const initialSupply = new BN(1000000);
+  let burnAmount;
   beforeEach(async () => {
-    utilityToken = await UtilityToken.new();
-    amount = new BN('100');
+    const coconsensus = accountProvider.get();
+    utBase = await UtBase.new(coconsensus, initialSupply);
+    amount = new BN(10);
+    burnAmount = new BN(5);
+    await utBase.setup({ from: coconsensus });
+    await utBase.setConsensusCogateway(consensusCogateway);
+    await utBase.wrap({ from: beneficiary, value: amount });
 
-    await utilityToken.setupToken(
-      TOKEN_SYMBOL,
-      TOKEN_NAME,
-      TOKEN_DECIMALS,
-      TOTAL_TOKEN_SUPPLY,
-      consensusCogateway,
-    );
-
-    await utilityToken.mint(
-      beneficiary,
-      amount,
-      {
-        from: consensusCogateway,
-      },
-    );
-
-    await utilityToken.approve(
+    await utBase.approve(
       spender,
-      amount,
+      burnAmount,
       {
         from: beneficiary,
       },
@@ -57,18 +45,18 @@ contract('UtBase::burnFrom', (accounts) => {
   });
 
   it('should burn tokens from beneficiary when called with proper params by spender using burnFrom.', async () => {
-    const balanceBeforeBurnFrom = await utilityToken.balanceOf(beneficiary);
+    const balanceBeforeBurnFrom = await utBase.balanceOf(beneficiary);
 
-    await utilityToken.burnFrom(beneficiary, amount, {
+    await utBase.burnFrom(beneficiary, burnAmount, {
       from: spender,
     });
 
-    const balanceAfterBurnFrom = await utilityToken.balanceOf(beneficiary);
+    const balanceAfterBurnFrom = await utBase.balanceOf(beneficiary);
 
     assert.strictEqual(
-      balanceBeforeBurnFrom.sub(balanceAfterBurnFrom).eq(amount),
+      balanceBeforeBurnFrom.sub(balanceAfterBurnFrom).eq(burnAmount),
       true,
-      `Balance of beneficiary must decrease by ${amount}.`,
+      `Balance of beneficiary must decrease by ${burnAmount}.`,
     );
   });
 });

@@ -48,7 +48,7 @@ contract UtBaseConfirmDepositSpy is UtilityTokenInterface {
     /**
      * @notice Implemented to satisfy the interface definition.
      */
-    function burn(address, uint256)
+    function burn(uint256)
         external
     {
         require(false, 'This method should not be called.');

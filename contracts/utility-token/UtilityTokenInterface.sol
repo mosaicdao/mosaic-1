@@ -36,11 +36,9 @@ interface UtilityTokenInterface {
     /**
      * @notice Burns an amount of the token of a given account.
      *
-     * @param _account The account whose tokens will be burnt.
      * @param _value The amount in atto that will be burnt.
      */
     function burn(
-        address _account,
         uint256 _value
     )
         external;
