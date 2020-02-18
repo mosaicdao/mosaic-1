@@ -30,7 +30,7 @@ contract MessageInboxDouble is MessageInbox {
         bytes32 _metachainId,
         address _messageOutbox,
         uint8 _outboxStorageIndex,
-        StateRootI _stateRootProvider,
+        StateRootInterface _stateRootProvider,
         uint256 _maxStorageRootItems
     )
         external

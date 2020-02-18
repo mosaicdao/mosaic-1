@@ -16,7 +16,7 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "../ERC20I.sol";
 
-interface MOSTI {
+interface MOSTInterface {
 
     /**
      * Mints the given amount of token to beneficiary.

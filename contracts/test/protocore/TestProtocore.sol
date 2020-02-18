@@ -14,7 +14,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../../consensus/CoconsensusI.sol";
+import "../../consensus/CoconsensusInterface.sol";
 import "../../protocore/Protocore.sol";
 import "../../validator-set/ValidatorSet.sol";
 
@@ -22,7 +22,7 @@ contract TestProtocore is Protocore {
 
 	/* Storage */
 
-    CoconsensusI public coconsensus;
+    CoconsensusInterface public coconsensus;
 
     mapping(uint256 /* metablock height */ => mapping(address /* validator */ => bool)) fvs;
     mapping(uint256 /* metablock height */ => uint256 /* fvs count */) fvsCounts;
@@ -31,7 +31,7 @@ contract TestProtocore is Protocore {
     /* Functions */
 
     constructor(
-        CoconsensusI _coconsensus,
+        CoconsensusInterface _coconsensus,
         bytes32 _metachainId,
         bytes32 _domainSeparator,
         uint256 _epochLength,
@@ -76,7 +76,7 @@ contract TestProtocore is Protocore {
     function getCoconsensus()
         public
         view
-        returns (CoconsensusI)
+        returns (CoconsensusInterface)
     {
         return coconsensus;
     }

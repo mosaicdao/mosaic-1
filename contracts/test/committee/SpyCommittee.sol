@@ -1,7 +1,7 @@
 pragma solidity >=0.5.0 <0.6.0;
 
+import "../../committee/CommitteeInterface.sol";
 import "../../proxies/MasterCopyNonUpgradable.sol";
-import "../../committee/CommitteeI.sol";
 
 // Copyright 2019 OpenST Ltd.
 //
@@ -17,7 +17,7 @@ import "../../committee/CommitteeI.sol";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-contract SpyCommittee is MasterCopyNonUpgradable, CommitteeI{
+contract SpyCommittee is MasterCopyNonUpgradable, CommitteeInterface{
 
     bytes32 public mockedCommitteeDecision;
 

@@ -14,11 +14,11 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "./CoreI.sol";
+import "./CoreInterface.sol";
 import "./CoreStatusEnum.sol";
 import "../consensus/ConsensusModule.sol";
+import "../reputation/ReputationInterface.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
-import "../reputation/ReputationI.sol";
 import "../validator-set/ValidatorSet.sol";
 import "../version/MosaicVersion.sol";
 import "../vote-message/VoteMessage.sol";
@@ -32,7 +32,7 @@ contract Core is
     MosaicVersion,
     CoreStatusEnum,
     VoteMessage,
-    CoreI
+    CoreInterface
 {
 
     /* Usings */
@@ -150,7 +150,7 @@ contract Core is
     uint256 public countLogOutMessages;
 
     /** Reputation contract */
-    ReputationI public reputation;
+    ReputationInterface public reputation;
 
     /** Creation kernel height */
     uint256 public creationKernelHeight;
@@ -244,12 +244,12 @@ contract Core is
     /* Special Functions */
 
     function setup(
-        ConsensusI _consensus,
+        ConsensusInterface _consensus,
         bytes32 _metachainId,
         uint256 _epochLength,
         uint256 _minValidators,
         uint256 _joinLimit,
-        ReputationI _reputation,
+        ReputationInterface _reputation,
         uint256 _height,
         bytes32 _parent,
         uint256 _gasTarget,
@@ -285,7 +285,7 @@ contract Core is
         );
 
         require(
-            _reputation != ReputationI(0),
+            _reputation != ReputationInterface(0),
             "Reputation contract's address is null."
         );
 

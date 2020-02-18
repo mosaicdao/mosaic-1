@@ -54,16 +54,16 @@ contract ConsensusTest is Consensus {
     )
         external
     {
-        committees[_metachainId] = CommitteeI(_committeeAddress);
+        committees[_metachainId] = CommitteeInterface(_committeeAddress);
     }
 
     function setReputation(address _reputation) external {
-        reputation = ReputationI(_reputation);
+        reputation = ReputationInterface(_reputation);
     }
 
     function setAssignment(
         bytes32 _metachainId,
-        CoreI _core
+        CoreInterface _core
     )
         external
     {
@@ -71,7 +71,7 @@ contract ConsensusTest is Consensus {
     }
 
     function setCommitteeProposal(
-        CommitteeI _committeeAddress,
+        CommitteeInterface _committeeAddress,
         bytes32 _proposal
     )
         external
@@ -81,7 +81,7 @@ contract ConsensusTest is Consensus {
 
     function setAnchor(
         bytes32 _metachainId,
-        AnchorI _anchor
+        AnchorInterface _anchor
     )
         external
     {
@@ -94,6 +94,6 @@ contract ConsensusTest is Consensus {
     )
         external
     {
-        consensusGateways[_metachainId] = ConsensusGatewayI(_consensusGateway);
+        consensusGateways[_metachainId] = ConsensusGatewayInterface(_consensusGateway);
     }
 }

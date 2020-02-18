@@ -24,7 +24,7 @@ contract ConsensusModuleTest is ConsensusModule{
      * @notice This method is created to test setupConsensus method.
      * @param _consensus Address of consensus contract.
      */
-    function setupConsensusExternal(ConsensusI _consensus) public
+    function setupConsensusExternal(ConsensusInterface _consensus) public
     {
         ConsensusModule.setupConsensus(_consensus);
     }

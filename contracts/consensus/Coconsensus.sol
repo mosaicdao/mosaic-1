@@ -14,14 +14,14 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../anchor/ObserverI.sol";
+import "../anchor/ObserverInterface.sol";
 import "../block/BlockHeader.sol";
 import "../consensus/GenesisCoconsensus.sol";
-import "../consensus-gateway/ConsensusCogatewayI.sol";
-import "../protocore/ProtocoreI.sol";
-import "../protocore/SelfProtocoreI.sol";
+import "../consensus-gateway/ConsensusCogatewayInterface.sol";
+import "../protocore/ProtocoreInterface.sol";
+import "../protocore/SelfProtocoreInterface.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
-import "../reputation/CoreputationI.sol";
+import "../reputation/CoreputationInterface.sol";
 import "../version/MosaicVersion.sol";
 import "../vote-message/VoteMessage.sol";
 
@@ -104,10 +104,10 @@ contract Coconsensus is
     mapping (bytes32 /* metachainId */ => uint256 /* blocknumber */) public blockTips;
 
     /** Mapping of metachain id to the protocore contract address. */
-    mapping (bytes32 /* metachainId */ => ProtocoreI) public protocores;
+    mapping (bytes32 /* metachainId */ => ProtocoreInterface) public protocores;
 
     /** Mapping of metachain id to the observers contract address. */
-    mapping (bytes32 /* metachainId */ => ObserverI) public observers;
+    mapping (bytes32 /* metachainId */ => ObserverInterface) public observers;
 
     /** Mapping of metachain id to the domain separators. */
     mapping (bytes32 /* metachainId */ => bytes32 /* domain separator */) public domainSeparators;
@@ -239,7 +239,7 @@ contract Coconsensus is
             _targetBlockNumber
         );
 
-        ProtocoreI protocore = protocores[_metachainId];
+        ProtocoreInterface protocore = protocores[_metachainId];
 
         /*
          * Update reputation of validators and update the validator set in self
@@ -381,7 +381,7 @@ contract Coconsensus is
         );
 
         // Get the observer contract.
-        ObserverI observer = observers[_metachainId];
+        ObserverInterface observer = observers[_metachainId];
 
         // Anchor the state root.
         observer.anchorStateRoot(blockHeader.height, blockHeader.stateRoot);
@@ -394,18 +394,18 @@ contract Coconsensus is
     function getCoreputation()
         internal
         view
-        returns (CoreputationI)
+        returns (CoreputationInterface)
     {
-        return CoreputationI(COREPUTATION);
+        return CoreputationInterface(COREPUTATION);
     }
 
     /** @notice Get the consensus cogateway contract address. */
     function getConsensusCogateway()
         internal
         view
-        returns (ConsensusCogatewayI)
+        returns (ConsensusCogatewayInterface)
     {
-        return ConsensusCogatewayI(CONSENSUS_COGATEWAY);
+        return ConsensusCogatewayInterface(CONSENSUS_COGATEWAY);
     }
 
     /**
@@ -464,9 +464,6 @@ contract Coconsensus is
      *
      * @param _metachainId Metachain id.
      *
-     * \pre Protocore contract must exist for the given metachain id in
-     *      the genesisProtocores storage variable.
-     *
      * \post Adds newly setup protocore's address into protocores storage variable.
      * \post Adds newly setup protocore's domain separator into domainSeparators
      *       storage variable.
@@ -479,12 +476,7 @@ contract Coconsensus is
         // Get the protocore contract address from the genesis storage.
         address protocoreAddress = genesisProtocores[_metachainId];
 
-        require(
-            protocoreAddress != address(0),
-            "Protocore address must not be null."
-        );
-
-        ProtocoreI protocore = ProtocoreI(protocoreAddress);
+        ProtocoreInterface protocore = ProtocoreInterface(protocoreAddress);
 
         // Store the protocore address in protocores mapping.
         protocores[_metachainId] = protocore;
@@ -521,7 +513,7 @@ contract Coconsensus is
         // Get the observer contract address from the genesis storage.
         address observerAddress = genesisObservers[_metachainId];
         if(observerAddress != address(0)) {
-            ObserverI observer = ObserverI(observerAddress);
+            ObserverInterface observer = ObserverInterface(observerAddress);
 
             // Update the observers mapping.
             observers[_metachainId] = observer;
@@ -591,7 +583,7 @@ contract Coconsensus is
             _gasTarget
         );
 
-        ConsensusCogatewayI consensusCogateway = getConsensusCogateway();
+        ConsensusCogatewayInterface consensusCogateway = getConsensusCogateway();
 
         // Get the open kernel hash from the consensus cogateway contract.
         bytes32 openKernelHash = consensusCogateway.getKernelHash(_kernelHeight);
@@ -649,8 +641,8 @@ contract Coconsensus is
     )
         private
     {
-        SelfProtocoreI selfProtocore = SelfProtocoreI(_protocore);
-        CoreputationI coreputation = getCoreputation();
+        SelfProtocoreInterface selfProtocore = SelfProtocoreInterface(_protocore);
+        CoreputationInterface coreputation = getCoreputation();
 
         for (uint256 i = 0; i < _updatedValidators.length; i = i.add(1)) {
             address validator = _updatedValidators[i];

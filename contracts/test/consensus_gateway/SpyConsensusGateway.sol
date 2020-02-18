@@ -15,9 +15,9 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 import "../../proxies/MasterCopyNonUpgradable.sol";
-import "../../consensus-gateway/ConsensusGatewayI.sol";
+import "../../consensus-gateway/ConsensusGatewayInterface.sol";
 
-contract SpyConsensusGateway is MasterCopyNonUpgradable, ConsensusGatewayI {
+contract SpyConsensusGateway is MasterCopyNonUpgradable, ConsensusGatewayInterface {
 
     address public spyCore;
     uint256 public spyFeeGasPrice;

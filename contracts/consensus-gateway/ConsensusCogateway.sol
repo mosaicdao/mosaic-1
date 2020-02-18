@@ -15,12 +15,12 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 
-import "../consensus/CoconsensusI.sol";
+import "../consensus/CoconsensusInterface.sol";
 import "../consensus/CoconsensusModule.sol";
 import "../consensus-gateway/ConsensusGatewayBase.sol";
 import "../erc20-gateway/ERC20GatewayBase.sol";
 import "../message-bus/MessageBus.sol";
-import "../message-bus/StateRootI.sol";
+import "../message-bus/StateRootInterface.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../utility-token/UtilityTokenInterface.sol";
 
@@ -85,7 +85,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
             _consensusGateway
         );
 
-        address anchor = CoconsensusI(_coconsensus).getAnchor(_metachainId);
+        address anchor = CoconsensusInterface(_coconsensus).getAnchor(_metachainId);
 
         require(
             anchor != address(0),
@@ -96,7 +96,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
             _metachainId,
             _consensusGateway,
             _outboxStorageIndex,
-            StateRootI(anchor),
+            StateRootInterface(anchor),
             _maxStorageRootItems
         );
     }
