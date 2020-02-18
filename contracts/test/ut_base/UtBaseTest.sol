@@ -66,6 +66,11 @@ contract UtBaseTest is UtBase {
         return coconsensus;
     }
 
+    /**
+     * @notice Gets the consensus cogateway contract address.
+     *
+     * @return ConsensusCogateway contract address.
+     */
     function getConsensusCogateway() public view returns(address) {
         return consensusCogateway;
     }

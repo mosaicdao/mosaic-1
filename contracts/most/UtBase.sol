@@ -158,7 +158,7 @@ contract UtBase is MasterCopyNonUpgradable, GenesisUtBase, ERC20Token, Coconsens
 
     /**
      * @notice It allows to burn UtBase tokens for an account. It calls
-     *         ERC20Token::burn method.
+     *         ERC20Token::_burn method.
      *
      * @param _account The account whose tokens will be burnt.
      * @param _value The amount that will be burnt.
@@ -171,7 +171,7 @@ contract UtBase is MasterCopyNonUpgradable, GenesisUtBase, ERC20Token, Coconsens
 
     /**
      * @notice It allows to burn tokens of the spender. It calls
-     *         ERC20Token::burnFrom method.
+     *         ERC20Token::_burnFrom method.
      *
      * @param _account The account whose tokens will be burnt.
      * @param _value The amount that will be burnt.
