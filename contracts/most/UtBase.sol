@@ -60,13 +60,18 @@ contract UtBase is MasterCopyNonUpgradable, GenesisUtBase, ERC20Token, Coconsens
     /**
      * @notice Initializes the UtBase contract.
      *
-     * \pre Caller must be Consensus cogateway contract.
-     * \pre setup() must be called only once.
+     * \pre Can be called only once by consensus cogateway contract
      *
-     * \post Initializes ERC20 UtBase token balance of this contract
-     *       with total supply defined in genesis.
-     * \post Initilizes token symbol, name, decimals and token supply.
-     */
+     * \post Sets the `tokenSymbol` storage variable with `TOKEN_SYMBOL`
+     *       constant value.
+     * \post Sets the `tokenName` storage variable with `TOKEN_NAME`
+     *       constant value.
+     * \post Sets the `tokenDecimals` storage variable with `TOKEN_DECIMALS`
+     *       constant value.
+     * \post Sets the `totalTokenSupply` storage variable to genesis total
+     *       supply value.
+     * \post Adds the balance for the (self) contract address with genesis
+     *       total supply value.     */
     function setup()
         external
         onlyCoconsensus
@@ -97,14 +102,16 @@ contract UtBase is MasterCopyNonUpgradable, GenesisUtBase, ERC20Token, Coconsens
      * @notice Mints the ERC20 token for the beneficiary address and
      *         unwraps its to base coin.
      *
-     * \pre Caller must be Consensus cogateway contract.
-     *
-     * \post Increases total token supply.
-     * \post Increase ERC20 UtBase token balance of the beneficiary.
-     * \post It satisfies \post conditions of UtBase::unwrapInternal().
-     *
      * @param _beneficiary Beneficairy address which will receive base coin.
      * @param _amount Amount of UtBase tokens to be minted.
+     *
+     * \pre Caller must be Consensus cogateway contract.
+     *
+     * \post Increases total token supply by `_amount `.
+     * \post Increase ERC20 UtBase token balance of the beneficiary
+     *       by `_amount`.
+     * \post It satisfies all post conditions of UtBase::unwrapInternal().
+     *
      *
      */
     function mint(
@@ -124,11 +131,12 @@ contract UtBase is MasterCopyNonUpgradable, GenesisUtBase, ERC20Token, Coconsens
      * @dev This contract's base coin balance must always be greater than
      *       amount.
      *
-     * \pre Satisfies \pre conditions of UtBase::unwrapInternal.
-     *
-     * \post Satisfies \post conditions of UtBase::unwrapInternal.
-     *
      * @param _amount Amount of ERC20 UtBase token to convert to base coin.
+     *
+     * \pre Satisfies all conditions of UtBase::unwrapInternal.
+     *
+     * \post Satisfies all conditions of UtBase::unwrapInternal.
+     *
      */
     function unwrap(
         uint256 _amount
@@ -148,8 +156,10 @@ contract UtBase is MasterCopyNonUpgradable, GenesisUtBase, ERC20Token, Coconsens
      * \pre UtBase ERC20 token balance must be greater than
      *      amount to be wrapped.
      *
-     * \post Increases ERC20 UtBase token balance of the caller.
-     * \post Decreases ERC20 UtBase token balance of the UtBase contract.
+     * \post Increases ERC20 UtBase token balance of the caller by `msg.value`
+     *        amount.
+     * \post Decreases ERC20 UtBase token balance of the UtBase contract by
+     *       `msg.value` amount.
      */
     function wrap()
         external
@@ -171,13 +181,14 @@ contract UtBase is MasterCopyNonUpgradable, GenesisUtBase, ERC20Token, Coconsens
     /**
      * @notice It allows to burn UtBase tokens for an account.
      *
+     * @param _value The amount that will be burnt.
+     *
      * \pre msg.value should be non-zero.
      * \pre Caller must have atleast `_value` amount of ERC20 UtBase tokens.
      *
-     * \post Decreases total token supply of the token.
-     * \post Decreases caller's ERC20 UtBase token balance.
+     * \post Decreases total token supply of the token by `_value` amount.
+     * \post Decreases caller's ERC20 UtBase token balance by `_value` amount.
      *
-     * @param _value The amount that will be burnt.
      */
     function burn(uint256 _value)
         external
@@ -188,13 +199,14 @@ contract UtBase is MasterCopyNonUpgradable, GenesisUtBase, ERC20Token, Coconsens
     /**
      * @notice It allows to burn tokens of the spender.
      *
-     * \pre `_account` must approve `_value` amount to the caller
-     *
-     * \post Decreases total token supply of the token.
-     * \post Decreases `_account` ERC20 UtBase token balance.
-     *
      * @param _account The account whose tokens will be burnt.
      * @param _value The amount that will be burnt.
+     *
+     * \pre `_account` must approve `_value` amount to the caller
+     *
+     * \post Decreases total token supply of the token by `_value` amount.
+     * \post Decreases `_account` ERC20 UtBase token balance by
+     *       `_value` amount.
      */
     function burnFrom(address _account, uint256 _value)
         external
@@ -230,15 +242,16 @@ contract UtBase is MasterCopyNonUpgradable, GenesisUtBase, ERC20Token, Coconsens
      * @notice Internal method to transfer the base coin equivalent amount to
      *         beneficiary address.
      *
+     * @param _beneficiary Beneficairy address which will receive base coin.
+     * @param _amount Amount of ERC20 UtBase tokens to be unwrapped.
+     *
      * \pre `amount` must be less than or equal to beneficiary token balance.
      * \pre UtBase contract base token balance must be greater than or
      *      equal to `amount`.
      *
-     * \post UtBase contract receives ERC20 UtBase tokens.
-     * \post `_beneficiary` address receives base coin.
+     * \post UtBase contract receives `_amount` number of ERC20 UtBase tokens.
+     * \post `_beneficiary` address receives `_amount` number of base coins.
      *
-     * @param _beneficiary Beneficairy address which will receive base coin.
-     * @param _amount Amount of ERC20 UtBase tokens to be unwrapped.
      */
     function unwrapInternal(
         address payable _beneficiary,
