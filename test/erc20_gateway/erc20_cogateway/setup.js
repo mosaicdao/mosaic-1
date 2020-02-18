@@ -19,7 +19,7 @@ const ConsensusGatewayUtils = require('../../consensus-gateway/utils');
 
 const ERC20Cogateway = artifacts.require('ERC20CogatewayDouble');
 
-contract('ERC20Gateway::setup', (accounts) => {
+contract('ERC20Cogateway::setup', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
   let erc20Cogateway;
   let setupGenesisParams = {};

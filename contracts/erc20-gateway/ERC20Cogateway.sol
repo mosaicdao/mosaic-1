@@ -47,6 +47,16 @@ contract ERC20Cogateway is MasterCopyNonUpgradable, MessageBus, GenesisERC20Coga
 
     /**
      * @notice It initializes ERC20Cogateway contract.
+     *
+     * \pre  This function can only be called once. It's ensured by
+     *        MessageInbox::setupMessageInbox() and
+     *        MessageOutbox::setupMessageOutbox().
+     *
+     * \post Activates ERC20Cogateway contract.
+     * \post Sets up message inbox and updates inboundChannelIdentifier storage
+     *       variable.
+     * \post Setup message outbox and updates outboundChannelIdentifier storage
+     *       variable.
      */
     function setup()
         external
