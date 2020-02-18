@@ -40,10 +40,8 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
     /**
      * @notice Setup function for ERC20 gateway contract.
      *
-     * @dev - Function can only be called once is ensured by setup function of
-     *        message outbox and message inbox.
-     *      - Validations for input parameters are done in message outbox and
-     *        message inbox setup method.
+     * @dev  Validations for input parameters are done in message outbox and
+     *       message inbox setup method.
      *
      * @param _metachainId Metachain Id.
      * @param _erc20Cogateway Address of ERC20 Cogateway contract.
@@ -51,7 +49,8 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
      * @param _maxStorageRootItems Maximum number of storage roots stored.
      * @param _outboxStorageIndex Outbox storage index of ERC20 Cogateway.
      *
-     * \pre  This function can only be called once.
+     * \pre  This function can only be called once. It's ensured by setup
+     *       function of message outbox and inbox.
      *
      * \post Setup message outbox and updates outboundChannelIdentifier storage
      *       variable.
