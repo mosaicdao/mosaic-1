@@ -16,6 +16,12 @@ pragma solidity >=0.5.0 <0.6.0;
 
 contract ERC20GatewayBase {
 
+    /* Events */
+
+    /** Emitted when Gateway/Cogateway contract is proven. */
+    event GatewayProven(address gateway, uint256 blockNumber);
+
+
     /* Constants */
 
     bytes32 constant public DEPOSIT_INTENT_TYPEHASH = keccak256(

@@ -20,7 +20,7 @@ const ProveERC20CogatewayProof = require('../../data/prove_erc20_cogateway.json'
 const ERC20Gateway = artifacts.require('ERC20Gateway');
 const SpyAnchor = artifacts.require('SpyAnchor');
 
-contract('ERC20Gateway::proveCogateway', () => {
+contract('ERC20Gateway::proveGateway', () => {
   let erc20Gateway;
 
   const setupParams = {
@@ -50,7 +50,7 @@ contract('ERC20Gateway::proveCogateway', () => {
 
   contract('Positive Tests', () => {
     it('should successfully prove ERC20Cogateway contract address', async () => {
-      await erc20Gateway.proveCogateway(
+      const response = await erc20Gateway.proveGateway(
         ProveERC20CogatewayProof.blockNumber,
         ProveERC20CogatewayProof.rlpAccountNode,
         ProveERC20CogatewayProof.rlpParentNodes,
@@ -64,6 +64,29 @@ contract('ERC20Gateway::proveCogateway', () => {
         actualStorageHash,
         ProveERC20CogatewayProof.storageHash,
         'Storage hash is incorrect.',
+      );
+
+      assert.isOk(
+        response.receipt.logs.length > 0,
+        'It must emit event',
+      );
+      const eventObject = response.receipt.logs[0];
+
+      assert.strictEqual(
+        eventObject.event,
+        'GatewayProven',
+        'Must emit GatewayProven event',
+      );
+
+      assert.strictEqual(
+        eventObject.args.gateway,
+        erc20Gateway.address,
+        'Gateway address is incorrect in the event.',
+      );
+
+      assert.isOk(
+        eventObject.args.blockNumber.eqn(ProveERC20CogatewayProof.blockNumber),
+        'Block number is incorrect in the event.',
       );
     });
   });

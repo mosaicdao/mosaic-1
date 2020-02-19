@@ -88,7 +88,7 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
      *  @param _rlpAccount RLP encoded account node object.
      *  @param _rlpParentNodes RLP encoded value of account proof node array.
      */
-    function proveCogateway(
+    function proveGateway(
         uint256 _blockNumber,
         bytes calldata _rlpAccount,
         bytes calldata _rlpParentNodes
@@ -100,6 +100,8 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
             _rlpAccount,
             _rlpParentNodes
         );
+
+        emit GatewayProven(address(this), _blockNumber);
     }
 
 }
