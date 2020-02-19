@@ -150,28 +150,4 @@ interface ERC20I {
         external
         returns (bool success_);
 
-    /**
-     * @notice Burns an amount of the token of a given
-     *         account.
-     * @param _account The account whose tokens will be burnt.
-     * @param _value The amount that will be burnt.
-     *
-     * @return success_ `true` for a successful burn, `false` otherwise.
-     */
-    function burn(address _account, uint256 _value)
-        external
-        returns (bool success_);
-
-    /**
-     * @notice Burns an amount of the token of a given account, deducting
-     *         from the sender's allowance for said account.
-     * @param _account The account whose tokens will be burnt.
-     * @param _value The amount that will be burnt.
-     *
-     * @return success_ `true` for a successful burnFrom, `false` otherwise.
-     */
-    function burnFrom(address _account, uint256 _value)
-        external
-        returns (bool success_);
-
 }

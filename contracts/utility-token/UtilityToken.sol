@@ -59,38 +59,27 @@ contract UtilityToken is ERC20Token {
      *      proper events are emitted.
      * @param _account The account that will receive the created tokens.
      * @param _value The amount that will be created.
-     *
-     * @return success_ `true` for a successful mint, `false` otherwise.
      */
     function mint(address _account, uint256 _value)
         external
         onlyConsensusCogateway()
-        returns (bool success_)
     {
         _mint(_account, _value);
 
         emit Transfer(address(0), _account, _value);
-
-        success_ = true;
     }
 
     /**
      * @notice External function to burn tokens.
      *
-     * @dev Burns an amount of the token of a given
-     *      account. Calls the internal burn function.
-     * @param _account The account whose tokens will be burnt.
-     * @param _value The amount that will be burnt.
+     * @dev Burns an amount of utility token from caller of the method.
      *
-     * @return success_ `true` for a successful burn, `false` otherwise.
+     * @param _value The amount that will be burnt.
      */
-    function burn(address _account, uint256 _value)
+    function burn(uint256 _value)
         external
-        returns (bool success_)
     {
-        _burn(_account, _value);
-
-        success_ = true;
+        _burn(msg.sender, _value);
     }
 
     /**
@@ -101,16 +90,11 @@ contract UtilityToken is ERC20Token {
      *      account. Uses the internal _burnFrom function.
      * @param _account The account whose tokens will be burnt.
      * @param _value The amount that will be burnt.
-     *
-     * @return success_ `true` for a successful burnFrom, `false` otherwise.
      */
     function burnFrom(address _account, uint256 _value)
         external
-        returns (bool success_)
     {
         _burnFrom(_account, _value);
-
-        success_ = true;
     }
 
 
