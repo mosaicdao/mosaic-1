@@ -14,18 +14,13 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-interface ReputationI {
+interface ConsensusGatewayInterface {
 
-    function isSlashed(address _validator) external view returns (bool);
-
-    function stake(
-        address _validator,
-        address _withdrawalAddress
+    function declareOpenKernel(
+        address _core,
+        uint256 _feeGasPrice,
+        uint256 _feeGasLimit
     )
         external
-        returns (uint256);
-
-    function deregister(address _validator) external returns (uint256);
-
-    function getReputation(address _validator) external view returns (uint256);
+        returns (bytes32);
 }

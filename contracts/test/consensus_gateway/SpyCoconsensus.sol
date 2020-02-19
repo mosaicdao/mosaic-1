@@ -14,7 +14,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../../protocore/ProtocoreI.sol";
+import "../../protocore/ProtocoreInterface.sol";
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
@@ -43,7 +43,7 @@ contract SpyCoconsensus {
     }
 
     function openKernel(
-        ProtocoreI _protocore,
+        ProtocoreInterface _protocore,
         bytes32 _kernelHash
     )
         external
@@ -66,4 +66,3 @@ contract SpyCoconsensus {
 
 
 }
-

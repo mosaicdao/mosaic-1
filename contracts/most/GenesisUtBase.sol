@@ -15,20 +15,13 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 /**
- * @title An interface for consensus cogateway contract.
+ * @title Genesis UtBase contract.
  */
-interface ConsensusCogatewayI {
+contract GenesisUtBase {
 
-    /* External Functions */
+     /* Constants */
 
-    /**
-     * @notice Get the kernel hash for a given kernel height.
-     *
-     * @param _kernelHeight Kernel height.
-     *
-     * @return kernelHash_ Returns the kernel hash.
-     */
-    function getKernelHash(uint256 _kernelHeight)
-        external
-        returns (bytes32 kernelHash_);
+    /** Total initial supply value for UtBase token */
+    uint256 public genesisTotalSupply;
+
 }

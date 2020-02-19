@@ -14,31 +14,44 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "./../../most/Utmost.sol";
+import "./../../most/UtBase.sol";
 
 /**
- * @title UtmostTest contract.
+ * @title UtBaseTest contract.
  */
-contract UtmostTest is Utmost {
+contract UtBaseTest is UtBase {
 
     /* Storage */
 
-    CoconsensusI public coconsensus;
+    CoconsensusInterface public coconsensus;
+
+    address public consensusCogateway;
 
 
     /* Special Functions */
 
     /**
-     * @notice UtmostTest constructor.
+     * @notice UtBaseTest constructor.
      *
      * @param _coconsensus Coconsensus contract address.
      * @param _initialTokenSupply Initial token supply.
      */
-    constructor(CoconsensusI _coconsensus, uint256 _initialTokenSupply)
+    constructor(CoconsensusInterface _coconsensus, uint256 _initialTokenSupply)
         public
     {
         genesisTotalSupply = _initialTokenSupply;
         coconsensus = _coconsensus;
+    }
+
+
+    /* External Functions */
+
+    /**
+     * @notice It is used for testing purpose.
+     * @param _consensusCogateway Consensus cogateway contract address.
+     */
+    function setConsensusCogateway(address _consensusCogateway) external {
+        consensusCogateway = _consensusCogateway;
     }
 
 
@@ -49,7 +62,16 @@ contract UtmostTest is Utmost {
      *
      * @return Coconsensus contract address.
      */
-    function getCoconsensus() public view returns (CoconsensusI) {
+    function getCoconsensus() public view returns (CoconsensusInterface) {
         return coconsensus;
+    }
+
+    /**
+     * @notice Gets the consensus cogateway contract address.
+     *
+     * @return ConsensusCogateway contract address.
+     */
+    function getConsensusCogateway() public view returns(address) {
+        return consensusCogateway;
     }
 }

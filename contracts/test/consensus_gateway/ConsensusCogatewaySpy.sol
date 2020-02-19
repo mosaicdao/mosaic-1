@@ -14,9 +14,9 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../../consensus-gateway/ConsensusCogatewayI.sol";
+import "../../consensus-gateway/ConsensusCogatewayInterface.sol";
 
-contract ConsensusCogatewaySpy is ConsensusCogatewayI {
+contract ConsensusCogatewaySpy is ConsensusCogatewayInterface {
 
     mapping(uint256 => bytes32) public testKernelHashes;
 

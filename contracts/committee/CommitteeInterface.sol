@@ -1,6 +1,6 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-interface CommitteeI {
+interface CommitteeInterface {
 
     /**
      * @notice Enters a `_validator` into the committee.

@@ -16,44 +16,35 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "../ERC20I.sol";
 
-interface MOSTI {
+interface MOSTInterface {
 
     /**
      * Mints the given amount of token to beneficiary.
      *
      * @param _beneficiary Address of beneficiary where tokens are minted.
      * @param _amount Amount in wei.
-     *
-     * @return bool `true` if success else `false`.
      */
     function mint(
         address _beneficiary,
         uint256 _amount
     )
-        external
-        returns(bool);
+        external;
 
     /**
      * Burns the given amount(in atto) by msg.sender.
      *
      * @param _amount Amount in atto.
-     *
-     * @return bool `true` if success else `false`.
      */
     function burn(uint256 _amount)
-        external
-        returns(bool);
+        external;
 
     /**
      * Burns the given amount(in atto) of the given account.
      *
      * @param _account Address of account for which the tokens will be burned.
      * @param _amount Amount in atto.
-     *
-     * @return bool `true` if success else `false`.
      */
     function burnFrom(address _account, uint256 _amount)
-        external
-        returns(bool);
+        external;
 
 }

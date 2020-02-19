@@ -14,17 +14,17 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "../../consensus/CoconsensusI.sol";
+import "../../consensus/CoconsensusInterface.sol";
 import "../../protocore/OriginProtocore.sol";
 
 contract TestOriginProtocore is OriginProtocore {
 
     /* Storage */
 
-    CoconsensusI public coconsensus;
+    CoconsensusInterface public coconsensus;
 
     function setCoconsensus(address _coconsensus) external {
-        coconsensus = CoconsensusI(_coconsensus);
+        coconsensus = CoconsensusInterface(_coconsensus);
     }
 
     function setGenesisStorage(
@@ -56,7 +56,7 @@ contract TestOriginProtocore is OriginProtocore {
     function getCoconsensus()
 		public
 		view
-		returns (CoconsensusI)
+		returns (CoconsensusInterface)
 	{
         return coconsensus;
     }

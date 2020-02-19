@@ -15,12 +15,12 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 
-import "../consensus/CoconsensusI.sol";
+import "../consensus/CoconsensusInterface.sol";
 import "../consensus/CoconsensusModule.sol";
 import "../consensus-gateway/ConsensusGatewayBase.sol";
-import "../consensus-gateway/ERC20GatewayBase.sol";
+import "../erc20-gateway/ERC20GatewayBase.sol";
 import "../message-bus/MessageBus.sol";
-import "../message-bus/StateRootI.sol";
+import "../message-bus/StateRootInterface.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../utility-token/UtilityTokenInterface.sol";
 
@@ -55,8 +55,8 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
      *
      * @param _metachainId Metachain id of a metablock.
      * @param _coconsensus Address of Coconsensus contract.
-     * @param _utMOST Address of most contract at auxiliary chain.
-     * @param _consensusGateway Address of most contract at auxiliary chain.
+     * @param _utBase Address of UtBase contract at auxiliary chain.
+     * @param _consensusGateway Address of consensus cogateway contract at auxiliary chain.
      * @param _outboxStorageIndex Outbox Storage index of ConsensusGateway.
      * @param _maxStorageRootItems Max storage roots to be stored.
      * @param _metablockHeight Height of the metablock.
@@ -64,7 +64,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
     function setup(
         bytes32 _metachainId,
         address _coconsensus,
-        ERC20I _utMOST,
+        ERC20I _utBase,
         address _consensusGateway,
         uint8 _outboxStorageIndex,
         uint256 _maxStorageRootItems,
@@ -78,14 +78,14 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
          * MessageOutbox contract.
          */
 
-        ConsensusGatewayBase.setup(_utMOST, _metablockHeight);
+        ConsensusGatewayBase.setup(_utBase, _metablockHeight);
 
         MessageOutbox.setupMessageOutbox(
             _metachainId,
             _consensusGateway
         );
 
-        address anchor = CoconsensusI(_coconsensus).getAnchor(_metachainId);
+        address anchor = CoconsensusInterface(_coconsensus).getAnchor(_metachainId);
 
         require(
             anchor != address(0),
@@ -96,7 +96,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
             _metachainId,
             _consensusGateway,
             _outboxStorageIndex,
-            StateRootI(anchor),
+            StateRootInterface(anchor),
             _maxStorageRootItems
         );
     }
@@ -167,15 +167,9 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
 
         uint256 mintAmount = _amount.sub(feeAmount);
 
-        require(
-            UtilityTokenInterface(address(most)).mint(msg.sender, feeAmount),
-            "Reward must be minted."
-        );
+        UtilityTokenInterface(address(most)).mint(msg.sender, feeAmount);
 
-        require(
-            UtilityTokenInterface(address(most)).mint(_beneficiary, mintAmount),
-            "Tokens must be minted for beneficiary."
-        );
+        UtilityTokenInterface(address(most)).mint(_beneficiary, mintAmount);
     }
 
     /**
@@ -269,7 +263,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
     }
 
     /**
-     * @notice It allows withdrawing Utmost tokens. Withdrawer needs to
+     * @notice It allows withdrawing UtBase tokens. Withdrawer needs to
      *         approve consensus cogateway contract for the amount to
      *         be withdrawn.
      *
@@ -324,10 +318,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
             msg.sender
         );
 
-        require(
-            ERC20I(most).burnFrom(msg.sender, _amount),
-            "Utmost burnFrom must succeed."
-        );
+        UtilityTokenInterface(address(most)).burnFrom(msg.sender, _amount);
     }
 
 

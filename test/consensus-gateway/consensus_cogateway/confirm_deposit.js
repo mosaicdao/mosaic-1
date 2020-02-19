@@ -20,22 +20,22 @@ const TestData = require('../data/deposit_proof');
 
 const SpyCoconsensus = artifacts.require('SpyCoconsensus');
 const ConsensusCogateway = artifacts.require('ConsensusCogatewayDouble');
-const UtmostConfirmDepositSpy = artifacts.require('UtmostConfirmDepositSpy');
+const UtBaseConfirmDepositSpy = artifacts.require('UtBaseConfirmDepositSpy');
 
 contract('ConsensusCogateway::confirmDeposit', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
   let consensusCogateway;
   const anchor = accountProvider.get();
   let setupParams;
-  let utmost;
+  let utBase;
 
   beforeEach(async () => {
     consensusCogateway = await ConsensusCogateway.new();
 
-    utmost = await UtmostConfirmDepositSpy.new();
+    utBase = await UtBaseConfirmDepositSpy.new();
     setupParams = {
       metachainId: TestData.metachainId,
-      utMOST: utmost.address,
+      utBase: utBase.address,
       consensusGateway: TestData.consensusGateway,
       outboxStorageIndex: new BN(1),
       maxStorageRootItems: new BN(100),
@@ -48,7 +48,7 @@ contract('ConsensusCogateway::confirmDeposit', (accounts) => {
     await consensusCogateway.setup(
       setupParams.metachainId,
       setupParams.coconsensus.address,
-      setupParams.utMOST,
+      setupParams.utBase,
       setupParams.consensusGateway,
       setupParams.outboxStorageIndex,
       setupParams.maxStorageRootItems,
@@ -79,10 +79,10 @@ contract('ConsensusCogateway::confirmDeposit', (accounts) => {
         { from: sender },
       );
 
-      const beneficiary1 = await utmost.beneficiaries.call(0);
-      const beneficiary2 = await utmost.beneficiaries.call(1);
-      const amount1 = await utmost.amounts.call(0);
-      const amount2 = await utmost.amounts.call(1);
+      const beneficiary1 = await utBase.beneficiaries.call(0);
+      const beneficiary2 = await utBase.beneficiaries.call(1);
+      const amount1 = await utBase.amounts.call(0);
+      const amount2 = await utBase.amounts.call(1);
 
       assert.strictEqual(
         beneficiary1,
