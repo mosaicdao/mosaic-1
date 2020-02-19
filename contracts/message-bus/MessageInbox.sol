@@ -87,7 +87,6 @@ contract MessageInbox is MessageBox, Proof {
      * \pre `_metachainId` must not be zero.
      * \pre `_messageOutbox` address must not be zero.
      * \pre `_stateRootProvider` must not be zero.
-     * \pre It calls `Proof.setupProof`.
      *
      * \post Sets `messageOutbox` storage variable with the value
      *        of `_messageOutbox`.

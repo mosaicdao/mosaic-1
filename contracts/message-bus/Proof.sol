@@ -53,7 +53,6 @@ contract Proof is CircularBufferUint {
      * \pre The function can be called only once.
      * \pre `_storageAccount` must not be zero.
      * \pre `_stateRootProvider` must not be zero.
-     * \pre It calls `CircularBufferUint.setupCircularBuffer` method.
      *
      * \post Sets `storageAccount` storage variable with `_storageAccount`.
      * \post Sets `stateRootProvider` storage variable

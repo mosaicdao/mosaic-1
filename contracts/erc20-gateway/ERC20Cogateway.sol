@@ -52,9 +52,6 @@ contract ERC20Cogateway is MasterCopyNonUpgradable, GenesisERC20Cogateway, Messa
     /**
      * @notice It initializes ERC20Cogateway contract.
      *
-     * \pre It calls `MessageOutbox.setupMessageOutbox` and
-     *      MessageInbox.setupMessageInbox.
-     *
      * \post Activates ERC20Cogateway contract by setting 'activated' storage
      *       variable 'true'.
      * \post It calls `MessageOutbox.setupMessageOutbox` and
