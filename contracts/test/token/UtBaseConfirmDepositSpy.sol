@@ -17,9 +17,9 @@ pragma solidity >=0.5.0 <0.6.0;
 import "../../utility-token/UtilityTokenInterface.sol";
 
 /**
- * @title Utmost spy contract to test ConsensusCogateway::confirmDeposit.
+ * @title UtBase spy contract to test ConsensusCogateway::confirmDeposit.
  */
-contract UtmostConfirmDepositSpy is UtilityTokenInterface {
+contract UtBaseConfirmDepositSpy is UtilityTokenInterface {
 
     /* Storage */
 
@@ -34,29 +34,33 @@ contract UtmostConfirmDepositSpy is UtilityTokenInterface {
      *
      * @param _beneficiary Address of beneficiary where tokens are minted.
      * @param _amount Amount in wei.
-     *
-     * @return bool `true` if success else `false`.
      */
     function mint(
         address payable _beneficiary,
         uint256 _amount
     )
         external
-        returns(bool)
     {
         beneficiaries.push(_beneficiary);
         amounts.push(_amount);
-        return true;
     }
 
     /**
      * @notice Implemented to satisfy the interface definition.
      */
-    function burn(address, uint256)
+    function burn(uint256)
         external
-        returns(bool)
     {
         require(false, 'This method should not be called.');
+    }
+
+    /**
+     * @notice Implemented to satisfy the interface definition.
+     */
+    function burnFrom(address, uint256)
+        external
+    {
+        require(false, "This method should not be called from unit tests.");
     }
 
 }
