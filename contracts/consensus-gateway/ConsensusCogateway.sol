@@ -163,7 +163,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
         // Additional gas consumption after this statement can be adjusted with
         // the gas price value.
         uint256 gasConsumed = initialGas.sub(gasleft());
-        uint256 feeAmount = reward(gasConsumed, _feeGasPrice, _feeGasLimit);
+        uint256 feeAmount = ERC20GatewayBase.reward(gasConsumed, _feeGasPrice, _feeGasLimit);
 
         uint256 mintAmount = _amount.sub(feeAmount);
 
@@ -320,33 +320,4 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
 
         UtilityTokenInterface(address(most)).burnFrom(msg.sender, _amount);
     }
-
-
-    /* Private functions */
-
-    /**
-     * @notice Calculates reward.
-     *
-     * @param _gasConsumed Gas consumption in confirm deposit transaction.
-     * @param _feeGasPrice Gas price at which fee will be calculated.
-     * @param _feeGasLimit Gas limit at which fee will be capped.
-     *
-     * @return rewardAmount_ Total reward amount.
-     */
-    function reward(
-        uint256 _gasConsumed,
-        uint256 _feeGasPrice,
-        uint256 _feeGasLimit
-    )
-        private
-        pure
-        returns(uint256 rewardAmount_)
-    {
-        if(_gasConsumed > _feeGasLimit) {
-            rewardAmount_ = _feeGasPrice.mul(_feeGasLimit);
-        } else {
-            rewardAmount_ = _feeGasPrice.mul(_gasConsumed);
-        }
-    }
-
 }
