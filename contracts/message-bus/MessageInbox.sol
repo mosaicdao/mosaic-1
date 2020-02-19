@@ -82,6 +82,7 @@ contract MessageInbox is MessageBox, Proof {
      * @param _stateRootProvider State root provider contract address.
      * @param _maxStorageRootItems Defines how many storage roots should be
      *                             stored in circular buffer.
+     *
      * \pre Setup can only be called once.
      * \pre `_metachainId` must not be zero.
      * \pre `_messageOutbox` address must not be zero.

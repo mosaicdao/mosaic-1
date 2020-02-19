@@ -43,14 +43,14 @@ contract Proof is CircularBufferUint {
     /* Internal Functions */
 
     /**
-     * @notice Setup the proof contract. This can be called only once.
+     * @notice Setup the proof contract.
      *
      * @param _storageAccount Storage account that will be proved.
      * @param _stateRootProvider State root provider contract address.
      * @param _maxStorageRootItems Defines how many storage roots should be
      *                             stored in circular buffer.
      *
-     * \pre It can be only initiliazed once.
+     * \pre It can be only be initiliazed once.
      * \pre `_storageAccount` must not be zero.
      * \pre `_stateRootProvider` must not be zero.
      * \pre Satifies all the pre conditions of setup of
