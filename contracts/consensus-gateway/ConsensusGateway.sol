@@ -221,12 +221,20 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
      *
      * @return messageHash_ Message Hash
      *
-     * \pre Withdrawal amount should be greater than zero.
-     * \pre Beneficiary and Withdrawer address should not be zero.
-     * \pre RLP Parent nodes should not be zero.
+     * \pre `_amount` is not 0.
+     * \pre `_beneficiary` address is not 0.
+     * \pre `_withdrawer` address is not 0.
+     * \pre `_rlpParentNodes` is not 0
      *
-     * \post Token transfer of amount to withdrawer address must succeed.
-     * \post Reward transfer to message sender must succeed.
+     * \post Adds a new entry in `inbox` mapping storage variable. The value is
+     *       set as `true` for `messagehash_` in `inbox` mapping. The
+     *       `messageHash_` is calculated by `MessageInbox.confirmMessage`.
+     * \post Update the nonces storage mapping variable by incrementing the
+     *       value for `msg.sender` by one.
+     * \post Transfers the `most` token to the `msg.sender` address as a fees.
+     *       The `fees` amount is calculated by `ERC20GatewayBase::reward()`
+     * \post Transfer the `most` token to the `_beneficiary` address. The
+     *       transfer amount calculated as `_amount-fees`
      */
     function confirmWithdraw(
         uint256 _amount,
