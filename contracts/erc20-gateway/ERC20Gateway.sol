@@ -80,4 +80,26 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
         );
     }
 
+    /**
+     * @notice This method verifies merkle proof of ERC20 cogateway contract.
+     *
+     *  @param _blockNumber Block number at which ERC20 cogateway contract
+     *                      address is to be proven.
+     *  @param _rlpAccount RLP encoded account node object.
+     *  @param _rlpParentNodes RLP encoded value of account proof node array.
+     */
+    function proveCogateway(
+        uint256 _blockNumber,
+        bytes calldata _rlpAccount,
+        bytes calldata _rlpParentNodes
+    )
+        external
+    {
+        MessageInbox.proveStorageAccount(
+            _blockNumber,
+            _rlpAccount,
+            _rlpParentNodes
+        );
+    }
+
 }
