@@ -83,16 +83,20 @@ contract MessageInbox is MessageBox, Proof {
      * @param _maxStorageRootItems Defines how many storage roots should be
      *                             stored in circular buffer.
      *
-     * \pre Setup can only be called once.
+     * \pre The function can be called only once.
      * \pre `_metachainId` must not be zero.
      * \pre `_messageOutbox` address must not be zero.
      * \pre `_stateRootProvider` must not be zero.
-     * \pre Satisfies all the pre conditions of setup of proof contract.
+     * \pre It calls `Proof.setupProof`.
      *
-     * \post Sets message outbox address.
-     * \post Sets outbox storage index.
-     * \post Calculates and sets inbound channel identifier.
-     * \post Satisfies all the post conditions of setup of proof contract.
+     * \post Sets `messageOutbox` storage variable with the value
+     *        of `_messageOutbox`.
+     * \post Sets `outboxStorageIndex` storage with the value
+     *       of `_outboxStorageIndex`.
+     * \post Sets `inboundChannelIdentifier` storage variable.
+     *       `inboundChannelIdentifier` is calculated by
+     *       `MessageBox.hashChannelIdentifier` method.
+     * \post It calls `Proof.setupProof`.
      */
     function setupMessageInbox(
         bytes32 _metachainId,

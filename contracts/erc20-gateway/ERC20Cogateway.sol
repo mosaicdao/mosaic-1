@@ -15,9 +15,9 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 import "./GenesisERC20Cogateway.sol";
-import "../proxies/MasterCopyNonUpgradable.sol";
 import "../message-bus/MessageBus.sol";
 import "../message-bus/StateRootInterface.sol";
+import "../proxies/MasterCopyNonUpgradable.sol";
 
 /**
  * @title ERC20Cogateway confirms the deposit intent and mint utility tokens.
@@ -52,12 +52,13 @@ contract ERC20Cogateway is MasterCopyNonUpgradable, GenesisERC20Cogateway, Messa
     /**
      * @notice It initializes ERC20Cogateway contract.
      *
-     * \pre Satisfies all pre conditions of setup of message outbox
-     *      and inbox contract.
+     * \pre It calls `MessageOutbox.setupMessageOutbox` and
+     *      MessageInbox.setupMessageInbox.
      *
-     * \post Activates ERC20Cogateway contract.
-     * \post Satifies all post conditions of setup message outbox and
-     *       inbox contract.
+     * \post Activates ERC20Cogateway contract by setting 'activated' storage
+     *       variable 'true'.
+     * \post It calls `MessageOutbox.setupMessageOutbox` and
+     *       MessageInbox.setupMessageInbox.
      */
     function setup()
         external

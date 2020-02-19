@@ -75,14 +75,14 @@ contract MessageOutbox is MessageBox {
      * @param _metachainId Metachain identifier.
      * @param _messageInbox MessageInbox contract address.
      *
-     * \pre Setup can only be called once.
+     * \pre The function can be called only once.
      * \pre `_metachainId` must not be zero.
      * \pre `_messageInbox` address must not be zero.
-     * \pre Satisfies all the pre conditions of setup of proof contract.
      *
-     * \post Sets message inbox address.
-     * \post Calculates and sets outbound channel identifier.
-     * \post Satisfies all the post conditions of setup of proof contract.
+     * \post Sets `messageInbox` storage variable with `_messageInbox`.
+     * \post Sets `outboundChannelIdentifier` storage variable.
+     *       `outboundChannelIdentifier` is calculated by
+     *       MessageBox.hashChannelIdentifier method.
      */
     function setupMessageOutbox(
         bytes32 _metachainId,
