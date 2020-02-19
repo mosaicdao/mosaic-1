@@ -30,12 +30,13 @@ contract('UtilityToken::mint', (accounts) => {
     utilityToken = await UtilityToken.new();
     amount = new BN('100');
 
-    await utilityToken.setupToken(
+    await utilityToken.setup(
       TOKEN_SYMBOL,
       TOKEN_NAME,
       TOKEN_DECIMALS,
       TOTAL_TOKEN_SUPPLY,
       consensusCogateway,
+      accounts[4],
     );
   });
 
