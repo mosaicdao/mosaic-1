@@ -28,7 +28,7 @@ contract('ConsensusCogateway::setup', (accounts) => {
   const anchor = accountProvider.get();
   const setupParams = {
     metachainId: Utils.getRandomHash(),
-    utMOST: accountProvider.get(),
+    utBase: accountProvider.get(),
     consensusGateway: accountProvider.get(),
     outboxStorageIndex: new BN(1),
     maxStorageRootItems: new BN(100),
@@ -47,7 +47,7 @@ contract('ConsensusCogateway::setup', (accounts) => {
       await consensusCogateway.setup(
         setupParams.metachainId,
         setupParams.coconsensus.address,
-        setupParams.utMOST,
+        setupParams.utBase,
         setupParams.consensusGateway,
         setupParams.outboxStorageIndex,
         setupParams.maxStorageRootItems,
@@ -116,7 +116,7 @@ contract('ConsensusCogateway::setup', (accounts) => {
       );
 
       assert.strictEqual(
-        setupParams.utMOST,
+        setupParams.utBase,
         await consensusCogateway.most.call(),
         'Invalid most address at auxiliary chain',
       );

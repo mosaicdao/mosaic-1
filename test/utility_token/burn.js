@@ -46,7 +46,7 @@ contract('UtilityToken::burn', (accounts) => {
   it('should burn tokens when called with proper params.', async () => {
     const balanceBeforeMint = await utilityToken.balanceOf(beneficiary);
 
-    await utilityToken.burn(beneficiary, amount);
+    await utilityToken.burn(amount, { from: beneficiary });
 
     const balanceAfterBurn = await utilityToken.balanceOf(beneficiary);
 
