@@ -45,15 +45,22 @@ contract Proof is CircularBufferUint {
     /**
      * @notice Setup the proof contract. This can be called only once.
      *
-     * @dev Function requires:
-     *          - proof contract must not be already initialized
-     *          - storageAccount must not be zero
-     *          - stateRootProvider must not be zero
-     *
      * @param _storageAccount Storage account that will be proved.
      * @param _stateRootProvider State root provider contract address.
      * @param _maxStorageRootItems Defines how many storage roots should be
      *                             stored in circular buffer.
+     *
+     * \pre It can be only initiliazed once.
+     * \pre `_storageAccount` must not be zero.
+     * \pre `_stateRootProvider` must not be zero.
+     * \pre Satifies all the pre conditions of setup of
+     *      CircularBuffer contract.
+     *
+     * \post Sets storage account.
+     * \post Sets state root provider.
+     * \post Calculates and sets encoded account path.
+     * \post Satisfies all the post conditions of setup of
+     *       CircularBuffer contract.
      */
     function setupProof(
         address _storageAccount,

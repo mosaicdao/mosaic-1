@@ -20,14 +20,18 @@ import "../message-bus/MessageBus.sol";
 import "../message-bus/StateRootInterface.sol";
 
 /**
- * @title ERC20Cogateway facilitates confirming deposit and withdrawal of
- *        utility token at auxiliary chain.
+ * @title ERC20Cogateway confirms the deposit intent and mint utility tokens.
+ *        Also initiates the withdrawal of token.
  */
-contract ERC20Cogateway is MasterCopyNonUpgradable, MessageBus, GenesisERC20Cogateway {
+contract ERC20Cogateway is MasterCopyNonUpgradable, GenesisERC20Cogateway, MessageBus {
 
     /* Storage */
 
-    /** Specifies if the ERC20Cogateway is activated. */
+    /**
+     * Specifies if the ERC20Cogateway is activated.
+     * @dev This is set to true when the setup is called. This ensures that
+     *      the functions revert if they are called before the setup is done.
+     */
     bool public activated;
 
 
@@ -48,20 +52,20 @@ contract ERC20Cogateway is MasterCopyNonUpgradable, MessageBus, GenesisERC20Coga
     /**
      * @notice It initializes ERC20Cogateway contract.
      *
-     * \pre  This function can only be called once. It's ensured by
-     *        MessageInbox::setupMessageInbox() and
-     *        MessageOutbox::setupMessageOutbox().
+     * \pre Satisfies all pre conditions of setup of message outbox
+     *      and inbox contract.
      *
      * \post Activates ERC20Cogateway contract.
-     * \post Sets up message inbox and updates inboundChannelIdentifier storage
-     *       variable.
-     * \post Setup message outbox and updates outboundChannelIdentifier storage
-     *       variable.
+     * \post Satifies all post conditions of setup message outbox and
+     *       inbox contract.
      */
     function setup()
         external
     {
-        MessageOutbox.setupMessageOutbox(genesisMetachainId, genesisERC20Gateway);
+        MessageOutbox.setupMessageOutbox(
+            genesisMetachainId,
+            genesisERC20Gateway
+        );
 
         MessageInbox.setupMessageInbox(
             genesisMetachainId,

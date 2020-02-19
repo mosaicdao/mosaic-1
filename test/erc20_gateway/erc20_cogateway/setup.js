@@ -49,29 +49,30 @@ contract('ERC20Cogateway::setup', (accounts) => {
     const outboxStorageIndexInContract = await erc20Cogateway.outboxStorageIndex.call();
     assert.isOk(
       setupGenesisParams.genesisOutboxStorageIndex.eq(outboxStorageIndexInContract),
-      `Expected outbox storage index is ${setupGenesisParams.genesisOutboxStorageIndex}`
-      + `but got ${outboxStorageIndexInContract}`,
+      'Expected outbox storage index is '
+      + `${setupGenesisParams.genesisOutboxStorageIndex.toString(10)}`
+      + `but got ${outboxStorageIndexInContract.toString(10)}`,
     );
 
     const stateRootProviderInContract = await erc20Cogateway.stateRootProvider.call();
     assert.strictEqual(
       stateRootProviderInContract,
       setupGenesisParams.genesisStateRootProvider,
-      'Incorrect state root provider in contract',
+      'State root provider address is not set in the contract.',
     );
 
-    const messageInboxFromContract = await erc20Cogateway.messageInbox.call();
+    const messageInboxAddressFromContract = await erc20Cogateway.messageInbox.call();
     assert.strictEqual(
-      messageInboxFromContract,
+      messageInboxAddressFromContract,
       setupGenesisParams.genesisERC20Gateway,
-      'Mismatch in inbox contract address.',
+      'Inbox address is not set in the contract.',
     );
 
-    const messageOutboxFromContract = await erc20Cogateway.messageOutbox.call();
+    const messageOutboxAddressFromContract = await erc20Cogateway.messageOutbox.call();
     assert.strictEqual(
-      messageOutboxFromContract,
+      messageOutboxAddressFromContract,
       setupGenesisParams.genesisERC20Gateway,
-      'Mismatch in outbox contract address',
+      'Outbox address is not set in the contract.',
     );
 
     const outboundChannelIdentifier = ConsensusGatewayUtils.getChannelIdentifier(
@@ -84,7 +85,7 @@ contract('ERC20Cogateway::setup', (accounts) => {
     assert.strictEqual(
       outboundChannelIdentifier,
       outboundChannelIdentifierInContract,
-      'Invalid outbound channel identifier',
+      'Invalid outbound channel identifier.',
     );
 
     const inboundChannelIdentifier = ConsensusGatewayUtils.getChannelIdentifier(
@@ -97,13 +98,13 @@ contract('ERC20Cogateway::setup', (accounts) => {
     assert.strictEqual(
       inboundChannelIdentifier,
       inboundChannelIdentifierInContract,
-      'Invalid inbound channel identifier',
+      'Invalid inbound channel identifier.',
     );
 
     const erc20CogatewayActivationStatus = await erc20Cogateway.activated.call();
     assert.isOk(
       erc20CogatewayActivationStatus,
-      'ERC20Cogateway must be activated',
+      'ERC20Cogateway must be activated.',
     );
   });
 });
