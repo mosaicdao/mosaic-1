@@ -59,6 +59,17 @@ contract UtilityToken is MasterCopyNonUpgradable, ERC20Token {
      * @param _totalTokenSupply Total token supply.
      * @param _consensusCogateway ConsensusCogateway contract address.
      * @param _valueToken Address of value token contract.
+     *
+     * \pre Setup is not already called.
+     * \pre `_consensusCogateway` address is not zero.
+     * \pre `_valueToken` address is not zero.
+     *
+     * \post Sets the token symbol;
+     * \post Sets the token name;
+     * \post Sets the token decimal;
+     * \post Sets the total token supply;
+     * \post Sets the consensus cogateway address;
+     * \post Sets the value token address;
      */
     function setup(
         string calldata _symbol,
@@ -72,7 +83,7 @@ contract UtilityToken is MasterCopyNonUpgradable, ERC20Token {
     {
         require(
             consensusCogateway == address(0),
-            "ConsensusCogateway address is already set."
+            "Contract has been already setup."
         );
 
         require(
