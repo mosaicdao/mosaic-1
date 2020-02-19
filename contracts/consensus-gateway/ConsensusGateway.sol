@@ -220,6 +220,13 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
                               on the origin chain.
      *
      * @return messageHash_ Message Hash
+     *
+     * \pre Withdrawal amount should be greater than zero.
+     * \pre Beneficiary and Withdrawer address should not be zero.
+     * \pre RLP Parent nodes should not be zero.
+     *
+     * \post Token transfer of amount to withdrawer address must succeed.
+     * \post Reward transfer to message sender must succeed.
      */
     function confirmWithdraw(
         uint256 _amount,
