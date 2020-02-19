@@ -26,10 +26,10 @@ const Utils = require('../test/test_lib/utils.js');
 /**
  * Instructions to generate proof
  * use web3 version as 1.0.0-beta.53
- * 1. run geth : docker run -p 8545:8545 -p 8546:8546 -p 30303:30303 mosaicdao/dev-chains:1.0.3 origin
- * 2. run test : truffle test data_generator/withdraw_proof.js
+ * 1. docker run -p 8545:8545 -p 8546:8546 -p 30303:30303 mosaicdao/dev-chains:1.0.3 origin
+ * 2. truffle test data_generator/withdraw_proof.js
  */
-contract('Withdraw Proof', (accounts) => {
+contract('Withdraw Proof', () => {
   let consensusCogateway;
   let setupParam;
   let token;
@@ -39,7 +39,8 @@ contract('Withdraw Proof', (accounts) => {
   let blockNumber;
   let outboundChannelIdentifier;
   let metachainId;
-​
+  let web3Accounts;
+
   function storagePath(
     storageIndex,
     mappings,
@@ -61,11 +62,11 @@ contract('Withdraw Proof', (accounts) => {
   }
 
   beforeEach(async () => {
-    web3 = new Web3("http://localhost:8545");
-    accounts = await web3.eth.getAccounts();
-    withdrawer = accounts[0];
+    web3 = new Web3('http://localhost:8545');
+    web3Accounts = await web3.eth.getAccounts();
+    [withdrawer] = web3Accounts;
 
-    token = await Utils.deployMockToken(withdrawer,200);
+    token = await Utils.deployMockToken(withdrawer, 200);
     consensusCogateway = await ConsensusCogateway.new();
 
     withdrawParam = {
@@ -123,12 +124,12 @@ contract('Withdraw Proof', (accounts) => {
     );
 
     outboundChannelIdentifier = await consensusCogateway.outboundChannelIdentifier.call();
-​
+
     await token.approve(consensusCogateway.address, withdrawParam.amount, {
       from: withdrawer,
     });
   });
-​
+
   it('Withdraw storage proof for ConsensusCogateway:withdraw', async () => {
     const messageHash = await consensusCogateway.withdraw.call(
       withdrawParam.amount,
@@ -137,7 +138,7 @@ contract('Withdraw Proof', (accounts) => {
       withdrawParam.feeGasLimit,
       { from: withdrawer },
     );
-​
+
     await consensusCogateway.withdraw(
       withdrawParam.amount,
       withdrawParam.beneficiary,
@@ -145,17 +146,17 @@ contract('Withdraw Proof', (accounts) => {
       withdrawParam.feeGasLimit,
       { from: withdrawer },
     );
-​
+
     blockNumber = (await web3.eth.getBlock('latest')).number;
     const proof = await web3.eth.getProof(
       consensusCogateway.address,
       [storagePath('1', [messageHash])],
       blockNumber,
     );
-​
+
     const accountProof = formatProof(proof.accountProof);
     const storageProof = formatProof(proof.storageProof[0].proof);
-​
+
     const proofOutput = {
       outboundChannelIdentifier,
       messageHash,
@@ -163,7 +164,7 @@ contract('Withdraw Proof', (accounts) => {
       blockNumber,
       accountProof,
       storageProof,
-      metachainId: metachainId,
+      metachainId,
       consensusGateway: setupParam.consensusGateway,
       consensusCogateway: consensusCogateway.address,
       outboxStorageIndex: setupParam.outboxStorageIndex,
@@ -172,7 +173,7 @@ contract('Withdraw Proof', (accounts) => {
 
     fs.writeFileSync(
       'test/consensus-gateway/data/withdraw_proof.json',
-      JSON.stringify(proofOutput,null, '    '),
+      JSON.stringify(proofOutput, null, '    '),
     );
   });
 });

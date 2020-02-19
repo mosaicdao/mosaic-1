@@ -83,30 +83,33 @@ contract('ConsensusGateway::confirmWithdraw', (accounts) => {
         TestData.withdrawParam.beneficiary,
         TestData.blockNumber,
         TestData.storageProof,
-        {from : sender},
+        { from: sender },
       );
 
       const afterMOSTBalanceConsensusGateway = await most.balanceOf(consensusGateway.address);
       const afterMOSTBalanceWithdrawer = await most.balanceOf(TestData.withdrawParam.beneficiary);
       const afterMOSTBalanceSender = await most.balanceOf(sender);
 
-      const transactionMOSTBalanceWithdrawer = new BN(afterMOSTBalanceWithdrawer).sub(new BN(beforeMOSTBalanceWithdrawer));
-      const transactionMOSTBalanceSender = new BN(afterMOSTBalanceSender).sub(new BN(beforeMOSTBalanceSender));
+      const transactionMOSTBalanceWithdrawer = new BN(afterMOSTBalanceWithdrawer)
+        .sub(new BN(beforeMOSTBalanceWithdrawer));
+
+      const transactionMOSTBalanceSender = new BN(afterMOSTBalanceSender)
+        .sub(new BN(beforeMOSTBalanceSender));
 
       assert.isOk(
         new BN(TestData.withdrawParam.amount)
-        .eq(
-          transactionMOSTBalanceWithdrawer.add(transactionMOSTBalanceSender),
-        ),
+          .eq(
+            transactionMOSTBalanceWithdrawer.add(transactionMOSTBalanceSender),
+          ),
         'Reward plus transfer amount should be equal to withdraw amount',
       );
 
       assert.isOk(
         new BN(TestData.withdrawParam.amount)
-        .eq(
-          new BN(beforeMOSTBalanceConsensusGateway).sub(new BN(afterMOSTBalanceConsensusGateway))
-        ),
-        'Withdrawal Amount should be transferred by consensus gateway.'
+          .eq(
+            new BN(beforeMOSTBalanceConsensusGateway).sub(new BN(afterMOSTBalanceConsensusGateway)),
+          ),
+        'Withdrawal Amount should be transferred by consensus gateway.',
       );
     });
   });
