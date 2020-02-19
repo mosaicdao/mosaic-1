@@ -36,7 +36,7 @@ contract('ConsensusGateway::confirmWithdraw', (accounts) => {
     await most.transfer(
       consensusGateway.address,
       TestData.withdrawParam.amount,
-      { from :owner, }
+      { from: owner },
     );
 
     spyConsensus = await SpyConsensus.new();
@@ -47,33 +47,33 @@ contract('ConsensusGateway::confirmWithdraw', (accounts) => {
       consensusCogateway: TestData.consensusCogateway,
       maxStorageRootItems: new BN(100),
       outboxStorageIndex: new BN(1),
-     };
+    };
 
-     await consensusGateway.setup(
+    await consensusGateway.setup(
       setupParams.metachainId,
       setupParams.consensus,
       setupParams.most,
       setupParams.consensusCogateway,
       setupParams.maxStorageRootItems,
       setupParams.outboxStorageIndex,
-     );
+    );
 
-     await consensusGateway.setInboundChannelIdentifier(
+    await consensusGateway.setInboundChannelIdentifier(
       TestData.outboundChannelIdentifier,
-     );
+    );
 
-     await consensusGateway.setStorageRoot(
+    await consensusGateway.setStorageRoot(
       TestData.blockNumber,
       TestData.rawProofResult.storageHash,
-     );
+    );
   });
 
   contract('Positive Tests', () => {
     it('should confirm withdraw', async () => {
       const sender = accountProvider.get();
-      let beforeMOSTBalanceConsensusGateway = await most.balanceOf(consensusGateway.address);
-      let beforeMOSTBalanceWithdrawer = await most.balanceOf(TestData.withdrawParam.beneficiary);
-      let beforeMOSTBalanceSender = await most.balanceOf(sender);
+      const beforeMOSTBalanceConsensusGateway = await most.balanceOf(consensusGateway.address);
+      const beforeMOSTBalanceWithdrawer = await most.balanceOf(TestData.withdrawParam.beneficiary);
+      const beforeMOSTBalanceSender = await most.balanceOf(sender);
 
       await consensusGateway.confirmWithdraw(
         TestData.withdrawParam.amount,
@@ -86,12 +86,12 @@ contract('ConsensusGateway::confirmWithdraw', (accounts) => {
         {from : sender},
       );
 
-      let afterMOSTBalanceConsensusGateway = await most.balanceOf(consensusGateway.address);
-      let afterMOSTBalanceWithdrawer = await most.balanceOf(TestData.withdrawParam.beneficiary);
-      let afterMOSTBalanceSender = await most.balanceOf(sender);
+      const afterMOSTBalanceConsensusGateway = await most.balanceOf(consensusGateway.address);
+      const afterMOSTBalanceWithdrawer = await most.balanceOf(TestData.withdrawParam.beneficiary);
+      const afterMOSTBalanceSender = await most.balanceOf(sender);
 
-      let transactionMOSTBalanceWithdrawer = new BN(afterMOSTBalanceWithdrawer).sub(new BN(beforeMOSTBalanceWithdrawer));
-      let transactionMOSTBalanceSender = new BN(afterMOSTBalanceSender).sub(new BN(beforeMOSTBalanceSender));
+      const transactionMOSTBalanceWithdrawer = new BN(afterMOSTBalanceWithdrawer).sub(new BN(beforeMOSTBalanceWithdrawer));
+      const transactionMOSTBalanceSender = new BN(afterMOSTBalanceSender).sub(new BN(beforeMOSTBalanceSender));
 
       assert.isOk(
         new BN(TestData.withdrawParam.amount)

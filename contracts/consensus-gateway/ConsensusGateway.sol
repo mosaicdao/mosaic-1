@@ -215,11 +215,11 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
      * @param _feeGasLimit Gas limit at which fee will be capped.
      * @param _blockNumber Block number of Aux chain against which storage
                            proof is generated.
-     * @param _withdrawer Storage merkle proof to verify message declaration
-                          on the origin chain.
+     * @param _withdrawer Address of the withdrawer account.
      * @param _rlpParentNodes Storage merkle proof to verify message declaration
                               on the origin chain.
      *
+     * @return messageHash_ Message Hash
      */
     function confirmWithdraw(
         uint256 _amount,
@@ -264,7 +264,11 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
         );
 
         uint256 gasConsumed = initialGas.sub(gasleft());
-        uint256 feeAmount = ERC20GatewayBase.reward(gasConsumed, _feeGasPrice, _feeGasLimit);
+        uint256 feeAmount = ERC20GatewayBase.reward(
+            gasConsumed,
+            _feeGasPrice,
+            _feeGasLimit
+        );
         uint256 withdrawAmount = _amount.sub(feeAmount);
 
         require(
@@ -273,7 +277,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
         );
         require(
             ERC20I(most).transfer(_beneficiary, withdrawAmount),
-            "Withdrawal MOST transfer to beneficiary must succeed."
+            "Token transfer to the beneficiary must succeed."
         );
     }
 }

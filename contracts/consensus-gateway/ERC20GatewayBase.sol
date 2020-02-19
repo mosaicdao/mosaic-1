@@ -22,6 +22,7 @@ contract ERC20GatewayBase {
 
     using SafeMath for uint256;
 
+
     /* Constants */
 
     bytes32 constant public DEPOSIT_INTENT_TYPEHASH = keccak256(
@@ -85,6 +86,7 @@ contract ERC20GatewayBase {
             )
         );
     }
+
 
     /* Internal functions */
 
