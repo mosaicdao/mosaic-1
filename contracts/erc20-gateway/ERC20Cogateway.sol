@@ -85,7 +85,7 @@ contract ERC20Cogateway is MasterCopyNonUpgradable, GenesisERC20Cogateway, Messa
     }
 
     /**
-     * @notice It proves that ERC20Gateway contract exists on origin chain
+     * @notice It verifies that ERC20Gateway contract exists on origin chain
      *         using merkle account proof.
      *
      * @param _blockNumber Block number at which ERC20Gateway contract is to
