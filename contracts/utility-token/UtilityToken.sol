@@ -51,7 +51,7 @@ contract UtilityToken is MasterCopyNonUpgradable, ERC20Token {
 
     /**
      * @notice Sets up the symbol, name, decimals, totalSupply, value token
-     *         and the consensusCogateway address
+     *         and the consensusCogateway address.
      *
      * @param _symbol Symbol of token.
      * @param _name Name of token.
@@ -64,12 +64,14 @@ contract UtilityToken is MasterCopyNonUpgradable, ERC20Token {
      * \pre `_consensusCogateway` address is not zero.
      * \pre `_valueToken` address is not zero.
      *
-     * \post Sets the token symbol;
-     * \post Sets the token name;
-     * \post Sets the token decimal;
-     * \post Sets the total token supply;
-     * \post Sets the consensus cogateway address;
-     * \post Sets the value token address;
+     * \post Sets `tokenSymbol` storage variable with `_symbol`.
+     * \post Sets `tokenName` storage variable with `_name`.
+     * \post Sets `tokenDecimals` storage variable with `_decimal`.
+     * \post Sets the `totalTokenSupply` storage variable with
+     *       `_totalTokenSupply`.
+     * \post Sets the `consensusCogateway` storage variable with
+     *       `_consensusCogateway`.
+     * \post Sets the `valueToken` storage variable with `_valueToken`.
      */
     function setup(
         string calldata _symbol,
