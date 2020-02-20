@@ -18,18 +18,20 @@ const BN = require('bn.js');
 const rlp = require('rlp');
 const fs = require('fs');
 
-const MockToken = artifacts.require('MockToken');
 const MockConsensus = artifacts.require('MockConsensus');
 const ConsensusGateway = artifacts.require('ConsensusGateway');
 
+const Web3 = require('web3');
 const Utils = require('../test/test_lib/utils.js');
-const web3 = require('../test/test_lib/web3');
 
 /**
  * Steps to run the script
  *
- * 1. Run geth: docker run -p 8545:8546 -p 30303:30303 mosaicdao/dev-chains:1.0.3 origin
+ * 1. Run geth: docker run -p 8545:8545 -p 8546:8546 -p 30303:30303 mosaicdao/dev-chains:1.0.3 origin
  * 2. Run test: node_modules/.bin/truffle test test/data_generator/deposit_proof.js
+ *
+ * note: The local web3 instance is used here because docker is exposing 8546 as WebSocket(ws)
+ * and to use web3 with http local web3 instace is newly created.
  */
 contract('Storage Proof', (accounts) => {
   let consensusGateway;
@@ -37,6 +39,8 @@ contract('Storage Proof', (accounts) => {
   let token;
   let depositor;
   let depositParam;
+  let web3;
+  let web3Accounts;
 
   let blockNumber;
   let outboundChannelIdentifier;
@@ -66,11 +70,13 @@ contract('Storage Proof', (accounts) => {
 
 
   beforeEach(async () => {
-    accounts = await web3.eth.getAccounts();
-    depositor = accounts[0];
+    web3 = new Web3('http://localhost:8545');
+    web3Accounts = await web3.eth.getAccounts();
+    [depositor] = web3Accounts;
     consensusGateway = await ConsensusGateway.new();
 
-    token = await MockToken.new(18, { from: depositor });
+    // token = await MockToken.new(18, { from: depositor });
+    token = await Utils.deployMockToken(depositor, 200);
 
     depositParam = {
       amount: '100',
@@ -160,6 +166,7 @@ contract('Storage Proof', (accounts) => {
 
     const proofOutput = {
       outboundChannelIdentifier,
+      valueToken: setupParam.most,
       messageHash,
       depositParam,
       blockNumber,
@@ -174,7 +181,7 @@ contract('Storage Proof', (accounts) => {
 
     fs.writeFileSync(
       'test/consensus-gateway/data/deposit_proof.json',
-      JSON.stringify(proofOutput,null, '    '),
+      JSON.stringify(proofOutput, null, '    '),
     );
   });
 });

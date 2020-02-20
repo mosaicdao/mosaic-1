@@ -34,7 +34,7 @@ contract ConsensusCogatewayDouble is ConsensusCogateway {
     )
         external
     {
-         storageRoots[_blockNumber] = _storageRoot;
+        storageRoots[_blockNumber] = _storageRoot;
     }
 
     /**
@@ -47,12 +47,20 @@ contract ConsensusCogatewayDouble is ConsensusCogateway {
     }
 
     /**
-     * It sets current metablock height.
+     * @notice It sets current metablock height.
      *
      * @param _metablockHeight Current metablock height.
      */
     function setMetablock(uint256 _metablockHeight) external {
         currentMetablockHeight = _metablockHeight;
     }
-}
 
+    /**
+     * @notice It sets value token address.
+     *
+     * @param _valueToken Value token address.
+     */
+    function setValueToken(address _valueToken) external {
+        valueToken = _valueToken;
+    }
+}
