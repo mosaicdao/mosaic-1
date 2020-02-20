@@ -145,7 +145,7 @@ contract MessageInbox is MessageBox, Proof {
      * @notice Verify merkle proof of a storage contract address.
      *         Trust factor is brought by state roots of the contract which
      *         implements StateRootInterface.
-     * @param _blockHeight Block height at which Gateway/CoGateway is to be
+     * @param _blockHeight Block height at which Gateway/Cogateway is to be
      *                     proven.
      * @param _rlpAccount RLP encoded account node object.
      * @param _rlpParentNodes RLP encoded value of account proof parent nodes.
