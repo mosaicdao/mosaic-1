@@ -60,7 +60,7 @@ contract UtilityToken is MasterCopyNonUpgradable, ERC20Token {
      * @param _consensusCogateway ConsensusCogateway contract address.
      * @param _valueToken Address of value token contract.
      *
-     * \pre Setup is not already called.
+     * \pre Setup function can be called only once.
      * \pre `_consensusCogateway` address is not zero.
      * \pre `_valueToken` address is not zero.
      *
@@ -120,8 +120,6 @@ contract UtilityToken is MasterCopyNonUpgradable, ERC20Token {
         onlyConsensusCogateway()
     {
         _mint(_account, _value);
-
-        emit Transfer(address(0), _account, _value);
     }
 
     /**
