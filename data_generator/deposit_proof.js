@@ -27,8 +27,11 @@ const Utils = require('../test/test_lib/utils.js');
 /**
  * Steps to run the script
  *
- * 1. Run geth: docker run -p 8545:8546 -p 30303:30303 mosaicdao/dev-chains:1.0.3 origin
+ * 1. Run geth: docker run -p 8545:8545 -p 8546:8546 -p 30303:30303 mosaicdao/dev-chains:1.0.3 origin
  * 2. Run test: node_modules/.bin/truffle test test/data_generator/deposit_proof.js
+ *
+ * note: The local web3 instance is used here because docker is exposing 8546 as WebSocket(ws)
+ * and to use web3 with http local web3 instace is newly created.
  */
 contract('Storage Proof', (accounts) => {
   let consensusGateway;

@@ -46,7 +46,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
     /* Storage */
 
     /* Utility token address. */
-    address public utilityToken;
+    address public utilityToken = address(0);
 
 
     /* External Functions */

@@ -47,7 +47,7 @@ contract ConsensusCogatewayDouble is ConsensusCogateway {
     }
 
     /**
-     * It sets current metablock height.
+     * @notice It sets current metablock height.
      *
      * @param _metablockHeight Current metablock height.
      */
@@ -56,7 +56,7 @@ contract ConsensusCogatewayDouble is ConsensusCogateway {
     }
 
     /**
-     * It sets value token address.
+     * @notice It sets value token address.
      *
      * @param _valueToken Value token address.
      */

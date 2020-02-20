@@ -69,6 +69,11 @@ contract('ConsensusGateway::confirmWithdraw', (accounts) => {
   });
 
   contract('Positive Tests', () => {
+    /* This test case is skipped because populating valueToken is necessary in withdraw_proof.json
+    file after generating proof. So that it can be used while testing
+    ConsensusGateway::confirmWithdraw(). While testing, valueToken is making a transaction. Hence,
+    it must be a live contract and hence can be handled in integration tests.
+    */
     it.skip('should confirm withdraw', async () => {
       const sender = accountProvider.get();
       const beforeMOSTBalanceConsensusGateway = await most.balanceOf(consensusGateway.address);
