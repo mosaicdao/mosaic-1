@@ -26,8 +26,14 @@ import "../utility-token/UtilityTokenInterface.sol";
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
-contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase,
-    ERC20GatewayBase,ConsensusModule, ConsensusGatewayInterface {
+contract ConsensusGateway is
+    MasterCopyNonUpgradable,
+    MessageBus,
+    ConsensusGatewayBase,
+    ERC20GatewayBase,
+    ConsensusModule,
+    ConsensusGatewayInterface
+{
 
     /* Usings */
 
