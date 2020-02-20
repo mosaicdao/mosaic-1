@@ -25,10 +25,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 const BN = require('bn.js');
-const Utils = require('../../test_lib/utils.js');
 const ProveERC20GatewayProof = require('../../data/prove_erc20_gateway.json');
+const Utils = require('../../test_lib/utils.js');
 
 const ERC20Cogateway = artifacts.require('ERC20CogatewayDouble');
 const SpyAnchor = artifacts.require('SpyAnchor');
