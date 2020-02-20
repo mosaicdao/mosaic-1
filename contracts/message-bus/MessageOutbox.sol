@@ -72,13 +72,17 @@ contract MessageOutbox is MessageBox {
     /**
      * @notice Setup message outbox.
      *
-     * @dev Function requires:
-     *          - outboundChannelIdentifier must be zero
-     *          - metachainId must not be zero
-     *          - messageInbox address must not be zero
-     *
      * @param _metachainId Metachain identifier.
      * @param _messageInbox MessageInbox contract address.
+     *
+     * \pre The function can be called only once.
+     * \pre `_metachainId` must not be zero.
+     * \pre `_messageInbox` address must not be zero.
+     *
+     * \post Sets `messageInbox` storage variable with `_messageInbox`.
+     * \post Sets `outboundChannelIdentifier` storage variable.
+     *       `outboundChannelIdentifier` is calculated by
+     *       MessageBox.hashChannelIdentifier method.
      */
     function setupMessageOutbox(
         bytes32 _metachainId,
@@ -118,7 +122,7 @@ contract MessageOutbox is MessageBox {
      *          - message should not exists in outbox
      *
      * @param _intentHash Intent hash of message.
-     * @param _nonce Nonce of sender.
+     * @param _nonce Nonce of sender account.
      * @param _feeGasPrice Fee gas price.
      * @param _feeGasLimit Fee gas limit.
      * @param _sender Sender address.

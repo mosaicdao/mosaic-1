@@ -75,13 +75,6 @@ contract MessageInbox is MessageBox, Proof {
     /**
      * @notice Setup message inbox.
      *
-     * @dev Function requires:
-     *          - inboundChannelIdentifier must be zero
-     *          - metachainId must not be zero
-     *          - messageOutbox address must not be zero
-     *          - verifyingAddress must not be zero
-     *          - stateRootProvider must not be zero
-     *
      * @param _metachainId Metachain identifier.
      * @param _messageOutbox MessageOutbox contract address.
      * @param _outboxStorageIndex Storage index of outbox mapping in
@@ -89,6 +82,20 @@ contract MessageInbox is MessageBox, Proof {
      * @param _stateRootProvider State root provider contract address.
      * @param _maxStorageRootItems Defines how many storage roots should be
      *                             stored in circular buffer.
+     *
+     * \pre The function can be called only once.
+     * \pre `_metachainId` must not be zero.
+     * \pre `_messageOutbox` address must not be zero.
+     * \pre `_stateRootProvider` must not be zero.
+     *
+     * \post Sets `messageOutbox` storage variable with the value
+     *        of `_messageOutbox`.
+     * \post Sets `outboxStorageIndex` storage with the value
+     *       of `_outboxStorageIndex`.
+     * \post Sets `inboundChannelIdentifier` storage variable.
+     *       `inboundChannelIdentifier` is calculated by
+     *       `MessageBox.hashChannelIdentifier` method.
+     * \post It calls `Proof.setupProof`.
      */
     function setupMessageInbox(
         bytes32 _metachainId,
