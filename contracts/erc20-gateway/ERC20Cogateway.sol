@@ -60,7 +60,7 @@ contract ERC20Cogateway is MasterCopyNonUpgradable, GenesisERC20Cogateway, Messa
      *       from `GenesisERC20Cogateway` contract.
      */
     function setup()
-        external
+        public
     {
         require(
             !activated,
