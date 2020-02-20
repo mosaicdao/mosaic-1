@@ -52,14 +52,21 @@ contract ERC20Cogateway is MasterCopyNonUpgradable, GenesisERC20Cogateway, Messa
     /**
      * @notice It initializes ERC20Cogateway contract.
      *
-     * \post Activates ERC20Cogateway contract by setting 'activated' storage
-     *       variable 'true'.
-     * \post It calls `MessageOutbox.setupMessageOutbox` and
-     *       MessageInbox.setupMessageInbox.
+     * \pre Gateway is not activated.
+     *
+     * \post Activates gateway by setting 'activated' storage variable to 'true'.
+     * \post Calls `MessageOutbox.setupMessageOutbox` and
+     *       `MessageInbox.setupMessageInbox` with genesis* values read
+     *       from `GenesisERC20Cogateway` contract.
      */
     function setup()
         external
     {
+        require(
+            !activated,
+            "Gateway has been already activated."
+        );
+
         MessageOutbox.setupMessageOutbox(
             genesisMetachainId,
             genesisERC20Gateway

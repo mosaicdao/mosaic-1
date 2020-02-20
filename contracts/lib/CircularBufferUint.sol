@@ -51,7 +51,7 @@ contract CircularBufferUint {
      * \pre The function can be called only once.
      * \pre `_maxItems` must be greater than 0.
      *
-     * \post Sets length of `items` with the value of `_maxItems`.
+     * \post Sets up max number of items to be maintained by this buffer.
      */
     function setupCircularBuffer(uint256 _maxItems) internal {
 
