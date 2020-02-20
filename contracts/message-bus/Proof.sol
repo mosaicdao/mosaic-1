@@ -43,17 +43,24 @@ contract Proof is CircularBufferUint {
     /* Internal Functions */
 
     /**
-     * @notice Setup the proof contract. This can be called only once.
-     *
-     * @dev Function requires:
-     *          - proof contract must not be already initialized
-     *          - storageAccount must not be zero
-     *          - stateRootProvider must not be zero
+     * @notice Setup the proof contract.
      *
      * @param _storageAccount Storage account that will be proved.
      * @param _stateRootProvider State root provider contract address.
      * @param _maxStorageRootItems Defines how many storage roots should be
      *                             stored in circular buffer.
+     *
+     * \pre The function can be called only once.
+     * \pre `_storageAccount` must not be zero.
+     * \pre `_stateRootProvider` must not be zero.
+     *
+     * \post Sets `storageAccount` storage variable with `_storageAccount`.
+     * \post Sets `stateRootProvider` storage variable
+     *       with `stateRootProvider`.
+     * \post Sets `encodedAccountPath` storage variable.
+     *       `encodedAccountPath` is calculated by performing `keccak256` of
+     *       `_storageAccount` and passing it to `BytesLib.bytes32ToBytes`.
+     * \post It calls `CircularBufferUint.setupCircularBuffer` method.
      */
     function setupProof(
         address _storageAccount,

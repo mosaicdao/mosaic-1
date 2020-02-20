@@ -15,6 +15,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 import "./ERC20Token.sol";
+import "../proxies/MasterCopyNonUpgradable.sol";
 
 /**
  *  @title UtilityToken is an ERC20Token.
@@ -22,18 +23,15 @@ import "./ERC20Token.sol";
  *  @notice This contract extends the functionalities of the ERC20Token.
  *
  */
-contract UtilityToken is ERC20Token {
-
-    /* Events */
-
-    /** Emitted whenever a ConsensusCogateway address is set */
-    event ConsensusCogatewaySet(address _consensusCogateway);
-
+contract UtilityToken is MasterCopyNonUpgradable, ERC20Token {
 
     /* Storage */
 
     /** Address of ConsensusCogateway contract. */
     address public consensusCogateway;
+
+    /** Address of value token contract. */
+    address public valueToken;
 
 
     /* Modifiers */
@@ -52,6 +50,63 @@ contract UtilityToken is ERC20Token {
     /* External Functions */
 
     /**
+     * @notice Sets up the symbol, name, decimals, totalSupply, value token
+     *         and the consensusCogateway address.
+     *
+     * @param _symbol Symbol of token.
+     * @param _name Name of token.
+     * @param _decimals Decimal of token.
+     * @param _totalTokenSupply Total token supply.
+     * @param _consensusCogateway ConsensusCogateway contract address.
+     * @param _valueToken Address of value token contract.
+     *
+     * \pre Setup function can be called only once.
+     * \pre `_consensusCogateway` address is not zero.
+     * \pre `_valueToken` address is not zero.
+     *
+     * \post Sets `tokenSymbol` storage variable with `_symbol`.
+     * \post Sets `tokenName` storage variable with `_name`.
+     * \post Sets `tokenDecimals` storage variable with `_decimal`.
+     * \post Sets the `totalTokenSupply` storage variable with
+     *       `_totalTokenSupply`.
+     * \post Sets the `consensusCogateway` storage variable with
+     *       `_consensusCogateway`.
+     * \post Sets the `valueToken` storage variable with `_valueToken`.
+     */
+    function setup(
+        string calldata _symbol,
+        string calldata _name,
+        uint8 _decimals,
+        uint256 _totalTokenSupply,
+        address _consensusCogateway,
+        address _valueToken
+    )
+        external
+    {
+        require(
+            consensusCogateway == address(0),
+            "Contract has been already setup."
+        );
+
+        require(
+            _consensusCogateway != address(0),
+            "ConsensusCogateway address should not be zero."
+        );
+
+        require(
+            _valueToken != address(0),
+            "Value token address must not be zero."
+        );
+
+        tokenSymbol = _symbol;
+        tokenName = _name;
+        tokenDecimals = _decimals;
+        totalTokenSupply = _totalTokenSupply;
+        consensusCogateway = _consensusCogateway;
+        valueToken = _valueToken;
+    }
+
+    /**
      * @notice External function to mint tokens.
      *
      * @dev Mints an amount of the token and assigns it to an account.
@@ -65,8 +120,6 @@ contract UtilityToken is ERC20Token {
         onlyConsensusCogateway()
     {
         _mint(_account, _value);
-
-        emit Transfer(address(0), _account, _value);
     }
 
     /**
@@ -95,49 +148,5 @@ contract UtilityToken is ERC20Token {
         external
     {
         _burnFrom(_account, _value);
-    }
-
-
-    /** Internal Functions */
-
-    /**
-     * @notice Sets up the symbol, name, decimals, totalSupply
-     *         and the consensusCogateway address
-     *
-     * @param _symbol Symbol of token.
-     * @param _name Name of token.
-     * @param _decimals Decimal of token.
-     * @param _totalTokenSupply Total token supply.
-     * @param _consensusCogateway ConsensusCogateway contract address.
-     *
-     * @return success_ `true` for a successful setup, `false` otherwise.
-     */
-    function setup(
-        string memory _symbol,
-        string memory _name,
-        uint8 _decimals,
-        uint256 _totalTokenSupply,
-        address _consensusCogateway
-    )
-        internal
-        returns (bool success_)
-    {
-        require(
-            consensusCogateway == address(0),
-            "ConsensusCogateway address is already set."
-        );
-
-        require(
-            _consensusCogateway != address(0),
-            "ConsensusCogateway address should not be zero."
-        );
-
-        tokenSymbol = _symbol;
-        tokenName = _name;
-        tokenDecimals = _decimals;
-        totalTokenSupply = _totalTokenSupply;
-        consensusCogateway = _consensusCogateway;
-
-        success_ = true;
     }
 }

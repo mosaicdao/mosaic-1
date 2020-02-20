@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const UtilityToken = artifacts.require('UtilityTokenTest');
+const UtilityToken = artifacts.require('UtilityToken');
 const BN = require('bn.js');
 
 contract('UtilityToken::setup', (accounts) => {
@@ -23,6 +23,7 @@ contract('UtilityToken::setup', (accounts) => {
   const TOKEN_DECIMALS = 18;
   const TOTAL_TOKEN_SUPPLY = new BN('1000');
   const consensusCogateway = accounts[2];
+  const valueToken = accounts[3];
 
   let utilityToken;
 
@@ -31,12 +32,13 @@ contract('UtilityToken::setup', (accounts) => {
   });
 
   it('should pass with correct parameters.', async () => {
-    await utilityToken.setupToken(
+    await utilityToken.setup(
       TOKEN_SYMBOL,
       TOKEN_NAME,
       TOKEN_DECIMALS,
       TOTAL_TOKEN_SUPPLY,
       consensusCogateway,
+      valueToken,
     );
 
     assert.strictEqual(
@@ -78,6 +80,13 @@ contract('UtilityToken::setup', (accounts) => {
       consensusCogatewayAddress,
       consensusCogateway,
       `ConsensusCogateway address must be set to ${consensusCogateway}.`,
+    );
+
+    const actualValueTokenAddress = await utilityToken.valueToken.call();
+    assert.strictEqual(
+      valueToken,
+      actualValueTokenAddress,
+      'Value token address must match.',
     );
   });
 });

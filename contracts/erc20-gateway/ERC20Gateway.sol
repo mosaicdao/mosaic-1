@@ -29,10 +29,10 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
     /* Constants */
 
     /** Storage offset of message outbox. */
-    uint8 constant public OUTBOX_OFFSET = uint8(1);
+    uint8 constant public OUTBOX_OFFSET = uint8(6);
 
     /** Storage offset of message inbox. */
-    uint8 constant public INBOX_OFFSET = uint8(4);
+    uint8 constant public INBOX_OFFSET = uint8(9);
 
 
     /* External Functions */
@@ -78,6 +78,36 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
             _stateRootProvider,
             _maxStorageRootItems
         );
+    }
+
+    /**
+     * @notice This method verifies merkle proof of ERC20Cogateway contract.
+     *
+     * @param _blockNumber Block number at which ERC20Cogateway contract
+     *                     address is to be proven.
+     * @param _rlpAccount RLP encoded account node object.
+     * @param _rlpParentNodes RLP encoded value of account proof node array.
+     *
+     * \post Calls `MessageInbox.proveStorageAccount()` function with
+     *       `_blockNumber`, `_rlpAccountNode`, `_rlpParentNodes` as input
+     *       parameters.
+     * \post Emits `GatewayProven` event with parameters `address(this)` and
+     *       `_blockNumber`.
+     */
+    function proveGateway(
+        uint256 _blockNumber,
+        bytes calldata _rlpAccount,
+        bytes calldata _rlpParentNodes
+    )
+        external
+    {
+        MessageInbox.proveStorageAccount(
+            _blockNumber,
+            _rlpAccount,
+            _rlpParentNodes
+        );
+
+        emit GatewayProven(messageInbox, _blockNumber);
     }
 
 }

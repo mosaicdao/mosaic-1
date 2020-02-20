@@ -23,6 +23,12 @@ contract ERC20GatewayBase {
     using SafeMath for uint256;
 
 
+    /* Events */
+
+    /** Emitted when the remote gateway contract address is proven. */
+    event GatewayProven(address remoteGateway, uint256 blockNumber);
+
+
     /* Constants */
 
     bytes32 constant public DEPOSIT_INTENT_TYPEHASH = keccak256(
