@@ -26,7 +26,7 @@ contract ERC20GatewayBase {
     /* Events */
 
     /** Emitted when the remote gateway contract address is proven. */
-    event GatewayProven(address gateway, uint256 blockNumber);
+    event GatewayProven(address remoteGateway, uint256 blockNumber);
 
 
     /* Constants */

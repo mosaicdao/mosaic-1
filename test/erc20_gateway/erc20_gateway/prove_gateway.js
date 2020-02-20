@@ -78,15 +78,17 @@ contract('ERC20Gateway::proveGateway', () => {
         'Must emit GatewayProven event',
       );
 
+      const expectedRemoteGateway = Utils.toChecksumAddress(ProveERC20CogatewayProof.address);
       assert.strictEqual(
-        eventObject.args.gateway,
-        erc20Gateway.address,
-        'Gateway address is incorrect in the event.',
+        eventObject.args.remoteGateway,
+        expectedRemoteGateway,
+        `Expected remote gateway address is ${expectedRemoteGateway} but found to be ${eventObject.args.remoteGateway}.`,
       );
 
       assert.isOk(
         eventObject.args.blockNumber.eqn(ProveERC20CogatewayProof.blockNumber),
-        'Block number is incorrect in the event.',
+        `Expected block number is ${ProveERC20CogatewayProof.blockNumber} but
+        found to be ${eventObject.args.blockNumber.toString(10)}.`,
       );
     });
   });

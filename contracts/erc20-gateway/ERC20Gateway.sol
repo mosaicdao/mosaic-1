@@ -107,7 +107,7 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
             _rlpParentNodes
         );
 
-        emit GatewayProven(address(this), _blockNumber);
+        emit GatewayProven(messageInbox, _blockNumber);
     }
 
 }
