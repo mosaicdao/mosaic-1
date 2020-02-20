@@ -32,6 +32,8 @@ contract('ConsensusCogateway::confirmDeposit', (accounts) => {
   beforeEach(async () => {
     consensusCogateway = await ConsensusCogateway.new();
 
+    await consensusCogateway.setValueToken(TestData.valueToken);
+
     utBase = await UtBaseConfirmDepositSpy.new();
     setupParams = {
       metachainId: TestData.metachainId,

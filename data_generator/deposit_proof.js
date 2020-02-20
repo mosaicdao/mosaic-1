@@ -18,12 +18,11 @@ const BN = require('bn.js');
 const rlp = require('rlp');
 const fs = require('fs');
 
-const MockToken = artifacts.require('MockToken');
 const MockConsensus = artifacts.require('MockConsensus');
 const ConsensusGateway = artifacts.require('ConsensusGateway');
 
+const Web3 = require('web3');
 const Utils = require('../test/test_lib/utils.js');
-const web3 = require('../test/test_lib/web3');
 
 /**
  * Steps to run the script
@@ -37,6 +36,8 @@ contract('Storage Proof', (accounts) => {
   let token;
   let depositor;
   let depositParam;
+  let web3;
+  let web3Accounts;
 
   let blockNumber;
   let outboundChannelIdentifier;
@@ -66,11 +67,13 @@ contract('Storage Proof', (accounts) => {
 
 
   beforeEach(async () => {
-    accounts = await web3.eth.getAccounts();
-    depositor = accounts[0];
+    web3 = new Web3('http://localhost:8545');
+    web3Accounts = await web3.eth.getAccounts();
+    [depositor] = web3Accounts;
     consensusGateway = await ConsensusGateway.new();
 
-    token = await MockToken.new(18, { from: depositor });
+    // token = await MockToken.new(18, { from: depositor });
+    token = await Utils.deployMockToken(depositor, 200);
 
     depositParam = {
       amount: '100',
@@ -160,6 +163,7 @@ contract('Storage Proof', (accounts) => {
 
     const proofOutput = {
       outboundChannelIdentifier,
+      valueToken: setupParam.most,
       messageHash,
       depositParam,
       blockNumber,
@@ -174,7 +178,7 @@ contract('Storage Proof', (accounts) => {
 
     fs.writeFileSync(
       'test/consensus-gateway/data/deposit_proof.json',
-      JSON.stringify(proofOutput,null, '    '),
+      JSON.stringify(proofOutput, null, '    '),
     );
   });
 });

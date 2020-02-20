@@ -30,15 +30,22 @@ contract('ERC20GatewayBase::hashDepositIntent', (accounts) => {
   });
 
   it('should return correct hash', async () => {
+    const depositor = accountProvider.get();
+    const valueToken = await Utils.deployMockToken(depositor, 500);
     const amount = new BN(Utils.getRandomNumber(500));
     const beneficiary = accountProvider.get();
 
     const actualHashDepositIntent = await erc20GatewayBase.hashDepositIntent.call(
+      valueToken.address,
       amount,
       beneficiary,
     );
 
-    const expectedDepositIntent = ConsensusGatewayUtils.getDepositIntentHash(amount, beneficiary);
+    const expectedDepositIntent = ConsensusGatewayUtils.getDepositIntentHash(
+      valueToken.address,
+      amount,
+      beneficiary,
+    );
     assert.strictEqual(
       actualHashDepositIntent,
       expectedDepositIntent,
