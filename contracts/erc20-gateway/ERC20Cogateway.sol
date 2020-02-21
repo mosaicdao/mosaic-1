@@ -30,28 +30,6 @@ contract ERC20Cogateway is
     MessageBus,
     ERC20GatewayBase {
 
-    /* Storage */
-
-    /**
-     * Specifies if the ERC20Cogateway is activated.
-     * @dev This is set to true when the setup is called. This ensures that
-     *      the functions revert if they are called before the setup is done.
-     */
-    bool public activated;
-
-
-    /* Modifiers */
-
-    /** Checks that contract is active. */
-    modifier isActive() {
-        require(
-            activated == true,
-            "ERC20Cogateway is not activated."
-        );
-        _;
-    }
-
-
     /* External Functions */
 
     /**
@@ -59,8 +37,6 @@ contract ERC20Cogateway is
      *
      * \pre Gateway is not activated.
      *
-     * \post Activates gateway by setting 'activated' storage variable
-     *       to 'true'.
      * \post Calls `MessageOutbox.setupMessageOutbox` and
      *       `MessageInbox.setupMessageInbox` with genesis* values read
      *       from `GenesisERC20Cogateway` contract.
@@ -68,11 +44,6 @@ contract ERC20Cogateway is
     function setup()
         external
     {
-        require(
-            !activated,
-            "Gateway has been already activated."
-        );
-
         MessageOutbox.setupMessageOutbox(
             genesisMetachainId,
             genesisERC20Gateway
@@ -85,8 +56,6 @@ contract ERC20Cogateway is
             StateRootInterface(genesisStateRootProvider),
             genesisOutboxStorageIndex
         );
-
-        activated = true;
     }
 
     /**
