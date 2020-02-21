@@ -33,7 +33,7 @@ contract Gen0ERC20Cogateway is ERC20Cogateway {
      * \pre `_metachainId` is not 0.
      * \pre `_erc20Gateway` is not 0.
      * \pre `_stateRootProvider` is not 0.
-     * \pre `maxStorageRootItems` is not 0.
+     * \pre `_maxStorageRootItems` is not 0.
      *
      * \post Sets corresponding genesis* variables inherited from
      *      GenesisERC20Cogateway contract and calls ERC20Cogateway::setup()
