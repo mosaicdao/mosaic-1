@@ -100,11 +100,5 @@ contract('ERC20Cogateway::setup', (accounts) => {
       inboundChannelIdentifierInContract,
       'Invalid inbound channel identifier.',
     );
-
-    const erc20CogatewayActivationStatus = await erc20Cogateway.activated.call();
-    assert.isOk(
-      erc20CogatewayActivationStatus,
-      'ERC20Cogateway must be activated.',
-    );
   });
 });
