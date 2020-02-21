@@ -22,10 +22,18 @@ import "../core/CoreInterface.sol";
 import "../erc20-gateway/ERC20GatewayBase.sol";
 import "../message-bus/MessageBus.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
+import "../utility-token/UtilityTokenInterface.sol";
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
-contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatewayBase, ERC20GatewayBase, ConsensusModule, ConsensusGatewayInterface {
+contract ConsensusGateway is
+    MasterCopyNonUpgradable,
+    MessageBus,
+    ConsensusGatewayBase,
+    ERC20GatewayBase,
+    ConsensusModule,
+    ConsensusGatewayInterface
+{
 
     /* Usings */
 
@@ -39,6 +47,12 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
 
     /* Storage offset of message inbox. */
     uint8 constant public INBOX_OFFSET = uint8(4);
+
+
+    /* Storage */
+
+    /* Utility token address. */
+    address public utilityToken = address(0);
 
 
     /* External Functions */
@@ -125,7 +139,7 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
             "Deposit amount should be greater than max reward."
         );
 
-        bytes32 depositIntentHash = hashDepositIntent(_amount, _beneficiary);
+        bytes32 depositIntentHash = hashDepositIntent(address(most), _amount, _beneficiary);
 
         uint256 nonce = nonces[msg.sender];
         nonces[msg.sender] = nonce.add(1);
@@ -267,6 +281,8 @@ contract ConsensusGateway is MasterCopyNonUpgradable, MessageBus, ConsensusGatew
 
         messageHash_ = MessageInbox.confirmMessage(
             ERC20GatewayBase.hashWithdrawIntent(
+                address(most),
+                utilityToken,
                 _amount,
                 _beneficiary
             ),

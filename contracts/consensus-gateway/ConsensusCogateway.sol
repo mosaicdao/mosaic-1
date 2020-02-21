@@ -44,6 +44,9 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
 
     /* Storage */
 
+    /* Value token address. */
+    address public valueToken;
+
     /** Mapping of kernel height and kernel hash. */
     mapping(uint256 /* Kernel Height */ => bytes32 /* Kernel Hash */) public  kernelHashes;
 
@@ -149,6 +152,7 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
 
         messageHash_ = MessageInbox.confirmMessage(
             ERC20GatewayBase.hashDepositIntent(
+                valueToken,
                 _amount,
                 _beneficiary
             ),
@@ -303,6 +307,8 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
         );
 
         bytes32 withdrawIntentHash = hashWithdrawIntent(
+            valueToken,
+            address(most),
             _amount,
             _beneficiary
         );

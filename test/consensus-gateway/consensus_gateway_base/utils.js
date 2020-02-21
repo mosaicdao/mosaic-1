@@ -16,13 +16,13 @@
 
 const web3 = require('../../test_lib/web3.js');
 
-const DEPOSIT_INTENT_TYPEHASH = web3.utils.soliditySha3('DepositIntent(uint256 amount,address beneficiary)');
+const DEPOSIT_INTENT_TYPEHASH = web3.utils.soliditySha3('DepositIntent(address valueToken,uint256 amount,address beneficiary)');
 
-function getDepositIntentHash(amount, beneficiary) {
+function getDepositIntentHash(valueToken, amount, beneficiary) {
   return web3.utils.sha3(
     web3.eth.abi.encodeParameters(
-      ['bytes32', 'uint256', 'address'],
-      [DEPOSIT_INTENT_TYPEHASH, amount.toString(), beneficiary],
+      ['bytes32', 'address', 'uint256', 'address'],
+      [DEPOSIT_INTENT_TYPEHASH, valueToken, amount.toString(), beneficiary],
     ),
   );
 }

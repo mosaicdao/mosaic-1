@@ -32,11 +32,11 @@ contract ERC20GatewayBase {
     /* Constants */
 
     bytes32 constant public DEPOSIT_INTENT_TYPEHASH = keccak256(
-        "DepositIntent(uint256 amount,address beneficiary)"
+        "DepositIntent(address valueToken,uint256 amount,address beneficiary)"
     );
 
     bytes32 constant public WITHDRAW_INTENT_TYPEHASH = keccak256(
-        "WithdrawIntent(uint256 amount,address beneficiary)"
+        "WithdrawIntent(address valueToken,address utilityToken,uint256 amount,address beneficiary)"
     );
 
 
@@ -45,12 +45,14 @@ contract ERC20GatewayBase {
     /**
      * @notice It returns hash of deposit intent.
      *
+     * @param _valueToken Value token Address.
      * @param _amount Amount of tokens.
      * @param _beneficiary Beneficiary address.
      *
      * @return depositIntentHash_ Hash of deposit intent.
      */
     function hashDepositIntent(
+        address _valueToken,
         uint256 _amount,
         address _beneficiary
     )
@@ -61,6 +63,7 @@ contract ERC20GatewayBase {
         depositIntentHash_ = keccak256(
             abi.encode(
                 DEPOSIT_INTENT_TYPEHASH,
+                _valueToken,
                 _amount,
                 _beneficiary
             )
@@ -71,12 +74,16 @@ contract ERC20GatewayBase {
     /**
      * @notice It returns hash of withdraw intent.
      *
+     * @param _valueToken Value token address.
+     * @param _utilityToken Utility token address.
      * @param _amount Amount of tokens.
      * @param _beneficiary Beneficiary address.
      *
      * @return withdrawIntentHash_ Hash of withdraw intent.
      */
     function hashWithdrawIntent(
+        address _valueToken,
+        address _utilityToken,
         uint256 _amount,
         address _beneficiary
     )
@@ -87,6 +94,8 @@ contract ERC20GatewayBase {
         withdrawIntentHash_ = keccak256(
             abi.encode(
                 WITHDRAW_INTENT_TYPEHASH,
+                _valueToken,
+                _utilityToken,
                 _amount,
                 _beneficiary
             )

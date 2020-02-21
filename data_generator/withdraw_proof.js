@@ -159,6 +159,7 @@ contract('Withdraw Proof', () => {
 
     const proofOutput = {
       outboundChannelIdentifier,
+      utilityToken: setupParam.utmost,
       messageHash,
       withdrawParam,
       blockNumber,
