@@ -50,17 +50,31 @@ contract Gen0ERC20Cogateway is ERC20Cogateway {
     )
         external
     {
+        require(_metachainId != bytes32(0), "Metachain id is 0.");
+        require(_erc20Gateway != address(0), "ERC20Cogateway's address is 0.");
+        require(
+            _stateRootProvider != address(0),
+            "State root provider's address is 0."
+        );
+        require(
+            _maxStorageRootItems != uint256(0),
+            "Max storage root item count is 0."
+        );
+
         genesisMetachainId = _metachainId;
         genesisERC20Gateway = _erc20Gateway;
         genesisStateRootProvider = _stateRootProvider;
         genesisMaxStorageRootItems = _maxStorageRootItems;
         genesisOutboxStorageIndex = _outboxStorageIndex;
 
-        ERC20Cogateway.setup();
+        setup();
     }
 
     /**
-     * @notice setup() function is a dummy function for this contract.
+     * @notice setup() function is a dummy function for this contract as
+     *         it will do nothing if called directly. Only calling through
+     *         activate() function it will call ERC20Cogateway.setup()
+     *         function.
      *
      * @dev Implementation does not mark the contract as private (as it has
      *      dummy implementation, it makes sense), because interfaces
@@ -70,5 +84,10 @@ contract Gen0ERC20Cogateway is ERC20Cogateway {
     function setup()
         public
     {
+        if (genesisMetachainId == bytes32(0)) {
+            return;
+        }
+
+        ERC20Cogateway.setup();
     }
 }
