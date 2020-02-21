@@ -17,6 +17,7 @@ pragma solidity >=0.5.0 <0.6.0;
 import "./ERC20Cogateway.sol";
 
 /**
+ * @title Implements ERC20Cogateway contract for gen0.
  */
 contract Gen0ERC20Cogateway is ERC20Cogateway {
 
