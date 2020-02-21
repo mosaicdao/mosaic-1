@@ -98,11 +98,11 @@ contract ERC20Cogateway is
      * @param _rlpAccount RLP encoded account node object.
      * @param _rlpParentNodes RLP encoded value of account proof node array.
      *
-     * \post Emits `GatewayProven` event with the address of `messageInbox`
-     *       and `_blockNumber` parameters.
      * \post Calls `MessageInbox.proveStorageAccount()` function with
      *       `_blockNumber`, `_rlpAccount`, `_rlpParentNodes` as input
      *       parameters.
+     * \post Emits `GatewayProven` event with the address of `messageInbox`
+     *       and `_blockNumber` parameters.
      */
     function proveGateway(
         uint256 _blockNumber,
