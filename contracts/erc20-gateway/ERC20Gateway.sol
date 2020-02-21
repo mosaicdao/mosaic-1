@@ -30,7 +30,7 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
     /** Events */
 
     event WithdrawIntentConfirmed ( bytes32 messageHash );
-    
+
 
     /* Constants */
 
