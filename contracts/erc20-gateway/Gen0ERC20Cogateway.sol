@@ -67,27 +67,19 @@ contract Gen0ERC20Cogateway is ERC20Cogateway {
         genesisMaxStorageRootItems = _maxStorageRootItems;
         genesisOutboxStorageIndex = _outboxStorageIndex;
 
-        setup();
+        ERC20Cogateway.setup();
     }
 
     /**
-     * @notice setup() function is a dummy function for this contract as
-     *         it will do nothing if called directly. Only calling through
-     *         activate() function it will call ERC20Cogateway.setup()
-     *         function.
+     * @notice setup() function is a dummy function for this contract.
      *
      * @dev Implementation does not mark the contract as private (as it has
-     *      dummy implementation, it makes sense), because interfaces
-     *      accepting ERC20Gateway contract might require this function to be
-     *      there.
+     *      dummy implementation, it makes sense), because components
+     *      accepting ERC20Cogateway interface might require this function
+     *      to be there.
      */
     function setup()
         public
     {
-        if (genesisMetachainId == bytes32(0)) {
-            return;
-        }
-
-        ERC20Cogateway.setup();
     }
 }
