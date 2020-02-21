@@ -24,7 +24,11 @@ import "../proxies/MasterCopyNonUpgradable.sol";
  * @title ERC20Cogateway confirms the deposit intent and mint utility tokens.
  *        Also initiates the withdrawal of token.
  */
-contract ERC20Cogateway is MasterCopyNonUpgradable, GenesisERC20Cogateway, MessageBus, ERC20GatewayBase {
+contract ERC20Cogateway is
+    MasterCopyNonUpgradable,
+    GenesisERC20Cogateway,
+    MessageBus,
+    ERC20GatewayBase {
 
     /* Storage */
 
@@ -55,7 +59,8 @@ contract ERC20Cogateway is MasterCopyNonUpgradable, GenesisERC20Cogateway, Messa
      *
      * \pre Gateway is not activated.
      *
-     * \post Activates gateway by setting 'activated' storage variable to 'true'.
+     * \post Activates gateway by setting 'activated' storage variable
+     *       to 'true'.
      * \post Calls `MessageOutbox.setupMessageOutbox` and
      *       `MessageInbox.setupMessageInbox` with genesis* values read
      *       from `GenesisERC20Cogateway` contract.
@@ -93,8 +98,8 @@ contract ERC20Cogateway is MasterCopyNonUpgradable, GenesisERC20Cogateway, Messa
      * @param _rlpAccount RLP encoded account node object.
      * @param _rlpParentNodes RLP encoded value of account proof node array.
      *
-     * \post Emits `GatewayProven` event with `messageInbox` and
-     *       `_blockNumber` parameters.
+     * \post Emits `GatewayProven` event with the address of `messageInbox`
+     *       and `_blockNumber` parameters.
      * \post Calls `MessageInbox.proveStorageAccount()` function with
      *       `_blockNumber`, `_rlpAccount`, `_rlpParentNodes` as input
      *       parameters.
