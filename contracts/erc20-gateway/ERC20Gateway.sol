@@ -17,6 +17,7 @@ pragma solidity >=0.5.0 <0.6.0;
 import "./ERC20GatewayBase.sol";
 import "../message-bus/MessageBus.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
+import "../ERC20I.sol";
 
 /**
  * @title ERC20Gateway Contract.
@@ -25,6 +26,10 @@ import "../proxies/MasterCopyNonUpgradable.sol";
  *         chains.
  */
 contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
+
+    /** Events */
+
+    event WithdrawIntentConfirmed ( bytes32 messageHash );
 
     /* Constants */
 
@@ -110,4 +115,111 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
         emit GatewayProven(messageInbox, _blockNumber);
     }
 
+    /**
+     * @notice Confirm withdraw in order to transfer value token.
+     *
+     * @param _utilityToken Address of utility token.
+     * @param _valueToken Address of value token.
+     * @param _amount Value token amount for withdrawal.
+     * @param _beneficiary Address of beneficiary where tokens will be withdrawn.
+     * @param _feeGasPrice Gas price at which fee will be calculated.
+     * @param _feeGasLimit Gas limit at which fee will be capped.
+     * @param _blockNumber Block number of Aux chain against which storage
+                           proof is generated.
+     * @param _withdrawer Address of the withdrawer account.
+     * @param _rlpParentNodes Storage merkle proof to verify message declaration
+                              on the origin chain.
+     *
+     * @return messageHash_ Message Hash
+     *
+     * \pre `_amount` is not 0.
+     * \pre `_beneficiary` address is not 0.
+     * \pre `_withdrawer` address is not 0.
+     * \pre `_rlpParentNodes` is not 0.
+     * \pre `_utilityToken` address is not 0.
+     * \pre `_valueToken` address is not 0.
+     *
+     * \post Adds a new entry in `inbox` mapping storage variable. The value is
+     *       set as `true` for `messagehash_` in `inbox` mapping. The
+     *       `messageHash_` is calculated by `MessageInbox.confirmMessage`.
+     * \post Update the nonces storage mapping variable by incrementing the
+     *       value for `msg.sender` by one.
+     * \post Transfers the `_valueToken` token to the `msg.sender` address as a fees.
+     *       The `fees` amount is calculated by `ERC20GatewayBase::reward()`
+     * \post Transfer the `_valueToken` token to the `_beneficiary` address. The
+     *       transfer amount calculated as `_amount-fees`
+     */
+    function confirmWithdraw(
+        address _utilityToken,
+        address _valueToken,
+        uint256 _amount,
+        address _beneficiary,
+        uint256 _feeGasPrice,
+        uint256 _feeGasLimit,
+        address _withdrawer,
+        uint256 _blockNumber,
+        bytes calldata _rlpParentNodes
+    )
+        external
+        returns (bytes32 messageHash_)
+    {
+        uint256 initialGas = gasleft();
+        require(
+            _utilityToken != address(0),
+            "Utility Token address must not be 0."
+        );
+        require(
+            _valueToken != address(0),
+            "Value Token address must not be 0."
+        );
+        require(
+            _amount != 0,
+            "Withdraw amount should be greater than 0."
+        );
+        require(
+            _beneficiary != address(0),
+            "Beneficiary address must not be 0."
+        );
+        require(
+            _withdrawer != address(0),
+            "Withdrawer address must not be 0."
+        );
+
+        uint256 nonce = nonces[msg.sender];
+        nonces[msg.sender] = nonce.add(1);
+
+        messageHash_ = MessageInbox.confirmMessage(
+            ERC20GatewayBase.hashWithdrawIntent(
+                _valueToken,
+                _utilityToken,
+                _amount,
+                _beneficiary
+            ),
+            nonce,
+            _feeGasPrice,
+            _feeGasLimit,
+            _withdrawer,
+            _blockNumber,
+            _rlpParentNodes
+        );
+
+        uint256 gasConsumed = initialGas.sub(gasleft());
+        uint256 feeAmount = ERC20GatewayBase.reward(
+            gasConsumed,
+            _feeGasPrice,
+            _feeGasLimit
+        );
+        uint256 withdrawAmount = _amount.sub(feeAmount);
+
+        require(
+            ERC20I(_valueToken).transfer(msg.sender, feeAmount),
+            "Reward transfer must succeed."
+        );
+        require(
+            ERC20I(_valueToken).transfer(_beneficiary, withdrawAmount),
+            "Token transfer to the beneficiary must succeed."
+        );
+
+        emit WithdrawIntentConfirmed(messageHash_);
+    }
 }

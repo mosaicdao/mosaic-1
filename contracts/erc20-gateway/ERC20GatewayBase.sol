@@ -39,6 +39,11 @@ contract ERC20GatewayBase {
         "WithdrawIntent(address valueToken,address utilityToken,uint256 amount,address beneficiary)"
     );
 
+    /* Storage */
+
+    /** Mapping of message sender and nonce. */
+    mapping(address => uint256) public  nonces;
+
 
     /* Public functions */
 
