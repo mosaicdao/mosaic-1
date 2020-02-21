@@ -37,10 +37,9 @@ contract Gen0ERC20Cogateway is ERC20Cogateway {
      *
      * \post Sets corresponding genesis* variables inherited from
      *      GenesisERC20Cogateway contract and calls ERC20Cogateway::setup()
-     *      function to initialize the contract. Calling ERC20Cogateway::setup()
-     *      also sets storage variable `activated` inherited from ERC20Cogateway
-     *      contract and asserts that contract has not been previously
-     *      activated.
+     *      function to initialize the contract. Calls to ERC20Cogateway::setup()
+     *      calls MessageOutbox::setupMessageOutbox() which assures that
+     *      activate() function cannot be called only once.
      */
     function activate(
         bytes32 _metachainId,

@@ -35,8 +35,6 @@ contract ERC20Cogateway is
     /**
      * @notice It initializes ERC20Cogateway contract.
      *
-     * \pre Gateway is not activated.
-     *
      * \post Calls `MessageOutbox.setupMessageOutbox` and
      *       `MessageInbox.setupMessageInbox` with genesis* values read
      *       from `GenesisERC20Cogateway` contract.
