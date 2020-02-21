@@ -31,14 +31,14 @@ contract ERC20Cogateway is MasterCopyNonUpgradable, GenesisERC20Cogateway, ERC20
 
     /** Emitted when withdraw message is declared */
     event WithdrawIntentDeclared(
+        bytes32 messageHash,
         address utilityToken,
         uint256 amount,
         uint256 nonce,
         address beneficiary,
         uint256 feeGasPrice,
         uint256 feeGasLimit,
-        address withdrawer,
-        bytes32 messageHash
+        address withdrawer
     );
 
 
@@ -121,6 +121,7 @@ contract ERC20Cogateway is MasterCopyNonUpgradable, GenesisERC20Cogateway, ERC20
      * \pre `_amount` is not 0.
      * \pre `_beneficiary` is not 0.
      * \pre `_amount` should be greater than maximum reward.
+     * \pre `msg.sender` should approve erc20 cogateway contract.
      *
      * \post Update the nonces storage mapping variable by incrementing the
      *       value for `msg.sender` by one.
@@ -176,17 +177,17 @@ contract ERC20Cogateway is MasterCopyNonUpgradable, GenesisERC20Cogateway, ERC20
             msg.sender
         );
 
+        UtilityTokenInterface(_utilityToken).burnFrom(msg.sender, _amount);
+
         emit WithdrawIntentDeclared(
+            messageHash_,
             _utilityToken,
             _amount,
             nonce,
             _beneficiary,
             _feeGasPrice,
             _feeGasLimit,
-            msg.sender,
-            messageHash_
+            msg.sender
         );
-
-        UtilityTokenInterface(_utilityToken).burnFrom(msg.sender, _amount);
     }
 }
