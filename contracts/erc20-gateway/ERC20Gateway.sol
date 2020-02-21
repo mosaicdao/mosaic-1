@@ -105,10 +105,10 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
      * @param _rlpParentNodes RLP encoded value of account proof node array.
      *
      * \post Calls `MessageInbox.proveStorageAccount()` function with
-     *       `_blockNumber`, `_rlpAccountNode`, `_rlpParentNodes` as input
+     *       `_blockNumber`, `_rlpAccount`, `_rlpParentNodes` as input
      *       parameters.
-     * \post Emits `GatewayProven` event with parameters `address(this)` and
-     *       `_blockNumber`.
+     * \post Emits `GatewayProven` event with the address of `messageInbox`
+     *       and `_blockNumber` parameters.
      */
     function proveGateway(
         uint256 _blockNumber,
