@@ -29,16 +29,16 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
 
     /* Events */
 
-    /* Emitted when deposit intent hash is declared. */
+    /** Emitted when deposit intent is declared. */
     event DepositIntentDeclared(
         bytes32 messageHash,
         address valueToken,
+        address depositor,
         uint256 amount,
         uint256 nonce,
         address beneficiary,
         uint256 feeGasPrice,
-        uint256 feeGasLimit,
-        address depositor
+        uint256 feeGasLimit
     );
 
 
@@ -127,14 +127,28 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
     }
 
     /**
-     * @notice Deposit funds to mint on auxiliary chain. Depositor needs to
-     *         approve this contract with the deposit amount.
+     * @notice Deposit funds to mint on auxiliary chain.
      *
      * @param _valueToken Address of value token.
-     * @param _amount Value token token deposit amount in atto.
+     * @param _amount Amount deposited in atto
      * @param _beneficiary Address of beneficiary on auxiliary chain.
      * @param _feeGasPrice Fee gas price at which rewards will be calculated.
      * @param _feeGasLimit Fee gas limit at which rewards will be calculated.
+     *
+     * \pre  Depositor needs to approve this contract with the deposit amount.
+     * \pre  Value token address must not be zero.
+     * \pre  Deposit amount should be greater than max reward.
+     * \pre  Beneficiary address must not be zero.
+     *
+     * \post Calls `ERC20GatewayBase.hashDepositIntent()` with `_valueToken`,
+     *       `_amount` and `_beneficiary` as input parameters.
+     * \post Calls `MessageOutbox.declareMessage()` with `depositIntentHash`,
+     *       `nonce`,`_feeGasPrice`, `_feeGasLimit`, `msg.sender` as input
+     *       parameters.
+     * \post Emits `DepositIntentDeclared` event with the address of `messageHash_`,
+     *       `_valueToken`, `msg.sender`, `_amount`, `nonce`, `_beneficiary`,
+     *       `_feeGasPrice` and `_feeGasLimit` parameters.
+     * \post Transfer approved value tokens from depositor to ERC20Gateway.
      */
     function deposit(
         address _valueToken,
@@ -147,19 +161,27 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
         returns (bytes32 messageHash_)
     {
         require(
+            _valueToken != address(0),
+            "Value token address is 0."
+        );
+        require(
             _amount != 0,
-            "Deposit amount should be greater than 0"
+            "Deposit amount is 0."
         );
         require(
             _beneficiary != address(0),
-            "Beneficiary address must not be 0."
+            "Beneficiary address is 0."
         );
         require(
             _amount > _feeGasPrice.mul(_feeGasLimit),
             "Deposit amount should be greater than max reward."
         );
 
-        bytes32 depositIntentHash = hashDepositIntent(_valueToken, _amount, _beneficiary);
+        bytes32 depositIntentHash = hashDepositIntent(
+            _valueToken,
+            _amount,
+            _beneficiary
+        );
 
         uint256 nonce = nonces[msg.sender];
         nonces[msg.sender] = nonce.add(1);
@@ -180,12 +202,12 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
         emit DepositIntentDeclared(
             messageHash_,
             _valueToken,
+            msg.sender,
             _amount,
             nonce,
             _beneficiary,
             _feeGasPrice,
-            _feeGasLimit,
-            msg.sender
+            _feeGasLimit
         );
     }
 }

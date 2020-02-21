@@ -42,9 +42,6 @@ contract('ERC20Gateway::deposit', async (accounts) => {
     depositor = accountProvider.get();
     valueToken = await Utils.deployMockToken(depositor, 200);
 
-    console.log('ValueToken address :-', valueToken.address);
-
-
     param = {
       valueToken: valueToken.address,
       amount: new BN(100),
@@ -52,7 +49,6 @@ contract('ERC20Gateway::deposit', async (accounts) => {
       feeGasPrice: new BN(1),
       feeGasLimit: new BN(1),
     };
-
     setupParam = {
       metachainId: Utils.getRandomHash(),
       erc20Cogateway,
@@ -60,7 +56,6 @@ contract('ERC20Gateway::deposit', async (accounts) => {
       maxStorageRootItems: new BN(50),
       coGatewayOutboxIndex: new BN(1),
     };
-
     await erc20Gateway.setup(
       setupParam.metachainId,
       setupParam.erc20Cogateway,
@@ -91,7 +86,6 @@ contract('ERC20Gateway::deposit', async (accounts) => {
       );
 
       const channelIdentifier = await erc20Gateway.outboundChannelIdentifier.call();
-
       const depositIntentHash = HashDepositIntent.getDepositIntentHash(
         param.valueToken,
         param.amount,
@@ -118,6 +112,9 @@ contract('ERC20Gateway::deposit', async (accounts) => {
 
       const depositorBalanceAfterTransfer = await valueToken.balanceOf(depositor);
       const erc20ContractBalanceAfterTransfer = await valueToken.balanceOf(erc20Gateway.address);
+
+      const messageStatus = await erc20Gateway.outbox.call(actualMessageHash);
+      assert.isOk(messageStatus === true, 'Message status must be true');
 
       assert.isOk(
         depositorBalanceAfterTransfer.eq(depositorBalanceBeforeTransfer.sub(param.amount)),
