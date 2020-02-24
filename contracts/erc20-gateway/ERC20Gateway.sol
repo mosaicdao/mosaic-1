@@ -15,6 +15,7 @@ pragma solidity >=0.5.0 <0.6.0;
 // limitations under the License.
 
 import "./ERC20GatewayBase.sol";
+import "../ERC20I.sol";
 import "../message-bus/MessageBus.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
 import "../ERC20I.sol";
@@ -29,7 +30,20 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
 
     /** Events */
 
-    event WithdrawIntentConfirmed ( bytes32 messageHash );
+    /** Emitted when deposit intent is declared. */
+    event DepositIntentDeclared(
+        uint256 amount,
+        uint256 nonce,
+        address beneficiary,
+        uint256 feeGasPrice,
+        uint256 feeGasLimit,
+        address depositor,
+        address valueToken,
+        bytes32 messageHash
+    );
+
+    /** Emitted when withdraw intent is confirmed. */
+    event WithdrawIntentConfirmed ( bytes32 messageHash )
 
 
     /* Constants */
@@ -116,6 +130,100 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
         emit GatewayProven(messageInbox, _blockNumber);
     }
 
+    /** 
+     * @notice Deposit ERC20 token to mint utility token on the auxiliary chain.
+     *
+     * @param _amount Amount of token to be deposited in atto
+     * @param _beneficiary Address of beneficiary on the auxiliary chain.
+     * @param _feeGasPrice Gas price at which fee will be calculated.
+     * @param _feeGasLimit Gas limit at which fee will be capped.
+     * @param _valueToken Address of ERC20 token.
+     *
+     * @return messageHash_ Message hash.
+     *
+     * \pre  `msg.sender` should approve this contract for `_amount` number of
+     *       token transfer.
+     * \pre  `_valueToken` address must not be zero.
+     * \pre  `_amount` should be greater than max reward. Max reward is
+     *       calculated as `_feeGasPrice.mul(_feeGasLimit),`
+     * \pre  `_beneficiary` address must not be zero.
+     *
+     * \post Adds a new entry in `outbox` mapping storage variable. The value is
+     *       set as `true` for `messageHash_` in `outbox` mapping. The
+     *       `messageHash_` is obtained by calling
+     *       `MessageOutbox.declareMessage` with the parameters `depositIntentHash`,
+     *      `nonces[msg.sender]`,`_feeGasPrice`,`_feeGasLimit`,`msg.sender`.
+     *       depositIntentHash is calculated by calling
+     *      `ERC20GatewayBase.hashDepositIntent()` with `_valueToken`,
+     *       `_amount` and `_beneficiary` as input parameters.
+     * \post Updates the `nonces` storage mapping variable by incrementing the
+     *       value for `msg.sender` by one.
+     * \post Transfers `_amount` of tokens from `msg.sender` to ERC20Gateway contract.
+     * \post Emits `DepositIntentDeclared` event with the address of `messageHash_`,
+     *       `_valueToken`, `msg.sender`, `_amount`, `nonce`, `_beneficiary`,
+     *       `_feeGasPrice` and `_feeGasLimit` parameters.
+     */
+    function deposit(
+        uint256 _amount,
+        address _beneficiary,
+        uint256 _feeGasPrice,
+        uint256 _feeGasLimit,
+        address _valueToken
+    )
+        external
+        returns (bytes32 messageHash_)
+    {
+        require(
+            _valueToken != address(0),
+            "Value token address is 0."
+        );
+        require(
+            _amount != 0,
+            "Deposit amount is 0."
+        );
+        require(
+            _beneficiary != address(0),
+            "Beneficiary address is 0."
+        );
+        require(
+            _amount > _feeGasPrice.mul(_feeGasLimit),
+            "Deposit amount should be greater than max reward."
+        );
+
+        bytes32 depositIntentHash = hashDepositIntent(
+            _valueToken,
+            _amount,
+            _beneficiary
+        );
+
+        uint256 nonce = nonces[msg.sender];
+        nonces[msg.sender] = nonce.add(1);
+
+        messageHash_ = MessageOutbox.declareMessage(
+            depositIntentHash,
+            nonce,
+            _feeGasPrice,
+            _feeGasLimit,
+            msg.sender
+        );
+
+        require(
+            ERC20I(_valueToken).transferFrom(msg.sender, address(this), _amount),
+            "Value token transferFrom must succeed."
+        );
+
+        emit DepositIntentDeclared(
+            _amount,
+            nonce,
+            _beneficiary,
+            _feeGasPrice,
+            _feeGasLimit,
+            msg.sender,
+            _valueToken,
+            messageHash_
+        );
+    }
+
     /**
      * @notice Confirm withdraw in order to transfer value token.
      *
@@ -143,12 +251,12 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
      * \post Adds a new entry in `inbox` mapping storage variable. The value is
      *       set as `true` for `messagehash_` in `inbox` mapping. The
      *       `messageHash_` is calculated by `MessageInbox.confirmMessage`.
-     * \post Update the nonces storage mapping variable by incrementing the
-     *       value for `msg.sender` by one.
      * \post Transfers the `_valueToken` token to the `msg.sender` address as a fees.
      *       The `fees` amount is calculated by `ERC20GatewayBase::reward()`
      * \post Transfer the `_valueToken` token to the `_beneficiary` address. The
      *       transfer amount calculated as `_amount-fees`
+     * \post Update the nonces storage mapping variable by incrementing the
+     *       value for `msg.sender` by one.
      */
     function confirmWithdraw(
         address _utilityToken,
