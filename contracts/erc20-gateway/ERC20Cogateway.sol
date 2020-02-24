@@ -19,6 +19,7 @@ import "./ERC20GatewayBase.sol";
 import "../message-bus/MessageBus.sol";
 import "../message-bus/StateRootInterface.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
+import "../proxies/ProxyFactory.sol";
 import "../utility-token/UtilityTokenInterface.sol";
 
 /**
@@ -29,6 +30,7 @@ contract ERC20Cogateway is
     MasterCopyNonUpgradable,
     GenesisERC20Cogateway,
     MessageBus,
+    ProxyFactory,
     ERC20GatewayBase {
 
     /** Events */
@@ -46,10 +48,23 @@ contract ERC20Cogateway is
     );
 
 
+    /* Constants */
+
+    /** The callprefix of the UtilityToken::setup(). */
+    bytes4 public constant UTILITY_TOKEN_SETUP_CALLPREFIX = bytes4(
+        keccak256(
+            "setup(string,string,uint8,uint256,address,address)"
+        )
+    );
+
+
     /* Storage */
 
     /* Value token address. */
     address public valueToken;
+
+    /* Mapping for utility token addresses */
+    mapping (address => address) public utilityTokens;
 
 
     /* External Functions */
@@ -202,5 +217,104 @@ contract ERC20Cogateway is
             _utilityToken,
             messageHash_
         );
+    }
+
+    /**
+     * @notice Confirm deposit in order to mint tokens.
+     *
+     * @param _amount ERC20 token deposit amount in atto.
+     * @param _beneficiary Address of beneficiary on target metachain.
+     * @param _feeGasPrice Gas price at which fee will be calculated.
+     * @param _feeGasLimit Gas limit at which fee will be capped.
+     * @param _valueToken ERC20 token address.
+     * @param _depositor Address of depositor on the origin chain.
+     * @param _blockNumber Block number of origin chain against which storage
+                           proof is generated.
+     * @param _rlpParentNodes Storage merkle proof to verify message declaration
+     *                        on the origin chain.
+     *
+     * @return messageHash_ Message hash.
+     */
+    function confirmDeposit(
+        uint256 _amount,
+        address payable _beneficiary,
+        uint256 _feeGasPrice,
+        uint256 _feeGasLimit,
+        address _valueToken,
+        address _depositor,
+        uint256 _blockNumber,
+        bytes calldata _rlpParentNodes
+     )
+        external
+        returns (bytes32 messageHash_)
+    {
+        uint256 initialGas = gasleft();
+
+        require(
+            _amount != 0,
+            "Deposit amount should be greater than 0."
+        );
+        require(
+            _beneficiary != address(0),
+            "Beneficiary address must not be 0."
+        );
+        require(
+            _depositor != address(0),
+            "Depositor address must not be 0."
+        );
+
+        deployUtilityToken(_valueToken);
+
+        uint256 nonce = nonces[msg.sender];
+        nonces[msg.sender] = nonce.add(1);
+
+        messageHash_ = MessageInbox.confirmMessage(
+            ERC20GatewayBase.hashDepositIntent(
+                valueToken,
+                _amount,
+                _beneficiary
+            ),
+            nonce,
+            _feeGasPrice,
+            _feeGasLimit,
+            _depositor,
+            _blockNumber,
+            _rlpParentNodes
+        );
+
+        uint256 feeAmount = ERC20GatewayBase.reward(
+            initialGas.sub(gasleft()),
+            _feeGasPrice,
+            _feeGasLimit
+        );
+
+        uint256 mintAmount = _amount.sub(feeAmount);
+
+        UtilityTokenInterface(address(_valueToken)).mint(msg.sender, feeAmount);
+
+        UtilityTokenInterface(address(_valueToken)).mint(_beneficiary, mintAmount);
+    }
+
+    function deployUtilityToken(address _valueToken) public {
+        address utilityToken = utilityTokens[_valueToken];
+
+        if(utilityToken == address(0)) {
+            bytes memory utilityTokenSetupCalldata = abi.encodeWithSelector(
+                UTILITY_TOKEN_SETUP_CALLPREFIX,
+                "",
+                "",
+                uint8(0),
+                uint256(0),
+                address(this),
+                _valueToken
+            );
+
+            Proxy utilityTokenProxy = createProxy(
+                genesisUtilityTokenMastercopy,
+                utilityTokenSetupCalldata
+            );
+
+            utilityTokens[_valueToken] = address(utilityTokenProxy);
+        }
     }
 }
