@@ -129,11 +129,11 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
     /**
      * @notice Deposit ERC20 token to mint utility token on the auxiliary chain.
      *
-     * @param _valueToken Address of ERC20 token.
      * @param _amount Amount of token to be deposited in atto
      * @param _beneficiary Address of beneficiary on the auxiliary chain.
      * @param _feeGasPrice Gas price at which fee will be calculated.
-     * @param _feeGasLimit Gas limit at which fee will be calculated.
+     * @param _feeGasLimit Gas limit at which fee will be capped.
+     * @param _valueToken Address of ERC20 token.
      *
      * @return messageHash_ Message hash.
      *
