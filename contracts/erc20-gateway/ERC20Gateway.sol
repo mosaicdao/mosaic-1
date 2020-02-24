@@ -43,7 +43,7 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
     );
 
     /** Emitted when withdraw intent is confirmed. */
-    event WithdrawIntentConfirmed ( bytes32 messageHash )
+    event WithdrawIntentConfirmed ( bytes32 messageHash );
 
 
     /* Constants */
