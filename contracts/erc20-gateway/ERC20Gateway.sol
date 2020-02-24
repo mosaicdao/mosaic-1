@@ -130,7 +130,7 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
         emit GatewayProven(messageInbox, _blockNumber);
     }
 
-    /** 
+    /**
      * @notice Deposit ERC20 token to mint utility token on the auxiliary chain.
      *
      * @param _amount Amount of token to be deposited in atto
@@ -227,6 +227,8 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
     /**
      * @notice Confirm withdraw in order to transfer value token.
      *
+     * @param _utilityToken Address of utility token contract.
+     * @param _valueToken Address of value token contract.
      * @param _amount Value token amount for withdrawal.
      * @param _beneficiary Address of beneficiary where tokens will be withdrawn.
      * @param _feeGasPrice Gas price at which fee will be calculated.
@@ -240,10 +242,10 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
      *
      * @return messageHash_ Message hash.
      *
-     * \pre `_amount` is not 0.
-     * \pre `_beneficiary` address is not 0.
      * \pre `_utilityToken` address is not 0.
      * \pre `_valueToken` address is not 0.
+     * \pre `_amount` is not 0.
+     * \pre `_beneficiary` address is not 0.
      * \pre `_withdrawer` address is not 0.
      * \pre `_rlpParentNodes` is not 0.
      *
@@ -259,12 +261,12 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
      * \post Emits `WithdrawIntentConfirmed` event with the `messageHash_` parameter.
      */
     function confirmWithdraw(
+        address _utilityToken,
+        address _valueToken,
         uint256 _amount,
         address _beneficiary,
         uint256 _feeGasPrice,
         uint256 _feeGasLimit,
-        address _utilityToken,
-        address _valueToken,
         address _withdrawer,
         uint256 _blockNumber,
         bytes calldata _rlpParentNodes
