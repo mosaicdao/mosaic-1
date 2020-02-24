@@ -46,6 +46,12 @@ contract ERC20GatewayBase {
     );
 
 
+    /* Storage */
+
+    /** Mapping of message sender and nonce. */
+    mapping(address => uint256) public  nonces;
+
+
     /* Public functions */
 
     /**
