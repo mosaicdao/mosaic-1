@@ -28,7 +28,7 @@ import "../ERC20I.sol";
  */
 contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
 
-    /** Events */
+    /* Events */
 
     /** Emitted when deposit intent is declared. */
     event DepositIntentDeclared(
@@ -43,7 +43,7 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
     );
 
     /** Emitted when withdraw intent is confirmed. */
-    event WithdrawIntentConfirmed ( bytes32 messageHash );
+    event WithdrawIntentConfirmed(bytes32 messageHash);
 
 
     /* Constants */
@@ -227,26 +227,26 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
     /**
      * @notice Confirm withdraw in order to transfer value token.
      *
-     * @param _utilityToken Address of utility token.
-     * @param _valueToken Address of value token.
+     * @param _utilityToken Address of utility token contract.
+     * @param _valueToken Address of value token contract.
      * @param _amount Value token amount for withdrawal.
      * @param _beneficiary Address of beneficiary where tokens will be withdrawn.
      * @param _feeGasPrice Gas price at which fee will be calculated.
      * @param _feeGasLimit Gas limit at which fee will be capped.
-     * @param _blockNumber Block number of Aux chain against which storage
+     * @param _blockNumber Block number of auxiliary chain against which storage
                            proof is generated.
      * @param _withdrawer Address of the withdrawer account.
      * @param _rlpParentNodes Storage merkle proof to verify message declaration
                               on the origin chain.
      *
-     * @return messageHash_ Message Hash
+     * @return messageHash_ Message hash.
      *
+     * \pre `_utilityToken` address is not 0.
+     * \pre `_valueToken` address is not 0.
      * \pre `_amount` is not 0.
      * \pre `_beneficiary` address is not 0.
      * \pre `_withdrawer` address is not 0.
      * \pre `_rlpParentNodes` is not 0.
-     * \pre `_utilityToken` address is not 0.
-     * \pre `_valueToken` address is not 0.
      *
      * \post Adds a new entry in `inbox` mapping storage variable. The value is
      *       set as `true` for `messagehash_` in `inbox` mapping. The
@@ -254,9 +254,10 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
      * \post Transfers the `_valueToken` token to the `msg.sender` address as a fees.
      *       The `fees` amount is calculated by `ERC20GatewayBase::reward()`
      * \post Transfer the `_valueToken` token to the `_beneficiary` address. The
-     *       transfer amount calculated as `_amount-fees`
+     *       transfer amount is calculated as `_amount-fees`
      * \post Update the nonces storage mapping variable by incrementing the
      *       value for `msg.sender` by one.
+     * \post Emits `WithdrawIntentConfirmed` event with the `messageHash_` parameter.
      */
     function confirmWithdraw(
         address _utilityToken,
@@ -275,23 +276,23 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
         uint256 initialGas = gasleft();
         require(
             _utilityToken != address(0),
-            "Utility Token address must not be 0."
+            "Utility Token address is 0."
         );
         require(
             _valueToken != address(0),
-            "Value Token address must not be 0."
+            "Value Token address is 0."
         );
         require(
             _amount != 0,
-            "Withdraw amount should be greater than 0."
+            "Withdraw amount is 0."
         );
         require(
             _beneficiary != address(0),
-            "Beneficiary address must not be 0."
+            "Beneficiary address is 0."
         );
         require(
             _withdrawer != address(0),
-            "Withdrawer address must not be 0."
+            "Withdrawer address is 0."
         );
 
         uint256 nonce = nonces[msg.sender];
