@@ -31,9 +31,6 @@ contract ConsensusGatewayBase {
     /** Address of most contract on origin or auxiliary chain. */
     ERC20I public most;
 
-    /** Mapping of message sender and nonce. */
-    mapping(address => uint256) public  nonces;
-
     /** Height of current metablock */
     uint256 public currentMetablockHeight;
 
