@@ -18,7 +18,6 @@ import "./ERC20GatewayBase.sol";
 import "../ERC20I.sol";
 import "../message-bus/MessageBus.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
-import "../ERC20I.sol";
 
 /**
  * @title ERC20Gateway Contract.
@@ -252,10 +251,13 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
      * \post Adds a new entry in `inbox` mapping storage variable. The value is
      *       set as `true` for `messagehash_` in `inbox` mapping. The
      *       `messageHash_` is calculated by `MessageInbox.confirmMessage`.
-     * \post Transfers the `_valueToken` token to the `msg.sender` address as a fees.
-     *       The `fees` amount is calculated by `ERC20GatewayBase::reward()`
-     * \post Transfer the `_valueToken` token to the `_beneficiary` address. The
-     *       transfer amount is calculated as `_amount-fees`
+     * \post Transfers the tokens to the `msg.sender` address as a fees.
+     *       The `fees` amount is calculated by calling
+     *       `ERC20GatewayBase::reward()` with parameters `gasConsumed`,
+     *       `_feeGasPrice` and `_feeGasLimit`. `gasConsumed` is the approximate
+     *       gas used in this transaction.
+     * \post Transfer the `_amount-fees` amount of token to the `_beneficiary`
+     *       address.
      * \post Update the nonces storage mapping variable by incrementing the
      *       value for `msg.sender` by one.
      * \post Emits `WithdrawIntentConfirmed` event with the `messageHash_` parameter.
