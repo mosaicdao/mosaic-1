@@ -32,7 +32,8 @@ contract ERC20CogatewayDouble is ERC20Cogateway {
         address _genesisERC20Gateway,
         address _genesisStateRootProvider,
         uint256 _genesisMaxStorageRootItems,
-        uint8 _genesisOutboxStorageIndex
+        uint8 _genesisOutboxStorageIndex,
+        address _genesisUtilityTokenMasterCopy
     )
         external
     {
@@ -41,5 +42,27 @@ contract ERC20CogatewayDouble is ERC20Cogateway {
         genesisStateRootProvider = _genesisStateRootProvider;
         genesisMaxStorageRootItems = _genesisMaxStorageRootItems;
         genesisOutboxStorageIndex = _genesisOutboxStorageIndex;
+        genesisUtilityTokenMastercopy = _genesisUtilityTokenMasterCopy;
+    }
+
+    /**
+     * @notice Sets storage root at specific block number.
+     */
+    function setStorageRoot(
+        uint256 _blockNumber,
+        bytes32 _storageRoot
+    )
+        external
+    {
+        storageRoots[_blockNumber] = _storageRoot;
+    }
+
+    /**
+     * @notice Sets inbound channel identifier.
+     */
+    function setInboundChannelIdentifier(bytes32 _inboundChannelIdentifier)
+        external
+    {
+        inboundChannelIdentifier = _inboundChannelIdentifier;
     }
 }
