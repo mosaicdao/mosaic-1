@@ -14,7 +14,6 @@ pragma solidity >=0.5.0 <0.6.0;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import "./ERC20GatewayBase.sol";
 import "./GenesisERC20Cogateway.sol";
 import "./ERC20GatewayBase.sol";
 import "../message-bus/MessageBus.sol";
@@ -36,14 +35,14 @@ contract ERC20Cogateway is
 
     /** Emitted when withdraw message is declared */
     event WithdrawIntentDeclared(
-        bytes32 messageHash,
-        address utilityToken,
         uint256 amount,
         uint256 nonce,
         address beneficiary,
         uint256 feeGasPrice,
         uint256 feeGasLimit,
-        address withdrawer
+        address withdrawer,
+        address utilityToken,
+        bytes32 messageHash
     );
 
 
@@ -58,11 +57,14 @@ contract ERC20Cogateway is
     /**
      * @notice It initializes ERC20Cogateway contract.
      *
-     * \pre Gateway is not activated.
+     * \pre Setup function can be called only once.
      *
-     * \post Calls `MessageOutbox.setupMessageOutbox` and
-     *       `MessageInbox.setupMessageInbox` with genesis* values read
-     *       from `GenesisERC20Cogateway` contract.
+     * \post Calls `MessageOutbox.setupMessageOutbox()` with parameters
+     *       `genesisMetachainId` and `genesisERC20Gateway`.
+     * \post Calls `MessageInbox.setupMessageInbox` with parameters
+     *       `genesisMetachainId`, `genesisERC20Gateway`,
+     *       `genesisOutboxStorageIndex`, `genesisStateRootProvider` and
+     *       `genesisOutboxStorageIndex`.
      */
     function setup()
         external
@@ -141,11 +143,11 @@ contract ERC20Cogateway is
      *       by erc20 cogateway.
      */
     function withdraw(
-        address _utilityToken,
         uint256 _amount,
         address _beneficiary,
         uint256 _feeGasPrice,
-        uint256 _feeGasLimit
+        uint256 _feeGasLimit,
+        address _utilityToken
     )
         external
         returns(bytes32 messageHash_)
@@ -153,10 +155,6 @@ contract ERC20Cogateway is
         require(
             _utilityToken != address(0),
             "Utility Token address must not be 0."
-        );
-        require(
-            _amount != 0,
-            "Withdrawal amount should be greater than 0."
         );
         require(
             _beneficiary != address(0),
@@ -188,14 +186,14 @@ contract ERC20Cogateway is
         UtilityTokenInterface(_utilityToken).burnFrom(msg.sender, _amount);
 
         emit WithdrawIntentDeclared(
-            messageHash_,
-            _utilityToken,
             _amount,
             nonce,
             _beneficiary,
             _feeGasPrice,
             _feeGasLimit,
-            msg.sender
+            msg.sender,
+            _utilityToken,
+            messageHash_
         );
     }
 }

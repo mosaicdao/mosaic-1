@@ -21,6 +21,7 @@ const ERC20Cogateway = artifacts.require('ERC20CogatewayDouble');
 const { AccountProvider } = require('../../test_lib/utils.js');
 const MessageBusUtils = require('../../message_bus/messagebus_utils');
 const Utils = require('../../test_lib/utils.js');
+const web3 = require('../../test_lib/web3');
 
 contract('ERC20Cogateway::withdraw', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
@@ -33,24 +34,23 @@ contract('ERC20Cogateway::withdraw', (accounts) => {
   let outboundChannelIdentifier;
 
   const WITHDRAW_INTENT_TYPEHASH = web3.utils.keccak256(
-    "WithdrawIntent(address valueToken,address utilityToken,uint256 amount,address beneficiary)",
+    'WithdrawIntent(address valueToken,address utilityToken,uint256 amount,address beneficiary)',
   );
 
   function hashWithdrawIntent(
-    valueToken, 
-    utilityToken,
+    valueToken,
+    utilityTokenAddress,
     amount,
     beneficiary,
-  )
-  {
+  ) {
     return web3.utils.sha3(
       web3.eth.abi.encodeParameters(
         ['bytes32', 'address', 'address', 'uint256', 'address'],
-        [ 
-          WITHDRAW_INTENT_TYPEHASH, 
+        [
+          WITHDRAW_INTENT_TYPEHASH,
           valueToken,
-          utilityToken,
-          amount.toString(), 
+          utilityTokenAddress,
+          amount.toString(10),
           beneficiary],
       ),
     );
@@ -71,7 +71,7 @@ contract('ERC20Cogateway::withdraw', (accounts) => {
       genesisMaxStorageRootItems: new BN(100),
       genesisOutboxStorageIndex: new BN(4),
     };
-    
+
     withdrawParam = {
       utilityToken: utilityToken.address,
       amount: new BN(100),
@@ -104,10 +104,9 @@ contract('ERC20Cogateway::withdraw', (accounts) => {
       withdrawParam.amount,
       withdrawParam.beneficiary,
     );
-
   });
 
-  it('should successfully withdraw' , async () => {
+  it('should successfully withdraw', async () => {
     const beforeSenderUtilityTokenBalance = await utilityToken.balanceOf(sender);
 
     await utilityToken.approve(erc20Cogateway.address, withdrawParam.amount, {
@@ -124,20 +123,20 @@ contract('ERC20Cogateway::withdraw', (accounts) => {
     );
 
     const messageHash = await erc20Cogateway.withdraw.call(
-      withdrawParam.utilityToken,
       withdrawParam.amount,
       withdrawParam.beneficiary,
       withdrawParam.feeGasPrice,
       withdrawParam.feeGasLimit,
+      withdrawParam.utilityToken,
       { from: sender },
     );
 
     await erc20Cogateway.withdraw(
-      withdrawParam.utilityToken,
       withdrawParam.amount,
       withdrawParam.beneficiary,
       withdrawParam.feeGasPrice,
       withdrawParam.feeGasLimit,
+      withdrawParam.utilityToken,
       { from: sender },
     );
 
@@ -146,7 +145,7 @@ contract('ERC20Cogateway::withdraw', (accounts) => {
     assert.strictEqual(
       messageHash,
       calculatedMessageHash,
-      "Incorrect Message hash."
+      'Incorrect Message hash.',
     );
 
     assert.isOk(
