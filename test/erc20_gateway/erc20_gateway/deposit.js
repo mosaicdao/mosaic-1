@@ -43,11 +43,11 @@ contract('ERC20Gateway::deposit', async (accounts) => {
     valueToken = await Utils.deployMockToken(depositor, 200);
 
     param = {
-      valueToken: valueToken.address,
       amount: new BN(100),
       beneficiary: accountProvider.get(),
       feeGasPrice: new BN(1),
       feeGasLimit: new BN(1),
+      valueToken: valueToken.address,
     };
     setupParam = {
       metachainId: Utils.getRandomHash(),
@@ -77,11 +77,11 @@ contract('ERC20Gateway::deposit', async (accounts) => {
       const erc20ContractBalanceBeforeTransfer = await valueToken.balanceOf(erc20Gateway.address);
 
       const actualMessageHash = await erc20Gateway.deposit.call(
-        param.valueToken,
         param.amount,
         param.beneficiary,
         param.feeGasPrice,
         param.feeGasLimit,
+        param.valueToken,
         { from: depositor },
       );
 
@@ -102,11 +102,11 @@ contract('ERC20Gateway::deposit', async (accounts) => {
       );
 
       await erc20Gateway.deposit(
-        param.valueToken,
         param.amount,
         param.beneficiary,
         param.feeGasPrice,
         param.feeGasLimit,
+        param.valueToken,
         { from: depositor },
       );
 

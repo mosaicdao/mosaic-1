@@ -31,14 +31,14 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
 
     /** Emitted when deposit intent is declared. */
     event DepositIntentDeclared(
-        bytes32 messageHash,
-        address valueToken,
-        address depositor,
         uint256 amount,
         uint256 nonce,
         address beneficiary,
         uint256 feeGasPrice,
-        uint256 feeGasLimit
+        uint256 feeGasLimit,
+        address depositor,
+        address valueToken,
+        bytes32 messageHash
     );
 
 
@@ -127,35 +127,44 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
     }
 
     /**
-     * @notice Deposit funds to mint on auxiliary chain.
+     * @notice Deposit ERC20 token to mint utility token on the auxiliary chain.
      *
-     * @param _valueToken Address of value token.
-     * @param _amount Amount deposited in atto
-     * @param _beneficiary Address of beneficiary on auxiliary chain.
-     * @param _feeGasPrice Fee gas price at which rewards will be calculated.
-     * @param _feeGasLimit Fee gas limit at which rewards will be calculated.
+     * @param _valueToken Address of ERC20 token.
+     * @param _amount Amount of token to be deposited in atto
+     * @param _beneficiary Address of beneficiary on the auxiliary chain.
+     * @param _feeGasPrice Gas price at which fee will be calculated.
+     * @param _feeGasLimit Gas limit at which fee will be calculated.
      *
-     * \pre  Depositor needs to approve this contract with the deposit amount.
-     * \pre  Value token address must not be zero.
-     * \pre  Deposit amount should be greater than max reward.
-     * \pre  Beneficiary address must not be zero.
+     * @return messageHash_ Message hash.
      *
-     * \post Calls `ERC20GatewayBase.hashDepositIntent()` with `_valueToken`,
+     * \pre  `msg.sender` should approve this contract for `_amount` number of
+     *       token transfer.
+     * \pre  `_valueToken` address must not be zero.
+     * \pre  `_amount` should be greater than max reward. Max reward is
+     *       calculated as `_feeGasPrice.mul(_feeGasLimit),`
+     * \pre  `_beneficiary` address must not be zero.
+     *
+     * \post Adds a new entry in `outbox` mapping storage variable. The value is
+     *       set as `true` for `messageHash_` in `outbox` mapping. The
+     *       `messageHash_` is obtained by calling
+     *       `MessageOutbox.declareMessage` with the parameters `depositIntentHash`,
+     *      `nonces[msg.sender]`,`_feeGasPrice`,`_feeGasLimit`,`msg.sender`.
+     *       depositIntentHash is calculated by calling
+     *      `ERC20GatewayBase.hashDepositIntent()` with `_valueToken`,
      *       `_amount` and `_beneficiary` as input parameters.
-     * \post Calls `MessageOutbox.declareMessage()` with `depositIntentHash`,
-     *       `nonce`,`_feeGasPrice`, `_feeGasLimit`, `msg.sender` as input
-     *       parameters.
+     * \post Updates the `nonces` storage mapping variable by incrementing the
+     *       value for `msg.sender` by one.
+     * \post Transfers `_amount` of tokens from `msg.sender` to ERC20Gateway contract.
      * \post Emits `DepositIntentDeclared` event with the address of `messageHash_`,
      *       `_valueToken`, `msg.sender`, `_amount`, `nonce`, `_beneficiary`,
      *       `_feeGasPrice` and `_feeGasLimit` parameters.
-     * \post Transfer approved value tokens from depositor to ERC20Gateway.
      */
     function deposit(
-        address _valueToken,
         uint256 _amount,
         address _beneficiary,
         uint256 _feeGasPrice,
-        uint256 _feeGasLimit
+        uint256 _feeGasLimit,
+        address _valueToken
     )
         external
         returns (bytes32 messageHash_)
@@ -200,14 +209,14 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
         );
 
         emit DepositIntentDeclared(
-            messageHash_,
-            _valueToken,
-            msg.sender,
             _amount,
             nonce,
             _beneficiary,
             _feeGasPrice,
-            _feeGasLimit
+            _feeGasLimit,
+            msg.sender,
+            _valueToken,
+            messageHash_
         );
     }
 }
