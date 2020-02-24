@@ -119,12 +119,12 @@ contract ERC20Cogateway is
      *       approve erc20 cogateway contract for the amount to be
      *       withdrawn.
      *
-     * @param _utilityToken Address of utility token
      * @param _amount Amount of tokens to be withdrawn.
      * @param _beneficiary The address in the origin chain where the value
      *                     where the tokens will be withdrawn.
      * @param _feeGasPrice Gas price at which fee will be calculated.
      * @param _feeGasLimit Gas limit at which fee will be capped.
+     * @param _utilityToken Address of utility token
      *
      * @return messageHash_ Message hash.
      *
@@ -134,13 +134,20 @@ contract ERC20Cogateway is
      * \pre `_amount` should be greater than maximum reward.
      * \pre `msg.sender` should approve erc20 cogateway contract.
      *
-     * \post Update the nonces storage mapping variable by incrementing the
-     *       value for `msg.sender` by one.
      * \post Adds a new entry in `outbox` mapping storage variable. The value is
      *       set as `true` for `messagehash_` in `outbox` mapping. The
-     *       `messageHash_` is calculated by `MessageOutbox.declareMessage`.
-     * \post Utility tokens will be burned from `msg.sender` account
-     *       by erc20 cogateway.
+     *       `messageHash_` is obtained by calling `MessageOutbox.declareMessage`
+     *       with the parameters `withdrawIntentHash`, `nonces[msg.sender]`,
+     *       `_feeGasPrice`, `_feeGasLimit` and `msg.sender`. `withdrawIntentHash`
+     *       is calculated by calling `ERC20GatewayBase.hashWithdrawIntent` with
+     *       parameters `valueToken`, `_utilityToken`, `_amount`, `_beneficiary`.
+     * \post `_amount` number of utility tokens will be burned from `msg.sender`
+     *       account by erc20 cogateway.
+     * \post Update the `nonces` storage mapping variable by incrementing the
+     *       value for `msg.sender` by one.
+     * \post Emits `WithdrawIntentDeclared` event with the `_amount`, address of
+     *       `_beneficiary`, `_feeGasPrice`, `_feeGasLimit`, address of
+     *       `msg.sender`, address of `_utilityToken` and `messageHash_`.
      */
     function withdraw(
         uint256 _amount,
@@ -165,7 +172,7 @@ contract ERC20Cogateway is
             "Withdrawal amount should be greater than max reward."
         );
 
-        bytes32 withdrawIntentHash = hashWithdrawIntent(
+        bytes32 withdrawIntentHash = ERC20GatewayBase.hashWithdrawIntent(
             valueToken,
             _utilityToken,
             _amount,
