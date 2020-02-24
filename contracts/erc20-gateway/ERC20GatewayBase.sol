@@ -29,12 +29,6 @@ contract ERC20GatewayBase {
     event GatewayProven(address remoteGateway, uint256 blockNumber);
 
 
-    /* Storage */
-
-    /** Mapping of message sender and nonce. */
-    mapping(address => uint256) public  nonces;
-
-
     /* Constants */
 
     bytes32 constant public DEPOSIT_INTENT_TYPEHASH = keccak256(
