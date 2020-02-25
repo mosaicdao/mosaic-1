@@ -32,6 +32,7 @@ contract('ERC20Cogateway::setup', (accounts) => {
       genesisStateRootProvider: accountProvider.get(),
       genesisMaxStorageRootItems: new BN(100),
       genesisOutboxStorageIndex: new BN(4),
+      genesisUtilityTokenMasterCopy: accountProvider.get(),
     };
     await erc20Cogateway.setupGenesis(
       setupGenesisParams.genesisMetachainId,
@@ -39,6 +40,7 @@ contract('ERC20Cogateway::setup', (accounts) => {
       setupGenesisParams.genesisStateRootProvider,
       setupGenesisParams.genesisMaxStorageRootItems,
       setupGenesisParams.genesisOutboxStorageIndex,
+      setupGenesisParams.genesisUtilityTokenMasterCopy,
     );
   });
 

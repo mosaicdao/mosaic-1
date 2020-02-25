@@ -13,6 +13,7 @@
 // limitations under the License.
 
 const UtilityToken = artifacts.require('UtilityToken');
+
 const BN = require('bn.js');
 
 contract('UtilityToken::burn', (accounts) => {
@@ -20,7 +21,7 @@ contract('UtilityToken::burn', (accounts) => {
   const TOKEN_NAME = 'Utility Token';
   const TOKEN_DECIMALS = 18;
   const TOTAL_TOKEN_SUPPLY = new BN('1000');
-  const consensusCogateway = accounts[2];
+  const cogateway = accounts[2];
   const beneficiary = accounts[3];
 
   let utilityToken;
@@ -35,12 +36,12 @@ contract('UtilityToken::burn', (accounts) => {
       TOKEN_NAME,
       TOKEN_DECIMALS,
       TOTAL_TOKEN_SUPPLY,
-      consensusCogateway,
+      cogateway,
       accounts[4],
     );
 
     await utilityToken.mint(beneficiary, amount, {
-      from: consensusCogateway,
+      from: cogateway,
     });
   });
 

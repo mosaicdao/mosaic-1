@@ -33,7 +33,7 @@ contract ERC20CogatewayDouble is ERC20Cogateway {
         address _genesisStateRootProvider,
         uint256 _genesisMaxStorageRootItems,
         uint8 _genesisOutboxStorageIndex,
-        address _genesisUtilityTokenMasterCopy
+        address _genesisUtilityTokenMastercopy
     )
         external
     {
@@ -42,7 +42,7 @@ contract ERC20CogatewayDouble is ERC20Cogateway {
         genesisStateRootProvider = _genesisStateRootProvider;
         genesisMaxStorageRootItems = _genesisMaxStorageRootItems;
         genesisOutboxStorageIndex = _genesisOutboxStorageIndex;
-        genesisUtilityTokenMastercopy = _genesisUtilityTokenMasterCopy;
+        genesisUtilityTokenMastercopy = _genesisUtilityTokenMastercopy;
     }
 
     /**

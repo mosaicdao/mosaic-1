@@ -232,11 +232,11 @@ contract ERC20Cogateway is
     /**
      * @notice Confirm deposit in order to mint tokens.
      *
+     * @param _valueToken ERC20 token address on the origin chain.
      * @param _amount ERC20 token deposit amount in atto.
      * @param _beneficiary Address of beneficiary on the target chain.
      * @param _feeGasPrice Gas price at which fee will be calculated.
      * @param _feeGasLimit Gas limit at which fee will be capped.
-     * @param _valueToken ERC20 token address on the origin chain.
      * @param _depositor Address of depositor on the origin chain.
      * @param _blockNumber Block number of origin chain against which storage
                            proof is generated.
@@ -245,9 +245,9 @@ contract ERC20Cogateway is
      *
      * @return messageHash_ Message hash.
      *
+     * \pre `_valueToken` address is not 0.
      * \pre `_amount` is not 0.
      * \pre `_beneficiary` address is not 0.
-     * \pre `_valueToken` address is not 0.
      * \pre `_depositor` address is not 0.
      * \pre `_rlpParentNodes` is not 0.
      *
@@ -273,11 +273,11 @@ contract ERC20Cogateway is
      * \post Emits `WithdrawIntentConfirmed` event with the `messageHash_` parameter.
      */
     function confirmDeposit(
+        address _valueToken,
         uint256 _amount,
         address payable _beneficiary,
         uint256 _feeGasPrice,
         uint256 _feeGasLimit,
-        address _valueToken,
         address _depositor,
         uint256 _blockNumber,
         bytes calldata _rlpParentNodes

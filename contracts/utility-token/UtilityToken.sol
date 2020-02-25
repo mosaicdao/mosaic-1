@@ -84,7 +84,7 @@ contract UtilityToken is MasterCopyNonUpgradable, ERC20Token {
         external
     {
         require(
-            _cogateway == address(0),
+            cogateway == address(0),
             "Contract has been already setup."
         );
 
