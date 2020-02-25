@@ -13,6 +13,7 @@ node_modules
 
 # NPM package generated files:
 dist/contracts.json
+dist/*
 
 # Do not track builds
 build/
