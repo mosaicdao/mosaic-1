@@ -18,7 +18,6 @@
     "clean": "rm -r contract_build/contracts.json dist/* interacts/* build/* 2> /dev/null || true",
     "build:package": "node tools/build_package.js",
     "generate:interacts": "ts-generator ts-generator.json && node tools/contract_interact_generator.js",
-    "postinstall": "npm run clean && npm run compile && npm run build:package && npm run generate:interacts",
     "copy:interacts": "cp interacts/*.d.ts dist/interacts",
     "prepare:publish": "npm run clean && npm run compile && npm run build:package && npm run generate:interacts && npm run compile:ts && npm run copy:interacts"
   },
