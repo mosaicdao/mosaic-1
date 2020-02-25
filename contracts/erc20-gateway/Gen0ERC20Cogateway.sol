@@ -17,7 +17,7 @@ pragma solidity >=0.5.0 <0.6.0;
 import "./ERC20Cogateway.sol";
 
 /**
- * @title Implements ERC20Cogateway contract for gen0.
+ * @title Implements ERC20Cogateway contract for gen0 chains.
  */
 contract Gen0ERC20Cogateway is ERC20Cogateway {
 
@@ -28,7 +28,7 @@ contract Gen0ERC20Cogateway is ERC20Cogateway {
      *
      * @dev The function sets corresponding genesis* variables inherited
      *      from GenesisERC20Cogateway contract and calls the parent class
-     *      ERC20Cogateway::setup() function to initialize contract.
+     *      ERC20Cogateway::setup() function to activate the gateway.
      *
      * \pre `_metachainId` is not 0.
      * \pre `_erc20Gateway` is not 0.
@@ -76,6 +76,9 @@ contract Gen0ERC20Cogateway is ERC20Cogateway {
 
         ERC20Cogateway.setup();
     }
+
+
+    /* Public Functions */
 
     /**
      * @notice setup() function is a dummy function for this contract.
