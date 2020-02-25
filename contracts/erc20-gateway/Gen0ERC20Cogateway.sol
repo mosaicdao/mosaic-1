@@ -35,11 +35,18 @@ contract Gen0ERC20Cogateway is ERC20Cogateway {
      * \pre `_stateRootProvider` is not 0.
      * \pre `_maxStorageRootItems` is not 0.
      *
-     * \post Sets corresponding genesis* variables inherited from
-     *      GenesisERC20Cogateway contract and calls ERC20Cogateway::setup()
-     *      function to initialize the contract. Calls to ERC20Cogateway::setup()
-     *      calls MessageOutbox::setupMessageOutbox() which assures that
-     *      activate() function cannot be called only once.
+     * \post Sets the `genesisMetachainId` storage variable to `_metachainId`.
+     * \post Sets the `genesisERC20Gateway` storage variable to `_erc20Gateway`.
+     * \post Sets the `genesisStateRootProvider` storage variable
+     *       to `_stateRootProvider`.
+     * \post Sets the `genesisMaxStorageRootItems` storage variable
+     *       to `_maxStorageRootItems`.
+     * \post Sets the `genesisOutboxStorageIndex` storage variable
+     *       to `_outboxStorageIndex`.
+     * \post Calls ERC20Cogateway::setup() function to activate the gateway,
+     *       which in its turn calls MessageOutbox::setupMessageOutbox()
+     *       function which assures that activate() function can be called
+     *       only once.
      */
     function activate(
         bytes32 _metachainId,
