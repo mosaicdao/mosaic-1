@@ -41,6 +41,7 @@ const contractNames = [
   'ERC20Cogateway',
   'ERC20Gateway',
   'ERC20I',
+  'Gen0ERC20Cogateway',
   'Reputation',
   'SelfProtocore',
   'StateRootProvider',
