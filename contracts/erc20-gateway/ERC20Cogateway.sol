@@ -83,6 +83,8 @@ contract ERC20Cogateway is
      *       `genesisMetachainId`, `genesisERC20Gateway`,
      *       `genesisOutboxStorageIndex`, `genesisStateRootProvider` and
      *       `genesisOutboxStorageIndex`.
+     * \post Sets `utilityTokenMasterCopy` storage variable with
+     *       `genesisUtilityTokenMastercopy` value.
      */
     function setup()
         public
@@ -231,10 +233,10 @@ contract ERC20Cogateway is
      * @notice Confirm deposit in order to mint tokens.
      *
      * @param _amount ERC20 token deposit amount in atto.
-     * @param _beneficiary Address of beneficiary on target metachain.
+     * @param _beneficiary Address of beneficiary on the target chain.
      * @param _feeGasPrice Gas price at which fee will be calculated.
      * @param _feeGasLimit Gas limit at which fee will be capped.
-     * @param _valueToken ERC20 token address.
+     * @param _valueToken ERC20 token address on the origin chain.
      * @param _depositor Address of depositor on the origin chain.
      * @param _blockNumber Block number of origin chain against which storage
                            proof is generated.
@@ -242,6 +244,33 @@ contract ERC20Cogateway is
      *                        on the origin chain.
      *
      * @return messageHash_ Message hash.
+     *
+     * \pre `_amount` is not 0.
+     * \pre `_beneficiary` address is not 0.
+     * \pre `_valueToken` address is not 0.
+     * \pre `_depositor` address is not 0.
+     * \pre `_rlpParentNodes` is not 0.
+     *
+     * \post Adds a new entry in `inbox` mapping storage variable. The value is
+     *       set as `true` for `messagehash_` in `inbox` mapping. The
+     *       `messageHash_` is calculated by calling `MessageInbox.confirmMessage`
+     *       function with parameters `depositIntentHash`, `nonce`,
+     *       `_feeGasPrice`, `_feeGasLimit`, `_depositor`, `_blockNumber` and
+     *       `_rlpParentNodes`. `depositIntentHash` is calculated by calling
+     *       `ERC20GatewayBase.hashDepositIntent` functions with the parameters
+     *       `_valueToken`, `_amount` and `_beneficiary`.
+     * \post Deploys a new utility token contract by calling
+     *       `deployUtilityToken()` with parameter `_valueToken`.
+     * \post Transfers the tokens to the `msg.sender` address as a fees.
+     *       The `fees` amount is calculated by calling
+     *       `ERC20GatewayBase::reward()` with parameters `gasConsumed`,
+     *       `_feeGasPrice` and `_feeGasLimit`. `gasConsumed` is the approximate
+     *       gas used in this transaction.
+     * \post Transfer the `_amount-fees` amount of token to the `_beneficiary`
+     *       address.
+     * \post Update the nonces storage mapping variable by incrementing the
+     *       value for `_withdrawer` by one.
+     * \post Emits `WithdrawIntentConfirmed` event with the `messageHash_` parameter.
      */
     function confirmDeposit(
         uint256 _amount,
@@ -271,14 +300,14 @@ contract ERC20Cogateway is
             "Depositor address must not be 0."
         );
 
-        deployUtilityToken(_valueToken);
+        address utilityToken = getUtilityToken(_valueToken);
 
-        uint256 nonce = nonces[msg.sender];
-        nonces[msg.sender] = nonce.add(1);
+        uint256 nonce = nonces[_depositor];
+        nonces[_depositor] = nonce.add(1);
 
         messageHash_ = MessageInbox.confirmMessage(
             ERC20GatewayBase.hashDepositIntent(
-                valueToken,
+                _valueToken,
                 _amount,
                 _beneficiary
             ),
@@ -290,6 +319,11 @@ contract ERC20Cogateway is
             _rlpParentNodes
         );
 
+        /*
+         * Calculate the reward fees based on the actual gas usage. The value
+         * of gas price can be adjusted to accommodate the additional gas usage
+         * after this statement.
+         */
         uint256 feeAmount = ERC20GatewayBase.reward(
             initialGas.sub(gasleft()),
             _feeGasPrice,
@@ -298,32 +332,34 @@ contract ERC20Cogateway is
 
         uint256 mintAmount = _amount.sub(feeAmount);
 
-        UtilityTokenInterface(address(_valueToken)).mint(msg.sender, feeAmount);
+        UtilityTokenInterface(utilityToken).mint(msg.sender, feeAmount);
 
-        UtilityTokenInterface(address(_valueToken)).mint(_beneficiary, mintAmount);
+        UtilityTokenInterface(utilityToken).mint(_beneficiary, mintAmount);
     }
 
 
     /* Private Functions */
 
     /**
-     * @notice Deploy the utility token proxy contract.
+     * @notice Returns the utility token proxy contract.
      * @param _valueToken Value token contract address.
-     * 
+     * @return utilityToken_ Utility token contract address.
+     *
      * \post Deploys a new proxy contract for utility token, if utility token
      *       address does not exists in `utilityTokens` mapping storage for the
      *       `_valueToken` key .
      * \post Updates the `utilityTokens` mapping storage by setting the values
      *       as address of newly deployed contract for `_valueToken` key.
      */
-    function deployUtilityToken(
+    function getUtilityToken(
         address _valueToken
-    ) 
-        private 
+    )
+        private
+        returns (address utilityToken_)
     {
-        address utilityToken = utilityTokens[_valueToken];
+        utilityToken_ = utilityTokens[_valueToken];
 
-        if(utilityToken == address(0)) {
+        if(utilityToken_ == address(0)) {
             bytes memory utilityTokenSetupCalldata = abi.encodeWithSelector(
                 UTILITY_TOKEN_SETUP_CALLPREFIX,
                 "",
@@ -334,12 +370,14 @@ contract ERC20Cogateway is
                 _valueToken
             );
 
-            Proxy utilityTokenProxy = createProxy(
-                utilityTokenMasterCopy,
-                utilityTokenSetupCalldata
+            utilityToken_ = address(
+                createProxy(
+                    utilityTokenMasterCopy,
+                    utilityTokenSetupCalldata
+                )
             );
 
-            utilityTokens[_valueToken] = address(utilityTokenProxy);
+            utilityTokens[_valueToken] = utilityToken_;
         }
     }
 }
