@@ -15,10 +15,5 @@
         "tools",
         "dist",
         "contracts"
-    ],
-    "types": [
-        "web3",
-        "node",
-        "mocha"
     ]
 }
