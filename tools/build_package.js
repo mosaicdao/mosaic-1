@@ -34,9 +34,18 @@ const contractNames = [
   'Axiom',
   'Committee',
   'Consensus',
+  'ConsensusCogateway',
+  'ConsensusGateway',
   'Core',
+  'Coreputation',
+  'ERC20Cogateway',
+  'ERC20Gateway',
   'ERC20I',
   'Reputation',
+  'SelfProtocore',
+  'StateRootProvider',
+  'UtBase',
+  'UtilityToken',
 ];
 
 const contracts = {};
