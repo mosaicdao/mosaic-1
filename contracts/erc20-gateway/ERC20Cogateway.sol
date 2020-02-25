@@ -63,8 +63,45 @@ contract ERC20Cogateway is
     /** Value token address. */
     address public valueToken;
 
+    /** Address of Utility token contract master copy. */
+    address public utilityTokenMasterCopy;
+
     /* Mapping for utility token addresses */
     mapping (address => address) public utilityTokens;
+
+
+    /* Public Functions */
+
+    /**
+     * @notice It initializes ERC20Cogateway contract.
+     *
+     * \pre Setup function can be called only once.
+     *
+     * \post Calls `MessageOutbox.setupMessageOutbox()` with parameters
+     *       `genesisMetachainId` and `genesisERC20Gateway`.
+     * \post Calls `MessageInbox.setupMessageInbox` with parameters
+     *       `genesisMetachainId`, `genesisERC20Gateway`,
+     *       `genesisOutboxStorageIndex`, `genesisStateRootProvider` and
+     *       `genesisOutboxStorageIndex`.
+     */
+    function setup()
+        public
+    {
+        MessageOutbox.setupMessageOutbox(
+            genesisMetachainId,
+            genesisERC20Gateway
+        );
+
+        MessageInbox.setupMessageInbox(
+            genesisMetachainId,
+            genesisERC20Gateway,
+            genesisOutboxStorageIndex,
+            StateRootInterface(genesisStateRootProvider),
+            genesisOutboxStorageIndex
+        );
+
+        utilityTokenMasterCopy = genesisUtilityTokenMastercopy;
+    }
 
 
     /* External Functions */
@@ -223,7 +260,7 @@ contract ERC20Cogateway is
 
         require(
             _amount != 0,
-            "Deposit amount should be greater than 0."
+            "Deposit amount must not be 0."
         );
         require(
             _beneficiary != address(0),
@@ -266,7 +303,24 @@ contract ERC20Cogateway is
         UtilityTokenInterface(address(_valueToken)).mint(_beneficiary, mintAmount);
     }
 
-    function deployUtilityToken(address _valueToken) public {
+
+    /* Private Functions */
+
+    /**
+     * @notice Deploy the utility token proxy contract.
+     * @param _valueToken Value token contract address.
+     * 
+     * \post Deploys a new proxy contract for utility token, if utility token
+     *       address does not exists in `utilityTokens` mapping storage for the
+     *       `_valueToken` key .
+     * \post Updates the `utilityTokens` mapping storage by setting the values
+     *       as address of newly deployed contract for `_valueToken` key.
+     */
+    function deployUtilityToken(
+        address _valueToken
+    ) 
+        private 
+    {
         address utilityToken = utilityTokens[_valueToken];
 
         if(utilityToken == address(0)) {
@@ -281,42 +335,11 @@ contract ERC20Cogateway is
             );
 
             Proxy utilityTokenProxy = createProxy(
-                genesisUtilityTokenMastercopy,
+                utilityTokenMasterCopy,
                 utilityTokenSetupCalldata
             );
 
             utilityTokens[_valueToken] = address(utilityTokenProxy);
         }
-
-
-    /* Public Functions */
-
-    /**
-     * @notice It initializes ERC20Cogateway contract.
-     *
-     * \pre Setup function can be called only once.
-     *
-     * \post Calls `MessageOutbox.setupMessageOutbox()` with parameters
-     *       `genesisMetachainId` and `genesisERC20Gateway`.
-     * \post Calls `MessageInbox.setupMessageInbox` with parameters
-     *       `genesisMetachainId`, `genesisERC20Gateway`,
-     *       `genesisOutboxStorageIndex`, `genesisStateRootProvider` and
-     *       `genesisOutboxStorageIndex`.
-     */
-    function setup()
-        public
-    {
-        MessageOutbox.setupMessageOutbox(
-            genesisMetachainId,
-            genesisERC20Gateway
-        );
-
-        MessageInbox.setupMessageInbox(
-            genesisMetachainId,
-            genesisERC20Gateway,
-            genesisOutboxStorageIndex,
-            StateRootInterface(genesisStateRootProvider),
-            genesisOutboxStorageIndex
-        );
     }
 }
