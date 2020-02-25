@@ -31,7 +31,7 @@ contract ERC20Cogateway is
     MessageBus,
     ERC20GatewayBase {
 
-    /** Events */
+    /* Events */
 
     /** Emitted when withdraw message is declared */
     event WithdrawIntentDeclared(
@@ -48,40 +48,11 @@ contract ERC20Cogateway is
 
     /* Storage */
 
-    /* Value token address. */
+    /** Value token address. */
     address public valueToken;
 
 
     /* External Functions */
-
-    /**
-     * @notice It initializes ERC20Cogateway contract.
-     *
-     * \pre Setup function can be called only once.
-     *
-     * \post Calls `MessageOutbox.setupMessageOutbox()` with parameters
-     *       `genesisMetachainId` and `genesisERC20Gateway`.
-     * \post Calls `MessageInbox.setupMessageInbox` with parameters
-     *       `genesisMetachainId`, `genesisERC20Gateway`,
-     *       `genesisOutboxStorageIndex`, `genesisStateRootProvider` and
-     *       `genesisOutboxStorageIndex`.
-     */
-    function setup()
-        public
-    {
-        MessageOutbox.setupMessageOutbox(
-            genesisMetachainId,
-            genesisERC20Gateway
-        );
-
-        MessageInbox.setupMessageInbox(
-            genesisMetachainId,
-            genesisERC20Gateway,
-            genesisOutboxStorageIndex,
-            StateRootInterface(genesisStateRootProvider),
-            genesisOutboxStorageIndex
-        );
-    }
 
     /**
      * @notice It verifies that ERC20Gateway contract exists on origin chain
@@ -201,6 +172,38 @@ contract ERC20Cogateway is
             msg.sender,
             _utilityToken,
             messageHash_
+        );
+    }
+
+
+    /* Public Functions */
+
+    /**
+     * @notice It initializes ERC20Cogateway contract.
+     *
+     * \pre Setup function can be called only once.
+     *
+     * \post Calls `MessageOutbox.setupMessageOutbox()` with parameters
+     *       `genesisMetachainId` and `genesisERC20Gateway`.
+     * \post Calls `MessageInbox.setupMessageInbox` with parameters
+     *       `genesisMetachainId`, `genesisERC20Gateway`,
+     *       `genesisOutboxStorageIndex`, `genesisStateRootProvider` and
+     *       `genesisOutboxStorageIndex`.
+     */
+    function setup()
+        public
+    {
+        MessageOutbox.setupMessageOutbox(
+            genesisMetachainId,
+            genesisERC20Gateway
+        );
+
+        MessageInbox.setupMessageInbox(
+            genesisMetachainId,
+            genesisERC20Gateway,
+            genesisOutboxStorageIndex,
+            StateRootInterface(genesisStateRootProvider),
+            genesisOutboxStorageIndex
         );
     }
 }
