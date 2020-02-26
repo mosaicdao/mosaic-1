@@ -15,16 +15,13 @@
 'use-strict';
 
 const BN = require('bn.js');
-const { AccountProvider } = require('../../test_lib/utils.js');
 
 const TestData = require('../../../test/erc20_gateway/data/erc20_deposit_proof.json');
 
 const UtilityToken = artifacts.require('UtilityToken');
-
 const ERC20Cogateway = artifacts.require('ERC20CogatewayDouble');
 
 contract('ERC20Cogateway::confirmDeposit', async (accounts) => {
-  // const accountProvider = new AccountProvider(accounts);
   let erc20Cogateway;
   let setupGenesisParams;
   let utilityToken;
@@ -32,11 +29,7 @@ contract('ERC20Cogateway::confirmDeposit', async (accounts) => {
 
   beforeEach(async () => {
     erc20Cogateway = await ERC20Cogateway.new();
-
     utilityToken = await UtilityToken.new();
-    console.log('address UT  ', utilityToken.address);
-
-    // console.log('utilityToken :-', utilityToken);
 
     param = {
       amount: TestData.param.amount,
@@ -64,7 +57,6 @@ contract('ERC20Cogateway::confirmDeposit', async (accounts) => {
       setupGenesisParams.genesisOutboxStorageIndex,
       setupGenesisParams.genesisUtilityTokenMastercopy,
     );
-
     await erc20Cogateway.setup();
     await erc20Cogateway.setInboundChannelIdentifier(
       TestData.outboundChannelIdentifier,
@@ -77,7 +69,7 @@ contract('ERC20Cogateway::confirmDeposit', async (accounts) => {
 
   it('should pass when deposit is confirmed.', async () => {
     const sender = accounts[2];
-    const messageHash = await erc20Cogateway.confirmDeposit.call(
+    await erc20Cogateway.confirmDeposit(
       param.valueToken,
       new BN(param.amount),
       param.beneficiary,
@@ -89,6 +81,38 @@ contract('ERC20Cogateway::confirmDeposit', async (accounts) => {
       { from: sender },
     );
 
-    console.log('Message Hash :-', messageHash);
+    const utilityTokenDeployedAddress = await erc20Cogateway
+      .utilityTokens.call(
+        param.valueToken,
+      );
+    const utilityTokenDeployed = await UtilityToken.at(utilityTokenDeployedAddress);
+
+    const senderBalanceAfterConfirmDeposit = await utilityTokenDeployed
+      .balanceOf(
+        sender,
+      );
+
+    const beneficiaryBlanaceAfterConfirmDeposit = await utilityTokenDeployed
+      .balanceOf(
+        param.beneficiary,
+      );
+
+    const gasPrice = new BN(param.feeGasPrice);
+    const gasLimit = new BN(param.feeGasLimit);
+    const maxReward = gasPrice.mul(gasLimit);
+
+    assert.strictEqual(
+      maxReward.toString(10),
+      senderBalanceAfterConfirmDeposit.toString(10),
+      'Reward earned with sender must match with max reward.',
+    );
+
+    const amount = new BN(param.amount);
+    const expectedAmountForBeneficiary = amount.sub(senderBalanceAfterConfirmDeposit);
+    assert.strictEqual(
+      expectedAmountForBeneficiary.toString(10),
+      beneficiaryBlanaceAfterConfirmDeposit.toString(10),
+      'Amount must be minted to beneficiary address and sender must get reward',
+    );
   });
 });

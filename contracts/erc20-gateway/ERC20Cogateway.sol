@@ -47,6 +47,16 @@ contract ERC20Cogateway is
         bytes32 messageHash
     );
 
+    /** Emitted when confirm deposit message is declared. */
+    event DepositIntentConfirmed(
+        bytes32 messageHash
+    );
+
+    /** Emitted when utility token is proxy is deployed. */
+    event UtilityTokenCreated(
+        address valueToken,
+        address utilityToken
+    );
 
     /* Constants */
 
@@ -345,6 +355,8 @@ contract ERC20Cogateway is
         UtilityTokenInterface(utilityToken).mint(msg.sender, feeAmount);
 
         UtilityTokenInterface(utilityToken).mint(_beneficiary, mintAmount);
+
+        emit DepositIntentConfirmed(messageHash_);
     }
 
 
@@ -390,6 +402,11 @@ contract ERC20Cogateway is
             );
 
             utilityTokens[_valueToken] = utilityToken_;
+
+            emit UtilityTokenCreated(
+                _valueToken,
+                utilityTokens[_valueToken]
+            );
         }
     }
 }
