@@ -22,7 +22,7 @@ contract('UtilityToken::setup', (accounts) => {
   const TOKEN_NAME = 'Utility Token';
   const TOKEN_DECIMALS = 18;
   const TOTAL_TOKEN_SUPPLY = new BN('1000');
-  const consensusCogateway = accounts[2];
+  const cogateway = accounts[2];
   const valueToken = accounts[3];
 
   let utilityToken;
@@ -37,7 +37,7 @@ contract('UtilityToken::setup', (accounts) => {
       TOKEN_NAME,
       TOKEN_DECIMALS,
       TOTAL_TOKEN_SUPPLY,
-      consensusCogateway,
+      cogateway,
       valueToken,
     );
 
@@ -75,11 +75,11 @@ contract('UtilityToken::setup', (accounts) => {
       'Token total supply from contract must be equal to zero.',
     );
 
-    const consensusCogatewayAddress = await utilityToken.consensusCogateway();
+    const cogatewayAddress = await utilityToken.cogateway();
     assert.strictEqual(
-      consensusCogatewayAddress,
-      consensusCogateway,
-      `ConsensusCogateway address must be set to ${consensusCogateway}.`,
+      cogatewayAddress,
+      cogateway,
+      `cogateway address must be set to ${cogateway}.`,
     );
 
     const actualValueTokenAddress = await utilityToken.valueToken.call();

@@ -20,7 +20,7 @@ contract('UtilityToken::mint', (accounts) => {
   const TOKEN_NAME = 'Utility Token';
   const TOKEN_DECIMALS = 18;
   const TOTAL_TOKEN_SUPPLY = new BN('1000');
-  const consensusCogateway = accounts[2];
+  const cogateway = accounts[2];
   const beneficiary = accounts[3];
 
   let utilityToken;
@@ -35,16 +35,16 @@ contract('UtilityToken::mint', (accounts) => {
       TOKEN_NAME,
       TOKEN_DECIMALS,
       TOTAL_TOKEN_SUPPLY,
-      consensusCogateway,
+      cogateway,
       accounts[4],
     );
   });
 
-  it('should mint tokens when called by the consensusCogateway.', async () => {
+  it('should mint tokens when called by the cogateway.', async () => {
     const balanceBeforeMint = await utilityToken.balanceOf(beneficiary);
 
     await utilityToken.mint(beneficiary, amount, {
-      from: consensusCogateway,
+      from: cogateway,
     });
 
     const balanceAfterMint = await utilityToken.balanceOf(beneficiary);

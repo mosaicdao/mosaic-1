@@ -19,6 +19,7 @@ import "./ERC20GatewayBase.sol";
 import "../message-bus/MessageBus.sol";
 import "../message-bus/StateRootInterface.sol";
 import "../proxies/MasterCopyNonUpgradable.sol";
+import "../proxies/ProxyFactory.sol";
 import "../utility-token/UtilityTokenInterface.sol";
 
 /**
@@ -29,6 +30,7 @@ contract ERC20Cogateway is
     MasterCopyNonUpgradable,
     GenesisERC20Cogateway,
     MessageBus,
+    ProxyFactory,
     ERC20GatewayBase {
 
     /* Events */
@@ -46,10 +48,62 @@ contract ERC20Cogateway is
     );
 
 
+    /* Constants */
+
+    /** The callprefix of the UtilityToken::setup(). */
+    bytes4 public constant UTILITY_TOKEN_SETUP_CALLPREFIX = bytes4(
+        keccak256(
+            "setup(string,string,uint8,uint256,address,address)"
+        )
+    );
+
+
     /* Storage */
 
     /** Value token address. */
     address public valueToken;
+
+    /** Address of Utility token contract master copy. */
+    address public utilityTokenMasterCopy;
+
+    /* Mapping for utility token addresses */
+    mapping (address => address) public utilityTokens;
+
+
+    /* Public Functions */
+
+    /**
+     * @notice It initializes ERC20Cogateway contract.
+     *
+     * \pre Setup function can be called only once.
+     *
+     * \post Calls `MessageOutbox.setupMessageOutbox()` with parameters
+     *       `genesisMetachainId` and `genesisERC20Gateway`.
+     * \post Calls `MessageInbox.setupMessageInbox` with parameters
+     *       `genesisMetachainId`, `genesisERC20Gateway`,
+     *       `genesisOutboxStorageIndex`, `genesisStateRootProvider` and
+     *       `genesisOutboxStorageIndex`.
+     * \post Sets `utilityTokenMasterCopy` storage variable with
+     *       `genesisUtilityTokenMastercopy` value.
+     */
+    function setup()
+        public
+    {
+        MessageOutbox.setupMessageOutbox(
+            genesisMetachainId,
+            genesisERC20Gateway
+        );
+
+        MessageInbox.setupMessageInbox(
+            genesisMetachainId,
+            genesisERC20Gateway,
+            genesisOutboxStorageIndex,
+            StateRootInterface(genesisStateRootProvider),
+            genesisOutboxStorageIndex
+        );
+
+        utilityTokenMasterCopy = genesisUtilityTokenMastercopy;
+    }
 
 
     /* External Functions */
@@ -175,35 +229,161 @@ contract ERC20Cogateway is
         );
     }
 
+    /**
+     * @notice Confirm deposit in order to mint tokens.
+     *
+     * @param _valueToken ERC20 token address on the origin chain.
+     * @param _amount ERC20 token deposit amount in atto.
+     * @param _beneficiary Address of beneficiary on the target chain.
+     * @param _feeGasPrice Gas price at which fee will be calculated.
+     * @param _feeGasLimit Gas limit at which fee will be capped.
+     * @param _depositor Address of depositor on the origin chain.
+     * @param _blockNumber Block number of origin chain against which storage
+                           proof is generated.
+     * @param _rlpParentNodes Storage merkle proof to verify message declaration
+     *                        on the origin chain.
+     *
+     * @return messageHash_ Message hash.
+     *
+     * \pre `_valueToken` address is not 0.
+     * \pre `_amount` is not 0.
+     * \pre `_beneficiary` address is not 0.
+     * \pre `_depositor` address is not 0.
+     * \pre `_rlpParentNodes` is not 0.
+     *
+     * \post Adds a new entry in `inbox` mapping storage variable. The value is
+     *       set as `true` for `messagehash_` in `inbox` mapping. The
+     *       `messageHash_` is calculated by calling `MessageInbox.confirmMessage`
+     *       function with parameters `depositIntentHash`, `nonce`,
+     *       `_feeGasPrice`, `_feeGasLimit`, `_depositor`, `_blockNumber` and
+     *       `_rlpParentNodes`. `depositIntentHash` is calculated by calling
+     *       `ERC20GatewayBase.hashDepositIntent` functions with the parameters
+     *       `_valueToken`, `_amount` and `_beneficiary`.
+     * \post Deploys a new utility token contract by calling
+     *       `deployUtilityToken()` with parameter `_valueToken`.
+     * \post Transfers the tokens to the `msg.sender` address as a fees.
+     *       The `fees` amount is calculated by calling
+     *       `ERC20GatewayBase::reward()` with parameters `gasConsumed`,
+     *       `_feeGasPrice` and `_feeGasLimit`. `gasConsumed` is the approximate
+     *       gas used in this transaction.
+     * \post Transfer the `_amount-fees` amount of token to the `_beneficiary`
+     *       address.
+     * \post Update the nonces storage mapping variable by incrementing the
+     *       value for `_withdrawer` by one.
+     * \post Emits `WithdrawIntentConfirmed` event with the `messageHash_` parameter.
+     */
+    function confirmDeposit(
+        address _valueToken,
+        uint256 _amount,
+        address payable _beneficiary,
+        uint256 _feeGasPrice,
+        uint256 _feeGasLimit,
+        address _depositor,
+        uint256 _blockNumber,
+        bytes calldata _rlpParentNodes
+     )
+        external
+        returns (bytes32 messageHash_)
+    {
+        uint256 initialGas = gasleft();
 
-    /* Public Functions */
+        require(
+            _valueToken != address(0),
+            "Value token address must not be 0."
+        );
+        require(
+            _amount != 0,
+            "Deposit amount must not be 0."
+        );
+        require(
+            _beneficiary != address(0),
+            "Beneficiary address must not be 0."
+        );
+        require(
+            _depositor != address(0),
+            "Depositor address must not be 0."
+        );
+
+        address utilityToken = getUtilityToken(_valueToken);
+
+        uint256 nonce = nonces[_depositor];
+        nonces[_depositor] = nonce.add(1);
+
+        messageHash_ = MessageInbox.confirmMessage(
+            ERC20GatewayBase.hashDepositIntent(
+                _valueToken,
+                _amount,
+                _beneficiary
+            ),
+            nonce,
+            _feeGasPrice,
+            _feeGasLimit,
+            _depositor,
+            _blockNumber,
+            _rlpParentNodes
+        );
+
+        /*
+         * Calculate the reward fees based on the actual gas usage. The value
+         * of gas price can be adjusted to accommodate the additional gas usage
+         * after this statement.
+         */
+        uint256 feeAmount = ERC20GatewayBase.reward(
+            initialGas.sub(gasleft()),
+            _feeGasPrice,
+            _feeGasLimit
+        );
+
+        uint256 mintAmount = _amount.sub(feeAmount);
+
+        UtilityTokenInterface(utilityToken).mint(msg.sender, feeAmount);
+
+        UtilityTokenInterface(utilityToken).mint(_beneficiary, mintAmount);
+    }
+
+
+    /* Private Functions */
 
     /**
-     * @notice It initializes ERC20Cogateway contract.
+     * @notice Returns the utility token proxy contract.
      *
-     * \pre Setup function can be called only once.
+     * @param _valueToken Value token contract address.
      *
-     * \post Calls `MessageOutbox.setupMessageOutbox()` with parameters
-     *       `genesisMetachainId` and `genesisERC20Gateway`.
-     * \post Calls `MessageInbox.setupMessageInbox` with parameters
-     *       `genesisMetachainId`, `genesisERC20Gateway`,
-     *       `genesisOutboxStorageIndex`, `genesisStateRootProvider` and
-     *       `genesisOutboxStorageIndex`.
+     * @return utilityToken_ Utility token contract address.
+     *
+     * \post Deploys a new proxy contract for utility token, if utility token
+     *       address does not exists in `utilityTokens` mapping storage for the
+     *       `_valueToken` key .
+     * \post Updates the `utilityTokens` mapping storage by setting the values
+     *       as address of newly deployed contract for `_valueToken` key.
      */
-    function setup()
-        public
+    function getUtilityToken(
+        address _valueToken
+    )
+        private
+        returns (address utilityToken_)
     {
-        MessageOutbox.setupMessageOutbox(
-            genesisMetachainId,
-            genesisERC20Gateway
-        );
+        utilityToken_ = utilityTokens[_valueToken];
 
-        MessageInbox.setupMessageInbox(
-            genesisMetachainId,
-            genesisERC20Gateway,
-            genesisOutboxStorageIndex,
-            StateRootInterface(genesisStateRootProvider),
-            genesisOutboxStorageIndex
-        );
+        if(utilityToken_ == address(0)) {
+            bytes memory utilityTokenSetupCalldata = abi.encodeWithSelector(
+                UTILITY_TOKEN_SETUP_CALLPREFIX,
+                "",
+                "",
+                uint8(0),
+                uint256(0),
+                address(this),
+                _valueToken
+            );
+
+            utilityToken_ = address(
+                createProxy(
+                    utilityTokenMasterCopy,
+                    utilityTokenSetupCalldata
+                )
+            );
+
+            utilityTokens[_valueToken] = utilityToken_;
+        }
     }
 }

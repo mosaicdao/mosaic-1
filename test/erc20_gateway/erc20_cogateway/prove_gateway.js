@@ -15,11 +15,14 @@
 const BN = require('bn.js');
 const ProveERC20GatewayProof = require('../../data/prove_erc20_gateway.json');
 const Utils = require('../../test_lib/utils.js');
+const { AccountProvider } = require('../../test_lib/utils.js');
 
 const ERC20Cogateway = artifacts.require('ERC20CogatewayDouble');
 const SpyAnchor = artifacts.require('SpyAnchor');
 
-contract('ERC20Cogateway::proveGateway', () => {
+contract('ERC20Cogateway::proveGateway', (accounts) => {
+  const accountProvider = new AccountProvider(accounts);
+
   let erc20Cogateway;
 
   const setupParams = {
@@ -44,6 +47,7 @@ contract('ERC20Cogateway::proveGateway', () => {
       spyAnchor.address,
       setupParams.maxStorageRootItems,
       setupParams.outboxStorageIndex,
+      accountProvider.get(),
     );
 
     await erc20Cogateway.setup();

@@ -259,7 +259,7 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
      * \post Transfer the `_amount-fees` amount of token to the `_beneficiary`
      *       address.
      * \post Update the nonces storage mapping variable by incrementing the
-     *       value for `msg.sender` by one.
+     *       value for `_withdrawer` by one.
      * \post Emits `WithdrawIntentConfirmed` event with the `messageHash_` parameter.
      */
     function confirmWithdraw(
@@ -298,8 +298,8 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
             "Withdrawer address is 0."
         );
 
-        uint256 nonce = nonces[msg.sender];
-        nonces[msg.sender] = nonce.add(1);
+        uint256 nonce = nonces[_withdrawer];
+        nonces[_withdrawer] = nonce.add(1);
 
         messageHash_ = MessageInbox.confirmMessage(
             ERC20GatewayBase.hashWithdrawIntent(

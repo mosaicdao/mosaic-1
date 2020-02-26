@@ -34,6 +34,7 @@ contract Gen0ERC20Cogateway is ERC20Cogateway {
      * \pre `_erc20Gateway` is not 0.
      * \pre `_stateRootProvider` is not 0.
      * \pre `_maxStorageRootItems` is not 0.
+     * \pre `_utilityTokenMastercopy` is not 0.
      *
      * \post Sets the `genesisMetachainId` storage variable to `_metachainId`.
      * \post Sets the `genesisERC20Gateway` storage variable to `_erc20Gateway`.
@@ -43,6 +44,8 @@ contract Gen0ERC20Cogateway is ERC20Cogateway {
      *       to `_maxStorageRootItems`.
      * \post Sets the `genesisOutboxStorageIndex` storage variable
      *       to `_outboxStorageIndex`.
+     * \post Sets the `genesisUtilityTokenMastercopy` storage variable to
+     *       `_utilityTokenMastercopy`.
      * \post Calls ERC20Cogateway::setup() function to activate the gateway,
      *       which in its turn calls MessageOutbox::setupMessageOutbox()
      *       function which assures that activate() function can be called
@@ -53,7 +56,8 @@ contract Gen0ERC20Cogateway is ERC20Cogateway {
         address _erc20Gateway,
         address _stateRootProvider,
         uint256 _maxStorageRootItems,
-        uint8 _outboxStorageIndex
+        uint8 _outboxStorageIndex,
+        address _utilityTokenMastercopy
     )
         external
     {
@@ -67,12 +71,17 @@ contract Gen0ERC20Cogateway is ERC20Cogateway {
             _maxStorageRootItems != uint256(0),
             "Max storage root item count is 0."
         );
+        require(
+            _utilityTokenMastercopy != address(0),
+            "Utility token master copy contract's address is 0."
+        );
 
         genesisMetachainId = _metachainId;
         genesisERC20Gateway = _erc20Gateway;
         genesisStateRootProvider = _stateRootProvider;
         genesisMaxStorageRootItems = _maxStorageRootItems;
         genesisOutboxStorageIndex = _outboxStorageIndex;
+        genesisUtilityTokenMastercopy = _utilityTokenMastercopy;
 
         ERC20Cogateway.setup();
     }
