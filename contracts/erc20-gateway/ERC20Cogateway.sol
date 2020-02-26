@@ -288,6 +288,10 @@ contract ERC20Cogateway is
         uint256 initialGas = gasleft();
 
         require(
+            _valueToken != address(0),
+            "Value token address must not be 0."
+        );
+        require(
             _amount != 0,
             "Deposit amount must not be 0."
         );
@@ -342,7 +346,9 @@ contract ERC20Cogateway is
 
     /**
      * @notice Returns the utility token proxy contract.
+     *
      * @param _valueToken Value token contract address.
+     *
      * @return utilityToken_ Utility token contract address.
      *
      * \post Deploys a new proxy contract for utility token, if utility token
