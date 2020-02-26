@@ -23,8 +23,16 @@ const ERC20Gateway = artifacts.require('ERC20Gateway');
 const Web3 = require('web3');
 const { AccountProvider } = require('../../test/test_lib/utils');
 const Utils = require('../../test/test_lib/utils');
-// const web3 = require('../../test/test_lib/web3');
 
+/**
+ * Steps to run the script
+ *
+ * 1. Run geth: docker run -p 8545:8545 -p 8546:8546 -p 30303:30303 mosaicdao/dev-chains:1.0.3 origin
+ * 2. Run test: node_modules/.bin/truffle test data_generator/erc20-gateways/deposit_proof.js
+ *
+ * note: The local web3 instance is used here because docker is exposing 8546 as WebSocket(ws)
+ * and to use web3 with http local web3 instace is newly created.
+ */
 contract('ERC20Gateway::deposit', async (accounts) => {
   const accountProvider = new AccountProvider(accounts);
   let erc20Gateway;
