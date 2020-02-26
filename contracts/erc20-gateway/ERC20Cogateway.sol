@@ -28,8 +28,8 @@ import "../utility-token/UtilityTokenInterface.sol";
  */
 contract ERC20Cogateway is
     MasterCopyNonUpgradable,
-    GenesisERC20Cogateway,
     MessageBus,
+    GenesisERC20Cogateway,
     ProxyFactory,
     ERC20GatewayBase {
 
@@ -49,6 +49,12 @@ contract ERC20Cogateway is
 
 
     /* Constants */
+
+    /** Storage offset of message outbox. */
+    uint8 constant public OUTBOX_OFFSET = uint8(1);
+
+    /** Storage offset of message inbox. */
+    uint8 constant public INBOX_OFFSET = uint8(4);
 
     /** The callprefix of the UtilityToken::setup(). */
     bytes4 public constant UTILITY_TOKEN_SETUP_CALLPREFIX = bytes4(
@@ -99,7 +105,7 @@ contract ERC20Cogateway is
             genesisERC20Gateway,
             genesisOutboxStorageIndex,
             StateRootInterface(genesisStateRootProvider),
-            genesisOutboxStorageIndex
+            genesisMaxStorageRootItems
         );
 
         utilityTokenMasterCopy = genesisUtilityTokenMastercopy;
