@@ -14,8 +14,8 @@
 
 'use strict';
 
-import shared, {Validator} from '../shared';
-import Utils from '../Utils';
+import shared, {Validator} from '../../shared';
+import Utils from '../../Utils';
 
 const FUNDING_AMOUNT_IN_ETH = '2';
 
