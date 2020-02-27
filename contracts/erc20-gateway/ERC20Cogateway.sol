@@ -47,12 +47,12 @@ contract ERC20Cogateway is
         bytes32 messageHash
     );
 
-    /** Emitted when confirm deposit message is declared. */
+    /** Emitted when deposit message is confirmed. */
     event DepositIntentConfirmed(
         bytes32 messageHash
     );
 
-    /** Emitted when utility token is proxy is deployed. */
+    /** Emitted when utility token proxy is deployed. */
     event UtilityTokenCreated(
         address valueToken,
         address utilityToken
@@ -405,7 +405,7 @@ contract ERC20Cogateway is
 
             emit UtilityTokenCreated(
                 _valueToken,
-                utilityTokens[_valueToken]
+                utilityToken_
             );
         }
     }

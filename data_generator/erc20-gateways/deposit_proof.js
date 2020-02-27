@@ -15,7 +15,6 @@
 'use strict';
 
 const BN = require('bn.js');
-const rlp = require('rlp');
 const fs = require('fs');
 
 const ERC20Gateway = artifacts.require('ERC20Gateway');
@@ -31,7 +30,7 @@ const Utils = require('../../test/test_lib/utils');
  * 2. Run test: node_modules/.bin/truffle test data_generator/erc20-gateways/deposit_proof.js
  *
  * note: The local web3 instance is used here because docker is exposing 8546 as WebSocket(ws)
- * and to use web3 with http local web3 instace is newly created.
+ * and to use web3 with http local web3 instance is newly created.
  */
 contract('ERC20Gateway::deposit', async (accounts) => {
   const accountProvider = new AccountProvider(accounts);
@@ -44,35 +43,9 @@ contract('ERC20Gateway::deposit', async (accounts) => {
   let param;
   let outboundChannelIdentifier;
   let blockNumber;
-  let web3;
-
-  function storagePath(
-    storageIndex,
-    mappings,
-  ) {
-    let path = '';
-
-    if (mappings && mappings.length > 0) {
-      mappings.map((mapping) => {
-        path = `${path}${web3.utils.padLeft(mapping, 64)}`;
-        return path;
-      });
-    }
-
-    path = `${path}${web3.utils.padLeft(storageIndex, 64)}`;
-    path = web3.utils.sha3(path);
-
-    return path;
-  }
-
-  function formatProof(proof) {
-    const formattedProof = proof.map(p => rlp.decode(p));
-    return `0x${rlp.encode(formattedProof).toString('hex')}`;
-  }
-
+  const web3 = new Web3('http://localhost:8545');
 
   beforeEach(async () => {
-    web3 = new Web3('http://localhost:8545');
     erc20Gateway = await ERC20Gateway.new();
     erc20Cogateway = accountProvider.get();
     stateRootProvider = accountProvider.get();
@@ -130,14 +103,16 @@ contract('ERC20Gateway::deposit', async (accounts) => {
     );
 
     blockNumber = (await web3.eth.getBlock('latest')).number;
+    const outboxOffset = await erc20Gateway.OUTBOX_OFFSET.call();
+
     const proof = await web3.eth.getProof(
       erc20Gateway.address,
-      [storagePath('1', [messageHash])],
+      [Utils.storagePath(outboxOffset, [messageHash])],
       blockNumber,
     );
 
-    const accountProof = formatProof(proof.accountProof);
-    const storageProof = formatProof(proof.storageProof[0].proof);
+    const accountProof = Utils.formatProof(proof.accountProof);
+    const storageProof = Utils.formatProof(proof.storageProof[0].proof);
 
     const proofOutput = {
       address: depositor,
