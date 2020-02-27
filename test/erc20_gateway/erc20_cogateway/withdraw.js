@@ -70,6 +70,7 @@ contract('ERC20Cogateway::withdraw', (accounts) => {
       genesisStateRootProvider: accountProvider.get(),
       genesisMaxStorageRootItems: new BN(100),
       genesisOutboxStorageIndex: new BN(4),
+      genesisUtilityTokenMasterCopy: accountProvider.get(),
     };
 
     withdrawParam = {
@@ -92,6 +93,7 @@ contract('ERC20Cogateway::withdraw', (accounts) => {
       setupGenesisParams.genesisStateRootProvider,
       setupGenesisParams.genesisMaxStorageRootItems,
       setupGenesisParams.genesisOutboxStorageIndex,
+      setupGenesisParams.genesisUtilityTokenMasterCopy,
     );
 
     await erc20Cogateway.setup();

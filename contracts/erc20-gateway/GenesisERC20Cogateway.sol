@@ -37,4 +37,7 @@ contract GenesisERC20Cogateway {
 
     /** Outbox storage index */
     uint8 public genesisOutboxStorageIndex;
+
+    /** Utility token mastercopy address */
+    address public genesisUtilityTokenMastercopy;
 }

@@ -32,6 +32,7 @@ contract('Gen0ERC20Cogateway::activate', (accounts) => {
       stateRootProvider: accountProvider.get(),
       maxStorageRootItems: new BN(100),
       outboxStorageIndex: new BN(4),
+      utilityTokenMasterCopy: accountProvider.get(),
     };
   });
 
@@ -42,6 +43,7 @@ contract('Gen0ERC20Cogateway::activate', (accounts) => {
       activateParams.stateRootProvider,
       activateParams.maxStorageRootItems,
       activateParams.outboxStorageIndex,
+      activateParams.utilityTokenMasterCopy,
     );
 
     const outboxStorageIndexInContract = await gen0ERC20Cogateway.outboxStorageIndex.call();
@@ -71,6 +73,16 @@ contract('Gen0ERC20Cogateway::activate', (accounts) => {
       messageOutboxAddressFromContract,
       activateParams.erc20Gateway,
       'Outbox address is not set in the contract.',
+    );
+
+    const utilityTokenMasterCopyAddressFromContract = await gen0ERC20Cogateway
+      .utilityTokenMasterCopy
+      .call();
+
+    assert.strictEqual(
+      utilityTokenMasterCopyAddressFromContract,
+      activateParams.utilityTokenMasterCopy,
+      'Utility token master copy address is not set in the contract.',
     );
 
     const outboundChannelIdentifier = ConsensusGatewayUtils.getChannelIdentifier(

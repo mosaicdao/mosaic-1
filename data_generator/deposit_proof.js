@@ -33,7 +33,7 @@ const Utils = require('../test/test_lib/utils.js');
  * note: The local web3 instance is used here because docker is exposing 8546 as WebSocket(ws)
  * and to use web3 with http local web3 instace is newly created.
  */
-contract('Storage Proof', (accounts) => {
+contract('Storage Proof', () => {
   let consensusGateway;
   let setupParam;
   let token;

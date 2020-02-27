@@ -20,7 +20,7 @@ contract('UtilityToken::burnFrom', (accounts) => {
   const TOKEN_NAME = 'Utility Token';
   const TOKEN_DECIMALS = 18;
   const TOTAL_TOKEN_SUPPLY = new BN('1000');
-  const consensusCogateway = accounts[2];
+  const cogateway = accounts[2];
   const beneficiary = accounts[3];
   const spender = accounts[4];
 
@@ -36,7 +36,7 @@ contract('UtilityToken::burnFrom', (accounts) => {
       TOKEN_NAME,
       TOKEN_DECIMALS,
       TOTAL_TOKEN_SUPPLY,
-      consensusCogateway,
+      cogateway,
       accounts[4],
     );
 
@@ -44,7 +44,7 @@ contract('UtilityToken::burnFrom', (accounts) => {
       beneficiary,
       amount,
       {
-        from: consensusCogateway,
+        from: cogateway,
       },
     );
 

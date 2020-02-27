@@ -27,8 +27,8 @@ contract UtilityToken is MasterCopyNonUpgradable, ERC20Token {
 
     /* Storage */
 
-    /** Address of ConsensusCogateway contract. */
-    address public consensusCogateway;
+    /** Address of cogateway contract. */
+    address public cogateway;
 
     /** Address of value token contract. */
     address public valueToken;
@@ -36,11 +36,11 @@ contract UtilityToken is MasterCopyNonUpgradable, ERC20Token {
 
     /* Modifiers */
 
-    /** Checks that only ConsensusCogateway can call a particular function. */
-    modifier onlyConsensusCogateway() {
+    /** Checks that only cogateway contract can call a particular function. */
+    modifier onlyCogateway() {
         require(
-            msg.sender == address(consensusCogateway),
-            "Only ConsensusCogateway can call the function."
+            msg.sender == address(cogateway),
+            "Only cogateway contract can call the function."
         );
 
         _;
@@ -51,17 +51,17 @@ contract UtilityToken is MasterCopyNonUpgradable, ERC20Token {
 
     /**
      * @notice Sets up the symbol, name, decimals, totalSupply, value token
-     *         and the consensusCogateway address.
+     *         and the cogateway address.
      *
      * @param _symbol Symbol of token.
      * @param _name Name of token.
      * @param _decimals Decimal of token.
      * @param _totalTokenSupply Total token supply.
-     * @param _consensusCogateway ConsensusCogateway contract address.
+     * @param _cogateway Cogateway contract address.
      * @param _valueToken Address of value token contract.
      *
      * \pre Setup function can be called only once.
-     * \pre `_consensusCogateway` address is not zero.
+     * \pre `_cogateway` address is not zero.
      * \pre `_valueToken` address is not zero.
      *
      * \post Sets `tokenSymbol` storage variable with `_symbol`.
@@ -69,8 +69,8 @@ contract UtilityToken is MasterCopyNonUpgradable, ERC20Token {
      * \post Sets `tokenDecimals` storage variable with `_decimal`.
      * \post Sets the `totalTokenSupply` storage variable with
      *       `_totalTokenSupply`.
-     * \post Sets the `consensusCogateway` storage variable with
-     *       `_consensusCogateway`.
+     * \post Sets the `cogateway` storage variable with
+     *       `_cogateway`.
      * \post Sets the `valueToken` storage variable with `_valueToken`.
      */
     function setup(
@@ -78,19 +78,19 @@ contract UtilityToken is MasterCopyNonUpgradable, ERC20Token {
         string calldata _name,
         uint8 _decimals,
         uint256 _totalTokenSupply,
-        address _consensusCogateway,
+        address _cogateway,
         address _valueToken
     )
         external
     {
         require(
-            consensusCogateway == address(0),
+            cogateway == address(0),
             "Contract has been already setup."
         );
 
         require(
-            _consensusCogateway != address(0),
-            "ConsensusCogateway address should not be zero."
+            _cogateway != address(0),
+            "Cogateway address should not be zero."
         );
 
         require(
@@ -102,7 +102,7 @@ contract UtilityToken is MasterCopyNonUpgradable, ERC20Token {
         tokenName = _name;
         tokenDecimals = _decimals;
         totalTokenSupply = _totalTokenSupply;
-        consensusCogateway = _consensusCogateway;
+        cogateway = _cogateway;
         valueToken = _valueToken;
     }
 
@@ -117,7 +117,7 @@ contract UtilityToken is MasterCopyNonUpgradable, ERC20Token {
      */
     function mint(address _account, uint256 _value)
         external
-        onlyConsensusCogateway()
+        onlyCogateway()
     {
         _mint(_account, _value);
     }
