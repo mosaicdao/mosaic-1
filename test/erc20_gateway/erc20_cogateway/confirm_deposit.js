@@ -16,10 +16,10 @@
 
 const BN = require('bn.js');
 
-const TestData = require('../../../test/erc20_gateway/data/erc20_deposit_proof.json');
-
 const UtilityToken = artifacts.require('UtilityToken');
 const ERC20Cogateway = artifacts.require('ERC20CogatewayDouble');
+
+const TestData = require('../../../test/erc20_gateway/data/erc20_deposit_proof.json');
 
 contract('ERC20Cogateway::confirmDeposit', async (accounts) => {
   let erc20Cogateway;

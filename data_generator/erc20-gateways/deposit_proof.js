@@ -140,6 +140,7 @@ contract('ERC20Gateway::deposit', async (accounts) => {
     const storageProof = formatProof(proof.storageProof[0].proof);
 
     const proofOutput = {
+      address: depositor,
       outboundChannelIdentifier,
       valueToken: param.valueToken,
       messageHash,
@@ -151,11 +152,12 @@ contract('ERC20Gateway::deposit', async (accounts) => {
       erc20Gateway: erc20Gateway.address,
       erc20Cogateway: erc20Cogateway.address,
       outboxStorageIndex: setupParam.outboxStorageIndex,
+      stateRootProvider,
       rawProofResult: proof,
     };
 
     fs.writeFileSync(
-      'test/consensus-gateway/data/erc20_deposit_proof.json',
+      'test/erc20_gateway/data/erc20_deposit_proof.json',
       JSON.stringify(proofOutput, null, '    '),
     );
   });
