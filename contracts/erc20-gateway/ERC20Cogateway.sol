@@ -286,7 +286,8 @@ contract ERC20Cogateway is
      *       address.
      * \post Update the nonces storage mapping variable by incrementing the
      *       value for `_withdrawer` by one.
-     * \post Emits `WithdrawIntentConfirmed` event with the `messageHash_` parameter.
+     * \post Emits `DepositIntentConfirmed` event with the `messageHash_` as a
+     *       parameter.
      */
     function confirmDeposit(
         address _valueToken,
@@ -374,6 +375,8 @@ contract ERC20Cogateway is
      *       `_valueToken` key .
      * \post Updates the `utilityTokens` mapping storage by setting the values
      *       as address of newly deployed contract for `_valueToken` key.
+     * \post Emits `UtilityTokenCreated` event with the `_valueToken`and
+     *       `utilityToken_` as parameters.
      */
     function getUtilityToken(
         address _valueToken
