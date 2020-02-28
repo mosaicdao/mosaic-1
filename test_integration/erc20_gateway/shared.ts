@@ -31,7 +31,9 @@ class ContractEntity<Type> {
 
 class Contract {
 
-  public Anchor: ContractEntity<Anchor>;
+  public OriginAnchor: ContractEntity<Anchor>;
+
+  public AuxilaryAnchor: ContractEntity<Anchor>;
 
   public ERC20Gateway: ContractEntity<ERC20Gateway>;
 
@@ -42,13 +44,13 @@ class Contract {
   public UtilityToken: ContractEntity<ERC20I>;
 
   constructor() {
-    this.Anchor = new ContractEntity<Anchor>();
+    this.OriginAnchor = new ContractEntity<Anchor>();
+    this.AuxilaryAnchor = new ContractEntity<Anchor>();
     this.ERC20Gateway = new ContractEntity<ERC20Gateway>();
     this.ERC20Cogateway = new ContractEntity<ERC20Cogateway>();
     this.ValueToken = new ContractEntity<ERC20I>();
     this.UtilityToken = new ContractEntity<ERC20I>();
   }
-
 }
 
 /**
@@ -56,10 +58,13 @@ class Contract {
  */
 class Shared {
   public artifacts: any;
+  public accounts: any;
   public contracts: Contract;
   public web3: Web3;
   public depositor: string;
   public facilitator: string;
+  public metachainId: string;
+  public utilityTokenMasterCopy: string;
 
   constructor() {
     this.artifacts = {};

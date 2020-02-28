@@ -11,7 +11,7 @@
     "lint:sol:solium:fix": "npm run lint:sol:solium -- --fix",
     "test": "npm run test:contracts",
     "test:contracts": "truffle test",
-    "test:integration": "npm run clean && npm run compile && npm run build:package && npm run generate:interacts && cd test_integration/erc_gateway && tsc && ./main.sh",
+    "test:integration": "npm run clean && npm run compile && npm run build:package && npm run generate:interacts && cd test_integration/erc20_gateway && tsc && ./main.sh",
     "test:dev": "truffle test test/coconsensus/commit_checkpoint.js",
     "ganache-cli": "./tools/run_ganache_cli.sh",
     "make:all": "lint:sol:solium && lint:js && compile:all && test:contracts",

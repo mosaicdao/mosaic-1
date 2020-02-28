@@ -53,6 +53,7 @@ const runTests = (callback) => {
       file => file !== __filename,
     )
     .forEach((file) => {
+      console.log('file ----> ',file);
       mocha.addFile(file);
     });
 
