@@ -22,8 +22,8 @@ const { AccountProvider } = require('../../test_lib/utils.js');
 const Utils = require('../../test_lib/utils.js');
 const ConsensusGatewayUtils = require('../../consensus-gateway/utils');
 
-const OUTBOX_OFFSET = 6;
-const INBOX_OFFSET = 9;
+const OUTBOX_OFFSET = 1;
+const INBOX_OFFSET = 4;
 
 let erc20Gateway;
 let metachainId;
