@@ -15,7 +15,7 @@
 import shared from '../shared';
 
 const BN = require('bn.js');
-const EventDecoder = require('../../../test/test_lib/event_decoder');
+import EventDecoder from '../event_decoder';
 
 describe('Deposit and Confirm Deposit', async () => {
 
@@ -24,34 +24,41 @@ describe('Deposit and Confirm Deposit', async () => {
   let ERC20Gateway;
   let ERC20Cogateway;
   let depositMessageHash;
+  let gasPrice;
+  let blockNumber;
+  let storageProof;
 
   before(async () => {
     ERC20Gateway = shared.contracts.ERC20Gateway;
     ERC20Cogateway = shared.contracts.ERC20Cogateway;
-    valueToken = shared.contracts.ValueToken;
+    valueToken = shared.contracts.ValueToken.instance;
+    gasPrice = "0x01"
 
     depositParam = {
       amount: new BN(100),
       beneficiary: shared.accounts[7],
       feeGasPrice: new BN(1),
-      feeGasLimit: new BN(100),
-      valueToken: valueToken.address,
+      feeGasLimit: new BN(10),
+      valueToken: shared.contracts.ValueToken.address, 
       depositor: shared.depositor,
     }
   });
 
   it('Deposit', async () => {
-
-    await valueToken.instance.methods.approve(
+    
+    await valueToken.methods.approve(
       ERC20Gateway.address,
       depositParam.amount,
+    ).send(
       { from: depositParam.depositor },
     );
 
-    const depositorBalanceBeforeTransfer = await valueToken.balanceOf(depositParam.depositor);
-    const erc20ContractBalanceBeforeTransfer = await valueToken.balanceOf(ERC20Gateway.address);
+    const depositorBalanceBeforeTransfer = await valueToken.methods.balanceOf(depositParam.depositor).call();
+    const erc20ContractBalanceBeforeTransfer = await valueToken.methods.balanceOf(ERC20Gateway.address).call();
 
     console.log(" Before Depositor Balance ===>>", depositorBalanceBeforeTransfer);
+    console.log("Before Gateway Balance ==>", erc20ContractBalanceBeforeTransfer);
+    
 
     const tx = await ERC20Gateway.instance.methods.deposit(
       depositParam.amount,
@@ -59,20 +66,26 @@ describe('Deposit and Confirm Deposit', async () => {
       depositParam.feeGasPrice,
       depositParam.feeGasLimit,
       depositParam.valueToken,
-      { from: depositParam.depositor },
     );
-
-    const event = EventDecoder.getEvents(tx, ERC20Gateway);
-
-    depositParam.messageHash = event.DepositIntentDeclared.messageHash_;
-
-    console.log("Message Hash__ ===>", depositParam.messageHash);
-
-    const depositorBalanceAfterTransfer = await valueToken.balanceOf(depositParam.depositor);
-    const erc20ContractBalanceAfterTransfer = await valueToken.balanceOf(ERC20Gateway.address);
+    tx.send(
+      { 
+        from: depositParam.depositor,
+        gas: "1000000",
+        gasPrice: "0x01",
+       },
+    );
+      
+    console.log("Tranasction Object--->",tx);
+    // console.log('TX string  ', JSON.stringify(tx));
+  
+    const depositorBalanceAfterTransfer = await valueToken.methods.balanceOf(depositParam.depositor).call();
+    const erc20ContractBalanceAfterTransfer = await valueToken.methods.balanceOf(ERC20Gateway.address).call();
 
     console.log("After Depositor Balance ==> ", depositorBalanceAfterTransfer);
+    console.log("After Gateway bal===>", erc20ContractBalanceAfterTransfer);
   });
 
-  it('Confirms deposit', async () => { });
+  it('Confirms deposit', async () => { 
+
+  });
 });

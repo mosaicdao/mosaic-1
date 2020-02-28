@@ -79,7 +79,7 @@ describe('Contract Setup', async () => {
       params.erc20Gateway,
       params.stateRootProvider,
       params.maxStorageRootItems,
-      params.coGatewayOutboxIndex,
+      params.coGatewayOutboxIndex.toString(),
       params.utilityTokenMastercopy,
     );
   });

@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+const rlp = require('rlp');
+
+import shared from './shared';
 'use strict';
 
 export default class Utils {
@@ -32,6 +35,29 @@ export default class Utils {
     );
   }
 
+  static async storagePath(
+    storageIndex: string,
+    mappings: any,
+  ) {
+    let path = '';
+    if (mappings && mappings.length > 0) {
+      mappings.map((mapping) => {
+        path = `${path}${shared.web3.utils.padLeft(mapping, 64)}`;
+        return path;
+      });
+    }
+    path = `${path}${shared.web3.utils.padLeft(storageIndex, 64)}`;
+    path = shared.web3.utils.sha3(path);
+    return path;
+  }
+
+  static async formatProof(
+    proof: any,
+    ) {
+    const formattedProof = proof.map(p => rlp.decode(p));
+    return `0x${rlp.encode(formattedProof).toString('hex')}`;
+  }
+  
   /**
    * Send Transaction.
    * @param rawTx Raw Transaction object.
