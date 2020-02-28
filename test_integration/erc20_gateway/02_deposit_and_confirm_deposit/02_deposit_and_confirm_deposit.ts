@@ -66,8 +66,7 @@ describe('Deposit and Confirm Deposit', async () => {
       depositParam.feeGasPrice,
       depositParam.feeGasLimit,
       depositParam.valueToken,
-    );
-    tx.send(
+    ).send(
       { 
         from: depositParam.depositor,
         gas: "1000000",
