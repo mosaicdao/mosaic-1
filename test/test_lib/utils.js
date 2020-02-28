@@ -17,6 +17,7 @@
 
 const Assert = require('assert');
 const BN = require('bn.js');
+const rlp = require('rlp');
 
 const ERC20Mock = artifacts.require('ERC20Mock');
 
@@ -322,6 +323,29 @@ Utils.prototype = {
       this.index += 1;
       return account;
     }
+  },
+
+  /** Get storage path */
+  storagePath: (storageIndex, mappings) => {
+    let path = '';
+
+    if (mappings && mappings.length > 0) {
+      mappings.map((mapping) => {
+        path = `${path}${web3.utils.padLeft(mapping, 64)}`;
+        return path;
+      });
+    }
+
+    path = `${path}${web3.utils.padLeft(storageIndex, 64)}`;
+    path = web3.utils.sha3(path);
+
+    return path;
+  },
+
+  /** Format proof */
+  formatProof: (proof) => {
+    const formattedProof = proof.map(p => rlp.decode(p));
+    return `0x${rlp.encode(formattedProof).toString('hex')}`;
   },
 
   encodeFunctionSignature: signature => web3.eth.abi.encodeFunctionSignature(signature),

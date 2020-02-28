@@ -48,10 +48,10 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
     /* Constants */
 
     /** Storage offset of message outbox. */
-    uint8 constant public OUTBOX_OFFSET = uint8(6);
+    uint8 constant public OUTBOX_OFFSET = uint8(1);
 
     /** Storage offset of message inbox. */
-    uint8 constant public INBOX_OFFSET = uint8(9);
+    uint8 constant public INBOX_OFFSET = uint8(4);
 
 
     /* External Functions */

@@ -47,8 +47,24 @@ contract ERC20Cogateway is
         bytes32 messageHash
     );
 
+    /** Emitted when deposit message is confirmed. */
+    event DepositIntentConfirmed(
+        bytes32 messageHash
+    );
+
+    /** Emitted when utility token proxy is deployed. */
+    event UtilityTokenCreated(
+        address valueToken,
+        address utilityToken
+    );
 
     /* Constants */
+
+    /** Storage offset of message outbox. */
+    uint8 constant public OUTBOX_OFFSET = uint8(7);
+
+    /** Storage offset of message inbox. */
+    uint8 constant public INBOX_OFFSET = uint8(10);
 
     /** The callprefix of the UtilityToken::setup(). */
     bytes4 public constant UTILITY_TOKEN_SETUP_CALLPREFIX = bytes4(
@@ -99,7 +115,7 @@ contract ERC20Cogateway is
             genesisERC20Gateway,
             genesisOutboxStorageIndex,
             StateRootInterface(genesisStateRootProvider),
-            genesisOutboxStorageIndex
+            genesisMaxStorageRootItems
         );
 
         utilityTokenMasterCopy = genesisUtilityTokenMastercopy;
@@ -270,7 +286,8 @@ contract ERC20Cogateway is
      *       address.
      * \post Update the nonces storage mapping variable by incrementing the
      *       value for `_withdrawer` by one.
-     * \post Emits `WithdrawIntentConfirmed` event with the `messageHash_` parameter.
+     * \post Emits `DepositIntentConfirmed` event with the `messageHash_` as a
+     *       parameter.
      */
     function confirmDeposit(
         address _valueToken,
@@ -339,6 +356,8 @@ contract ERC20Cogateway is
         UtilityTokenInterface(utilityToken).mint(msg.sender, feeAmount);
 
         UtilityTokenInterface(utilityToken).mint(_beneficiary, mintAmount);
+
+        emit DepositIntentConfirmed(messageHash_);
     }
 
 
@@ -356,6 +375,8 @@ contract ERC20Cogateway is
      *       `_valueToken` key .
      * \post Updates the `utilityTokens` mapping storage by setting the values
      *       as address of newly deployed contract for `_valueToken` key.
+     * \post Emits `UtilityTokenCreated` event with the `_valueToken`and
+     *       `utilityToken_` as parameters.
      */
     function getUtilityToken(
         address _valueToken
@@ -384,6 +405,11 @@ contract ERC20Cogateway is
             );
 
             utilityTokens[_valueToken] = utilityToken_;
+
+            emit UtilityTokenCreated(
+                _valueToken,
+                utilityToken_
+            );
         }
     }
 }
