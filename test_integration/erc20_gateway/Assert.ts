@@ -14,7 +14,12 @@
 
 import BN from 'bn.js';
 const assert = require('assert');
+import Interacts from '../../interacts/Interacts';
+import shared from './shared';
 
+/**
+ * It has methods used for assertion for ERC20Gateway's integration tests.
+ */
 export default class Assert {
 
   /**
@@ -48,14 +53,13 @@ export default class Assert {
    *
    * @param event StateRootAvailable event.
    * @param blockNumber Block number at which anchoring is done.
-   * @param stateroot State root for a block.
+   * @param stateRoot State root for a block.
    */
   public static assertAnchor(
     event: { returnValues: {} },
     blockNumber: BN,
-    stateroot: string,
+    stateRoot: string,
   ) {
-
     assert.strictEqual(
       blockNumber.eq(new BN(event.returnValues['_blockNumber'])),
       true,
@@ -65,8 +69,101 @@ export default class Assert {
 
     assert.strictEqual(
       event.returnValues['_stateRoot'],
-      stateroot,
+      stateRoot,
       'Incorrect state root',
+    );
+  }
+
+  /**
+   * It validates minting after confirm deposit transaction.
+   *
+   * @param facilitatorAddress Address of facilitator who did confirm deposit transaction.
+   * @param feeGasLimit Gas limit which the depositor is ready to pay for deposit.
+   * @param feeGasPrice Gas price which the depositor is ready to pay for deposit.
+   * @param utilityToken Utility token address.
+   * @param beneficiary Beneficiary address who gets minted utility tokens.
+   * @param depositAmount Amount deposited by depositor.
+   */
+  public static async assertMinting(
+    facilitatorAddress: string,
+    feeGasLimit: BN,
+    feeGasPrice: BN,
+    utilityToken: string,
+    beneficiary: string,
+    depositAmount: BN,
+  ) {
+    const utilityTokenInstance = Interacts.getUtilityToken(shared.web3, utilityToken);
+
+    const actualBeneficiaryBalance = new BN(
+      await utilityTokenInstance.methods.balanceOf(beneficiary).call(),
+    );
+
+    const facilitatorBalance = new BN(
+      await utilityTokenInstance.methods.balanceOf(facilitatorAddress).call(),
+    );
+
+    const reward = feeGasPrice.mul(feeGasLimit);
+    const mintedAmount = depositAmount.sub(reward);
+
+    assert.strictEqual(
+      actualBeneficiaryBalance.eq(mintedAmount),
+      true,
+      `Expected beneficiary balance is ${mintedAmount} but got ${mintedAmount}`,
+    );
+
+    assert.strictEqual(
+      facilitatorBalance.eq(reward),
+      true,
+      `Expected facilitator balance is ${reward} but got ${facilitatorBalance}`,
+    );
+  }
+
+  /**
+   * It asserts message hash received for DepositIntentConfirmed event.
+   *
+   * @param actualMessageHash Message hash from the event.
+   * @param expectedMessageHash Expected message hash.
+   */
+  public static assertDepositIntentConfirmed(
+    actualMessageHash: string,
+    expectedMessageHash: string,
+  ) {
+    assert.strictEqual(
+      actualMessageHash,
+      expectedMessageHash,
+      'Invalid deposit intent message hash',
+    );
+  }
+
+  /**
+   * It asserts balances after deposit is done.
+   *
+   * @param depositorBalanceBeforeDeposit Depositor's value token balance before deposit.
+   * @param depositorBalanceAfterDeposit Depositor's value token balance after deposit.
+   * @param erc20ContractBalanceBeforeTransfer ERC20Contract's value token balance before deposit.
+   * @param erc20GatewayAfterBalance ERC20Contract's value token balance after deposit.
+   * @param depositedAmount Amount deposited by depositor.
+   */
+  public static assertDeposit(
+    depositorBalanceBeforeDeposit: BN,
+    depositorBalanceAfterDeposit: BN,
+    erc20ContractBalanceBeforeTransfer: BN,
+    erc20GatewayAfterBalance: BN,
+    depositedAmount: BN,
+  ) {
+
+    assert.strictEqual(
+      depositorBalanceBeforeDeposit.sub(depositedAmount).eq(depositorBalanceAfterDeposit),
+      true,
+      `Expected depositor balance is ${depositorBalanceBeforeDeposit.sub(depositedAmount)}`
+      + `but got ${depositorBalanceAfterDeposit}`,
+    );
+
+    assert.strictEqual(
+      erc20ContractBalanceBeforeTransfer.add(depositedAmount).eq(erc20GatewayAfterBalance),
+      true,
+      `Expected erc20Gateway balance is ${erc20ContractBalanceBeforeTransfer.add(depositedAmount)}`
+      + `but got ${erc20GatewayAfterBalance}`,
     );
   }
 }

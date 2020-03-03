@@ -21,9 +21,8 @@ describe('Contract deployment', async (): Promise<void> => {
 
     shared.accounts = await shared.web3.eth.getAccounts();
     const depositor = shared.accounts[2];
-    const facilitator = shared.accounts[3];
     shared.depositor = depositor;
-    shared.facilitator = facilitator;
+    shared.facilitator = shared.accounts[3];
     const valueToken = await shared.artifacts.ERC20Token.new(
       depositor,
       '8000000000000000000000',

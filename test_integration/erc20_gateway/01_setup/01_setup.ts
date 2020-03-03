@@ -12,15 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import shared from '../shared';
+import shared, { ContractEntity } from '../shared';
 import Utils from '../Utils';
+import { ERC20Gateway } from '../../../interacts/ERC20Gateway';
+import { ERC20Cogateway } from '../../../interacts/ERC20Cogateway';
 
 const BN = require('bn.js');
 
 describe('Contract Setup', async (): Promise<void> => {
 
-  let ERC20Gateway;
-  let ERC20Cogateway;
+  let ERC20Gateway: ContractEntity<ERC20Gateway>;
+  let ERC20Cogateway: ContractEntity<ERC20Cogateway>;
+
   before(async() => {
     ERC20Gateway = shared.contracts.ERC20Gateway;
     ERC20Cogateway = shared.contracts.ERC20Cogateway;
@@ -28,11 +31,11 @@ describe('Contract Setup', async (): Promise<void> => {
     shared.metachainId = shared.web3.utils.randomHex(32);
     const utilityTokenMasterCopy = await shared.artifacts.UtilityToken.new();
     shared.utilityTokenMasterCopy = utilityTokenMasterCopy.address;
+    shared.consensus = shared.accounts[4];
+    shared.coconsensus = shared.accounts[9];
   });
 
   it('should setup Anchor', async (): Promise<void> => {
-
-    shared.consensus = shared.accounts[4];
     const originAnchor = shared.contracts.OriginAnchor.instance;
     const originAnchorRawTx = originAnchor.methods.setup(
       new BN(100),
@@ -46,7 +49,6 @@ describe('Contract Setup', async (): Promise<void> => {
       }
     );
 
-    shared.coconsensus = shared.accounts[9];
     const auxAnchor = shared.contracts.AuxilaryAnchor.instance;
     const rawTx = auxAnchor.methods.setup(
       new BN(100),
@@ -62,18 +64,17 @@ describe('Contract Setup', async (): Promise<void> => {
   });
 
   it('should setup ERC20Gateway', async (): Promise<void> => {
-
-    const ERC20Gateway = shared.contracts.ERC20Gateway.instance;
+    const erc20Gateway = ERC20Gateway.instance;
 
     const params = {
       metachainId: shared.metachainId,
-      erc20Cogateway: shared.contracts.ERC20Cogateway.address,
+      erc20Cogateway: ERC20Cogateway.address,
       stateRootProvider: shared.contracts.OriginAnchor.address,
       maxStorageRootItems: new BN(50),
       gatewayOutboxIndex: await ERC20Cogateway.instance.methods.OUTBOX_OFFSET().call(),
     };
 
-    const rawTx = ERC20Gateway.methods.setup(
+    const rawTx = erc20Gateway.methods.setup(
       params.metachainId,
       params.erc20Cogateway,
       params.stateRootProvider,
@@ -89,9 +90,8 @@ describe('Contract Setup', async (): Promise<void> => {
     );
   });
 
-  it('should activates ERC20Cogateway', async (): Promise<void> => {
-
-    const ERC20Cogateway = shared.contracts.ERC20Cogateway.instance;
+  it('should activate ERC20Cogateway contract', async (): Promise<void> => {
+    const erc20Cogateway = shared.contracts.ERC20Cogateway.instance;
 
     const params = {
       metachainId: shared.metachainId,
@@ -102,7 +102,7 @@ describe('Contract Setup', async (): Promise<void> => {
       utilityTokenMasterCopy: shared.utilityTokenMasterCopy,
     };
 
-    const rawTx = ERC20Cogateway.methods.activate(
+    const rawTx = erc20Cogateway.methods.activate(
       params.metachainId,
       params.erc20Gateway,
       params.stateRootProvider,

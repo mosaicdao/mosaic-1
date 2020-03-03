@@ -22,9 +22,10 @@ import shared from './shared';
 export default class Utils {
 
   /**
+   * It calculates storage path for a key.
    *
-   * @param storageIndex
-   * @param mappings
+   * @param storageIndex Index at which contract key is present in the contract.
+   * @param mappings List of keys in case storage is mapping.
    */
   static async storagePath(
     storageIndex: string,
@@ -44,8 +45,9 @@ export default class Utils {
   }
 
   /**
+   * It serializes the array of node keys for account or storage proof.
    *
-   * @param proof
+   * @param proof Array of account or storage keys.
    */
   static formatProof(
     proof: string[],
@@ -54,11 +56,10 @@ export default class Utils {
     return `0x${rlp.encode(formattedProof).toString('hex')}`;
   }
 
-
-
   /**
+   * It returns block information for a block number.
    *
-   * @param blockNumber
+   * @param blockNumber Block number for which block information is required.
    */
   static async getBlock(blockNumber: string) {
     const block = await shared.web3.eth.getBlock(blockNumber);
@@ -66,9 +67,10 @@ export default class Utils {
   }
 
   /**
+   * It provides account proof for an address.
    *
-   * @param contractAddress
-   * @param blockNumber
+   * @param contractAddress Contract address for which account proof is required.
+   * @param blockNumber Block number at which proof is required.
    */
   static async getAccountProof(
     contractAddress: string,
@@ -80,8 +82,6 @@ export default class Utils {
       blockNumber,
     );
 
-    console.log('proof getAccountProof : ', proof);
-
     const encodedAccountValue = Utils.encodedAccountValue(proof.accountProof);
     const serializedProof = Utils.formatProof(proof.accountProof);
     return {
@@ -91,38 +91,22 @@ export default class Utils {
   }
 
   /**
+   * It provides rlp serialized account node.
    *
-   * @param contractAddress
-   * @param storagePath
-   * @param blockNumber
+   * @param accountProof Array of nodes of account proof.
    */
-  static async getStorageProof(
-    contractAddress: string,
-    storagePath: string[],
-    blockNumber: string
-  ) {
-    const proof = Utils.getProof(
-      contractAddress,
-      storagePath,
-      blockNumber
-    );
-  }
-
-  /**
-   *
-   * @param accountProof
-   */
-  private static encodedAccountValue(accountProof: string[]) {
+  private static encodedAccountValue(accountProof: string[]): string {
     const decodedProof = accountProof.map((proof) => rlp.decode(proof));;
     const leafElement = decodedProof[decodedProof.length - 1];
     return `0x${leafElement[leafElement.length - 1].toString('hex')}`;
   }
 
   /**
+   * It uses web3's getProof method to account and storage proof for an contract.
    *
-   * @param contractAddress
-   * @param storagePath
-   * @param blockNumber
+   * @param contractAddress Contract address for which proof is required.
+   * @param storagePath Array of storage keys to get storage proof.
+   * @param blockNumber Block number at which proof is required.
    */
   static async getProof(
     contractAddress: string,
@@ -136,6 +120,28 @@ export default class Utils {
     );
 
     return proof;
+  }
+
+  /**
+   * It returns storage proof for an contract's key.
+   *
+   * @param contractAddress Contract address for which proof is required.
+   * @param storagePath Array of storage keys to get storage proof.
+   * @param blockNumber Block number at which proof is required.
+   */
+  static async getStorageProof(
+    contractAddress: string,
+    storagePath: string[],
+    blockNumber: string,
+  ): Promise<string>{
+    const proof = await Utils.getProof(
+      contractAddress,
+      storagePath,
+      blockNumber,
+    );
+    const serializedStorageProof = Utils.formatProof(proof.storageProof[0].proof);
+
+    return serializedStorageProof;
   }
 
   /**

@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import shared, { ContractEntity } from '../shared';
-const assert = require('assert');
 const BN = require('bn.js');
 import Utils from '../Utils';
 import { ERC20I } from '../../../interacts/ERC20I';
@@ -22,13 +21,13 @@ import { ERC20Cogateway } from '../../../interacts/ERC20Cogateway';
 import Assert from '../Assert';
 
 describe('Deposit and Confirm Deposit', async (): Promise<void> => {
-
   let depositParam;
   let valueToken: ERC20I;
   let erc20Gateway: ContractEntity<ERC20Gateway>;
   let erc20Cogateway: ContractEntity<ERC20Cogateway>;
   let depositMessageHash: string;
   let blockNumber;
+
   before(async (): Promise<void> => {
     erc20Gateway = shared.contracts.ERC20Gateway;
     erc20Cogateway = shared.contracts.ERC20Cogateway;
@@ -37,7 +36,7 @@ describe('Deposit and Confirm Deposit', async (): Promise<void> => {
     depositParam = {
       amount: new BN(100),
       beneficiary: shared.accounts[7],
-      feeGasPrice: new BN(1),
+      feeGasPrice: new BN(2),
       feeGasLimit: new BN(10),
       valueToken: shared.contracts.ValueToken.address,
       depositor: shared.depositor,
@@ -64,9 +63,6 @@ describe('Deposit and Confirm Deposit', async (): Promise<void> => {
       await valueToken.methods.balanceOf(erc20Gateway.address).call(),
     );
 
-    console.log(" Before Depositor Balance ===>>", depositorBalanceBeforeTransfer);
-    console.log("Before Gateway Balance ==>", erc20ContractBalanceBeforeTransfer);
-
     const rawTx = erc20Gateway.instance.methods.deposit(
       depositParam.amount,
       depositParam.beneficiary,
@@ -91,21 +87,12 @@ describe('Deposit and Confirm Deposit', async (): Promise<void> => {
       await valueToken.methods.balanceOf(erc20Gateway.address).call(),
     );
 
-    console.log("After Depositor Balance ==> ", depositorBalanceAfterTransfer);
-    console.log("After Gateway bal===>", erc20ContractBalanceAfterTransfer);
-
-    assert.strictEqual(
-      depositorBalanceBeforeTransfer.sub(depositParam.amount).eq(depositorBalanceAfterTransfer),
-      true,
-      `Expected depositor balance is ${depositorBalanceBeforeTransfer.sub(depositParam.amount)}`
-      + `but got ${depositorBalanceAfterTransfer}`
-    );
-
-    assert.strictEqual(
-      erc20ContractBalanceBeforeTransfer.add(depositParam.amount).eq(erc20ContractBalanceAfterTransfer),
-      true,
-      `Expected depositor balance is ${erc20ContractBalanceBeforeTransfer.add(depositParam.amount)}`
-      + `but got ${erc20ContractBalanceAfterTransfer}`
+    Assert.assertDeposit(
+      depositorBalanceBeforeTransfer,
+      depositorBalanceAfterTransfer,
+      erc20ContractBalanceBeforeTransfer,
+      erc20ContractBalanceAfterTransfer,
+      depositParam.amount,
     );
   });
 
@@ -125,28 +112,11 @@ describe('Deposit and Confirm Deposit', async (): Promise<void> => {
       }
     );
 
-    // console.log('tx : ', tx);
-    const event = tx.events.StateRootAvailable;
-
-    // assert.strictEqual(
-    //   blockNumber.eq(new BN(event.returnValues['_blockNumber'])),
-    //   true,
-    //   `Expected blocknumber at which anchoring is done ${blockNumber.toString(10)} but got`
-    //   + `${event.returnValues['_blockNumber']}`,
-    // );
-
-    // assert.strictEqual(
-    //   event.returnValues['_stateRoot'],
-    //   block.stateRoot,
-    //   'Incorrect state root',
-    // );
-
     Assert.assertAnchor(
       tx.events.StateRootAvailable,
       blockNumber,
       block.stateRoot,
     );
-
   });
 
   it('should prove ERC20Gateway contract',async(): Promise<void> => {
@@ -178,17 +148,14 @@ describe('Deposit and Confirm Deposit', async (): Promise<void> => {
   it('should confirm deposit successfully', async (): Promise<void> => {
     const outboxStorageIndex = await erc20Cogateway.instance.methods.outboxStorageIndex().call();
     const storagePath = await Utils.storagePath(outboxStorageIndex, [depositMessageHash]);
-
-    const proofData = await Utils.getProof(
+    const serializedStorageProof = await Utils.getStorageProof(
       shared.contracts.ERC20Gateway.address,
       [storagePath],
       blockNumber.toString(10),
     );
 
-    const serializedStorageProof = Utils.formatProof(proofData.storageProof[0].proof);
-
     const rawTx = erc20Cogateway.instance.methods.confirmDeposit(
-      shared.contracts.ValueToken.address,
+      depositParam.valueToken,
       depositParam.amount,
       depositParam.beneficiary,
       depositParam.feeGasPrice,
@@ -198,11 +165,29 @@ describe('Deposit and Confirm Deposit', async (): Promise<void> => {
       serializedStorageProof as any,
     );
 
-    await Utils.sendTransaction(
+    const tx = await Utils.sendTransaction(
       rawTx,
       {
         from: shared.facilitator,
-      }
+      },
+    );
+
+    Assert.assertDepositIntentConfirmed(
+      tx.events.DepositIntentConfirmed.returnValues['messageHash'],
+      depositMessageHash,
+    );
+
+    const utilityToken = await erc20Cogateway.instance.methods.utilityTokens(
+      depositParam.valueToken,
+    ).call();
+
+    await Assert.assertMinting(
+      shared.facilitator,
+      depositParam.feeGasLimit,
+      depositParam.feeGasPrice,
+      utilityToken,
+      depositParam.beneficiary,
+      depositParam.amount,
     );
   });
 });
