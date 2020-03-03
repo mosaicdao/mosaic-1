@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+const BN = require('bn.js');
+
 import shared, { ContractEntity } from '../shared';
 import Utils from '../Utils';
 import { ERC20Gateway } from '../../../interacts/ERC20Gateway';
 import { ERC20Cogateway } from '../../../interacts/ERC20Cogateway';
 import Assert from '../Assert';
-
-const BN = require('bn.js');
 
 describe('Contract Setup', async (): Promise<void> => {
 
@@ -36,7 +36,7 @@ describe('Contract Setup', async (): Promise<void> => {
     shared.coconsensus = shared.accounts[9];
   });
 
-  it('should setup Anchor', async (): Promise<void> => {
+  it('should setup origin anchor contract', async (): Promise<void> => {
     const originAnchor = shared.contracts.OriginAnchor.instance;
     const originAnchorRawTx = originAnchor.methods.setup(
       new BN(100),
@@ -50,6 +50,13 @@ describe('Contract Setup', async (): Promise<void> => {
       }
     );
 
+    Assert.assertAnchorSetup(
+      await originAnchor.methods.consensus().call(),
+      shared.consensus,
+    );
+  });
+
+  it('should setup auxiliary anchor contract', async (): Promise<void> => {
     const auxAnchor = shared.contracts.AuxilaryAnchor.instance;
     const rawTx = auxAnchor.methods.setup(
       new BN(100),
@@ -62,9 +69,14 @@ describe('Contract Setup', async (): Promise<void> => {
         from: shared.facilitator,
       }
     );
+
+    Assert.assertAnchorSetup(
+      await auxAnchor.methods.consensus().call(),
+      shared.coconsensus,
+    );
   });
 
-  it('should setup ERC20Gateway', async (): Promise<void> => {
+  it('should setup ERC20Gateway contract', async (): Promise<void> => {
     const erc20Gateway = ERC20Gateway.instance;
 
     const params = {
@@ -88,6 +100,13 @@ describe('Contract Setup', async (): Promise<void> => {
       {
         from: shared.facilitator,
       }
+    );
+
+    Assert.assertERC20GatewaySetup(
+      params,
+      await erc20Gateway.methods.messageInbox().call(),
+      await erc20Gateway.methods.stateRootProvider().call(),
+      new BN(await erc20Gateway.methods.outboxStorageIndex().call()),
     );
   });
 

@@ -12,7 +12,7 @@ module.exports = {
       host: 'localhost',
       network_id: '*',
       websocket: true,
-      port: 8545,
+      port: 9545,
       gas: 5000000,
       gasPrice: 0x01,
     },

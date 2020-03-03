@@ -14,11 +14,12 @@
 
 import BN from 'bn.js';
 const assert = require('assert');
+
 import Interacts from '../../interacts/Interacts';
 import shared from './shared';
 
 /**
- * It has methods used for assertion for ERC20Gateway's integration tests.
+ * It has methods used in assertion of ERC20Gateway's integration tests.
  */
 export default class Assert {
 
@@ -75,7 +76,7 @@ export default class Assert {
   }
 
   /**
-   * It validates minting after confirm deposit transaction.
+   * It asserts minting of utility tokens.
    *
    * @param facilitatorAddress Address of facilitator who did confirm deposit transaction.
    * @param feeGasLimit Gas limit which the depositor is ready to pay for deposit.
@@ -229,6 +230,56 @@ export default class Assert {
       true,
       `Expected genesis outbox storage index is ${params.coGatewayOutboxIndex} `
       + `but got ${genesisOutboxStorageIndex.toString(10)}`,
+    );
+  }
+
+  /**
+   *
+   * @param actualConsensusAddress
+   * @param expectedConsensusAddress
+   */
+  public static assertAnchorSetup(
+    actualConsensusAddress: string,
+    expectedConsensusAddress: string,
+  ) : void {
+    assert.strictEqual(
+      actualConsensusAddress,
+      expectedConsensusAddress,
+      'Incorrect consensus address in Anchor setup',
+    );
+  }
+
+  /**
+   * It asserts ERC20Gateway storage with the params provided during setup of it.
+   *
+   * @param params ERC20Gateway setup params.
+   * @param messageInbox Message inbox contract address in ERC20Gateway contract.
+   * @param stateRootProvider State root provider address in ERC20Gateway contract.
+   * @param outboxStorageIndex Outbox storage index value in ERC20Gateway contract.
+   */
+  public static assertERC20GatewaySetup(
+    params: any,
+    messageInbox: string,
+    stateRootProvider: string,
+    outboxStorageIndex: BN,
+  ) {
+    assert.strictEqual(
+      messageInbox,
+      params.erc20Cogateway,
+      'Incorrect message inbox contract address',
+    );
+
+    assert.strictEqual(
+      stateRootProvider,
+      params.stateRootProvider,
+      'Incorrect state root provider contract address',
+    );
+
+    assert.strictEqual(
+      outboxStorageIndex.eq(new BN(params.gatewayOutboxIndex)),
+      true,
+      `Expected outbox storage index is ${params.gatewayOutboxIndex} `
+      + `but got ${outboxStorageIndex.toString(10)}`,
     );
   }
 }

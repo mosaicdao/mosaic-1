@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import shared, { ContractEntity } from '../shared';
 import BN from 'bn.js';
+
+import shared, { ContractEntity } from '../shared';
 import Utils from '../Utils';
 import { ERC20I } from '../../../interacts/ERC20I';
 import { ERC20Gateway } from '../../../interacts/ERC20Gateway';

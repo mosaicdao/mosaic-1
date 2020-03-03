@@ -13,14 +13,14 @@
 // limitations under the License.
 
 const assert = require('assert');
+import BN from 'bn.js';
 
 import shared from '../shared'
 import Interacts from '../../../interacts/Interacts';
-import BN = require('bn.js');
 
 describe('Contract deployment', async (): Promise<void> => {
 
-  it('Deploy value token', async (): Promise<void> => {
+  it('deploy value token', async (): Promise<void> => {
     shared.totalTokenSupply = new BN('8000000000000000000000');
     shared.accounts = await shared.web3.eth.getAccounts();
     shared.depositor = shared.accounts[2];
@@ -33,19 +33,21 @@ describe('Contract deployment', async (): Promise<void> => {
     shared.contracts.ValueToken.instance = Interacts.getERC20I(shared.web3, valueTokenAddress);
     shared.contracts.ValueToken.address = valueTokenAddress;
 
-    const depositorInitialBalance = await shared.contracts.ValueToken.instance.methods.balanceOf(
-      shared.depositor,
-    ).call();
+    const inContractInitialTokenBalance = await shared.contracts.ValueToken.instance.
+    methods.balanceOf(
+        shared.depositor,
+      )
+    .call();
 
     assert.strictEqual(
-      shared.totalTokenSupply.eq(new BN(depositorInitialBalance)),
+      shared.totalTokenSupply.eq(new BN(inContractInitialTokenBalance)),
       true,
-      `Depositor initial balance must be ${shared.totalTokenSupply.toString(10)} `
-      + `but got ${depositorInitialBalance}`,
+      `Total token supply must be ${shared.totalTokenSupply.toString(10)} `
+      + `but got ${inContractInitialTokenBalance}`,
     );
   });
 
-  it('Deploy anchors', async (): Promise<void> => {
+  it('deploy origin anchor', async (): Promise<void> => {
     const originAnchor = await shared.artifacts.Anchor.new();
     assert.strictEqual(
       originAnchor && originAnchor.address !== null,
@@ -59,6 +61,9 @@ describe('Contract deployment', async (): Promise<void> => {
     );
     shared.contracts.OriginAnchor.address = originAnchor.address;
 
+  });
+
+  it('deploy auxiliary anchor', async (): Promise<void> => {
     const auxAnchor = await shared.artifacts.Anchor.new();
     assert.strictEqual(
       auxAnchor && auxAnchor.address !== null,
@@ -71,7 +76,7 @@ describe('Contract deployment', async (): Promise<void> => {
     shared.contracts.AuxilaryAnchor.address = auxAnchorAddress;
   });
 
-  it('Deploy gateways', async (): Promise<void> => {
+  it('deploy ERC20Gateway contact', async (): Promise<void> => {
     const erc20Gateway = await shared.artifacts.ERC20Gateway.new();
     assert.strictEqual(
       erc20Gateway && erc20Gateway.address !== null,
@@ -82,6 +87,9 @@ describe('Contract deployment', async (): Promise<void> => {
     shared.contracts.ERC20Gateway.instance = Interacts.getERC20Gateway(shared.web3, erc20Gateway.address);
     shared.contracts.ERC20Gateway.address = erc20Gateway.address;
 
+  });
+
+  it('deploy ERC20Cogateway contact', async (): Promise<void> => {
     const erc20Cogateway = await shared.artifacts.ERC20Cogateway.new();
     assert.strictEqual(
       erc20Cogateway && erc20Cogateway.address !== null,

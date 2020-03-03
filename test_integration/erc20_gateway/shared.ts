@@ -15,13 +15,16 @@
 'use strict';
 
 import Web3 from 'web3';
+import BN = require('bn.js');
+
 import { Anchor } from '../../interacts/Anchor';
 import { ERC20Gateway } from '../../interacts/ERC20Gateway';
 import { Gen0ERC20Cogateway as ERC20Cogateway } from '../../interacts/Gen0ERC20Cogateway';
 import { ERC20I } from '../../interacts/ERC20I';
-import BN = require('bn.js');
 
-
+/**
+ * It represents type of contract instance and address of it.
+ */
 export class ContractEntity<Type> {
   address: string;
   instance: Type;
@@ -30,6 +33,9 @@ export class ContractEntity<Type> {
   }
 }
 
+/**
+ * It contains instances of the contracts
+ */
 class Contract {
 
   public OriginAnchor: ContractEntity<Anchor>;
@@ -73,7 +79,7 @@ class Shared {
   constructor() {
     this.artifacts = {};
     this.contracts =  new Contract();
-    this.web3 = new Web3('http://localhost:8545');
+    this.web3 = new Web3('http://localhost:9545');
     // For testing use 1 block confirmation.
     // @ts-ignore
     this.web3.transactionConfirmationBlocks = 1;
