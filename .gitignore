@@ -31,6 +31,7 @@ build/
 
 # Do not track generated wrapper, it should be part of build script
 interacts/*
+test_integration/test_dist/*
 
 # NPM package generated files:
 contract_build

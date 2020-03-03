@@ -33,12 +33,16 @@ const ERC20Cogateway = artifacts.require('Gen0ERC20Cogateway');
 // @ts-ignore
 const ERC20Token  = artifacts.require('ERC20Mock');
 
+// @ts-ignore
+const UtilityToken = artifacts.require('UtilityToken');
+
 const setupArtifacts = () => {
   shared.artifacts = {
     Anchor,
     ERC20Gateway,
     ERC20Cogateway,
-    ERC20Token
+    ERC20Token,
+    UtilityToken,
   };
 };
 

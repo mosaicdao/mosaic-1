@@ -21,7 +21,7 @@ import {Gen0ERC20Cogateway as ERC20Cogateway} from "../../interacts/Gen0ERC20Cog
 import {ERC20I} from "../../interacts/ERC20I";
 
 
-class ContractEntity<Type> {
+export class ContractEntity<Type> {
   address: string;
   instance: Type;
 
@@ -65,6 +65,8 @@ class Shared {
   public facilitator: string;
   public metachainId: string;
   public utilityTokenMasterCopy: string;
+  public coconsensus: string;
+  public consensus: string;
 
   constructor() {
     this.artifacts = {};

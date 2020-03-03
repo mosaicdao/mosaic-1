@@ -13,34 +13,55 @@
 // limitations under the License.
 
 import shared from '../shared';
+import Utils from '../Utils';
 
 const BN = require('bn.js');
 
-describe('Contract Setup', async () => {
+describe('Contract Setup', async (): Promise<void> => {
 
-  beforeEach(async() => {
+  let ERC20Gateway;
+  let ERC20Cogateway;
+  before(async() => {
+    ERC20Gateway = shared.contracts.ERC20Gateway;
+    ERC20Cogateway = shared.contracts.ERC20Cogateway;
+
     shared.metachainId = shared.web3.utils.randomHex(32);
-    shared.utilityTokenMasterCopy = shared.accounts[6];
+    const utilityTokenMasterCopy = await shared.artifacts.UtilityToken.new();
+    shared.utilityTokenMasterCopy = utilityTokenMasterCopy.address;
   });
 
-  it('should setup Anchor', async () => {
+  it('should setup Anchor', async (): Promise<void> => {
 
-    let consensus = shared.accounts[4];
+    shared.consensus = shared.accounts[4];
     const originAnchor = shared.contracts.OriginAnchor.instance;
-    originAnchor.methods.setup(
+    const originAnchorRawTx = originAnchor.methods.setup(
       new BN(100),
-      consensus,
+      shared.consensus,
     );
 
-    let coconsensus = shared.accounts[5];
+    await Utils.sendTransaction(
+      originAnchorRawTx,
+      {
+        from: shared.accounts[7],
+      }
+    );
+
+    shared.coconsensus = shared.accounts[9];
     const auxAnchor = shared.contracts.AuxilaryAnchor.instance;
-    auxAnchor.methods.setup(
+    const rawTx = auxAnchor.methods.setup(
       new BN(100),
-      coconsensus,
+      shared.coconsensus,
+    );
+
+    await Utils.sendTransaction(
+      rawTx,
+      {
+        from: shared.facilitator,
+      }
     );
   });
 
-  it('should setup ERC20Gateway', async () => {
+  it('should setup ERC20Gateway', async (): Promise<void> => {
 
     const ERC20Gateway = shared.contracts.ERC20Gateway.instance;
 
@@ -49,19 +70,26 @@ describe('Contract Setup', async () => {
       erc20Cogateway: shared.contracts.ERC20Cogateway.address,
       stateRootProvider: shared.contracts.OriginAnchor.address,
       maxStorageRootItems: new BN(50),
-      gatewayOutboxIndex: ERC20Gateway.methods.OUTBOX_OFFSET(),
+      gatewayOutboxIndex: await ERC20Cogateway.instance.methods.OUTBOX_OFFSET().call(),
     };
 
-    ERC20Gateway.methods.setup(
+    const rawTx = ERC20Gateway.methods.setup(
       params.metachainId,
       params.erc20Cogateway,
       params.stateRootProvider,
       params.maxStorageRootItems,
       params.gatewayOutboxIndex.toString(),
     );
+
+    await Utils.sendTransaction(
+      rawTx,
+      {
+        from: shared.facilitator,
+      }
+    );
   });
 
-  it('should activates ERC20Cogateway', async () => {
+  it('should activates ERC20Cogateway', async (): Promise<void> => {
 
     const ERC20Cogateway = shared.contracts.ERC20Cogateway.instance;
 
@@ -70,17 +98,24 @@ describe('Contract Setup', async () => {
       erc20Gateway: shared.contracts.ERC20Gateway.address,
       stateRootProvider: shared.contracts.AuxilaryAnchor.address,
       maxStorageRootItems: new BN(50),
-      coGatewayOutboxIndex: ERC20Cogateway.methods.OUTBOX_OFFSET(),
-      utilityTokenMastercopy: shared.utilityTokenMasterCopy,
+      coGatewayOutboxIndex: await shared.contracts.ERC20Gateway.instance.methods.OUTBOX_OFFSET().call(),
+      utilityTokenMasterCopy: shared.utilityTokenMasterCopy,
     };
 
-    ERC20Cogateway.methods.activate(
+    const rawTx = ERC20Cogateway.methods.activate(
       params.metachainId,
       params.erc20Gateway,
       params.stateRootProvider,
       params.maxStorageRootItems,
       params.coGatewayOutboxIndex.toString(),
-      params.utilityTokenMastercopy,
+      params.utilityTokenMasterCopy,
+    );
+
+    await Utils.sendTransaction(
+      rawTx,
+      {
+        from: shared.facilitator,
+      }
     );
   });
 });

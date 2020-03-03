@@ -15,9 +15,9 @@
 import shared from '../shared'
 import Interacts from '../../../interacts/Interacts';
 
-describe('Contract deployment', async () => {
+describe('Contract deployment', async (): Promise<void> => {
 
-  it('Deploy value token', async () => {
+  it('Deploy value token', async (): Promise<void> => {
 
     shared.accounts = await shared.web3.eth.getAccounts();
     const depositor = shared.accounts[2];
@@ -25,16 +25,15 @@ describe('Contract deployment', async () => {
     shared.depositor = depositor;
     shared.facilitator = facilitator;
     const valueToken = await shared.artifacts.ERC20Token.new(
-        depositor,
-      '8000000000000000000000'
+      depositor,
+      '8000000000000000000000',
     );
     const valueTokenAddress = valueToken.address;
     shared.contracts.ValueToken.instance = Interacts.getERC20I(shared.web3, valueTokenAddress);
     shared.contracts.ValueToken.address = valueTokenAddress;
   });
 
-  it('Deploy anchors', async () => {
-
+  it('Deploy anchors', async (): Promise<void> => {
     const originAnchor = await shared.artifacts.Anchor.new();
     const originAnchorAddress = originAnchor.address;
     shared.contracts.OriginAnchor.instance = Interacts.getAnchor(shared.web3, originAnchorAddress);
@@ -46,16 +45,15 @@ describe('Contract deployment', async () => {
     shared.contracts.AuxilaryAnchor.address = auxAnchorAddress;
   });
 
-  it('Deploy gateways', async () => {
-
+  it('Deploy gateways', async (): Promise<void> => {
     const ERC20Gateway = await shared.artifacts.ERC20Gateway.new();
-    const ERC20GatewayAddress = ERC20Gateway.address;
-    shared.contracts.ERC20Gateway.instance = Interacts.getERC20Gateway(shared.web3, ERC20GatewayAddress);
-    shared.contracts.ERC20Gateway.address = ERC20GatewayAddress;
+    const erc20GatewayAddress = ERC20Gateway.address;
+    shared.contracts.ERC20Gateway.instance = Interacts.getERC20Gateway(shared.web3, erc20GatewayAddress);
+    shared.contracts.ERC20Gateway.address = erc20GatewayAddress;
 
     const ERC20Cogateway = await shared.artifacts.ERC20Cogateway.new();
-    const ERC20CogatewayAddress = ERC20Cogateway.address;
-    shared.contracts.ERC20Cogateway.instance = Interacts.getGen0ERC20Cogateway(shared.web3, ERC20CogatewayAddress);
-    shared.contracts.ERC20Cogateway.address = ERC20CogatewayAddress;
+    const erc20CogatewayAddress = ERC20Cogateway.address;
+    shared.contracts.ERC20Cogateway.instance = Interacts.getGen0ERC20Cogateway(shared.web3, erc20CogatewayAddress);
+    shared.contracts.ERC20Cogateway.address = erc20CogatewayAddress;
   });
 });

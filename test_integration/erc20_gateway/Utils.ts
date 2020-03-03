@@ -15,26 +15,17 @@
 const rlp = require('rlp');
 
 import shared from './shared';
-'use strict';
 
+/**
+ * It contains utility methods for integration tests.
+ */
 export default class Utils {
-  /**
-   * Fund address for gas with ETH
-   * @param beneficiary Beneficiary Address.
-   * @param funder Funder Address.
-   * @param web3 Web3 instance.
-   * @param value Amount in wei.
-   */
-  static fundAddressForGas(beneficiary: string, funder:string, web3, value: string) {
-    return web3.eth.sendTransaction(
-      {
-        from: funder,
-        to: beneficiary,
-        value,
-      },
-    );
-  }
 
+  /**
+   *
+   * @param storageIndex
+   * @param mappings
+   */
   static async storagePath(
     storageIndex: string,
     mappings: any,
@@ -48,16 +39,105 @@ export default class Utils {
     }
     path = `${path}${shared.web3.utils.padLeft(storageIndex, 64)}`;
     path = shared.web3.utils.sha3(path);
+
     return path;
   }
 
-  static async formatProof(
-    proof: any,
-    ) {
+  /**
+   *
+   * @param proof
+   */
+  static formatProof(
+    proof: string[],
+    ): string {
     const formattedProof = proof.map(p => rlp.decode(p));
     return `0x${rlp.encode(formattedProof).toString('hex')}`;
   }
-  
+
+
+
+  /**
+   *
+   * @param blockNumber
+   */
+  static async getBlock(blockNumber: string) {
+    const block = await shared.web3.eth.getBlock(blockNumber);
+    return block;
+  }
+
+  /**
+   *
+   * @param contractAddress
+   * @param blockNumber
+   */
+  static async getAccountProof(
+    contractAddress: string,
+    blockNumber: string,
+  ): Promise<{encodedAccountValue, serializedProof}> {
+    const proof = await Utils.getProof(
+      contractAddress,
+      [],
+      blockNumber,
+    );
+
+    console.log('proof getAccountProof : ', proof);
+
+    const encodedAccountValue = Utils.encodedAccountValue(proof.accountProof);
+    const serializedProof = Utils.formatProof(proof.accountProof);
+    return {
+      encodedAccountValue,
+      serializedProof,
+    };
+  }
+
+  /**
+   *
+   * @param contractAddress
+   * @param storagePath
+   * @param blockNumber
+   */
+  static async getStorageProof(
+    contractAddress: string,
+    storagePath: string[],
+    blockNumber: string
+  ) {
+    const proof = Utils.getProof(
+      contractAddress,
+      storagePath,
+      blockNumber
+    );
+  }
+
+  /**
+   *
+   * @param accountProof
+   */
+  private static encodedAccountValue(accountProof: string[]) {
+    const decodedProof = accountProof.map((proof) => rlp.decode(proof));;
+    const leafElement = decodedProof[decodedProof.length - 1];
+    return `0x${leafElement[leafElement.length - 1].toString('hex')}`;
+  }
+
+  /**
+   *
+   * @param contractAddress
+   * @param storagePath
+   * @param blockNumber
+   */
+  static async getProof(
+    contractAddress: string,
+    storagePath: string[],
+    blockNumber: string,
+  ) {
+    const proof = await shared.web3.eth.getProof(
+      contractAddress,
+      storagePath,
+      blockNumber,
+    );
+
+    return proof;
+  }
+
   /**
    * Send Transaction.
    * @param rawTx Raw Transaction object.
@@ -67,13 +147,13 @@ export default class Utils {
     rawTx: any,
     txOptions: {
       gas?: string,
-      from: string
+      gasPrice?: string,
+      from: string,
     }) {
     txOptions.gas = txOptions.gas
       ? txOptions.gas
-      : (await rawTx.estimateGas()).toString();
+      : (await rawTx.estimateGas({ from: txOptions.from })).toString();
 
     return rawTx.send(txOptions);
   }
 }
-
