@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import shared, { ContractEntity } from '../shared';
-const BN = require('bn.js');
+import BN from 'bn.js';
 import Utils from '../Utils';
 import { ERC20I } from '../../../interacts/ERC20I';
 import { ERC20Gateway } from '../../../interacts/ERC20Gateway';
@@ -26,7 +26,7 @@ describe('Deposit and Confirm Deposit', async (): Promise<void> => {
   let erc20Gateway: ContractEntity<ERC20Gateway>;
   let erc20Cogateway: ContractEntity<ERC20Cogateway>;
   let depositMessageHash: string;
-  let blockNumber;
+  let blockNumber: BN;
 
   before(async (): Promise<void> => {
     erc20Gateway = shared.contracts.ERC20Gateway;
@@ -101,7 +101,7 @@ describe('Deposit and Confirm Deposit', async (): Promise<void> => {
     const block = await Utils.getBlock('latest');
     blockNumber = new BN(block.number);
     const rawTx = auxiliaryAnchor.methods.anchorStateRoot(
-      blockNumber,
+      blockNumber.toString(10),
       block.stateRoot,
     );
 
@@ -122,11 +122,11 @@ describe('Deposit and Confirm Deposit', async (): Promise<void> => {
   it('should prove ERC20Gateway contract',async(): Promise<void> => {
     const proof = await Utils.getAccountProof(
       erc20Gateway.address,
-      blockNumber,
+      blockNumber.toString(10),
     );
 
     const rawTx = erc20Cogateway.instance.methods.proveGateway(
-      blockNumber,
+      blockNumber.toString(10),
       proof.encodedAccountValue,
       proof.serializedProof,
     );

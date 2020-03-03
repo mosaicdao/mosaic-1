@@ -14,11 +14,12 @@
 
 'use strict';
 
-import Web3 from "web3";
-import {Anchor} from "../../interacts/Anchor";
-import {ERC20Gateway} from "../../interacts/ERC20Gateway";
-import {Gen0ERC20Cogateway as ERC20Cogateway} from "../../interacts/Gen0ERC20Cogateway";
-import {ERC20I} from "../../interacts/ERC20I";
+import Web3 from 'web3';
+import { Anchor } from '../../interacts/Anchor';
+import { ERC20Gateway } from '../../interacts/ERC20Gateway';
+import { Gen0ERC20Cogateway as ERC20Cogateway } from '../../interacts/Gen0ERC20Cogateway';
+import { ERC20I } from '../../interacts/ERC20I';
+import BN = require('bn.js');
 
 
 export class ContractEntity<Type> {
@@ -67,6 +68,7 @@ class Shared {
   public utilityTokenMasterCopy: string;
   public coconsensus: string;
   public consensus: string;
+  public totalTokenSupply: BN;
 
   constructor() {
     this.artifacts = {};

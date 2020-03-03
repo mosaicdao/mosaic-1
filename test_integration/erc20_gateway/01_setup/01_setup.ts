@@ -16,6 +16,7 @@ import shared, { ContractEntity } from '../shared';
 import Utils from '../Utils';
 import { ERC20Gateway } from '../../../interacts/ERC20Gateway';
 import { ERC20Cogateway } from '../../../interacts/ERC20Cogateway';
+import Assert from '../Assert';
 
 const BN = require('bn.js');
 
@@ -116,6 +117,16 @@ describe('Contract Setup', async (): Promise<void> => {
       {
         from: shared.facilitator,
       }
+    );
+
+    Assert.assertERC20CogatewaySetup(
+      params,
+      await erc20Cogateway.methods.genesisMetachainId().call(),
+      await erc20Cogateway.methods.genesisERC20Gateway().call(),
+      await erc20Cogateway.methods.genesisStateRootProvider().call(),
+      new BN(await erc20Cogateway.methods.genesisMaxStorageRootItems().call()),
+      new BN(await erc20Cogateway.methods.genesisOutboxStorageIndex().call()),
+      await erc20Cogateway.methods.genesisUtilityTokenMastercopy().call(),
     );
   });
 });

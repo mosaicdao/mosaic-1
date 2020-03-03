@@ -33,7 +33,7 @@ export default class Assert {
     event: {returnValues: {}},
     expectedInboxAddress: string,
     expectedBlockNumber: BN,
-  ) {
+  ) : void {
     assert.strictEqual(
       event.returnValues['remoteGateway'],
       expectedInboxAddress,
@@ -59,7 +59,7 @@ export default class Assert {
     event: { returnValues: {} },
     blockNumber: BN,
     stateRoot: string,
-  ) {
+  ) : void {
     assert.strictEqual(
       blockNumber.eq(new BN(event.returnValues['_blockNumber'])),
       true,
@@ -91,7 +91,7 @@ export default class Assert {
     utilityToken: string,
     beneficiary: string,
     depositAmount: BN,
-  ) {
+  ): Promise<void> {
     const utilityTokenInstance = Interacts.getUtilityToken(shared.web3, utilityToken);
 
     const actualBeneficiaryBalance = new BN(
@@ -127,7 +127,7 @@ export default class Assert {
   public static assertDepositIntentConfirmed(
     actualMessageHash: string,
     expectedMessageHash: string,
-  ) {
+  ) : void {
     assert.strictEqual(
       actualMessageHash,
       expectedMessageHash,
@@ -150,8 +150,7 @@ export default class Assert {
     erc20ContractBalanceBeforeTransfer: BN,
     erc20GatewayAfterBalance: BN,
     depositedAmount: BN,
-  ) {
-
+  ) : void{
     assert.strictEqual(
       depositorBalanceBeforeDeposit.sub(depositedAmount).eq(depositorBalanceAfterDeposit),
       true,
@@ -164,6 +163,72 @@ export default class Assert {
       true,
       `Expected erc20Gateway balance is ${erc20ContractBalanceBeforeTransfer.add(depositedAmount)}`
       + `but got ${erc20GatewayAfterBalance}`,
+    );
+  }
+
+  /**
+   * It asserts the parameters in the `GenesisERC20Cogateway` contract with params provided
+   * at the time of ERC20Gateway setup.
+   *
+   * @param params ERC20Cogateway setup parameters.
+   * @param genesisMetachainId Value of genesisMetachainId storage in
+   *                           `GenesisERC20Cogateway` contract.
+   * @param genesisERC20Gateway Value of genesisERC20Gateway storage in
+   *                            `GenesisERC20Cogateway` contract.
+   * @param genesisStateRootProvider Value of genesisERC20Gateway in
+   *                                 `GenesisERC20Cogateway` contract.
+   * @param genesisMaxStorageRootItems Value of genesisERC20Gateway storage in
+   *                                   `GenesisERC20Cogateway` contract.
+   * @param genesisOutboxStorageIndex Value of genesisOutboxStorageIndex in
+   *                                  `GenesisERC20Cogateway` contract.
+   * @param genesisUtilityTokenMastercopy Value of `genesisUtilityTokenMastercopy` storage in
+   *                                      `GenesisERC20Cogateway` contract.
+   */
+  public static assertERC20CogatewaySetup(
+    params: any,
+    genesisMetachainId: string,
+    genesisERC20Gateway: string,
+    genesisStateRootProvider: string,
+    genesisMaxStorageRootItems: BN,
+    genesisOutboxStorageIndex: BN,
+    genesisUtilityTokenMastercopy: string,
+  ): void {
+    assert.strictEqual(
+      params.metachainId,
+      genesisMetachainId,
+      'Incorrect genesis metachain id',
+    );
+
+    assert.strictEqual(
+      params.erc20Gateway,
+      genesisERC20Gateway,
+      'Incorrect genesis ERC20gateway contract address',
+    );
+
+    assert.strictEqual(
+      params.stateRootProvider,
+      genesisStateRootProvider,
+      'Incorrect genesis state root provider contract address',
+    );
+
+    assert.strictEqual(
+      params.utilityTokenMasterCopy,
+      genesisUtilityTokenMastercopy,
+      'Incorrect genesis utility token master copy  contract address',
+    );
+
+    assert.strictEqual(
+      params.maxStorageRootItems.eq(genesisMaxStorageRootItems),
+      true,
+      `Expected genesis max storage root items is ${params.maxStorageRootItems.toString(10)} `
+      + `but got ${genesisMaxStorageRootItems.toString(10)}`,
+    );
+
+    assert.strictEqual(
+      genesisOutboxStorageIndex.eq(new BN(params.coGatewayOutboxIndex)),
+      true,
+      `Expected genesis outbox storage index is ${params.coGatewayOutboxIndex} `
+      + `but got ${genesisOutboxStorageIndex.toString(10)}`,
     );
   }
 }
