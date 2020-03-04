@@ -14,13 +14,13 @@
 
 'use strict';
 
-import {Axiom} from "../interacts/Axiom";
-import {Committee} from "../interacts/Committee";
-import {Consensus} from "../interacts/Consensus";
-import {Core} from "../interacts/Core";
-import {Reputation} from "../interacts/Reputation";
-import {Anchor} from "../interacts/Anchor";
-import {ERC20I} from "../interacts/ERC20I";
+import {Axiom} from "../../interacts/Axiom";
+import {Committee} from "../../interacts/Committee";
+import {Consensus} from "../../interacts/Consensus";
+import {Core} from "../../interacts/Core";
+import {Reputation} from "../../interacts/Reputation";
+import {Anchor} from "../../interacts/Anchor";
+import {ERC20I} from "../../interacts/ERC20I";
 
 const Web3 = require("web3");
 

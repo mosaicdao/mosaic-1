@@ -206,10 +206,7 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
             msg.sender
         );
 
-        require(
-            ERC20I(_valueToken).transferFrom(msg.sender, address(this), _amount),
-            "Value token transferFrom must succeed."
-        );
+        ERC20I(_valueToken).transferFrom(msg.sender, address(this), _amount);
 
         emit DepositIntentDeclared(
             _amount,

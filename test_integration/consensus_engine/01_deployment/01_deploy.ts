@@ -15,7 +15,7 @@
 'use strict';
 
 import shared from '../shared';
-import Interacts from "../../interacts/Interacts";
+import Interacts from "../../../interacts/Interacts";
 
 const FUNDING_AMOUNT_IN_ETHER = '2';
 describe('Deployment', async () => {
