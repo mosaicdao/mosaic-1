@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const BN = require('bn.js');
+import BN from 'bn.js';
 
 import shared, { ContractEntity } from '../shared';
 import Utils from '../Utils';
@@ -30,23 +30,22 @@ describe('Contract Setup', async (): Promise<void> => {
     ERC20Cogateway = shared.contracts.ERC20Cogateway;
 
     shared.metachainId = shared.web3.utils.randomHex(32);
-    const utilityTokenMasterCopy = await shared.artifacts.UtilityToken.new();
-    shared.utilityTokenMasterCopy = utilityTokenMasterCopy.address;
     shared.consensus = shared.accounts[4];
     shared.coconsensus = shared.accounts[9];
+    shared.deployer = shared.accounts[7];
   });
 
   it('should setup origin anchor contract', async (): Promise<void> => {
     const originAnchor = shared.contracts.OriginAnchor.instance;
     const originAnchorRawTx = originAnchor.methods.setup(
-      new BN(100),
+      '100',
       shared.consensus,
     );
 
     await Utils.sendTransaction(
       originAnchorRawTx,
       {
-        from: shared.accounts[7],
+        from: shared.deployer,
       }
     );
 
@@ -59,14 +58,14 @@ describe('Contract Setup', async (): Promise<void> => {
   it('should setup auxiliary anchor contract', async (): Promise<void> => {
     const auxAnchor = shared.contracts.AuxilaryAnchor.instance;
     const rawTx = auxAnchor.methods.setup(
-      new BN(100),
+      '100',
       shared.coconsensus,
     );
 
     await Utils.sendTransaction(
       rawTx,
       {
-        from: shared.facilitator,
+        from: shared.deployer,
       }
     );
 
@@ -91,14 +90,14 @@ describe('Contract Setup', async (): Promise<void> => {
       params.metachainId,
       params.erc20Cogateway,
       params.stateRootProvider,
-      params.maxStorageRootItems,
+      params.maxStorageRootItems.toString(10),
       params.gatewayOutboxIndex.toString(),
     );
 
     await Utils.sendTransaction(
       rawTx,
       {
-        from: shared.facilitator,
+        from: shared.deployer,
       }
     );
 
@@ -126,7 +125,7 @@ describe('Contract Setup', async (): Promise<void> => {
       params.metachainId,
       params.erc20Gateway,
       params.stateRootProvider,
-      params.maxStorageRootItems,
+      params.maxStorageRootItems.toString(10),
       params.coGatewayOutboxIndex.toString(),
       params.utilityTokenMasterCopy,
     );
@@ -134,7 +133,7 @@ describe('Contract Setup', async (): Promise<void> => {
     await Utils.sendTransaction(
       rawTx,
       {
-        from: shared.facilitator,
+        from: shared.deployer,
       }
     );
 

@@ -31,75 +31,42 @@ describe('Contract deployment', async (): Promise<void> => {
     );
     shared.contracts.ValueToken.instance = Interacts.getERC20I(shared.web3, valueToken.address);
     shared.contracts.ValueToken.address = valueToken.address;
-
-    const inContractInitialTokenBalance = await shared.contracts.ValueToken.instance.
-    methods.balanceOf(
-        shared.depositor,
-      )
-    .call();
-
-    assert.strictEqual(
-      shared.totalTokenSupply.eq(new BN(inContractInitialTokenBalance)),
-      true,
-      `Total token supply must be ${shared.totalTokenSupply.toString(10)} `
-      + `but got ${inContractInitialTokenBalance}`,
-    );
   });
 
-  it('deploy origin anchor', async (): Promise<void> => {
+  it('deploy origin anchor contract', async (): Promise<void> => {
     const originAnchor = await shared.artifacts.Anchor.new();
-    assert.strictEqual(
-      originAnchor && originAnchor.address !== null,
-      true,
-      'Origin anchor contract address must exists',
-    );
-
     shared.contracts.OriginAnchor.instance = Interacts.getAnchor(
       shared.web3,
       originAnchor.address,
     );
     shared.contracts.OriginAnchor.address = originAnchor.address;
-
   });
 
-  it('deploy auxiliary anchor', async (): Promise<void> => {
+  it('deploy auxiliary anchor contract', async (): Promise<void> => {
     const auxAnchor = await shared.artifacts.Anchor.new();
-    assert.strictEqual(
-      auxAnchor && auxAnchor.address !== null,
-      true,
-      'Auxiliary anchor contract address must exists',
-    );
-
     const auxAnchorAddress = auxAnchor.address;
     shared.contracts.AuxilaryAnchor.instance = Interacts.getAnchor(shared.web3, auxAnchorAddress);
     shared.contracts.AuxilaryAnchor.address = auxAnchorAddress;
   });
 
-  it('deploy ERC20Gateway contact', async (): Promise<void> => {
+  it('deploy ERC20Gateway contract', async (): Promise<void> => {
     const erc20Gateway = await shared.artifacts.ERC20Gateway.new();
-    assert.strictEqual(
-      erc20Gateway && erc20Gateway.address !== null,
-      true,
-      'ERC20Gateway contract address must exists',
-    );
-
     shared.contracts.ERC20Gateway.instance = Interacts.getERC20Gateway(shared.web3, erc20Gateway.address);
     shared.contracts.ERC20Gateway.address = erc20Gateway.address;
 
   });
 
-  it('deploy ERC20Cogateway contact', async (): Promise<void> => {
+  it('deploy ERC20Cogateway contract', async (): Promise<void> => {
     const erc20Cogateway = await shared.artifacts.ERC20Cogateway.new();
-    assert.strictEqual(
-      erc20Cogateway && erc20Cogateway.address !== null,
-      true,
-      'ERC20Cogateway contract address must exists',
-    );
-
     shared.contracts.ERC20Cogateway.instance = Interacts.getGen0ERC20Cogateway(
       shared.web3,
       erc20Cogateway.address,
     );
     shared.contracts.ERC20Cogateway.address = erc20Cogateway.address;
+  });
+
+  it('deploy utility token contract', async (): Promise<void> => {
+    const utilityTokenMasterCopy = await shared.artifacts.UtilityToken.new();
+    shared.utilityTokenMasterCopy = utilityTokenMasterCopy.address;
   });
 });

@@ -238,6 +238,7 @@ export default class Assert {
   }
 
   /**
+   * It asserts setup of anchors.
    *
    * @param actualConsensusAddress
    * @param expectedConsensusAddress

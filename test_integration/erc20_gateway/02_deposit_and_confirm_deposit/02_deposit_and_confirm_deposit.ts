@@ -15,7 +15,7 @@
 import BN from 'bn.js';
 
 import shared, { ContractEntity } from '../shared';
-import Utils from '../Utils';
+import Utils from "../Utils";
 import { ERC20I } from '../../../interacts/ERC20I';
 import { ERC20Gateway } from '../../../interacts/ERC20Gateway';
 import { ERC20Cogateway } from '../../../interacts/ERC20Cogateway';
@@ -49,7 +49,7 @@ describe('Deposit and Confirm Deposit', async (): Promise<void> => {
     const approveTx = valueToken.methods.approve(
       erc20Gateway.address,
       depositParam.amount.toString(10),
-    )
+    );
 
     await Utils.sendTransaction(
       approveTx,
@@ -129,8 +129,10 @@ describe('Deposit and Confirm Deposit', async (): Promise<void> => {
 
     const rawTx = erc20Cogateway.instance.methods.proveGateway(
       blockNumber.toString(10),
-      proof.encodedAccountValue as unknown as string[],
-      proof.serializedProof as unknown as string[],
+      // @ts-ignore
+      proof.encodedAccountValue,
+      // @ts-ignore
+      proof.serializedProof,
     );
 
     const tx = await Utils.sendTransaction(
