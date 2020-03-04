@@ -109,13 +109,15 @@ export default class Assert {
     assert.strictEqual(
       actualBeneficiaryBalance.eq(mintedAmount),
       true,
-      `Expected beneficiary balance is ${mintedAmount} but got ${mintedAmount}`,
+      `Expected beneficiary balance is ${mintedAmount.toString(10)} `
+       + `but got ${mintedAmount.toString(10)}`,
     );
 
     assert.strictEqual(
       facilitatorBalance.eq(reward),
       true,
-      `Expected facilitator balance is ${reward} but got ${facilitatorBalance}`,
+      `Expected facilitator balance is ${reward.toString(10)} `
+      + `but got ${facilitatorBalance.toString(10)}`,
     );
   }
 
@@ -155,15 +157,17 @@ export default class Assert {
     assert.strictEqual(
       depositorBalanceBeforeDeposit.sub(depositedAmount).eq(depositorBalanceAfterDeposit),
       true,
-      `Expected depositor balance is ${depositorBalanceBeforeDeposit.sub(depositedAmount)}`
-      + `but got ${depositorBalanceAfterDeposit}`,
+      'Expected depositor balance is'
+      + `${(depositorBalanceBeforeDeposit.sub(depositedAmount)).toString(10)}`
+      + `but got ${depositorBalanceAfterDeposit.toString(10)}`,
     );
 
     assert.strictEqual(
       erc20ContractBalanceBeforeTransfer.add(depositedAmount).eq(erc20GatewayAfterBalance),
       true,
-      `Expected erc20Gateway balance is ${erc20ContractBalanceBeforeTransfer.add(depositedAmount)}`
-      + `but got ${erc20GatewayAfterBalance}`,
+      'Expected erc20Gateway balance is '
+      +`${(erc20ContractBalanceBeforeTransfer.add(depositedAmount)).toString(10)} `
+      + `but got ${erc20GatewayAfterBalance.toString(10)}`,
     );
   }
 

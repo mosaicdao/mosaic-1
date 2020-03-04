@@ -22,7 +22,14 @@ import { ERC20Cogateway } from '../../../interacts/ERC20Cogateway';
 import Assert from '../Assert';
 
 describe('Deposit and Confirm Deposit', async (): Promise<void> => {
-  let depositParam;
+  let depositParam = {
+    amount: new BN(100),
+    depositor: '',
+    beneficiary: '',
+    feeGasPrice: new BN(2),
+    feeGasLimit: new BN(10),
+    valueToken: '',
+  };
   let valueToken: ERC20I;
   let erc20Gateway: ContractEntity<ERC20Gateway>;
   let erc20Cogateway: ContractEntity<ERC20Cogateway>;
@@ -33,21 +40,15 @@ describe('Deposit and Confirm Deposit', async (): Promise<void> => {
     erc20Gateway = shared.contracts.ERC20Gateway;
     erc20Cogateway = shared.contracts.ERC20Cogateway;
     valueToken = shared.contracts.ValueToken.instance;
-
-    depositParam = {
-      amount: new BN(100),
-      beneficiary: shared.accounts[7],
-      feeGasPrice: new BN(2),
-      feeGasLimit: new BN(10),
-      valueToken: shared.contracts.ValueToken.address,
-      depositor: shared.depositor,
-    }
+    depositParam.valueToken = shared.contracts.ValueToken.address;
+    depositParam.beneficiary = shared.accounts[7];
+    depositParam.depositor = shared.depositor;
   });
 
   it('should deposit successfully', async (): Promise<void> => {
     const approveTx = valueToken.methods.approve(
       erc20Gateway.address,
-      depositParam.amount,
+      depositParam.amount.toString(10),
     )
 
     await Utils.sendTransaction(
@@ -65,10 +66,10 @@ describe('Deposit and Confirm Deposit', async (): Promise<void> => {
     );
 
     const rawTx = erc20Gateway.instance.methods.deposit(
-      depositParam.amount,
+      depositParam.amount.toString(10),
       depositParam.beneficiary,
-      depositParam.feeGasPrice,
-      depositParam.feeGasLimit,
+      depositParam.feeGasPrice.toString(10),
+      depositParam.feeGasLimit.toString(10),
       depositParam.valueToken,
     );
 
@@ -128,8 +129,8 @@ describe('Deposit and Confirm Deposit', async (): Promise<void> => {
 
     const rawTx = erc20Cogateway.instance.methods.proveGateway(
       blockNumber.toString(10),
-      proof.encodedAccountValue,
-      proof.serializedProof,
+      proof.encodedAccountValue as unknown as string[],
+      proof.serializedProof as unknown as string[],
     );
 
     const tx = await Utils.sendTransaction(
@@ -157,10 +158,10 @@ describe('Deposit and Confirm Deposit', async (): Promise<void> => {
 
     const rawTx = erc20Cogateway.instance.methods.confirmDeposit(
       depositParam.valueToken,
-      depositParam.amount,
+      depositParam.amount.toString(10),
       depositParam.beneficiary,
-      depositParam.feeGasPrice,
-      depositParam.feeGasLimit,
+      depositParam.feeGasPrice.toString(10),
+      depositParam.feeGasLimit.toString(10),
       depositParam.depositor,
       blockNumber.toString(10),
       serializedStorageProof as any,

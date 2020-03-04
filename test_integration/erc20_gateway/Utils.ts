@@ -75,7 +75,7 @@ export default class Utils {
   static async getAccountProof(
     contractAddress: string,
     blockNumber: string,
-  ): Promise<{encodedAccountValue, serializedProof}> {
+  ): Promise<{encodedAccountValue: string; serializedProof: string}> {
     const proof = await Utils.getProof(
       contractAddress,
       [],
