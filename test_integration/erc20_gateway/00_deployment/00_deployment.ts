@@ -29,9 +29,8 @@ describe('Contract deployment', async (): Promise<void> => {
       shared.depositor,
       shared.totalTokenSupply.toString(10),
     );
-    const valueTokenAddress = valueToken.address;
-    shared.contracts.ValueToken.instance = Interacts.getERC20I(shared.web3, valueTokenAddress);
-    shared.contracts.ValueToken.address = valueTokenAddress;
+    shared.contracts.ValueToken.instance = Interacts.getERC20I(shared.web3, valueToken.address);
+    shared.contracts.ValueToken.address = valueToken.address;
 
     const inContractInitialTokenBalance = await shared.contracts.ValueToken.instance.
     methods.balanceOf(

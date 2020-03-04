@@ -12,14 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-'use strict';
+import Mocha from 'mocha';
+import shared from './shared';
 
 /**
  * @file Truffle's `artifacts.require()` won't be available inside the Mocha
  * tests. Thus, we load them here and add them to the `shared` object.
  */
-const Mocha = require('mocha');
-import shared from './shared';
+
+'use strict';
 
 // @ts-ignore
 const Anchor = artifacts.require('Anchor');
@@ -31,7 +32,7 @@ const ERC20Gateway = artifacts.require('ERC20Gateway');
 const ERC20Cogateway = artifacts.require('Gen0ERC20Cogateway');
 
 // @ts-ignore
-const ERC20Token  = artifacts.require('ERC20Mock');
+const ERC20Token = artifacts.require('ERC20Mock');
 
 // @ts-ignore
 const UtilityToken = artifacts.require('UtilityToken');

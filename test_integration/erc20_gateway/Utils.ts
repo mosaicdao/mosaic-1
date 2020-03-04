@@ -29,7 +29,7 @@ export default class Utils {
    */
   static async storagePath(
     storageIndex: string,
-    mappings: any,
+    mappings: string[],
   ) {
     let path = '';
     if (mappings && mappings.length > 0) {

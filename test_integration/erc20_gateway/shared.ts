@@ -15,7 +15,7 @@
 'use strict';
 
 import Web3 from 'web3';
-import BN = require('bn.js');
+import BN from 'bn.js';
 
 import { Anchor } from '../../interacts/Anchor';
 import { ERC20Gateway } from '../../interacts/ERC20Gateway';
