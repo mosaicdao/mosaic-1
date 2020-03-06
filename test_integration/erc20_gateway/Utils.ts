@@ -14,10 +14,9 @@
 
 const rlp = require('rlp');
 
-import shared, { ContractEntity } from './shared';
+import shared from './shared';
 import { Anchor } from '../../interacts/Anchor';
 import BN = require('bn.js');
-import { TransactionObject } from '../../interacts/types';
 
 /**
  * It contains utility methods for integration tests.
@@ -143,8 +142,6 @@ export default class Utils {
       blockNumber,
     );
 
-    console.log('proof : ', proof);
-
     const serializedStorageProof = Utils.formatProof(proof.storageProof[0].proof);
 
     return serializedStorageProof;
@@ -172,8 +169,8 @@ export default class Utils {
   /**
    * It performs anchoring on origin and auxiliary chains.
    *
-   * @param anchor
-   * @param from
+   * @param anchor Origin or Auxiliary anchor instance.
+   * @param from Address of the account who is the sender of the anchoring of state root.
    */
   static async performAnchor(
     anchor: Anchor,

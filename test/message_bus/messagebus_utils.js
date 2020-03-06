@@ -16,8 +16,6 @@
 
 const web3 = require('../test_lib/web3.js');
 
-const MessageOutboxDouble = artifacts.require('MessageOutboxDouble');
-
 const MESSAGE_TYPEHASH = web3.utils.keccak256(
   'Message(bytes32 intentHash,uint256 nonce,uint256 feeGasPrice,uint256 feeGasLimit,address sender)',
 );
@@ -34,12 +32,9 @@ const MMB_DOMAIN_SEPARATOR_NAME = 'Mosaic-Bus';
 
 const MMB_DOMAIN_SEPARATOR_VERSION = '0';
 
-let messageOutbox;
-
-async function deployMessageOutbox() {
-  messageOutbox = await MessageOutboxDouble.new();
-  return messageOutbox;
-}
+const WITHDRAW_INTENT_TYPEHASH = web3.utils.keccak256(
+  'WithdrawIntent(address valueToken,address utilityToken,uint256 amount,address beneficiary)',
+);
 
 function hashMessage(
   intentHash,
@@ -123,8 +118,27 @@ function hashChannelIdentifier(
   return channelIdentifier;
 }
 
+function hashWithdrawIntent(
+  valueToken,
+  utilityTokenAddress,
+  amount,
+  beneficiary,
+) {
+  return web3.utils.sha3(
+    web3.eth.abi.encodeParameters(
+      ['bytes32', 'address', 'address', 'uint256', 'address'],
+      [
+        WITHDRAW_INTENT_TYPEHASH,
+        valueToken,
+        utilityTokenAddress,
+        amount.toString(10),
+        beneficiary,
+      ],
+    ),
+  );
+}
 module.exports = {
-  deployMessageOutbox,
   hashChannelIdentifier,
   hashMessage,
+  hashWithdrawIntent,
 };

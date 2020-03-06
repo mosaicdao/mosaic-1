@@ -57,6 +57,10 @@ describe('withdraw and confirm withdraw', async (): Promise<void> => {
       utilityToken: utilityToken,
     };
 
+    const withdrawerBalanceBeforeWithdraw = await utilityTokenInstance.methods.balanceOf(
+      withdrawerAddress,
+    ).call();
+
     const withdrawRawTx = erc20Cogateway.instance.methods.withdraw(
       withdrawParams.withdrawalAmount.toString(10),
       withdrawParams.beneficiary,
@@ -73,17 +77,23 @@ describe('withdraw and confirm withdraw', async (): Promise<void> => {
     );
 
     withdrawMessageHash = tx.events.WithdrawIntentDeclared.returnValues['messageHash'];
-    console.log('withdrawMessageHash : ', withdrawMessageHash);
 
-    const status = await erc20Cogateway.instance.methods.outbox(withdrawMessageHash).call();
+    const withdrawerBalanceAfterWithdraw = await utilityTokenInstance.methods.balanceOf(
+      withdrawerAddress,
+    ).call();
 
-    console.log('valuetoken in utility token : ',await utilityTokenInstance.methods.valueToken().call());
+    await Assert.assertWithdrawIntentDeclared(
+      tx.events.WithdrawIntentDeclared,
+      withdrawerAddress,
+      withdrawParams,
+    );
 
-    console.log('expected value token : ',shared.contracts.ValueToken.address);
-
-    console.log('withdrawMessageHash status : ', status);
+    Assert.assertWithdraw(
+      new BN(withdrawerBalanceBeforeWithdraw),
+      new BN(withdrawerBalanceAfterWithdraw),
+      withdrawParams.withdrawalAmount,
+    );
   });
-
 
   it('should anchor successfully', async (): Promise<void> => {
     const anchor = await Utils.performAnchor(
@@ -130,14 +140,19 @@ describe('withdraw and confirm withdraw', async (): Promise<void> => {
 
   it('should confirm withdraw successfully', async (): Promise<void> => {
     const outboxStorageIndex = await erc20Gateway.instance.methods.outboxStorageIndex().call();
-    console.log('outboxStorageIndex : ', outboxStorageIndex);
     const storagePath = Utils.storagePath(outboxStorageIndex, [withdrawMessageHash]);
-    console.log('storagePath : ', storagePath);
+
     const serializedStorageProof = await Utils.getStorageProof(
       erc20Cogateway.address,
       [storagePath],
       blockNumber.toString(10),
     );
+
+    const facilitatorBalanceBeforeConfirmWithdraw = await shared.contracts.ValueToken.instance.methods.
+      balanceOf(shared.facilitator).call();
+
+    const beneficiaryBalanceBeforeConfirmWithdraw = await shared.contracts.ValueToken.instance.methods.
+      balanceOf(withdrawParams.beneficiary).call();
 
     const rawTx = erc20Gateway.instance.methods.confirmWithdraw(
       utilityToken,
@@ -158,8 +173,20 @@ describe('withdraw and confirm withdraw', async (): Promise<void> => {
       },
     );
 
-    console.log('tx : ', JSON.stringify(tx));
+    Assert.assertWithdrawIntentConfirmed(
+      tx.events.WithdrawIntentConfirmed.returnValues['messageHash'],
+      withdrawMessageHash,
+    );
 
-
+    await Assert.assertConfirmWithdraw(
+      shared.facilitator,
+      withdrawParams.feeGasLimit,
+      withdrawParams.feeGasPrice,
+      shared.contracts.ValueToken,
+      withdrawParams.beneficiary,
+      withdrawParams.withdrawalAmount,
+      new BN(facilitatorBalanceBeforeConfirmWithdraw),
+      new BN(beneficiaryBalanceBeforeConfirmWithdraw),
+    );
   });
 });
