@@ -14,7 +14,10 @@
 
 const rlp = require('rlp');
 
-import shared from './shared';
+import shared, { ContractEntity } from './shared';
+import { Anchor } from '../../interacts/Anchor';
+import BN = require('bn.js');
+import { TransactionObject } from '../../interacts/types';
 
 /**
  * It contains utility methods for integration tests.
@@ -27,7 +30,7 @@ export default class Utils {
    * @param storageIndex Index at which contract key is present in the contract.
    * @param mappings List of keys in case storage is mapping.
    */
-  static async storagePath(
+  static storagePath(
     storageIndex: string,
     mappings: string[],
   ) {
@@ -139,6 +142,9 @@ export default class Utils {
       storagePath,
       blockNumber,
     );
+
+    console.log('proof : ', proof);
+
     const serializedStorageProof = Utils.formatProof(proof.storageProof[0].proof);
 
     return serializedStorageProof;
@@ -161,5 +167,38 @@ export default class Utils {
       : (await rawTx.estimateGas({ from: txOptions.from })).toString();
 
     return rawTx.send(txOptions);
+  }
+
+  /**
+   * It performs anchoring on origin and auxiliary chains.
+   *
+   * @param anchor
+   * @param from
+   */
+  static async performAnchor(
+    anchor: Anchor,
+    from: string,
+  ): Promise<{ tx: any; blockNumber: BN; stateRoot: string}> {
+
+    const block = await Utils.getBlock('latest');
+    const blockNumber = new BN(block.number);
+
+    const rawTx = anchor.methods.anchorStateRoot(
+      blockNumber.toString(10),
+      block.stateRoot,
+    );
+
+    const tx = await Utils.sendTransaction(
+      rawTx,
+      {
+        from: from,
+      }
+    );
+
+    return {
+      tx,
+      blockNumber,
+      stateRoot: block.stateRoot,
+    };
   }
 }

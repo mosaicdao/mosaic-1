@@ -76,6 +76,8 @@ class Shared {
   public coconsensus: string;
   public consensus: string;
   public totalTokenSupply: BN;
+  public beneficiaryAtAuxiliary: string;
+  public beneficiaryAtOrigin: string;
 
   constructor() {
     this.artifacts = {};

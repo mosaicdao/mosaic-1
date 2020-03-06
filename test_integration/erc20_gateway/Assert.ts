@@ -287,4 +287,11 @@ export default class Assert {
       + `but got ${outboxStorageIndex.toString(10)}`,
     );
   }
+
+  /**
+   *
+   */
+  public static assertWithdraw() {
+
+  }
 }

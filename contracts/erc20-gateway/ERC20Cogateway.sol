@@ -61,10 +61,10 @@ contract ERC20Cogateway is
     /* Constants */
 
     /** Storage offset of message outbox. */
-    uint8 constant public OUTBOX_OFFSET = uint8(7);
+    uint8 constant public OUTBOX_OFFSET = uint8(6);
 
     /** Storage offset of message inbox. */
-    uint8 constant public INBOX_OFFSET = uint8(10);
+    uint8 constant public INBOX_OFFSET = uint8(9);
 
     /** The callprefix of the UtilityToken::setup(). */
     bytes4 public constant UTILITY_TOKEN_SETUP_CALLPREFIX = bytes4(
@@ -75,9 +75,6 @@ contract ERC20Cogateway is
 
 
     /* Storage */
-
-    /** Value token address. */
-    address public valueToken;
 
     /** Address of Utility token contract master copy. */
     address public utilityTokenMasterCopy;
@@ -165,7 +162,7 @@ contract ERC20Cogateway is
      *                     where the tokens will be withdrawn.
      * @param _feeGasPrice Gas price at which fee will be calculated.
      * @param _feeGasLimit Gas limit at which fee will be capped.
-     * @param _utilityToken Address of utility token
+     * @param _utilityToken Address of utility token.
      *
      * @return messageHash_ Message hash.
      *
@@ -213,6 +210,7 @@ contract ERC20Cogateway is
             "Withdrawal amount should be greater than max reward."
         );
 
+        address valueToken = UtilityTokenInterface(_utilityToken).valueToken();
         bytes32 withdrawIntentHash = ERC20GatewayBase.hashWithdrawIntent(
             valueToken,
             _utilityToken,
