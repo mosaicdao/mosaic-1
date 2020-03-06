@@ -8,6 +8,14 @@ module.exports = {
       gas: 8000000,
       gasPrice: 0x01,
     },
+    integration: {
+      host: 'localhost',
+      network_id: '*',
+      websocket: true,
+      port: 9545,
+      gas: 5000000,
+      gasPrice: 0x01,
+    },
   },
   compilers: {
     solc: {
