@@ -199,6 +199,19 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
     }
 
     /**
+     * @notice Gets the remote gateway latest proven block number.
+     *
+     * @return blockNumber_ Remote gateway latest proven block number.
+     */
+    function getRemoteGatewayLatestProvenBlockNumber()
+        external
+        view
+        returns (uint256 blockNumber_)
+    {
+        blockNumber_ = CircularBufferUint.head();
+    }
+
+    /**
      * @notice Confirms the initiation of opening a kernel at auxiliary chain.
      *
      * @dev Function requires:

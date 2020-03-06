@@ -130,6 +130,19 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
     }
 
     /**
+     * @notice Gets the remote gateway latest proven block number.
+     *
+     * @return blockNumber_ Remote gateway latest proven block number.
+     */
+    function getRemoteGatewayLatestProvenBlockNumber()
+        external
+        view
+        returns (uint256 blockNumber_)
+    {
+        blockNumber_ = CircularBufferUint.head();
+    }
+
+    /**
      * @notice Deposit ERC20 token to mint utility token on the auxiliary chain.
      *
      * @param _amount Amount of token to be deposited in atto

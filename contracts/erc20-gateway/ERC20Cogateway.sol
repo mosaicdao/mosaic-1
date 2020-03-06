@@ -156,6 +156,19 @@ contract ERC20Cogateway is
     }
 
     /**
+     * @notice Gets the remote gateway latest proven block number.
+     *
+     * @return blockNumber_ Remote gateway latest proven block number.
+     */
+    function getRemoteGatewayLatestProvenBlockNumber()
+        external
+        view
+        returns (uint256 blockNumber_)
+    {
+        blockNumber_ = CircularBufferUint.head();
+    }
+
+    /**
      * @notice It allows withdrawing Utility tokens. Withdrawer needs to
      *       approve erc20 cogateway contract for the amount to be
      *       withdrawn.

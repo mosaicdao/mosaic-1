@@ -311,4 +311,17 @@ contract ConsensusGateway is
             "Token transfer to the beneficiary must succeed."
         );
     }
+
+    /**
+     * @notice Gets the remote gateway latest proven block number.
+     *
+     * @return blockNumber_ Remote gateway latest proven block number.
+     */
+    function getRemoteGatewayLatestProvenBlockNumber()
+        external
+        view
+        returns (uint256 blockNumber_)
+    {
+        blockNumber_ = CircularBufferUint.head();
+    }
 }
