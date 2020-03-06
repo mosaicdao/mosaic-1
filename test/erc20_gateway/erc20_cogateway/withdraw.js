@@ -32,6 +32,7 @@ contract('ERC20Cogateway::withdraw', (accounts) => {
   let withdrawIntent;
   let sender;
   let outboundChannelIdentifier;
+  let valueTokenForUtilityToken;
 
   const WITHDRAW_INTENT_TYPEHASH = web3.utils.keccak256(
     'WithdrawIntent(address valueToken,address utilityToken,uint256 amount,address beneficiary)',
@@ -61,8 +62,7 @@ contract('ERC20Cogateway::withdraw', (accounts) => {
     const owner = accountProvider.get();
     sender = accountProvider.get();
     utilityToken = await Utils.deployMockToken(owner);
-
-    const valueToken = '0x0000000000000000000000000000000000000000';
+    valueTokenForUtilityToken = accountProvider.get();
 
     setupGenesisParams = {
       genesisMetachainId: Utils.generateRandomMetachainId(),
@@ -101,7 +101,7 @@ contract('ERC20Cogateway::withdraw', (accounts) => {
     outboundChannelIdentifier = await erc20Cogateway.outboundChannelIdentifier.call();
 
     withdrawIntent = await hashWithdrawIntent(
-      valueToken,
+      valueTokenForUtilityToken,
       withdrawParam.utilityToken,
       withdrawParam.amount,
       withdrawParam.beneficiary,
