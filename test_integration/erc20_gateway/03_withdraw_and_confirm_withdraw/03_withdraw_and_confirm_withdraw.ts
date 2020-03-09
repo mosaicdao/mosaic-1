@@ -1,4 +1,4 @@
-import shared from "../shared";
+//import shared from "../shared";
 
 // Copyright 2020 OpenST Ltd.
 //
@@ -15,6 +15,8 @@ import shared from "../shared";
 // limitations under the License.
 
 import BN from 'bn.js';
+
+import shared from "../shared";
 import Utils from '../Utils';
 import Assert from "../Assert";
 import Interacts from "../../../interacts/Interacts";
