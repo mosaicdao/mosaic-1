@@ -17,6 +17,7 @@
 const BN = require('bn.js');
 
 const ERC20Cogateway = artifacts.require('ERC20CogatewayDouble');
+const UtilityToken = artifacts.require('UtilityTokenMock');
 
 const { AccountProvider } = require('../../test_lib/utils.js');
 const MessageBusUtils = require('../../message_bus/messagebus_utils');
@@ -61,8 +62,8 @@ contract('ERC20Cogateway::withdraw', (accounts) => {
     erc20Cogateway = await ERC20Cogateway.new();
     const owner = accountProvider.get();
     sender = accountProvider.get();
-    utilityToken = await Utils.deployMockToken(owner);
     valueTokenForUtilityToken = accountProvider.get();
+    utilityToken = await UtilityToken.new(valueTokenForUtilityToken, owner, '1000000000000');
 
     setupGenesisParams = {
       genesisMetachainId: Utils.generateRandomMetachainId(),
@@ -70,7 +71,7 @@ contract('ERC20Cogateway::withdraw', (accounts) => {
       genesisStateRootProvider: accountProvider.get(),
       genesisMaxStorageRootItems: new BN(100),
       genesisOutboxStorageIndex: new BN(4),
-      genesisUtilityTokenMasterCopy: accountProvider.get(),
+      genesisUtilityTokenMasterCopy: utilityToken.address,
     };
 
     withdrawParam = {
@@ -143,7 +144,7 @@ contract('ERC20Cogateway::withdraw', (accounts) => {
     );
 
     const afterSenderUtilityTokenBalance = await utilityToken.balanceOf(sender);
-
+ 
     assert.strictEqual(
       messageHash,
       calculatedMessageHash,
