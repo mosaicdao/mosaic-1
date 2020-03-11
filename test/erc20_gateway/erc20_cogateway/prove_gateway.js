@@ -96,6 +96,13 @@ contract('ERC20Cogateway::proveGateway', (accounts) => {
         `Expected block number is ${ProveERC20GatewayProof.blockNumber} but
         found to be ${eventObject.args.blockNumber.toString(10)}.`,
       );
+
+      const latestProvenBlockNumber = await erc20Cogateway.getRemoteGatewayLatestProvenBlockNumber
+        .call();
+      assert.isOk(
+        latestProvenBlockNumber.eqn(ProveERC20GatewayProof.blockNumber),
+        'Invalid latest proven block number.',
+      );
     });
   });
 });

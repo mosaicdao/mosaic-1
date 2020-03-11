@@ -79,6 +79,13 @@ contract('CoConsensusgateway::proveConsensusGateway', (accounts) => {
         ProveConsensusGatewayProof.storageHash,
         'Incorrect storage hash',
       );
+
+      const latestProvenBlockNumber = await consensusCogateway
+        .getRemoteGatewayLatestProvenBlockNumber.call();
+      assert.isOk(
+        latestProvenBlockNumber.eqn(ProveConsensusGatewayProof.blockNumber),
+        'Invalid latest proven block number.',
+      );
     });
   });
 });
