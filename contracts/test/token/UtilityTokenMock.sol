@@ -17,7 +17,7 @@ pragma solidity >=0.5.0 <0.6.0;
 import "./ERC20Mock.sol";
 
 /**
- * @title It is used for testing UtilityToken contract.
+ * @title It is used for mocking utility token contract when testing other contracts.
  */
 contract UtilityTokenMock is ERC20Mock {
 

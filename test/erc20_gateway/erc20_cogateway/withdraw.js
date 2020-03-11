@@ -22,7 +22,6 @@ const UtilityToken = artifacts.require('UtilityTokenMock');
 const { AccountProvider } = require('../../test_lib/utils.js');
 const MessageBusUtils = require('../../message_bus/messagebus_utils');
 const Utils = require('../../test_lib/utils.js');
-const web3 = require('../../test_lib/web3');
 
 contract('ERC20Cogateway::withdraw', (accounts) => {
   const accountProvider = new AccountProvider(accounts);
@@ -34,29 +33,6 @@ contract('ERC20Cogateway::withdraw', (accounts) => {
   let sender;
   let outboundChannelIdentifier;
   let valueTokenForUtilityToken;
-
-  const WITHDRAW_INTENT_TYPEHASH = web3.utils.keccak256(
-    'WithdrawIntent(address valueToken,address utilityToken,uint256 amount,address beneficiary)',
-  );
-
-  function hashWithdrawIntent(
-    valueToken,
-    utilityTokenAddress,
-    amount,
-    beneficiary,
-  ) {
-    return web3.utils.sha3(
-      web3.eth.abi.encodeParameters(
-        ['bytes32', 'address', 'address', 'uint256', 'address'],
-        [
-          WITHDRAW_INTENT_TYPEHASH,
-          valueToken,
-          utilityTokenAddress,
-          amount.toString(10),
-          beneficiary],
-      ),
-    );
-  }
 
   beforeEach(async () => {
     erc20Cogateway = await ERC20Cogateway.new();
@@ -101,7 +77,7 @@ contract('ERC20Cogateway::withdraw', (accounts) => {
 
     outboundChannelIdentifier = await erc20Cogateway.outboundChannelIdentifier.call();
 
-    withdrawIntent = await hashWithdrawIntent(
+    withdrawIntent = await MessageBusUtils.hashWithdrawIntent(
       valueTokenForUtilityToken,
       withdrawParam.utilityToken,
       withdrawParam.amount,

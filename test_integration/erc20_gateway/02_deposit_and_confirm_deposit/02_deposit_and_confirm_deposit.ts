@@ -186,6 +186,5 @@ describe('Deposit and Confirm Deposit', async (): Promise<void> => {
       depositParam.amount,
     );
 
-    shared.beneficiaryAtAuxiliary = depositParam.beneficiary;
   });
 });

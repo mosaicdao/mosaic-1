@@ -1,5 +1,3 @@
-//import shared from "../shared";
-
 // Copyright 2020 OpenST Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,12 +21,21 @@ import Interacts from "../../../interacts/Interacts";
 
 describe('withdraw and confirm withdraw', async (): Promise<void> => {
 
-  let erc20Cogateway = shared.contracts.ERC20Cogateway;
-  let erc20Gateway = shared.contracts.ERC20Gateway;
+  let erc20Cogateway;
+  let erc20Gateway;
   let blockNumber: BN;
+  let beneficiaryAtAuxiliary;
+  let beneficiaryAtOrigin;
   let utilityToken: string;
   let withdrawMessageHash: string;
-  let withdrawParams: { withdrawalAmount: any; beneficiary: any; feeGasPrice: any; feeGasLimit: any; utilityToken: any; };
+  let withdrawParams: { withdrawalAmount: any; beneficiary: string; feeGasPrice: BN; feeGasLimit: BN; utilityToken: string; };
+
+  before(() => {
+    erc20Cogateway = shared.contracts.ERC20Cogateway;
+    erc20Gateway = shared.contracts.ERC20Gateway;
+    beneficiaryAtAuxiliary = shared.accounts[7];
+    beneficiaryAtOrigin = shared.accounts[11];
+  });
 
   it('should withdraw successfully', async (): Promise<void> => {
     utilityToken = await erc20Cogateway.instance.methods.utilityTokens(
@@ -38,10 +45,10 @@ describe('withdraw and confirm withdraw', async (): Promise<void> => {
 
     const rawTx = utilityTokenInstance.methods.approve(
       erc20Cogateway.address,
-      '100',
+      '40',
     );
 
-    const withdrawerAddress = shared.beneficiaryAtAuxiliary;
+    const withdrawerAddress = beneficiaryAtAuxiliary;
 
     await Utils.sendTransaction(
       rawTx,
@@ -50,10 +57,9 @@ describe('withdraw and confirm withdraw', async (): Promise<void> => {
       }
     );
 
-    shared.beneficiaryAtOrigin = shared.accounts[11];
     withdrawParams = {
       withdrawalAmount: new BN(40),
-      beneficiary: shared.beneficiaryAtOrigin,
+      beneficiary: beneficiaryAtOrigin,
       feeGasPrice: new BN(2),
       feeGasLimit: new BN(10),
       utilityToken: utilityToken,
@@ -97,7 +103,7 @@ describe('withdraw and confirm withdraw', async (): Promise<void> => {
     );
   });
 
-  it('should anchor successfully', async (): Promise<void> => {
+  it('should anchor auxiliary stateroot on origin', async (): Promise<void> => {
     const anchor = await Utils.performAnchor(
       shared.contracts.OriginAnchor.instance,
       shared.consensus,
@@ -112,7 +118,7 @@ describe('withdraw and confirm withdraw', async (): Promise<void> => {
     blockNumber = anchor.blockNumber;
   });
 
-  it('should prove ERC20Gateway successfully', async(): Promise<void> => {
+  it('should prove ERC20Cogateway successfully', async(): Promise<void> => {
     const proof = await Utils.getAccountProof(
       erc20Cogateway.address,
       blockNumber.toString(10),
@@ -161,9 +167,9 @@ describe('withdraw and confirm withdraw', async (): Promise<void> => {
       shared.contracts.ValueToken.address,
       withdrawParams.withdrawalAmount,
       withdrawParams.beneficiary,
-      withdrawParams.feeGasPrice,
-      withdrawParams.feeGasLimit,
-      shared.beneficiaryAtAuxiliary, // withdrawer address
+      withdrawParams.feeGasPrice.toString(),
+      withdrawParams.feeGasLimit.toString(),
+      beneficiaryAtAuxiliary, // withdrawer address
       blockNumber.toString(10),
       serializedStorageProof as any,
     );
