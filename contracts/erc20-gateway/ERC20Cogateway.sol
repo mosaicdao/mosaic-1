@@ -192,13 +192,13 @@ contract ERC20Cogateway is
         address _beneficiary,
         uint256 _feeGasPrice,
         uint256 _feeGasLimit,
-        address _utilityToken
+        UtilityTokenInterface _utilityToken
     )
         external
         returns(bytes32 messageHash_)
     {
         require(
-            _utilityToken != address(0),
+            address(_utilityToken) != address(0),
             "Utility Token address must not be 0."
         );
         require(
@@ -210,10 +210,10 @@ contract ERC20Cogateway is
             "Withdrawal amount should be greater than max reward."
         );
 
-        address valueToken = UtilityTokenInterface(_utilityToken).valueToken();
+        address valueToken = _utilityToken.valueToken();
         bytes32 withdrawIntentHash = ERC20GatewayBase.hashWithdrawIntent(
             valueToken,
-            _utilityToken,
+            address(_utilityToken),
             _amount,
             _beneficiary
         );
@@ -229,7 +229,7 @@ contract ERC20Cogateway is
             msg.sender
         );
 
-        UtilityTokenInterface(_utilityToken).burnFrom(msg.sender, _amount);
+        _utilityToken.burnFrom(msg.sender, _amount);
 
         emit WithdrawIntentDeclared(
             _amount,
@@ -238,7 +238,7 @@ contract ERC20Cogateway is
             _feeGasPrice,
             _feeGasLimit,
             msg.sender,
-            _utilityToken,
+            address(_utilityToken),
             messageHash_
         );
     }
