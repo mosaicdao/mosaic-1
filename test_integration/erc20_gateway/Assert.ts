@@ -13,10 +13,13 @@
 // limitations under the License.
 
 import BN from 'bn.js';
-const assert = require('assert');
+import assert from 'assert';
 
 import Interacts from '../../interacts/Interacts';
-import shared from './shared';
+import shared, { ContractEntity } from './shared';
+import { ERC20I } from '../../interacts/ERC20I';
+
+import message from '../../test/message_bus/messagebus_utils';
 
 /**
  * It has methods used in assertion of ERC20Gateway's integration tests.
@@ -285,6 +288,174 @@ export default class Assert {
       true,
       `Expected outbox storage index is ${params.gatewayOutboxIndex} `
       + `but got ${outboxStorageIndex.toString(10)}`,
+    );
+  }
+
+  /**
+   * It asserts `WithdrawIntentDeclared` event for withdraw request on ERC20Cogateway contract.
+   * @param event `WithdrawIntentDeclared` event.
+   * @param expectedWithdrawerAddress Withdrawer address.
+   * @param params Withdrawal parameter.
+   */
+  public static async assertWithdrawIntentDeclared(
+    event: { returnValues: { } },
+    expectedWithdrawerAddress: string,
+    params: any,
+  ) {
+    const withdrawIntentHash = message.hashWithdrawIntent(
+      shared.contracts.ValueToken.address,
+      params.utilityToken,
+      parseInt(params.withdrawalAmount),
+      params.beneficiary,
+    );
+
+    const expectedMessageHash = message.hashMessage(
+      withdrawIntentHash,
+      new BN(
+        await shared.contracts.ERC20Cogateway.instance.methods.nonces(expectedWithdrawerAddress).call(),
+      ).subn(1),
+      params.feeGasPrice,
+      params.feeGasLimit,
+      expectedWithdrawerAddress,
+      await shared.contracts.ERC20Cogateway.instance.methods.outboundChannelIdentifier().call(),
+    );
+
+    assert.strictEqual(
+      expectedMessageHash,
+      event.returnValues['messageHash'],
+      'Incorrect withdraw intent message hash',
+    );
+
+    assert.strictEqual(
+      params.withdrawalAmount.eq(new BN(event.returnValues['amount'])),
+      true,
+      `Expected withdrawal amount is ${params.withdrawalAmount.toString(10)} `
+      + `but got ${event.returnValues['amount']}`,
+    );
+
+    assert.strictEqual(
+      params.beneficiary,
+      event.returnValues['beneficiary'],
+      'Incorrect beneficiary address',
+    );
+
+    assert.strictEqual(
+      params.feeGasPrice.eq(new BN(event.returnValues['feeGasPrice'])),
+      true,
+      `Expected gas price fee is ${params.feeGasPrice.toString(10)} `
+      + `but got ${event.returnValues['feeGasPrice']},`
+    );
+
+    assert.strictEqual(
+      params.feeGasLimit.eq(new BN(event.returnValues['feeGasLimit'])),
+      true,
+      `Expected gas price fee is ${params.feeGasLimit.toString(10)} `
+      + `but got ${event.returnValues['feeGasLimit']},`
+    );
+
+    assert.strictEqual(
+      params.utilityToken,
+      event.returnValues['utilityToken'],
+      'Incorrect utility token address',
+    );
+
+    assert.strictEqual(
+      expectedWithdrawerAddress,
+      event.returnValues['withdrawer'],
+      'Incorrect withdrawer address',
+    );
+  }
+
+  /**
+   * It asserts withdrawer account balance.
+   *
+   * @param withdrawerBalanceBeforeWithdraw Withdrawer balance before withdraw transaction.
+   * @param withdrawerBalanceAfterWithdraw Withdrawer balance after withdraw transaction.
+   * @param withdrawalAmount Amount to be withdrawn by withdrawer.
+   */
+  public static assertWithdraw(
+    withdrawerBalanceBeforeWithdraw: BN,
+    withdrawerBalanceAfterWithdraw: BN,
+    withdrawalAmount: BN,
+  ) {
+    assert.strictEqual(
+      withdrawerBalanceBeforeWithdraw.sub(withdrawalAmount).eq(withdrawerBalanceAfterWithdraw),
+      true,
+      'Expected withdrawer balance after withdraw is '
+      + `${(withdrawerBalanceBeforeWithdraw.sub(withdrawalAmount)).toString(10)} but got`
+      + `${withdrawerBalanceAfterWithdraw.toString(10)}`,
+    );
+  }
+
+  /**
+   * It asserts `WithdrawIntentConfirmed` event.
+   *
+   * @param expectedMessageHash Expected message hash.
+   * @param actualMessageHash Actual message hash in the event.
+   */
+  public static assertWithdrawIntentConfirmed(
+    expectedMessageHash: string,
+    actualMessageHash: string,
+  ) {
+    assert.strictEqual(
+      expectedMessageHash,
+      actualMessageHash,
+      'Incorrect message hash in withdraw intent confirmed event',
+    );
+  }
+
+  /**
+   * It assert balances of beneficiary and facilitator accounts after withdrawal is confirmed
+   * at origin.
+   *
+   * @param facilitatorAddress Address of the facilitator account.
+   * @param feeGasLimit Gas limit which the withdrawer is ready to pay for withdrawing.
+   * @param feeGasPrice Gas price which the withdrawer is ready to pay for withdrawing.
+   * @param valueToken Address of value token contract.
+   * @param beneficiary Address of the account which will receive value tokens.
+   * @param withdrawalAmount Amount to be withdrawn.
+   * @param facilitatorBalanceBeforeConfirmWithdraw Balance of the facilitator account before
+   *                                                confirm withdraw.
+   * @param beneficiaryBalanceBeforeConfirmWithdraw Balance of the beneficiary account before
+   *                                                confirm withdraw.
+   */
+  public static async assertConfirmWithdraw(
+    facilitatorAddress: string,
+    feeGasLimit: BN,
+    feeGasPrice: BN,
+    valueToken: ContractEntity<ERC20I>,
+    beneficiary: string,
+    withdrawalAmount: BN,
+    facilitatorBalanceBeforeConfirmWithdraw: BN,
+    beneficiaryBalanceBeforeConfirmWithdraw: BN,
+  ): Promise<void> {
+    const beneficiaryBalanceAfterConfirmWithdraw = new BN(
+      await valueToken.instance.methods.balanceOf(beneficiary).call(),
+    );
+
+    const facilitatorBalanceAfterConfirmWithdraw = new BN(
+      await valueToken.instance.methods.balanceOf(facilitatorAddress).call(),
+    );
+
+    const reward = feeGasPrice.mul(feeGasLimit);
+    const totalWithdrawalAmountToBeneficiary = withdrawalAmount.sub(reward);
+
+    assert.strictEqual(
+      beneficiaryBalanceBeforeConfirmWithdraw.add(
+        totalWithdrawalAmountToBeneficiary,
+      ).eq(beneficiaryBalanceAfterConfirmWithdraw),
+      true,
+      'Expected beneficiary balance is '
+      + `${(beneficiaryBalanceBeforeConfirmWithdraw.add(totalWithdrawalAmountToBeneficiary)).toString(10)}`
+      + `but got ${totalWithdrawalAmountToBeneficiary.toString(10)}`,
+    );
+
+    assert.strictEqual(
+      facilitatorBalanceBeforeConfirmWithdraw.add(reward).eq(facilitatorBalanceAfterConfirmWithdraw),
+      true,
+      'Expected facilitator balance is '
+      + `${(facilitatorBalanceBeforeConfirmWithdraw.add(reward)).toString(10)} `
+      + `but got ${facilitatorBalanceAfterConfirmWithdraw.toString(10)}`,
     );
   }
 }

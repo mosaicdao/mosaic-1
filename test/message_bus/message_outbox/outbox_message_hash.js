@@ -16,6 +16,8 @@
 
 const BN = require('bn.js');
 
+const MessageOutboxDouble = artifacts.require('MessageOutboxDouble');
+
 const { AccountProvider } = require('../../test_lib/utils');
 const MessageBusUtils = require('../messagebus_utils');
 const Utils = require('../../test_lib/utils');
@@ -39,7 +41,7 @@ contract('MessageOutbox::outboxMessageHash', (accounts) => {
     config.calculatedChannelIdentifier = '';
 
 
-    config.outbox = await MessageBusUtils.deployMessageOutbox();
+    config.outbox = await MessageOutboxDouble.new();
     config.calculatedChannelIdentifier =
       await MessageBusUtils.hashChannelIdentifier(
         config.metachainId,

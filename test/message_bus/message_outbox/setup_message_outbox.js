@@ -14,6 +14,8 @@
 
 'use strict';
 
+const MessageOutboxDouble = artifacts.require('MessageOutboxDouble');
+
 const { AccountProvider } = require('../../test_lib/utils.js');
 const MessageBusUtils = require('../messagebus_utils.js');
 const Utils = require('../../test_lib/utils.js');
@@ -29,7 +31,7 @@ contract('MessageOutbox::setupMessageOutbox', (accounts) => {
       inboxAddress: accountProvider.get(),
     };
 
-    config.outbox = await MessageBusUtils.deployMessageOutbox();
+    config.outbox = await MessageOutboxDouble.new();
 
   });
 

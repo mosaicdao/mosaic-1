@@ -15,7 +15,7 @@
 import BN from 'bn.js';
 
 import shared, { ContractEntity } from '../shared';
-import Utils from "../Utils";
+import Utils from '../Utils';
 import { ERC20I } from '../../../interacts/ERC20I';
 import { ERC20Gateway } from '../../../interacts/ERC20Gateway';
 import { ERC20Cogateway } from '../../../interacts/ERC20Cogateway';
@@ -98,27 +98,19 @@ describe('Deposit and Confirm Deposit', async (): Promise<void> => {
     );
   });
 
-  it('should anchor successfully',async (): Promise<void> => {
-    const auxiliaryAnchor = shared.contracts.AuxilaryAnchor.instance;
-    const block = await Utils.getBlock('latest');
-    blockNumber = new BN(block.number);
-    const rawTx = auxiliaryAnchor.methods.anchorStateRoot(
-      blockNumber.toString(10),
-      block.stateRoot,
-    );
-
-    const tx = await Utils.sendTransaction(
-      rawTx,
-      {
-        from: shared.coconsensus,
-      }
+  it('should anchor at auxiliary successfully',async (): Promise<void> => {
+    const anchor = await Utils.performAnchor(
+      shared.contracts.AuxilaryAnchor.instance,
+      shared.coconsensus,
     );
 
     Assert.assertAnchor(
-      tx.events.StateRootAvailable,
-      blockNumber,
-      block.stateRoot,
+      anchor.tx.events.StateRootAvailable,
+      anchor.blockNumber,
+      anchor.stateRoot,
     );
+
+    blockNumber = anchor.blockNumber;
   });
 
   it('should prove ERC20Gateway contract',async(): Promise<void> => {
@@ -151,7 +143,7 @@ describe('Deposit and Confirm Deposit', async (): Promise<void> => {
 
   it('should confirm deposit successfully', async (): Promise<void> => {
     const outboxStorageIndex = await erc20Cogateway.instance.methods.outboxStorageIndex().call();
-    const storagePath = await Utils.storagePath(outboxStorageIndex, [depositMessageHash]);
+    const storagePath = Utils.storagePath(outboxStorageIndex, [depositMessageHash]);
     const serializedStorageProof = await Utils.getStorageProof(
       shared.contracts.ERC20Gateway.address,
       [storagePath],
@@ -193,5 +185,6 @@ describe('Deposit and Confirm Deposit', async (): Promise<void> => {
       depositParam.beneficiary,
       depositParam.amount,
     );
+
   });
 });

@@ -30,6 +30,20 @@ contract UtBaseConfirmDepositSpy is UtilityTokenInterface {
     /* External Functions. */
 
     /**
+     * @notice It provides address of value token.
+     *
+     * @return valueTokenAddress_ Value token address.
+     */
+    function valueToken()
+        external
+        returns (
+            address valueTokenAddress_
+        )
+    {
+        valueTokenAddress_ = address(1);
+    }
+
+    /**
      * @notice Used for unit testing of ConsensusCogateway::confirmDeposit.
      *
      * @param _beneficiary Address of beneficiary where tokens are minted.
@@ -51,7 +65,7 @@ contract UtBaseConfirmDepositSpy is UtilityTokenInterface {
     function burn(uint256)
         external
     {
-        require(false, 'This method should not be called.');
+        require(false, "This method should not be called.");
     }
 
     /**
