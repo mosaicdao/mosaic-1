@@ -22,6 +22,13 @@ interface UtilityTokenInterface {
     /* External Functions */
 
     /**
+     * @notice It provides address of value token.
+     *
+     * @return _valueTokenAddress Value token address.
+     */
+    function valueToken() external returns(address _valueTokenAddress);
+
+    /**
      * @notice Mints the given amount of token to beneficiary.
      *
      * @param _beneficiary Address of beneficiary where tokens are minted.

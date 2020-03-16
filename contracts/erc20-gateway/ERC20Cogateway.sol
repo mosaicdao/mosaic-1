@@ -61,10 +61,10 @@ contract ERC20Cogateway is
     /* Constants */
 
     /** Storage offset of message outbox. */
-    uint8 constant public OUTBOX_OFFSET = uint8(7);
+    uint8 constant public OUTBOX_OFFSET = uint8(6);
 
     /** Storage offset of message inbox. */
-    uint8 constant public INBOX_OFFSET = uint8(10);
+    uint8 constant public INBOX_OFFSET = uint8(9);
 
     /** The callprefix of the UtilityToken::setup(). */
     bytes4 public constant UTILITY_TOKEN_SETUP_CALLPREFIX = bytes4(
@@ -75,9 +75,6 @@ contract ERC20Cogateway is
 
 
     /* Storage */
-
-    /** Value token address. */
-    address public valueToken;
 
     /** Address of Utility token contract master copy. */
     address public utilityTokenMasterCopy;
@@ -178,7 +175,7 @@ contract ERC20Cogateway is
      *                     where the tokens will be withdrawn.
      * @param _feeGasPrice Gas price at which fee will be calculated.
      * @param _feeGasLimit Gas limit at which fee will be capped.
-     * @param _utilityToken Address of utility token
+     * @param _utilityToken Address of utility token.
      *
      * @return messageHash_ Message hash.
      *
@@ -208,13 +205,13 @@ contract ERC20Cogateway is
         address _beneficiary,
         uint256 _feeGasPrice,
         uint256 _feeGasLimit,
-        address _utilityToken
+        UtilityTokenInterface _utilityToken
     )
         external
         returns(bytes32 messageHash_)
     {
         require(
-            _utilityToken != address(0),
+            address(_utilityToken) != address(0),
             "Utility Token address must not be 0."
         );
         require(
@@ -226,9 +223,10 @@ contract ERC20Cogateway is
             "Withdrawal amount should be greater than max reward."
         );
 
+        address valueToken = _utilityToken.valueToken();
         bytes32 withdrawIntentHash = ERC20GatewayBase.hashWithdrawIntent(
             valueToken,
-            _utilityToken,
+            address(_utilityToken),
             _amount,
             _beneficiary
         );
@@ -244,7 +242,7 @@ contract ERC20Cogateway is
             msg.sender
         );
 
-        UtilityTokenInterface(_utilityToken).burnFrom(msg.sender, _amount);
+        _utilityToken.burnFrom(msg.sender, _amount);
 
         emit WithdrawIntentDeclared(
             _amount,
@@ -253,7 +251,7 @@ contract ERC20Cogateway is
             _feeGasPrice,
             _feeGasLimit,
             msg.sender,
-            _utilityToken,
+            address(_utilityToken),
             messageHash_
         );
     }
