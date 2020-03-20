@@ -33,6 +33,9 @@ contract MessageOutbox is MessageBox {
     /** Message inbox address */
     address public messageInbox;
 
+    /** Mapping of message sender and nonce. */
+    mapping(address => uint256) public outboxNonces;
+
 
     /* External Functions. */
 

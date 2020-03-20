@@ -312,7 +312,7 @@ export default class Assert {
     const expectedMessageHash = message.hashMessage(
       withdrawIntentHash,
       new BN(
-        await shared.contracts.ERC20Cogateway.instance.methods.nonces(expectedWithdrawerAddress).call(),
+        await shared.contracts.ERC20Cogateway.instance.methods.outboxNonces(expectedWithdrawerAddress).call(),
       ).subn(1),
       params.feeGasPrice,
       params.feeGasLimit,

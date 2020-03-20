@@ -147,8 +147,8 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
             "Depositor address must not be 0."
         );
 
-        uint256 nonce = nonces[msg.sender];
-        nonces[msg.sender] = nonce.add(1);
+        uint256 nonce = MessageInbox.inboxNonces[msg.sender];
+        MessageInbox.inboxNonces[msg.sender] = nonce.add(1);
 
         messageHash_ = MessageInbox.confirmMessage(
             ERC20GatewayBase.hashDepositIntent(
@@ -245,8 +245,8 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
 
         currentMetablockHeight = _kernelHeight;
 
-        uint256 nonce = nonces[_sender];
-        nonces[_sender] = nonce.add(1);
+        uint256 nonce = MessageInbox.inboxNonces[_sender];
+        MessageInbox.inboxNonces[_sender] = nonce.add(1);
 
         bytes32 kernelIntentHash = hashKernelIntent(
             _kernelHeight,
@@ -313,8 +313,8 @@ contract ConsensusCogateway is MasterCopyNonUpgradable, MessageBus, ConsensusGat
             _beneficiary
         );
 
-        uint256 nonce = nonces[msg.sender];
-        nonces[msg.sender] = nonce.add(1);
+        uint256 nonce = MessageOutbox.outboxNonces[msg.sender];
+        MessageOutbox.outboxNonces[msg.sender] = nonce.add(1);
 
         messageHash_ = MessageOutbox.declareMessage(
             withdrawIntentHash,

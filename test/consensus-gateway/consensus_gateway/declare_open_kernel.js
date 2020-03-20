@@ -72,7 +72,7 @@ contract('ConsensusGateway::declareOpenKernel', (accounts) => {
     );
 
     const consensusNonce = new BN(
-      await consensusGateway.nonces.call(consensus),
+      await consensusGateway.outboxNonces.call(consensus),
     );
     assert.strictEqual(
       consensusNonce.toString(10),
