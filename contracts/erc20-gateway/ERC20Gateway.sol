@@ -151,12 +151,12 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
      *       set as `true` for `messageHash_` in `outbox` mapping. The
      *       `messageHash_` is obtained by calling
      *       `MessageOutbox.declareMessage` with the parameters `depositIntentHash`,
-     *      `nonces[msg.sender]`,`_feeGasPrice`,`_feeGasLimit`,`msg.sender`.
-     *       depositIntentHash is calculated by calling
-     *      `ERC20GatewayBase.hashDepositIntent()` with `_valueToken`,
+     *      `MessageOutbox.outboxNonces[msg.sender]`,`_feeGasPrice`,
+     *       `_feeGasLimit`,`msg.sender`. depositIntentHash is calculated by
+     *       calling `ERC20GatewayBase.hashDepositIntent()` with `_valueToken`,
      *       `_amount` and `_beneficiary` as input parameters.
-     * \post Updates the `nonces` storage mapping variable by incrementing the
-     *       value for `msg.sender` by one.
+     * \post Updates the `MessageOutbox.outboxNonces` storage mapping variable
+     *       by incrementing the value for `msg.sender` by one.
      * \post Transfers `_amount` of tokens from `msg.sender` to ERC20Gateway contract.
      * \post Emits `DepositIntentDeclared` event with the address of `messageHash_`,
      *       `_valueToken`, `msg.sender`, `_amount`, `nonce`, `_beneficiary`,
@@ -195,8 +195,8 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
             _beneficiary
         );
 
-        uint256 nonce = nonces[msg.sender];
-        nonces[msg.sender] = nonce.add(1);
+        uint256 nonce = MessageOutbox.outboxNonces[msg.sender];
+        MessageOutbox.outboxNonces[msg.sender] = nonce.add(1);
 
         messageHash_ = MessageOutbox.declareMessage(
             depositIntentHash,
@@ -255,8 +255,8 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
      *       gas used in this transaction.
      * \post Transfer the `_amount-fees` amount of token to the `_beneficiary`
      *       address.
-     * \post Update the nonces storage mapping variable by incrementing the
-     *       value for `_withdrawer` by one.
+     * \post Update the MessageInbox.inboxNonces storage mapping variable by
+     *       incrementing the value for `_withdrawer` by one.
      * \post Emits `WithdrawIntentConfirmed` event with the `messageHash_` parameter.
      */
     function confirmWithdraw(
@@ -295,8 +295,8 @@ contract ERC20Gateway is MasterCopyNonUpgradable, MessageBus, ERC20GatewayBase {
             "Withdrawer address is 0."
         );
 
-        uint256 nonce = nonces[_withdrawer];
-        nonces[_withdrawer] = nonce.add(1);
+        uint256 nonce = MessageInbox.inboxNonces[_withdrawer];
+        MessageInbox.inboxNonces[_withdrawer] = nonce.add(1);
 
         messageHash_ = MessageInbox.confirmMessage(
             ERC20GatewayBase.hashWithdrawIntent(

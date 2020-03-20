@@ -36,6 +36,9 @@ contract MessageInbox is MessageBox, Proof {
     /** Outbox storage index */
     uint8 public outboxStorageIndex;
 
+    /** Mapping of message sender and nonce. */
+    mapping(address => uint256) public inboxNonces;
+
 
     /* External Functions */
 
