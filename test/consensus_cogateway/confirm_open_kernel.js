@@ -83,7 +83,7 @@ contract('CoconsensusGateway::confirmOpenKernel', (accounts) => {
 
   contract('Positive Tests', () => {
     it('should confirm open kernel successfully', async () => {
-      const initialNonceForSender = await consensusCogateway.nonces.call(
+      const initialNonceForSender = await consensusCogateway.inboxNonces.call(
         confirmOpenKernelParams.sender,
       );
 
@@ -106,7 +106,7 @@ contract('CoconsensusGateway::confirmOpenKernel', (accounts) => {
         'Invalid kernel hash',
       );
 
-      const actualNonceForSender = await consensusCogateway.nonces.call(
+      const actualNonceForSender = await consensusCogateway.inboxNonces.call(
         confirmOpenKernelParams.sender,
       );
       assert.strictEqual(

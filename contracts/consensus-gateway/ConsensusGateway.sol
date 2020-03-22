@@ -141,8 +141,8 @@ contract ConsensusGateway is
 
         bytes32 depositIntentHash = hashDepositIntent(address(most), _amount, _beneficiary);
 
-        uint256 nonce = nonces[msg.sender];
-        nonces[msg.sender] = nonce.add(1);
+        uint256 nonce = MessageOutbox.outboxNonces[msg.sender];
+        MessageOutbox.outboxNonces[msg.sender] = nonce.add(1);
 
         messageHash_ = MessageOutbox.declareMessage(
             depositIntentHash,
@@ -208,8 +208,8 @@ contract ConsensusGateway is
             openKernelHash
         );
 
-        uint256 nonce = nonces[msg.sender];
-        nonces[msg.sender] = nonce.add(1);
+        uint256 nonce = MessageOutbox.outboxNonces[msg.sender];
+        MessageOutbox.outboxNonces[msg.sender] = nonce.add(1);
 
         messageHash_ = MessageOutbox.declareMessage(
             kernelIntentHash,
@@ -243,8 +243,8 @@ contract ConsensusGateway is
      * \post Adds a new entry in `inbox` mapping storage variable. The value is
      *       set as `true` for `messagehash_` in `inbox` mapping. The
      *       `messageHash_` is calculated by `MessageInbox.confirmMessage`.
-     * \post Update the nonces storage mapping variable by incrementing the
-     *       value for `msg.sender` by one.
+     * \post Update the MessageInbox.inboxNonces storage mapping variable by
+     *       incrementing the value for `msg.sender` by one.
      * \post Transfers the `most` token to the `msg.sender` address as a fees.
      *       The `fees` amount is calculated by `ERC20GatewayBase::reward()`
      * \post Transfer the `most` token to the `_beneficiary` address. The
@@ -276,8 +276,8 @@ contract ConsensusGateway is
             "Withdrawer address must not be 0."
         );
 
-        uint256 nonce = nonces[msg.sender];
-        nonces[msg.sender] = nonce.add(1);
+        uint256 nonce = MessageInbox.inboxNonces[msg.sender];
+        MessageInbox.inboxNonces[msg.sender] = nonce.add(1);
 
         messageHash_ = MessageInbox.confirmMessage(
             ERC20GatewayBase.hashWithdrawIntent(

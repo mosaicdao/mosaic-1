@@ -188,14 +188,15 @@ contract ERC20Cogateway is
      * \post Adds a new entry in `outbox` mapping storage variable. The value is
      *       set as `true` for `messagehash_` in `outbox` mapping. The
      *       `messageHash_` is obtained by calling `MessageOutbox.declareMessage`
-     *       with the parameters `withdrawIntentHash`, `nonces[msg.sender]`,
-     *       `_feeGasPrice`, `_feeGasLimit` and `msg.sender`. `withdrawIntentHash`
-     *       is calculated by calling `ERC20GatewayBase.hashWithdrawIntent` with
-     *       parameters `valueToken`, `_utilityToken`, `_amount`, `_beneficiary`.
+     *       with the parameters `withdrawIntentHash`,
+     *       `MessageOutbox.outboxNonces[msg.sender]`, `_feeGasPrice`,
+     *       `_feeGasLimit` and `msg.sender`. `withdrawIntentHash` is calculated
+     *       by calling `ERC20GatewayBase.hashWithdrawIntent` with parameters
+     *       `valueToken`, `_utilityToken`, `_amount`, `_beneficiary`.
      * \post `_amount` number of utility tokens will be burned from `msg.sender`
      *       account by erc20 cogateway.
-     * \post Update the `nonces` storage mapping variable by incrementing the
-     *       value for `msg.sender` by one.
+     * \post Update the `MessageOutbox.outboxNonces` storage mapping variable
+     *       by incrementing the value for `msg.sender` by one.
      * \post Emits `WithdrawIntentDeclared` event with the `_amount`, address of
      *       `_beneficiary`, `_feeGasPrice`, `_feeGasLimit`, address of
      *       `msg.sender`, address of `_utilityToken` and `messageHash_`.
@@ -231,8 +232,8 @@ contract ERC20Cogateway is
             _beneficiary
         );
 
-        uint256 nonce = nonces[msg.sender];
-        nonces[msg.sender] = nonce.add(1);
+        uint256 nonce = MessageOutbox.outboxNonces[msg.sender];
+        MessageOutbox.outboxNonces[msg.sender] = nonce.add(1);
 
         messageHash_ = MessageOutbox.declareMessage(
             withdrawIntentHash,
@@ -295,7 +296,8 @@ contract ERC20Cogateway is
      *       gas used in this transaction.
      * \post Transfer the `_amount-fees` amount of token to the `_beneficiary`
      *       address.
-     * \post Update the nonces storage mapping variable by incrementing the
+     * \post Update the MessageInbox.inboxNonces storage mapping variable by
+     *       incrementing the
      *       value for `_withdrawer` by one.
      * \post Emits `DepositIntentConfirmed` event with the `messageHash_` as a
      *       parameter.
@@ -334,8 +336,8 @@ contract ERC20Cogateway is
 
         address utilityToken = getUtilityToken(_valueToken);
 
-        uint256 nonce = nonces[_depositor];
-        nonces[_depositor] = nonce.add(1);
+        uint256 nonce = MessageInbox.inboxNonces[_depositor];
+        MessageInbox.inboxNonces[_depositor] = nonce.add(1);
 
         messageHash_ = MessageInbox.confirmMessage(
             ERC20GatewayBase.hashDepositIntent(
