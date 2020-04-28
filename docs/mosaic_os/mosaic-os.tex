@@ -1,0 +1,164 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Journal Article
+% LaTeX Template
+% Version 1.4 (15/5/16)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% Original author:
+% Frits Wenneker (http://www.howtotex.com) with extensive modifications by
+% Vel (vel@LaTeXTemplates.com)
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass[twoside,twocolumn]{article}
+
+\usepackage{blindtext} % Package to generate dummy text throughout this template 
+
+\usepackage[sc]{mathpazo} % Use the Palatino font
+\usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
+\linespread{1.05} % Line spacing - Palatino needs more space between lines
+\usepackage{microtype} % Slightly tweak font spacing for aesthetics
+
+\usepackage[english]{babel} % Language hyphenation and typographical rules
+
+\usepackage[hmarginratio=1:1,top=32mm,columnsep=20pt]{geometry} % Document margins
+\usepackage[hang, small,labelfont=bf,up,textfont=it,up]{caption} % Custom captions under/above floats in tables or figures
+\usepackage{booktabs} % Horizontal rules in tables
+
+\usepackage{lettrine} % The lettrine is the first enlarged letter at the beginning of the text
+
+\usepackage{enumitem} % Customized lists
+\setlist[itemize]{noitemsep} % Make itemize lists more compact
+
+\usepackage{abstract} % Allows abstract customization
+\renewcommand{\abstractnamefont}{\normalfont\bfseries} % Set the "Abstract" text to bold
+\renewcommand{\abstracttextfont}{\normalfont\small\itshape} % Set the abstract itself to small italic text
+
+\usepackage{titlesec} % Allows customization of titles
+\renewcommand\thesection{\Roman{section}} % Roman numerals for the sections
+\renewcommand\thesubsection{\roman{subsection}} % roman numerals for subsections
+\titleformat{\section}[block]{\large\scshape\centering}{\thesection.}{1em}{} % Change the look of the section titles
+\titleformat{\subsection}[block]{\large}{\thesubsection.}{1em}{} % Change the look of the section titles
+
+\usepackage{fancyhdr} % Headers and footers
+\pagestyle{fancy} % All pages have headers and footers
+\fancyhead{} % Blank out the default header
+\fancyfoot{} % Blank out the default footer
+\fancyhead[C]{Computing Collective Knowledge from Self-Sovereign Applications} % Custom header text
+\fancyfoot[RO,LE]{\thepage} % Custom footer text
+
+\usepackage{titling} % Customizing the title section
+
+\usepackage{hyperref} % For hyperlinks in the PDF
+
+\usepackage{endnotes}
+
+%----------------------------------------------------------------------------------------
+%	TITLE SECTION
+%----------------------------------------------------------------------------------------
+
+\setlength{\droptitle}{-4\baselineskip} % Move the title up
+
+\pretitle{\begin{center}\Huge\bfseries} % Article title formatting
+\posttitle{\end{center}} % Article title closing formatting
+\title{A Decentralised Operating System for Computing Collective Knowledge from User-Siloed Data} % Article title
+\author{%
+\textsc{Mosaic OS} \\[1ex]
+\normalsize MosaicDAO
+}
+\date{Memo April 2020, last revised \today} % Leave empty to omit a date
+\renewcommand{\maketitlehookd}{%
+%\begin{abstract}
+%\noindent TODO write abstract
+%\end{abstract}
+}
+
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+% Print the title
+\maketitle
+
+%----------------------------------------------------------------------------------------
+%	ARTICLE CONTENTS
+%----------------------------------------------------------------------------------------
+
+\section{Responding to the COVID-19 pandemic}
+
+\lettrine[nindent=0em,lines=3]{T} he COVID-19 pandemic has caught the world underprepared. Contact tracing can be a valuable tool to identify who to test for an infectious disease, and as such control its spread - COVID-19 acutely so.
+
+The fight against epidemics has altered the course of social and political history. In particular the creation of public health systems (and governments to support them) grew out of the people's acceptance for disease control as a public responsibility.
+
+To scale contact tracing today various governments are turning to technology. Mass-collected cellphone geolocation data is used track the movement of aggregate populations, or in some countries to track individual citizens meeting each other.
+New initiatives are worked on to establish contact tracing with better privacy protection - we highlight DP-3T\endnote{Decentralized Privacy-Preserving Proximity Tracing, \href{https://github.com/DP-3T}{github.com/DP-3T}} - where Bluetooth signals are used to register proximity of people.
+
+At a minimum a discussion is warranted about which technical freedoms we value, and which options are available to work on. With this memo, we look to contribute to such a discussion.
+
+%------------------------------------------------
+
+\subsection{Introduction}
+Contact tracing applications elevate the question of who owns such intimate user data. Conventionally data is owned and accessible by the application developers. In contrast a growing body of open-source protocols is building towards applications with \emph{user-siloed data}: where only the user owns and can access their data.
+
+However, during the current pandemic, the major technology platforms and governments are accelerating the trend to exploit user data, first to fight the pandemic and misinformation, but it is an open question whether such new powers will have oversight and be constraint for other purposes.
+
+Therefore a contact tracing application is an ideal case study for advancing applications with user-siloed data, where cryptography enforces digital freedoms and ownership of our data. However, a contact tracing application highlights a second requirement: to meaningfully address global problems - such as the spread of infectious diseases - an application must also be able to \emph{compute collective knowledge} from (anonymous) user-data contributions: e.g. ``\textit{What was my exposure risk to COVID-19 given later attestations of positive individuals?}''.
+
+In this document we explore how to build such applications. We bring together existing protocols, and introduce new work to construct an operating system for applications where users can collectively build insight from their data. We describe how the MapReduce algorithm can be orchestrated over a decentralised network to compute over a large user-owned data flow. All of the ideas presented in this work are being worked on under open-source licenses and this is an invitation to discuss and question, and ultimately help strengthen protocols towards a new standard for applications.
+
+
+%------------------------------------------------
+
+\section{Background}
+
+\subsection{Ethereum}
+
+\subsection{IPFS}
+
+\subsection{Textile Threads}
+
+\subsection{OpenST}
+
+%------------------------------------------------
+
+\section{The Mosaic Protocol}
+
+\subsection{Private State}
+
+\subsection{Recovery of Private State}
+
+\subsection{Consensus on Public State}
+
+\subsection{Anonymous Avatars}
+
+\subsection{Decentralised MapReduce}
+
+
+%----------------------------------------------------------------------------------------
+%	NOTES
+%----------------------------------------------------------------------------------------
+
+\theendnotes
+
+%----------------------------------------------------------------------------------------
+%	REFERENCE LIST
+%----------------------------------------------------------------------------------------
+
+\begin{thebibliography}{99} % Bibliography - this is intentionally simple in this template
+
+ 
+\end{thebibliography}
+
+%----------------------------------------------------------------------------------------
+
+\end{document}
+

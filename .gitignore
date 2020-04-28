@@ -21,6 +21,8 @@ build/
 # LaTeX auxiliary files
 *.aux
 *.log
+*.ent
+*.out
 
 ## Build tool auxiliary files:
 *.synctex
