@@ -77,9 +77,10 @@
 }
 \date{Memo April 2020, last revised \today} % Leave empty to omit a date
 \renewcommand{\maketitlehookd}{%
-%\begin{abstract}
-%\noindent TODO write abstract
-%\end{abstract}
+\begin{abstract}
+\noindent Mosaic-OS sets out a model on how to structure self-sovereign applications that run on Ethereum and hold user-siloed data on IPFS.
+We build on Textile Threads to structure access control over data between end-users and public application nodes. We apply MapReduce to a decentralised context and show how a public computation over big data sets can be used to generate collective knowledge over the problem addressed by the application. We detail how the shared state of Ethereum can be extended to allow orchestration for a large number of application nodes and users.
+\end{abstract}
 }
 
 %----------------------------------------------------------------------------------------
@@ -128,11 +129,16 @@ In this document we explore how to build such applications. We bring together ex
 
 \subsection{OpenST}
 
+\subsection{MapReduce}
+
 %------------------------------------------------
 
 \section{The Mosaic Protocol}
 
-\subsection{Private State}
+\subsection{Root, Hosts and Avatars}
+
+From the user's perspective Mosaic-OS is an \emph{access-control schema} to manage their applications and data.
+We set forward three access levels \emph{root}, \emph{host}, \emph{avatar}
 
 \subsection{Recovery of Private State}
 
