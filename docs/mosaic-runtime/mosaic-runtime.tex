@@ -53,7 +53,7 @@
 \pagestyle{fancy} % All pages have headers and footers
 \fancyhead{} % Blank out the default header
 \fancyfoot{} % Blank out the default footer
-\fancyhead[C]{Computing Collective Knowledge from Self-Sovereign Applications} % Custom header text
+\fancyhead[C]{High Performance Computing in Decentralised Applications} % Custom header text
 \fancyfoot[RO,LE]{\thepage} % Custom footer text
 
 \usepackage{titling} % Customizing the title section
@@ -70,17 +70,23 @@
 
 \pretitle{\begin{center}\Huge\bfseries} % Article title formatting
 \posttitle{\end{center}} % Article title closing formatting
-\title{A Decentralised Operating System for Computing Collective Knowledge from User-Siloed Data} % Article title
+\title{Computing Collective Knowledge from User-Siloed Data in Decentralised Applications} % Article title
 \author{%
-\textsc{Mosaic OS} \\[1ex]
-\normalsize MosaicDAO
+\textsc{Mosaic Runtime} \\[1ex]
+\normalsize draft - last revision \today
 }
-\date{Memo April 2020, last revised \today} % Leave empty to omit a date
+\date{Project Vision April 2020} % Leave empty to omit a date
 \renewcommand{\maketitlehookd}{%
+%\begin{abstract}
+%\noindent Mosaic-OS sets out a model on how to structure self-sovereign applications that run on Ethereum and hold user-siloed data on IPFS.
+%We build on Textile Threads to structure access control over data between end-users and public application nodes. We apply MapReduce to a decentralised context and show how a public computation over big data sets can be used to generate collective knowledge over the problem addressed by the application. We detail how the shared state of Ethereum can be extended to allow orchestration for a large number of application nodes and users.
+%\end{abstract}
 \begin{abstract}
-\noindent Mosaic-OS sets out a model on how to structure self-sovereign applications that run on Ethereum and hold user-siloed data on IPFS.
-We build on Textile Threads to structure access control over data between end-users and public application nodes. We apply MapReduce to a decentralised context and show how a public computation over big data sets can be used to generate collective knowledge over the problem addressed by the application. We detail how the shared state of Ethereum can be extended to allow orchestration for a large number of application nodes and users.
+\noindent We construct a general framework of smart contracts on Ethereum that can be used to build decentralised applications which provide any service hosted from a decentralised network of application nodes. We move the application code and content to an encryption-derived access-control DAG building on IPFS and ThreadsDB. The contracts allow for orchestration of redundant computation and services to build out the application. We present contracts for orchestrating high performance computation, again over a decentralised network of nodes, allowing for deriving rich analysis and feedback loops. Applications can also build on the computations of other applications, extending the driving strength of the world-wide-web, then smart contracts now into high-performance computing.
+
+We present a special type of such application to provide an extension of BFT consensus over Ethereum smart contract state, such that the contract orchestration is feasible in scale and cost. Lastly we elaborate on a construction for managing different application data together under a single root for the user to manage their user-siloed data and enable secure, decentralised and easy-to-use account recovery.
 \end{abstract}
+
 }
 
 %----------------------------------------------------------------------------------------
@@ -118,18 +124,18 @@ In this document we explore how to build such applications. We bring together ex
 
 
 %------------------------------------------------
-
-\section{Background}
-
-\subsection{Ethereum}
-
-\subsection{IPFS}
-
-\subsection{Textile Threads}
-
-\subsection{OpenST}
-
-\subsection{MapReduce}
+%
+%\section{Background}
+%
+%\subsection{Ethereum}
+%
+%\subsection{IPFS}
+%
+%\subsection{Textile Threads}
+%
+%\subsection{OpenST}
+%
+%\subsection{MapReduce}
 
 %------------------------------------------------
 
